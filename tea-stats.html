@@ -10,6 +10,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <!-- مكتبة التقاط الشاشة -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         :root { 
@@ -54,46 +57,47 @@
         /* Loader */
         #excel-loader { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; color: white; font-weight: 900; font-size: 20px; }
         
-        /* Modals */
+        /* Modals & Windows Setup */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 1200px; border-radius: 15px; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        .modal-header { background: var(--dark); color: #fcd34d; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h2 { font-size: 18px; font-weight: 900; margin: 0; }
-        .modal-body { padding: 25px; overflow: auto; }
+        .modal-content { background: white; width: 100%; max-width: 1200px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 95vh; }
+        .modal-header { background: var(--dark); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--danger); }
         
-        /* جدول الخطة */
-        .plan-table { width: 100%; border-collapse: collapse; text-align: center; }
-        .plan-table th, .plan-table td { border: 1px solid #cbd5e1; padding: 8px 4px; font-size: 12px; font-weight: 800; }
-        .plan-table th { background: #f1f5f9; color: var(--dark); }
-        .plan-table input { width: 45px; padding: 5px; border: 2px solid #cbd5e1; border-radius: 6px; text-align: center; font-weight: 900; outline: none; }
-        .plan-table input:focus { border-color: var(--info); }
-        .btn-save-plan { background: var(--success); color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 900; cursor: pointer; margin-top: 20px; width: 100%; font-size: 16px; }
+        .modal-header-titles h2 { font-size: 18px; font-weight: 900; margin: 0; color: #fcd34d; display: flex; align-items: center; gap: 10px; }
+        .watermark-text { font-size: 13px; font-weight: 900; margin-top: 5px; opacity: 0.9; color: #fff; }
+        
+        /* أزرار النافذة (سكرين شوت + إغلاق) */
+        .btn-screenshot { background: var(--success); border: none; color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-family: 'Cairo'; font-weight: 900; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn-screenshot:hover { background: #15803d; transform: scale(1.05); }
+        .btn-close-modal { background: none; border: none; color: #cbd5e1; font-size: 32px; cursor: pointer; transition: 0.2s; line-height: 1; }
+        .btn-close-modal:hover { color: #ef4444; }
 
-        /* جدول المعاينة السريعة والجداول العامة */
+        .modal-body { padding: 25px; overflow-y: auto; background: #ffffff; } /* خلفية بيضاء لتجنب سواد الصورة */
+        
+        /* الجداول العامة */
         .preview-container { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; }
-        .preview-top-table { width: 100%; border-collapse: collapse; text-align: center; border: 3px solid #000; margin-bottom: 20px; background: white; }
+        .preview-top-table, .preview-teachers-table, .plan-table, .modern-budget-table { width: 100%; border-collapse: collapse; text-align: center; background: white; }
+        
         .preview-top-table th, .preview-top-table td { border: 1px solid #000; padding: 6px; font-size: 14px; font-weight: 900; color: #000; }
         .preview-top-table thead th { background: #e2e8f0; border-bottom: 2px solid #000; }
         .preview-top-table .sum-row { background: #e2e8f0; border-top: 2px solid #000; }
         .pt-cell-danger { font-size: 20px; color: var(--danger); vertical-align: middle; }
         .pt-cell-success { font-size: 20px; color: var(--info); vertical-align: middle; }
 
-        .preview-teachers-table { width: 100%; border-collapse: collapse; text-align: center; border: 3px solid #cbd5e1; background: white; }
+        .preview-teachers-table { border: 3px solid #cbd5e1; }
         .preview-teachers-table th, .preview-teachers-table td { border: 1px solid #cbd5e1; padding: 10px; font-size: 15px; font-weight: 800; color: #1e293b; }
         .preview-teachers-table thead th { background: #f1f5f9; border-bottom: 2px solid #94a3b8; }
         .preview-teachers-table td:nth-child(2) { text-align: right; padding-right: 15px; }
 
-        /* جدول الميزانية الشاملة (يستخدم ايضاً لجدول المعاشات) */
-        .modern-budget-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-        .modern-budget-table th, .modern-budget-table td { padding: 12px 15px; text-align: center; font-size: 14px; font-weight: 800; border-bottom: 1px solid #e2e8f0; }
-        .modern-budget-table thead th { background: var(--primary); color: white; position: sticky; top: 0; z-index: 10; }
-        .modern-budget-table thead th:first-child { border-top-right-radius: 10px; }
-        .modern-budget-table thead th:last-child { border-top-left-radius: 10px; }
+        .modern-budget-table { border: 2px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
+        .modern-budget-table th, .modern-budget-table td { padding: 12px 15px; border-bottom: 1px solid #e2e8f0; border-left: 1px solid #e2e8f0; }
+        .modern-budget-table thead th { background: var(--primary); color: white; }
         .modern-budget-table tbody tr:hover { background: #f8fafc; }
-        .modern-budget-table td:first-child { text-align: right; color: var(--dark); font-weight: 900; }
-        .badge-danger { color: #dc2626; background: #fee2e2; padding: 4px 12px; border-radius: 20px; }
-        .badge-success { color: #16a34a; background: #dcfce7; padding: 4px 12px; border-radius: 20px; }
+        
+        .plan-table th, .plan-table td { border: 1px solid #cbd5e1; padding: 8px 4px; font-size: 12px; font-weight: 800; }
+        .plan-table th { background: #f1f5f9; color: var(--dark); }
+        .plan-table input { width: 45px; padding: 5px; border: 2px solid #cbd5e1; border-radius: 6px; text-align: center; font-weight: 900; outline: none; }
+        .btn-save-plan { background: var(--success); color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 900; cursor: pointer; margin-top: 20px; width: 100%; font-size: 16px; }
 
         .zizo-signature-bottom { position: fixed; bottom: 10px; left: 10px; background: white; padding: 5px 15px; border-radius: 20px; font-weight: 900; font-size: 11px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); z-index: 100; }
         
@@ -148,7 +152,6 @@
                 <button class="btn-action btn-all-budget" onclick="buildAllBudgetTable()"><i class="fa-solid fa-table"></i> عرض ميزانية جميع المواد</button>
                 <button class="btn-action btn-plan" onclick="toggleModal('planModal', true)"><i class="fa-solid fa-gear"></i> إعداد خطة المدرسة</button>
                 
-                <!-- الزر الجديد لفتح نافذة المعاشات -->
                 <button class="btn-action" style="background: var(--danger); box-shadow: 0 4px 15px rgba(190, 24, 60, 0.3);" onclick="toggleModal('retirementModal', true)">
                     <i class="fa-solid fa-hourglass-half"></i> ترقب المحالين للمعاش
                 </button>
@@ -177,47 +180,57 @@
         </div>
     </div>
 
-    <!-- شاشة التحميل للإكسيل -->
     <div id="excel-loader">
         <i class="fa-solid fa-spinner fa-spin fa-3x" style="color: #fcd34d; margin-bottom: 20px;"></i>
         <div>جاري جلب قالب الإكسيل وتعبئته بالبيانات...</div>
     </div>
 
-    <!-- نافذة المعاشات الجديدة -->
+    <!-- ================= 1. نافذة المعاشات ================= -->
     <div class="modal-overlay" id="retirementModal">
-        <div class="modal-content">
+        <div class="modal-content" id="capture-retirement">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-hourglass-half"></i> شاشة ترقب: أقرب ١٠ عاملين لبلوغ سن المعاش</h2>
-                <button onclick="toggleModal('retirementModal', false)" style="background:none; border:none; color:#fcd34d; font-size:28px; cursor:pointer;">&times;</button>
+                <div class="modal-header-titles">
+                    <h2><i class="fa-solid fa-hourglass-half"></i> شاشة ترقب: أقرب ١٠ عاملين لبلوغ سن المعاش</h2>
+                    <div class="watermark-text"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
+                </div>
+                <div class="hide-in-shot" style="display: flex; gap: 15px; align-items: center;">
+                    <button onclick="takeScreenshot('capture-retirement', 'بيان_ترقب_المعاشات')" class="btn-screenshot"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
+                    <button onclick="toggleModal('retirementModal', false)" class="btn-close-modal">&times;</button>
+                </div>
             </div>
             <div class="modal-body">
-                <table class="modern-budget-table">
+                <table class="modern-budget-table" style="border: 1px solid #cbd5e1;">
                     <thead>
                         <tr>
                             <th style="width: 10%;">م</th>
                             <th style="text-align: right; width: 40%;">اسم الموظف</th>
                             <th style="width: 25%;">تاريخ الإحالة للمعاش</th>
-                            <th style="width: 25%;">العداد الزمني (بالأيام)</th>
+                            <th style="width: 25%;">العداد الزمني (أيام)</th>
                         </tr>
                     </thead>
                     <tbody id="retirement-body">
-                        <tr><td colspan="4" style="padding:20px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i> جاري حساب البيانات...</td></tr>
+                        <tr><td colspan="4" style="padding:20px; color:#94a3b8; text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> جاري حساب البيانات...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- نافذة المعاينة السريعة للمادة المحددة -->
+    <!-- ================= 2. نافذة المعاينة السريعة ================= -->
     <div class="modal-overlay" id="previewModal">
-        <div class="modal-content">
+        <div class="modal-content" id="capture-preview">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-eye"></i> معاينة الميزانية: <span id="prev-sub-name" style="color:var(--white);"></span></h2>
-                <button onclick="toggleModal('previewModal', false)" style="background:none; border:none; color:#fcd34d; font-size:28px; cursor:pointer;">&times;</button>
+                <div class="modal-header-titles">
+                    <h2><i class="fa-solid fa-eye"></i> معاينة الميزانية: <span id="prev-sub-name" style="color:white; margin-right:5px;"></span></h2>
+                    <div class="watermark-text"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
+                </div>
+                <div class="hide-in-shot" style="display: flex; gap: 15px; align-items: center;">
+                    <button onclick="takeScreenshot('capture-preview', 'معاينة_الميزانية')" class="btn-screenshot"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
+                    <button onclick="toggleModal('previewModal', false)" class="btn-close-modal">&times;</button>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="preview-container">
-                    
                     <table class="preview-top-table">
                         <thead>
                             <tr>
@@ -230,9 +243,7 @@
                                 <th style="width: 10%;">العجز بالحصص</th>
                             </tr>
                         </thead>
-                        <tbody id="prev-top-body">
-                            <!-- سيتم تعبئته برمجياً -->
-                        </tbody>
+                        <tbody id="prev-top-body"></tbody>
                     </table>
 
                     <h3 style="font-size: 16px; font-weight: 900; margin-bottom: 10px; color: var(--dark); border-bottom: 2px solid #cbd5e1; padding-bottom: 5px;">
@@ -247,29 +258,32 @@
                                 <th style="border: 1px solid #000; width: 25%;">النصاب القانوني</th>
                             </tr>
                         </thead>
-                        <tbody id="prev-teachers-body">
-                            <!-- سيتم تعبئته برمجياً -->
-                        </tbody>
+                        <tbody id="prev-teachers-body"></tbody>
                     </table>
 
-                    <div style="margin-top: 20px;">
+                    <div class="hide-in-shot" style="margin-top: 20px;">
                         <button class="btn-action btn-print" style="width: 100%; padding: 15px; font-size: 16px;" onclick="injectAndDownloadExcel()"><i class="fa-solid fa-file-excel"></i> تصدير الميزانية إلى الإكسيل الرسمي للطباعة</button>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- نافذة الميزانية الشاملة -->
+    <!-- ================= 3. نافذة الميزانية الشاملة ================= -->
     <div class="modal-overlay" id="allBudgetModal">
-        <div class="modal-content">
+        <div class="modal-content" id="capture-all-budget">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-table-list"></i> الميزانية الشاملة لجميع المواد الدراسية</h2>
-                <button onclick="toggleModal('allBudgetModal', false)" style="background:none; border:none; color:#fcd34d; font-size:28px; cursor:pointer;">&times;</button>
+                <div class="modal-header-titles">
+                    <h2><i class="fa-solid fa-table-list"></i> الميزانية الشاملة لجميع المواد الدراسية</h2>
+                    <div class="watermark-text"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
+                </div>
+                <div class="hide-in-shot" style="display: flex; gap: 15px; align-items: center;">
+                    <button onclick="takeScreenshot('capture-all-budget', 'الميزانية_الشاملة')" class="btn-screenshot"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
+                    <button onclick="toggleModal('allBudgetModal', false)" class="btn-close-modal">&times;</button>
+                </div>
             </div>
             <div class="modal-body">
-                <table class="modern-budget-table">
+                <table class="modern-budget-table" style="border: 1px solid #cbd5e1;">
                     <thead><tr><th>المادة / التصنيف</th><th>عدد الحصص اللازم</th><th>الموجود الفعلي</th><th>العجز</th><th>الزيادة</th><th>عدد المعلمين</th></tr></thead>
                     <tbody id="all-budget-body"></tbody>
                 </table>
@@ -277,16 +291,22 @@
         </div>
     </div>
 
-    <!-- نافذة إعداد الخطة -->
+    <!-- ================= 4. نافذة إعداد الخطة ================= -->
     <div class="modal-overlay" id="planModal">
-        <div class="modal-content">
+        <div class="modal-content" id="capture-plan">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-gear"></i> إعداد فصول وحصص المدرسة</h2>
-                <button onclick="toggleModal('planModal', false)" style="background:none; border:none; color:#fcd34d; font-size:28px; cursor:pointer;">&times;</button>
+                <div class="modal-header-titles">
+                    <h2><i class="fa-solid fa-gear"></i> إعداد فصول وحصص المدرسة</h2>
+                    <div class="watermark-text"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
+                </div>
+                <div class="hide-in-shot" style="display: flex; gap: 15px; align-items: center;">
+                    <button onclick="takeScreenshot('capture-plan', 'خطة_المدرسة')" class="btn-screenshot"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
+                    <button onclick="toggleModal('planModal', false)" class="btn-close-modal">&times;</button>
+                </div>
             </div>
             <div class="modal-body">
                 <table class="plan-table"><thead id="plan-head"></thead><tbody id="plan-rows"></tbody></table>
-                <button class="btn-save-plan" onclick="saveSchoolPlan()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ واعتماد الخطة</button>
+                <button class="btn-save-plan hide-in-shot" onclick="saveSchoolPlan()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ واعتماد الخطة</button>
             </div>
         </div>
     </div>
@@ -334,11 +354,53 @@
                 
                 initPlanTable();
                 calculateDashboardStats(); 
-                renderRetirementList(); // تحميل وتجهيز بيانات المعاشات برمجياً
+                renderRetirementList(); 
             } catch (error) {
                 console.error("Error loading initial data:", error);
             }
         });
+
+        // ================= دالة التقاط الشاشة الشاملة بصيغة JPEG =================
+        function takeScreenshot(targetId, fileName) {
+            const targetEl = document.getElementById(targetId);
+            const hiddenElements = targetEl.querySelectorAll('.hide-in-shot');
+            
+            // إخفاء الأزرار مؤقتاً أثناء التصوير
+            hiddenElements.forEach(el => el.style.display = 'none');
+            
+            // إلغاء شريط التمرير (Scroll) من الجسم مؤقتاً لتصوير المحتوى بالكامل
+            const modalBody = targetEl.querySelector('.modal-body');
+            const originalMaxHeight = modalBody.style.maxHeight;
+            const originalOverflow = modalBody.style.overflowY;
+            modalBody.style.maxHeight = 'none';
+            modalBody.style.overflowY = 'visible';
+
+            html2canvas(targetEl, {
+                scale: 2, // دقة عالية
+                backgroundColor: "#ffffff", // خلفية بيضاء لضمان عدم وجود مساحات سوداء في JPEG
+                useCORS: true
+            }).then(canvas => {
+                // إرجاع العناصر كما كانت فوراً بعد الالتقاط
+                hiddenElements.forEach(el => el.style.display = 'flex'); // عرض الأزرار مجدداً
+                modalBody.style.maxHeight = originalMaxHeight;
+                modalBody.style.overflowY = originalOverflow;
+
+                // تحويل الصورة إلى JPEG وتحميلها
+                let imgData = canvas.toDataURL("image/jpeg", 0.95);
+                let link = document.createElement('a');
+                link.download = fileName + '.jpg';
+                link.href = imgData;
+                link.click();
+            }).catch(err => {
+                console.error(err);
+                alert("حدث خطأ أثناء التقاط الصورة!");
+                // إرجاع الأزرار في حالة حدوث خطأ
+                hiddenElements.forEach(el => el.style.display = 'flex');
+                modalBody.style.maxHeight = originalMaxHeight;
+                modalBody.style.overflowY = originalOverflow;
+            });
+        }
+        // =========================================================================
 
         // ================= دوال حساب الإحالة للمعاش المحدثة =================
         function getDOBFromNID(nid) {
@@ -367,11 +429,11 @@
             let diffTime = retirementDate - today;
             let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
-            // تحويل التاريخ ليكون رقماً مثل 15/03/2024
+            // التعديل: إجبار المتصفح على قراءة التاريخ من اليسار لليمين ليظهر اليوم/الشهر/السنة بشكل صحيح
             let dd = String(retirementDate.getDate()).padStart(2, '0');
             let mm = String(retirementDate.getMonth() + 1).padStart(2, '0');
             let yyyy = retirementDate.getFullYear();
-            let dateStrNum = `${dd}/${mm}/${yyyy}`;
+            let dateStrNum = `<bdo dir="ltr">${dd} / ${mm} / ${yyyy}</bdo>`;
             
             return {
                 dateStr: dateStrNum,
@@ -410,14 +472,14 @@
             }
 
             top10.forEach((item, index) => {
-                let warningStyle = item.daysLeft <= 60 ? 'color: var(--danger); font-size: 16px;' : 'color: var(--primary);';
+                let warningStyle = item.daysLeft <= 60 ? 'color: var(--danger); font-size: 16px;' : 'color: var(--primary); font-size: 16px;';
                 
                 tbody.innerHTML += `
                     <tr>
                         <td style="text-align:center;">${toAr(index + 1)}</td>
                         <td style="text-align: right;">${item.name}</td>
                         <td style="text-align:center; color: var(--info); font-weight: 900; font-size:16px;">${item.retirementDate}</td>
-                        <td style="text-align:center; font-weight: 900; font-size: 16px; ${warningStyle}">${item.daysLeft}</td>
+                        <td style="text-align:center; font-weight: 900; ${warningStyle}">${item.daysLeft}</td>
                     </tr>
                 `;
             });
