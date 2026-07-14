@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مركز إدارة البيانات المجمعة - مستر زيزو</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root { 
+            --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; 
+            --save-btn: #4f46e5; --danger: #be123c; --warning: #d97706; --info: #0284c7; --success: #16a34a;
+        }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); height: 100vh; display: flex; flex-direction: column; overflow: hidden; padding: 10px 20px; }
+
+        .top-navigation { width: 100%; background: var(--dark); padding: 10px 20px; border-radius: 10px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .nav-title { font-size: 15px; font-weight: 900; color: #93c5fd; }
+        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn-nav:hover { background: var(--info); }
+
+        .tool-bar { background: white; padding: 8px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid #cbd5e1; flex-wrap: wrap; gap: 8px; }
+        .controls-group { display: flex; gap: 8px; align-items: center; }
+        select, .search-input { padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 13px; outline: none; cursor: pointer; }
+        .search-input { cursor: text; width: 180px; }
+        .search-input:focus { border-color: var(--info); }
+
+        .btn { border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; color: white; display: flex; align-items: center; gap: 6px; font-size: 12px; transition: 0.2s; }
+        .btn-stats { background: var(--info); }
+        .btn-import { background: #7c3aed; }
+        .btn-excel { background: #166534; } 
+        .btn-save { background: var(--save-btn); box-shadow: 0 0 12px rgba(79, 70, 229, 0.3); }
+        .btn-golden { background: linear-gradient(135deg, #d97706, #b45309); color: white; font-weight: 900; box-shadow: 0 0 10px rgba(217,119,6,0.4); }
+        .btn-pass-all { background: var(--success); }
+        .btn-promote { background: var(--danger); box-shadow: 0 0 10px rgba(190, 18, 60, 0.3); }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .table-wrapper { flex-grow: 1; overflow: auto; background: white; border-radius: 10px; border: 1px solid #cbd5e1; }
+        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 1550px; table-layout: fixed; }
+        
+        /* ضبط عرض الأعمدة لتشمل عمود النتيجة */
+        th:nth-child(1) { width: 40px; }  
+        th:nth-child(2) { width: 230px; } 
+        th:nth-child(3) { width: 65px; }  
+        th:nth-child(4) { width: 95px; }  
+        th:nth-child(5) { width: 135px; } 
+        th:nth-child(6) { width: 95px; }  
+        th:nth-child(7) { width: 60px; }  
+        th:nth-child(8) { width: 85px; }  
+        th:nth-child(9) { width: 65px; }  
+        th:nth-child(10) { width: 70px; } 
+        th:nth-child(11) { width: 90px; } /* النتيجة */
+        th:nth-child(12) { width: 70px; } 
+        th:nth-child(13) { width: 60px; } 
+        th:nth-child(14) { width: 85px; } 
+        th:nth-child(15) { width: 110px; } 
+
+        thead th { position: sticky; top: 0; background: var(--primary); color: white; padding: 10px 4px; font-size: 12px; z-index: 5; border: 1px solid #1e40af; }
+        .th-content { display: flex; align-items: center; gap: 5px; }
+        .export-cb { accent-color: white; cursor: pointer; }
+
+        tbody td { padding: 2px; border: 1px solid #e2e8f0; }
+        .editable-input, .result-select { width: 100%; border: none; background: transparent; font-size: 12.5px; font-weight: 600; font-family: 'Cairo'; padding: 5px; outline: none; }
+        .editable-input:focus, .result-select:focus { background: #f0f7ff; box-shadow: inset 0 0 0 2px var(--info); border-radius: 3px; }
+        .readonly-cell { background-color: #f8fafc; color: var(--primary); font-weight: 800; }
+        .result-select { cursor: pointer; color: var(--primary); font-weight: 900; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--bg); width: 90%; max-width: 950px; border-radius: 12px; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .modal-header { background: var(--primary); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; overflow-y: auto; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 15px; border-radius: 10px; border-top: 4px solid var(--info); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .stat-card h4 { color: var(--dark); font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 6px; }
+        .stat-line { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px; }
+        .stat-val { color: var(--primary); font-weight: 900; font-size: 15px; }
+
+        .radar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+        .class-chip { padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; background: white; display: flex; flex-direction: column; gap: 6px; }
+        .class-name { font-size: 15px; font-weight: 900; color: var(--dark); border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
+        .class-details { display: flex; justify-content: space-around; font-size: 12px; font-weight: 700; color: #475569; }
+        .class-total { font-size: 13px; font-weight: 900; background: #f8fafc; padding: 3px; border-radius: 4px; color: var(--primary); }
+        
+        .density-low { border-bottom: 4px solid var(--info); } 
+        .density-mid { border-bottom: 4px solid var(--warning); }
+        .density-high { border-bottom: 4px solid var(--danger); background: #fef2f2; }
+
+        #file-input { display: none; }
+        .zizo-signature { position: fixed; bottom: 5px; left: 5px; background: white; padding: 2px 12px; border-radius: 10px; font-size: 10px; font-weight: 900; border: 1px solid #ddd; z-index: 100;}
+    </style>
+</head>
+<body>
+
+ <nav class="top-navigation" style="display: flex; justify-content: space-between; align-items: center; min-height: 80px; padding: 0 20px; background-color: #081f36;">
+    <!-- الجزء الأيمن: العنوان -->
+    <div class="nav-title">
+        <i class="fa-solid fa-database"></i> مركز إدارة البيانات المجمعة لشئون التلاميذ
+    </div>
+
+    <!-- الجزء الأوسط: النص الجديد -->
+    <div class="nav-middle" style="font-weight: bold; font-size: 24px; color: #b8b6b6;">
+        إعداد / مستر زيزو
+    </div>
+
+    <!-- الجزء الأيسر: الأزرار -->
+    <div style="display:flex; gap:8px;">
+        <a href="index.html" class="btn-nav" style="background:#1e3a8a; padding: 10px 30px; color: white; text-decoration: none; border-radius: 5px;">
+            <i class="fa-solid fa-house"></i> الرئيسية
+        </a>
+    </div>
+</nav>
+
+    <div class="tool-bar">
+        <div class="controls-group">
+            <select id="grade-filter" onchange="loadFromFirebase()">
+                <option value="" disabled selected>اختر الصف لفلترة البيانات...</option>
+                <option value="KG1">KG1</option><option value="KG2">KG2</option>
+                <option value="الأول">الصف الأول</option><option value="الثاني">الصف الثاني</option>
+                <option value="الثالث">الصف الثالث</option><option value="الرابع">الصف الرابع</option>
+                <option value="الخامس">الصف الخامس</option><option value="السادس">الصف السادس</option>
+            </select>
+            <input type="text" id="search-student" class="search-input" placeholder="🔍 بحث عن تلميذ بالصف..." oninput="filterTableByName()">
+            <button class="btn btn-stats" onclick="toggleModal(true)"><i class="fa-solid fa-chart-pie"></i> إحصاء</button>
+            <button class="btn btn-golden" onclick="generateMasterCapsule()"><i class="fa-solid fa-bolt"></i> اعتماد إحصاء</button>
+        </div>
+        
+        <div class="controls-group">
+            <button class="btn btn-pass-all" onclick="markVisibleAsPass()"><i class="fa-solid fa-check-double"></i> الكل ناجح</button>
+            <button class="btn btn-promote" id="btn-promote" onclick="promoteStudents()"><i class="fa-solid fa-angles-up"></i> ترحيل الصف</button>
+            <div style="width: 1px; height: 25px; background: #cbd5e1; margin: 0 5px;"></div> <!-- فاصل -->
+            <input type="file" id="file-input" accept=".xlsx, .xls" onchange="handleFile(event)">
+            <button class="btn btn-import" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-file-import"></i> إكسيل</button>
+            <button class="btn btn-excel" onclick="customExportToExcel()"><i class="fa-solid fa-file-excel"></i> تصدير</button>
+            <button class="btn btn-save" onclick="saveAllToFirebase()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ</button>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="main-table">
+            <thead>
+                <tr>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="index" checked> م</div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="name" checked> اسم التلميذ</div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="class" checked> الفصل</div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="code" checked> الكود</div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="nid" checked> الرقم القومي</div></th>
+                    <th class="readonly-cell"><div class="th-content"><input type="checkbox" class="export-cb" data-key="dob" checked> الميلاد</div></th>
+                    <th class="readonly-cell"><div class="th-content"><input type="checkbox" class="export-cb" data-key="gender" checked> النوع</div></th>
+                    <th class="readonly-cell"><div class="th-content"><input type="checkbox" class="export-cb" data-key="age_october" checked> السن</div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="register_num" checked> السجل</div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="status" checked> القيد</div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="result" checked> النتيجة</div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="religion" checked> الديانة</div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="dmj" checked> الدمج</div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="transfer_type" checked> الانتماء</div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="father_mobile" checked> الموبايل</div></th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <tr><td colspan="15" style="text-align:center; padding:100px; color:#94a3b8; font-size:15px;">اختر الصف من القائمة أو استورد ملف إكسيل للبدء...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- النافذة المنبثقة للإحصائيات -->
+    <div class="modal-overlay" id="statsModal" onclick="if(event.target.id==='statsModal')toggleModal(false)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-chart-line"></i> التحليل الإحصائي للصف <span id="modal-grade-title"></span></h2>
+                <button onclick="toggleModal(false)" style="background:transparent; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4><i class="fa-solid fa-users" style="color:var(--info)"></i> القوة الإجمالية</h4>
+                        <div class="stat-line"><span>بنين:</span> <span class="stat-val" id="st-b">0</span></div>
+                        <div class="stat-line"><span>بنات:</span> <span class="stat-val" id="st-g">0</span></div>
+                        <div class="stat-line" style="border-top:1px solid #eee; padding-top:6px;"><span style="color:var(--danger)">الإجمالي:</span> <span class="stat-val" style="color:var(--danger)" id="st-all">0</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <h4><i class="fa-solid fa-star-and-crescent" style="color:var(--primary)"></i> ديانة (مسلم)</h4> 
+                        <div class="stat-line"><span>بنين:</span> <span class="stat-val" id="st-mb">0</span></div>
+                        <div class="stat-line"><span>بنات:</span> <span class="stat-val" id="st-mg">0</span></div>
+                        <div class="stat-line"><span>جملة:</span> <span class="stat-val" id="st-mall">0</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <h4><i class="fa-solid fa-cross" style="color:#475569"></i> ديانة (مسيحي)</h4>
+                        <div class="stat-line"><span>بنين:</span> <span class="stat-val" id="st-cb">0</span></div>
+                        <div class="stat-line"><span>بنات:</span> <span class="stat-val" id="st-cg">0</span></div>
+                        <div class="stat-line"><span>جملة:</span> <span class="stat-val" id="st-call">0</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <h4><i class="fa-solid fa-circle-info" style="color:#ea580c"></i> حالات وقيد</h4>
+                        <div class="stat-line"><span>منقول:</span> <span class="stat-val" id="st-mon">0</span></div>
+                        <div class="stat-line"><span>باقي:</span> <span class="stat-val" id="st-baq">0</span></div>
+                        <div class="stat-line"><span>دمج:</span> <span class="stat-val" id="st-dmj">0</span></div>
+                    </div>
+                </div>
+                <h4 style="margin-bottom:12px; border-bottom:2px solid #eee; padding-bottom:5px; color:var(--dark)"><i class="fa-solid fa-school-flag" style="color:var(--info)"></i> رادار كثافة الفصول</h4>
+                <div class="radar-grid" id="class-radar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="zizo-signature">إعداد مستر زيزو</div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac",
+            authDomain: "zizo-school.firebaseapp.com",
+            projectId: "zizo-school",
+            storageBucket: "zizo-school.firebasestorage.app",
+            messagingSenderId: "46708980196",
+            appId: "1:46708980196:web:9349e311d3a1bf5309eff1"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+
+        const stdGrades = ["KG1", "KG2", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
+
+        function sortStudents(arr) {
+            return arr.sort((a, b) => {
+                if (a.gender === "ذكر" && b.gender !== "ذكر") return -1;
+                if (a.gender !== "ذكر" && b.gender === "ذكر") return 1;
+                return (a.name || "").localeCompare((b.name || ""), 'ar');
+            });
+        }
+
+        // --- 1. جلب البيانات ---
+        function loadFromFirebase() {
+            const g = document.getElementById("grade-filter").value;
+            if(!g) return;
+            const tbody = document.getElementById("table-body");
+            tbody.innerHTML = "<tr><td colspan='15' style='text-align:center; padding:50px;'>⏳ جاري الاتصال بالسحابة وجلب بيانات الصف...</td></tr>";
+            document.getElementById("search-student").value = ""; // تصفير البحث عند تبديل الصف
+            
+            db.collection("students").where("grade", "==", g).get()
+            .then(snap => {
+                if(snap.empty) {
+                    tbody.innerHTML = `<tr><td colspan='15' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة في السحابة لهذا الصف (${g}). يمكنك استيراد ملف إكسيل.</td></tr>`;
+                    return;
+                }
+                let arr = [];
+                snap.forEach(d => {
+                    let studentData = d.data();
+                    if (studentData.transfer_type !== "محول من") {
+                        arr.push(studentData);
+                    }
+                });
+                arr = sortStudents(arr);
+                tbody.innerHTML = "";
+                arr.forEach((s, i) => renderRow(s, i + 1));
+            })
+            .catch(err => {
+                tbody.innerHTML = `<tr><td colspan='15' style='text-align:center; padding:40px; color:red;'>❌ المتصفح يمنع جلب البيانات: ${err.message}</td></tr>`;
+            });
+        }
+
+        // --- 2. البحث داخل الصف المعروض ---
+        function filterTableByName() {
+            let input = document.getElementById("search-student").value.toLowerCase();
+            let rows = document.querySelectorAll("#table-body tr");
+            rows.forEach(row => {
+                if(row.cells.length < 2) return;
+                let name = row.querySelector('[data-field="name"]').value.toLowerCase();
+                if(name.includes(input)) row.style.display = "";
+                else row.style.display = "none";
+            });
+        }
+
+        // --- 3. استيراد الإكسيل ---
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const workbook = XLSX.read(new Uint8Array(event.target.result), { type: 'array' });
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    let arr = [];
+                    
+                    jsonData.forEach(row => {
+                        const nid = String(row.nid || row["الرقم القومي"] || "");
+                        let dob = "", gen = "", age = "";
+                        if (nid.length === 14) {
+                            const y = (nid[0] === '3' ? '20' : '19') + nid.substring(1, 3);
+                            dob = `${y}-${nid.substring(3, 5)}-${nid.substring(5, 7)}`;
+                            gen = (parseInt(nid[12]) % 2 === 0) ? "أنثى" : "ذكر";
+                            age = (2024 - parseInt(y)) + " سنة";
+                        }
+                        
+                        let rawDmj = row.dmj || row["الدمج"] || "";
+                        let finalDmj = (rawDmj === "دمج" || rawDmj === "نعم") ? "دمج" : "";
+                        let tType = row.transfer_type || row["الانتماء"] || "أساسي";
+                        let cls = row.class || row["الفصل"] || "";
+                        let reg = row.register_num || row["السجل"] || "";
+
+                        if (tType === "محول من") { cls = ""; reg = ""; }
+
+                        arr.push({
+                            name: row.name || row["اسم التلميذ"] || "",
+                            class: cls,
+                            code: row.code || row["الكود"] || "",
+                            nid: nid, dob: dob, gender: gen, age_october: age,
+                            register_num: reg,
+                            status: row.status || row["القيد"] || "منقول",
+                            religion: row.religion || row["الديانة"] || "مسلم",
+                            dmj: finalDmj,
+                            transfer_type: tType,
+                            father_mobile: row.father_mobile || row["الموبايل"] || ""
+                        });
+                    });
+
+                    arr = sortStudents(arr);
+                    document.getElementById("table-body").innerHTML = "";
+                    arr.forEach((s, i) => renderRow(s, i + 1));
+                    alert("تم استيراد الملف! يرجى الضغط على (حفظ السحابة) لتسجيلهم.");
+                } catch(err) { alert("فشل قراءة الملف: " + err.message); }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // --- 4. رسم الصفوف (مع إضافة النتيجة) ---
+        function renderRow(d, i) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${i}</td>
+                <td><input class="editable-input" value="${d.name || ''}" data-field="name"></td>
+                <td><input class="editable-input" value="${d.class || ''}" data-field="class"></td>
+                <td><input class="editable-input" value="${d.code || ''}" data-field="code"></td>
+                <td><input class="editable-input" value="${d.nid || ''}" data-field="nid"></td>
+                <td class="readonly-cell"><input class="editable-input" value="${d.dob || ''}" data-field="dob" readonly></td>
+                <td class="readonly-cell"><input class="editable-input" value="${d.gender || ''}" data-field="gender" readonly></td>
+                <td class="readonly-cell"><input class="editable-input" value="${d.age_october || ''}" data-field="age_october" readonly></td>
+                <td><input class="editable-input" value="${d.register_num || ''}" data-field="register_num"></td>
+                <td><input class="editable-input" value="${d.status || 'منقول'}" data-field="status"></td>
+                <td>
+                    <select class="result-select" data-field="result">
+                        <option value="">-- اختر --</option>
+                        <option value="ناجح">ناجح</option>
+                        <option value="راسب">راسب</option>
+                    </select>
+                </td>
+                <td><input class="editable-input" value="${d.religion || 'مسلم'}" data-field="religion"></td>
+                <td><input class="editable-input" value="${d.dmj || ''}" data-field="dmj" placeholder="دمج/فارغ"></td>
+                <td><input class="editable-input" value="${d.transfer_type || 'أساسي'}" data-field="transfer_type"></td>
+                <td><input class="editable-input" value="${d.father_mobile || ''}" data-field="father_mobile"></td>
+            `;
+            document.getElementById("table-body").appendChild(tr);
+        }
+
+        // --- 5. تحديد الكل ناجح (يطبق على الظاهر في البحث فقط) ---
+        function markVisibleAsPass() {
+            let rows = document.querySelectorAll("#table-body tr");
+            let count = 0;
+            rows.forEach(row => {
+                if(row.cells.length < 2) return; 
+                // نطبق فقط على التلاميذ الظاهرين (لو كان هناك بحث نشط)
+                if(row.style.display !== "none") { 
+                    let select = row.querySelector('[data-field="result"]');
+                    if(select && !select.value) { // نضع ناجح لمن لم يتم اختيار نتيجته
+                        select.value = "ناجح";
+                        count++;
+                    }
+                }
+            });
+            if(count > 0) alert(`تم تحديد النتيجة "ناجح" لعدد (${count}) تلميذ من المعروضين.`);
+            else alert("جميع التلاميذ الظاهرين محددة نتيجتهم بالفعل!");
+        }
+
+       // --- دالة مساعدة: تعديل رقم الفصل بذكاء (مثال 1/2 تصبح 1/3) ---
+        function getNextClassName(oldClass, currentGradeText, nextGradeText) {
+            if(!oldClass) return "";
+            const gradeNums = {"KG1":"1", "KG2":"2", "الأول":"1", "الثاني":"2", "الثالث":"3", "الرابع":"4", "الخامس":"5", "السادس":"6"};
+            let currNum = gradeNums[currentGradeText];
+            let nextNum = gradeNums[nextGradeText];
+            
+            if(currNum && nextNum) {
+                let parts = oldClass.split('/');
+                if(parts.length === 2) {
+                    // إذا كان الرقم الأول هو الذي يعبر عن الصف (مثال: 2/1 تصبح 3/1)
+                    if(parts[0] === currNum) return nextNum + '/' + parts[1];
+                    // إذا كان الرقم الثاني هو الذي يعبر عن الصف (مثال: 1/2 تصبح 1/3)
+                    if(parts[1] === currNum) return parts[0] + '/' + nextNum;
+                }
+            }
+            return oldClass; // إعادة الاسم كما هو لو لم يتعرف على النمط
+        }
+
+        // --- 6. الترحيل الذكي للصف (مع الحذف النهائي للخريج) ---
+        async function promoteStudents() {
+            const currentGrade = document.getElementById("grade-filter").value;
+            if (!currentGrade) { alert("اختر الصف أولاً من القائمة!"); return; }
+
+            const rows = document.querySelectorAll("#table-body tr");
+            if(rows.length === 0 || rows[0].cells.length < 2) return;
+
+            let missingCount = 0;
+            let processCount = 0;
+            let deleteCount = 0;
+            const nextGradeMap = {"KG1":"KG2", "KG2":"الأول", "الأول":"الثاني", "الثاني":"الثالث", "الثالث":"الرابع", "الرابع":"الخامس", "الخامس":"السادس", "السادس":"خريج"};
+
+            // فحص وجود نتائج فارغة أولاً
+            rows.forEach(row => {
+                if(row.cells.length > 2) {
+                    if(!row.querySelector('[data-field="result"]').value) missingCount++;
+                }
+            });
+
+            if(missingCount > 0) {
+                if(!confirm(`تنبيه: يوجد (${missingCount}) تلميذ لم يتم اختيار نتيجتهم.\nهل تريد تجاهلهم وترحيل الباقي فقط؟`)) return;
+            } else {
+                if(!confirm(`هل أنت متأكد من ترحيل جميع تلاميذ الصف (${currentGrade})؟\n\n- الناجح سيصعد للصف الأعلى مع تعديل فصله.\n- الراسب (باقي) سيصعد حسب القانون وتتغير حالته لمنقول.\n- الراسب (منقول) سيبقى في صفه وتتغير حالته لباقي.\n- خريجو الصف السادس سيتم حذفهم نهائياً من المنظومة.`)) return;
+            }
+
+            const btn = document.getElementById("btn-promote");
+            const oldText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الترحيل...`;
+            
+            let batch = db.batch();
+
+            rows.forEach(row => {
+                if(row.cells.length < 2) return;
+                
+                let s = { grade: currentGrade };
+                const inputs = row.querySelectorAll("input, select");
+                inputs.forEach(i => {
+                    if(i.getAttribute("data-field")) s[i.getAttribute("data-field")] = i.value;
+                });
+
+                if(!s.result || !s.code) return; 
+
+                let shouldDelete = false;
+
+                // 💡 تطبيق قوانين الترحيل والحذف
+                if(s.result === "ناجح") {
+                    if (currentGrade === "السادس") {
+                        shouldDelete = true; // خريج ناجح يُحذف
+                    } else {
+                        s.grade = nextGradeMap[currentGrade];
+                        s.status = "منقول";
+                        s.class = getNextClassName(s.class, currentGrade, s.grade);
+                    }
+                } 
+                else if (s.result === "راسب") {
+                    if(s.status === "باقي") { // راسب للمرة الثانية (بقوة القانون)
+                        if (currentGrade === "السادس") {
+                            shouldDelete = true; // يُحذف أيضاً لتخطيه السن أو تحويله لمهني
+                        } else {
+                            s.grade = nextGradeMap[currentGrade];
+                            s.status = "منقول";
+                            s.class = getNextClassName(s.class, currentGrade, s.grade);
+                        }
+                    } else { // راسب منقول
+                        s.status = "باقي";
+                        // الصف والفصل يبقيان كما هما
+                    }
+                }
+
+                if (shouldDelete) {
+                    batch.delete(db.collection("students").doc(String(s.code)));
+                    deleteCount++;
+                } else {
+                    s.last_result = s.result;
+                    delete s.result; // مسح حقل النتيجة بعد الترحيل
+                    batch.set(db.collection("students").doc(String(s.code)), s, { merge: true });
+                    processCount++;
+                }
+            });
+
+            if (processCount > 0 || deleteCount > 0) {
+                await batch.commit();
+                alert(`🚀 تمت عملية الترحيل بنجاح!\n- تم تحديث ونقل: (${processCount}) تلميذ.\n- تم طي قيد وحذف: (${deleteCount}) خريج من المنظومة.`);
+                btn.innerHTML = oldText;
+                loadFromFirebase(); 
+            } else {
+                alert("لم يتم العثور على أي تلميذ جاهز للترحيل.");
+                btn.innerHTML = oldText;
+            }
+        }
+
+        // --- 7. حفظ السحابة العادي (بدون ترحيل) ---
+        async function saveAllToFirebase() {
+            const g = document.getElementById("grade-filter").value;
+            if (!g) { alert("اختر الصف أولاً!"); return; }
+            const rows = document.querySelectorAll("#table-body tr");
+            if(rows.length === 0 || rows[0].cells.length < 2) return;
+
+            let batch = db.batch();
+            let count = 0;
+            rows.forEach(row => {
+                // نجمع القيم من الـ input والـ select
+                const ins = row.querySelectorAll("input, select");
+                if (ins.length > 0) {
+                    let s = { grade: g };
+                    ins.forEach(i => {
+                        if(i.getAttribute("data-field")) s[i.getAttribute("data-field")] = i.value;
+                    });
+                    if (s.code) {
+                        batch.set(db.collection("students").doc(String(s.code)), s, { merge: true });
+                        count++;
+                    }
+                }
+            });
+            if (count > 0) {
+                await batch.commit();
+                alert(`✅ تم حفظ وتحديث بيانات ${count} تلميذ في السحابة بنجاح!`);
+                loadFromFirebase();
+            }
+        }
+
+        // --- 8. التصدير للإكسيل ---
+        function customExportToExcel() {
+    const rows = document.querySelectorAll("#table-body tr");
+    
+    // التحقق من وجود بيانات أصلاً في الجدول
+    if(rows.length === 0 || rows[0].cells.length < 2) {
+        alert("لا توجد بيانات لتصديرها! يرجى اختيار الصف أو استيراد البيانات أولاً.");
+        return;
+    }
+
+    const checks = document.querySelectorAll('.export-cb:checked');
+    if(checks.length === 0) { 
+        alert("اختر عموداً واحداً على الأقل من رأس الجدول!"); 
+        return; 
+    }
+    
+    // جلب أسماء ومفاتيح الأعمدة المحددة من علامات الصح
+    const selectedCols = Array.from(checks).map(cb => ({ 
+        key: cb.getAttribute('data-key'), 
+        label: cb.parentElement.textContent.trim() 
+    }));
+    
+    let data = [];
+    rows.forEach(r => {
+        // تخطي رسالة "اختر الصف" وتخطي التلاميذ المخفيين بسبب البحث
+        if (r.cells.length < 2 || r.style.display === "none") return;
+
+        let obj = {};
+        selectedCols.forEach(c => {
+            if (c.key === 'index') {
+                obj[c.label] = r.cells[0].innerText.trim();
+            } else {
+                let el = r.querySelector(`[data-field="${c.key}"]`);
+                obj[c.label] = el ? el.value : "";
+            }
+        });
+        data.push(obj);
+    });
+
+    if (data.length === 0) {
+        alert("لا يوجد تلاميذ متطابقون مع عملية البحث الحالية لتصديرهم.");
+        return;
+    }
+
+    try {
+        // 1. تحويل البيانات إلى شيت إكسيل (Worksheet)
+        const ws = XLSX.utils.json_to_sheet(data);
+        
+        // 2. جعل اتجاه الشيت في الإكسيل من اليمين لليسار (RTL) ليتوافق مع العربي
+        if(!ws['!views']) ws['!views'] = [];
+        ws['!views'].push({ rightToLeft: true });
+
+        // 3. إنشاء كتاب عمل جديد (Workbook) وإضافة الشيت داخله (هذا هو الجزء الذي كان يسبب المشكلة)
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "بيانات التلاميذ");
+
+        // 4. استخراج اسم الملف وتصديره
+        let gradeName = document.getElementById("grade-filter").value;
+        let fileName = gradeName ? `كشف_تلاميذ_الصف_${gradeName}.xlsx` : `كشف_تلاميذ_مخصص.xlsx`;
+
+        XLSX.writeFile(wb, fileName);
+    } catch(err) {
+        alert("حدث خطأ أثناء التصدير: " + err.message);
+    }
+}
+
+        // --- 9. الإحصاء السريع (لم يتأثر بالإضافات) ---
+        function calculateStats() {
+            let st = {tb:0, tg:0, mb:0, mg:0, cb:0, cg:0, mon:0, baq:0, dmj:0, cls:{}};
+            
+            document.querySelectorAll("#table-body tr").forEach(r => {
+                if(r.cells.length < 2) return;
+                const nameInp = r.querySelector('[data-field="name"]');
+                if(!nameInp || !nameInp.value.trim()) return; 
+
+                const trans = r.querySelector('[data-field="transfer_type"]').value;
+                if (trans === "محول من") return;
+
+                const gen = r.querySelector('[data-field="gender"]').value; 
+                const rel = r.querySelector('[data-field="religion"]').value;
+                const sta = r.querySelector('[data-field="status"]').value; 
+                const d = r.querySelector('[data-field="dmj"]').value; 
+                const c = r.querySelector('[data-field="class"]').value;
+
+                if(gen === "ذكر") st.tb++; else st.tg++;
+                if(rel.includes("مسلم")){ if(gen === "ذكر") st.mb++; else st.mg++; } else { if(gen === "ذكر") st.cb++; else st.cg++; }
+                if(sta === "منقول") st.mon++; else st.baq++; 
+                if(d === "دمج") st.dmj++;
+
+                if(c){ 
+                    if(!st.cls[c]) st.cls[c] = {b:0, g:0}; 
+                    if(gen === "ذكر") st.cls[c].b++; else st.cls[c].g++; 
+                }
+            });
+
+            document.getElementById("st-b").innerText = st.tb; document.getElementById("st-g").innerText = st.tg; document.getElementById("st-all").innerText = st.tb + st.tg;
+            document.getElementById("st-mb").innerText = st.mb; document.getElementById("st-mg").innerText = st.mg; document.getElementById("st-mall").innerText = st.mb + st.mg;
+            document.getElementById("st-cb").innerText = st.cb; document.getElementById("st-cg").innerText = st.cg; document.getElementById("st-call").innerText = st.cb + st.cg;
+            document.getElementById("st-mon").innerText = st.mon; document.getElementById("st-baq").innerText = st.baq; document.getElementById("st-dmj").innerText = st.dmj;
+
+            const radar = document.getElementById("class-radar"); radar.innerHTML = "";
+            Object.keys(st.cls).sort().forEach(c => {
+                const tot = st.cls[c].b + st.cls[c].g; 
+                let density = tot > 50 ? "density-high" : (tot >= 45 ? "density-mid" : "density-low");
+                radar.innerHTML += `<div class="class-chip ${density}"><div class="class-name">فصل <span dir="ltr">${c}</span></div><div class="class-details"><span>بنين: ${st.cls[c].b}</span><span>بنات: ${st.cls[c].g}</span></div><div class="class-total">المجموع: ${tot}</div></div>`;
+            });
+        }
+
+        // --- 10. كبسولة الإحصاء (تتجاهل الخريجين والمحولين بشكل تلقائي) ---
+        async function generateMasterCapsule() {
+            const btn = document.querySelector('.btn-golden');
+            const oldText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري فحص السحابة...`;
+            
+            try {
+                const snap = await db.collection("students").get();
+                if (snap.size === 0) {
+                    alert("⚠️ تنبيه حرج: قاعدة بيانات التلاميذ فارغة!");
+                    btn.innerHTML = oldText; return;
+                }
+
+                let capsule = { updatedAt: new Date().toLocaleDateString('ar-EG'), general: {}, gradesBreakdown: {} };
+                stdGrades.forEach(g => {
+                    capsule.general[g] = { mb:0, mg:0, cb:0, cg:0, db:0, dg:0, tb:0, tg:0, cSet: new Set() };
+                    capsule.gradesBreakdown[g] = { tb:0, tg:0, mb:0, mg:0, cb:0, cg:0, mon:0, baq:0, dmj:0, trans:0, cls:{} };
+                });
+                let grand = { mb:0, mg:0, cb:0, cg:0, db:0, dg:0, tb:0, tg:0, cSet: new Set() };
+                let matchedCount = 0;
+
+                snap.forEach(doc => {
+                    const s = doc.data();
+                    if(s.transfer_type === "محول من" || s.grade === "خريج") return; // 💡 استبعاد خريجي السادس والمحولين
+
+                    let rawG = String(s.grade || "").trim();
+                    let g = null;
+                    if(rawG.includes("1") || rawG.includes("الاول") || rawG.includes("الأول")) g = "الأول";
+                    else if(rawG.includes("2") || rawG.includes("الثاني") || rawG.includes("الثانى")) g = "الثاني";
+                    else if(rawG.includes("3") || rawG.includes("الثالث")) g = "الثالث";
+                    else if(rawG.includes("4") || rawG.includes("الرابع")) g = "الرابع";
+                    else if(rawG.includes("5") || rawG.includes("الخامس")) g = "الخامس";
+                    else if(rawG.includes("6") || rawG.includes("السادس")) g = "السادس";
+                    else if(rawG.toUpperCase().includes("KG1")) g = "KG1";
+                    else if(rawG.toUpperCase().includes("KG2")) g = "KG2";
+
+                    if(!g || !capsule.general[g]) return;
+                    matchedCount++;
+
+                    const isB = (s.gender || "").includes("ذكر");
+                    const isM = (s.religion || "").includes("مسلم");
+                    const isD = (s.dmj === "دمج");
+                    const clsName = s.class || "بدون";
+
+                    if(s.class) { capsule.general[g].cSet.add(s.class); grand.cSet.add(g+s.class); }
+                    if(isB){ capsule.general[g].tb++; grand.tb++; if(isM){capsule.general[g].mb++;grand.mb++}else{capsule.general[g].cb++;grand.cb++} if(isD){capsule.general[g].db++;grand.db++} }
+                    else { capsule.general[g].tg++; grand.tg++; if(isM){capsule.general[g].mg++;grand.mg++}else{capsule.general[g].cg++;grand.cg++} if(isD){capsule.general[g].dg++;grand.dg++} }
+
+                    let gb = capsule.gradesBreakdown[g];
+                    if(isB) gb.tb++; else gb.tg++;
+                    if(isM){if(isB)gb.mb++;else gb.mg++}else{if(isB)gb.cb++;else gb.cg++}
+                    if(s.status==="منقول")gb.mon++; else if(s.status==="باقي")gb.baq++;
+                    if(isD) gb.dmj++; if(s.transfer_type==="محول إلى") gb.trans++;
+                    if(!gb.cls[clsName]) gb.cls[clsName] = {b:0, g:0};
+                    if(isB) gb.cls[clsName].b++; else gb.cls[clsName].g++;
+                });
+
+                stdGrades.forEach(g => { capsule.general[g].cCount = capsule.general[g].cSet.size; delete capsule.general[g].cSet; });
+                grand.cCount = grand.cSet.size; delete grand.cSet;
+                capsule.general["إجمالي"] = grand;
+
+                await db.collection("system_capsules").doc("stats_2026").set(capsule);
+                btn.innerHTML = oldText;
+                alert(`🚀 تم ضغط وحفظ إحصاء (${matchedCount}) تلميذ في الكبسولة بنجاح!`);
+            } catch(err) { btn.innerHTML = oldText; alert("فشل الاعتماد: " + err.message); }
+        }
+    </script>
+</body>
+</html>

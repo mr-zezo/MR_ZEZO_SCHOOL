@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة الشكاوى والمقترحات - مدرسة الشهيد أشرف حبيب</title>
+    
+    <!-- الخطوط والأيقونات -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root { 
+            --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; 
+            --save-btn: #4f46e5; --danger: #be123c; --warning: #d97706; --success: #16a34a;
+        }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px 15px; }
+
+        /* الترويسة */
+        .school-header { text-align: center; margin-bottom: 25px; }
+        .school-header i { font-size: 45px; color: var(--primary); margin-bottom: 10px; }
+        .school-header h1 { font-size: 24px; font-weight: 900; color: var(--dark); margin-bottom: 5px; }
+        .school-header p { font-size: 15px; color: #475569; font-weight: 700; }
+        .designer-credit { display: inline-block; background: #e0e7ff; color: var(--primary); padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: 900; margin-top: 10px; border: 1px dashed #bfdbfe; }
+
+        /* الحاوية الرئيسية */
+        .main-card { background: white; width: 100%; max-width: 600px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; border-top: 6px solid var(--primary); }
+        
+        /* التبويبات (Tabs) */
+        .tabs { display: flex; background: #f1f5f9; border-bottom: 2px solid #e2e8f0; }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: transparent; font-size: 15px; font-weight: 900; color: #64748b; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { background: white; color: var(--primary); border-bottom: 3px solid var(--primary); }
+        .tab-btn i { margin-left: 5px; }
+
+        /* الأقسام */
+        .tab-content { padding: 25px 20px; display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* الحقول */
+        .form-group { margin-bottom: 15px; position: relative; }
+        .form-group label { display: block; font-size: 13px; font-weight: 800; color: var(--dark); margin-bottom: 6px; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; font-weight: 700; outline: none; transition: 0.2s; background: #fcfcfc; }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
+        .form-group input.error, .form-group textarea.error { border-color: var(--danger); background: #fef2f2; box-shadow: 0 0 0 3px rgba(190, 18, 60, 0.1); }
+        .form-group textarea { resize: vertical; min-height: 120px; }
+        .error-text { color: var(--danger); font-size: 11px; font-weight: 700; margin-top: 5px; display: none; }
+
+        /* الأزرار */
+        .btn-submit { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; }
+        .btn-submit:hover { background: #1e40af; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(30,58,138,0.2); }
+        .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* نافذة النجاح (Modal) */
+        .success-modal { position: fixed; inset: 0; background: rgba(15,23,42,0.85); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px; backdrop-filter: blur(5px); }
+        .success-content { background: white; padding: 30px; border-radius: 20px; text-align: center; max-width: 400px; width: 100%; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .success-icon { font-size: 60px; color: var(--success); margin-bottom: 15px; }
+        .success-content h3 { font-size: 20px; color: var(--dark); margin-bottom: 10px; font-weight: 900; }
+        .code-box { background: #f8fafc; border: 2px dashed var(--primary); padding: 15px; font-size: 28px; font-weight: 900; letter-spacing: 3px; color: var(--primary); border-radius: 10px; margin: 20px 0; font-family: Arial, sans-serif; }
+        .btn-close-modal { background: var(--dark); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; width: 100%; font-size: 15px; }
+
+        /* منطقة عرض نتيجة التتبع */
+        #track-result { margin-top: 25px; display: none; border-top: 2px dashed #cbd5e1; padding-top: 20px; }
+        .status-badge { display: inline-block; padding: 6px 15px; border-radius: 20px; font-size: 13px; font-weight: 900; margin-bottom: 15px; }
+        .status-new { background: #fee2e2; color: var(--danger); border: 1px solid #fecaca; }
+        .status-replied { background: #dcfce7; color: var(--success); border: 1px solid #bbf7d0; }
+        
+        .result-box { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 15px; }
+        .result-box h4 { font-size: 13px; color: #64748b; margin-bottom: 5px; font-weight: 800; }
+        .result-box p { font-size: 15px; font-weight: 700; color: var(--dark); line-height: 1.6; }
+
+        .reply-box { background: #eff6ff; border: 1px solid #bfdbfe; border-right: 4px solid var(--info); }
+        .reply-box h4 { color: var(--info); }
+    </style>
+</head>
+<body>
+
+    <div class="school-header">
+        <i class="fa-solid fa-school-flag"></i>
+        <h1>مدرسة الشهيد أشرف حبيب</h1>
+        <p>بوابة الشكاوى والمقترحات الإلكترونية</p>
+        <div class="designer-credit">إعداد وتصميم: أ / عبدالعزيز لولح</div>
+    </div>
+
+    <div class="main-card">
+        <!-- التبويبات -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('submit')" id="btn-tab-submit"><i class="fa-solid fa-pen-to-square"></i> تقديم شكوى</button>
+            <button class="tab-btn" onclick="switchTab('track')" id="btn-tab-track"><i class="fa-solid fa-magnifying-glass"></i> متابعة شكوى</button>
+        </div>
+
+        <!-- قسم التقديم -->
+        <div id="tab-submit" class="tab-content active">
+            <div style="display: flex; gap: 10px;">
+                <div class="form-group" style="flex: 2;"><label>اسم التلميذ بالكامل</label><input type="text" id="stu_name" placeholder="اكتب اسم التلميذ هنا..."></div>
+                <div class="form-group" style="flex: 1;"><label>الصف</label><input type="text" id="stu_grade" placeholder="مثال: الرابع"></div>
+                <div class="form-group" style="flex: 1;"><label>الفصل</label><input type="text" id="stu_class" placeholder="مثال: 4/2"></div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label>اسم مقدم الشكوى (ولي الأمر) <span style="color:var(--danger)">*</span></label>
+                    <input type="text" id="parent_name" placeholder="اكتب اسمك هنا بوضوح...">
+                    <div class="error-text" id="err_parent_name">يجب إدخال اسم ولي الأمر بشكل صحيح.</div>
+                </div>
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label>رقم الموبايل للتواصل <span style="color:var(--danger)">*</span></label>
+                    <input type="tel" id="parent_phone" placeholder="مثال: 01xxxxxxxxx" maxlength="11" style="font-family: Arial; text-align: left; direction: ltr;">
+                    <div class="error-text" id="err_parent_phone">يجب إدخال رقم موبايل مصري صحيح (11 رقم).</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>موضوع الشكوى أو المقترح <span style="color:var(--danger)">*</span></label>
+                <textarea id="comp_text" placeholder="اكتب تفاصيل الشكوى أو المقترح بوضوح هنا..."></textarea>
+                <div class="error-text" id="err_comp_text">لا يمكن إرسال شكوى فارغة.</div>
+            </div>
+            
+            <button class="btn-submit" id="btn-send" onclick="submitComplaint()">
+                <i class="fa-solid fa-paper-plane"></i> إرسال الشكوى للإدارة
+            </button>
+        </div>
+
+        <!-- قسم المتابعة -->
+        <div id="tab-track" class="tab-content">
+            <div class="form-group">
+                <label style="text-align: center; font-size: 15px; margin-bottom: 15px; color: var(--primary);">الرجاء إدخال رقم الشكوى الخاص بك للمتابعة</label>
+                <input type="number" id="track_code" placeholder="أدخل الرقم المكون من 10 أرقام..." style="font-family: Arial; text-align: center; font-size: 20px; letter-spacing: 2px;">
+            </div>
+            <button class="btn-submit" id="btn-search" onclick="trackComplaint()">
+                <i class="fa-solid fa-search"></i> بحث وعرض النتيجة
+            </button>
+
+            <!-- منطقة عرض النتيجة -->
+            <div id="track-result"></div>
+        </div>
+    </div>
+
+    <!-- نافذة النجاح بعد الإرسال -->
+    <div class="success-modal" id="successModal">
+        <div class="success-content">
+            <i class="fa-solid fa-circle-check success-icon"></i>
+            <h3>تم استلام شكواك بنجاح</h3>
+            <p style="color: #64748b; font-weight: 600; font-size: 14px;">يرجى الاحتفاظ بهذا الرقم السري لمتابعة حالة الشكوى والرد عليها من قبل الإدارة.</p>
+            <div class="code-box" id="generated-code">--</div>
+            <button class="btn-close-modal" onclick="closeModalAndReset()">حسناً، فهمت</button>
+        </div>
+    </div>
+
+    <script>
+        // ================= إعدادات Firebase =================
+        const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
+        firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
+
+        // التبديل بين التبويبات
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`btn-tab-${tabId}`).classList.add('active');
+            document.getElementById('track-result').style.display = 'none'; 
+        }
+
+        // خوارزمية توليد كود الشكوى
+        function generateShortCode() {
+            const now = new Date();
+            const yy = String(now.getFullYear()).slice(-2); 
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            return `${yy}${mm}${dd}${hh}${min}`;
+        }
+
+        // إزالة رسائل الخطأ عند الكتابة
+        document.querySelectorAll('input, textarea').forEach(el => {
+            el.addEventListener('input', function() {
+                this.classList.remove('error');
+                const errBox = document.getElementById(`err_${this.id}`);
+                if(errBox) errBox.style.display = 'none';
+            });
+        });
+
+        // ================= إرسال الشكوى والتحقق القوي (Validation) =================
+        async function submitComplaint() {
+            // جلب البيانات
+            const stu_name = document.getElementById("stu_name").value.trim();
+            const stu_grade = document.getElementById("stu_grade").value.trim();
+            const stu_class = document.getElementById("stu_class").value.trim();
+            const parent_name = document.getElementById("parent_name").value.trim();
+            const parent_phone = document.getElementById("parent_phone").value.trim();
+            const comp_text = document.getElementById("comp_text").value.trim();
+
+            let isValid = true;
+
+            // 1. التحقق من اسم ولي الأمر (ألا يكون فارغاً أو حرفاً واحداً)
+            if(parent_name.length < 3) {
+                document.getElementById("parent_name").classList.add('error');
+                document.getElementById("err_parent_name").style.display = 'block';
+                isValid = false;
+            }
+
+            // 2. التحقق الصارم من رقم الموبايل (مصر: يبدأ بـ 01 ومكون من 11 رقم)
+            const phoneRegex = /^01[0125][0-9]{8}$/;
+            if(!phoneRegex.test(parent_phone)) {
+                document.getElementById("parent_phone").classList.add('error');
+                document.getElementById("err_parent_phone").style.display = 'block';
+                isValid = false;
+            }
+
+            // 3. التحقق من نص الشكوى
+            if(comp_text.length < 5) {
+                document.getElementById("comp_text").classList.add('error');
+                document.getElementById("err_comp_text").style.display = 'block';
+                isValid = false;
+            }
+
+            // منع الإرسال إذا كان هناك خطأ
+            if(!isValid) return;
+
+            const btn = document.getElementById("btn-send");
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الإرسال...`;
+
+            try {
+                let finalCode = generateShortCode();
+                let docCheck = await db.collection("complaints").doc(finalCode).get();
+                if(docCheck.exists) { finalCode = finalCode + Math.floor(Math.random() * 10); }
+
+                const complaintData = {
+                    code: finalCode,
+                    student_name: stu_name,
+                    grade: stu_grade,
+                    class_name: stu_class,
+                    parent_name: parent_name,
+                    phone: parent_phone,
+                    text: comp_text,
+                    status: "جديدة", 
+                    admin_reply: "",
+                    submit_date: new Date().toLocaleString('ar-EG'),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+                };
+
+                await db.collection("complaints").doc(finalCode).set(complaintData);
+
+                document.getElementById("generated-code").innerText = finalCode;
+                document.getElementById("successModal").style.display = "flex";
+
+            } catch (error) {
+                alert("حدث خطأ في الإرسال.\n" + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> إرسال الشكوى للإدارة`;
+            }
+        }
+
+        function closeModalAndReset() {
+            document.getElementById("successModal").style.display = "none";
+            document.getElementById("comp_text").value = "";
+            // لا نفرغ باقي الخانات تيسيراً على ولي الأمر إذا أراد إرسال شكوى أخرى
+        }
+
+        // ================= متابعة الشكوى =================
+        async function trackComplaint() {
+            const trackCode = document.getElementById("track_code").value.trim();
+            if(!trackCode) { alert("الرجاء إدخال رقم الشكوى الخاص بك أولاً."); return; }
+
+            const btn = document.getElementById("btn-search");
+            const resArea = document.getElementById("track-result");
+            
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري البحث...`;
+            resArea.style.display = "none";
+
+            try {
+                const docRef = await db.collection("complaints").doc(trackCode).get();
+                
+                if(!docRef.exists) {
+                    alert("عفواً، لا توجد شكوى مسجلة بهذا الرقم. تأكد من الرقم وأعد المحاولة.");
+                } else {
+                    const data = docRef.data();
+                    let badgeHtml = "";
+                    let replyHtml = "";
+
+                    if(data.status === "تم الرد") {
+                        badgeHtml = `<div class="status-badge status-replied"><i class="fa-solid fa-check-double"></i> تم الرد على الشكوى</div>`;
+                        replyHtml = `
+                            <div class="result-box reply-box">
+                                <h4><i class="fa-solid fa-comment-dots"></i> رد إدارة المدرسة:</h4>
+                                <p>${data.admin_reply}</p>
+                            </div>
+                        `;
+                    } else {
+                        badgeHtml = `<div class="status-badge status-new"><i class="fa-solid fa-clock"></i> الشكوى قيد الفحص</div>`;
+                        replyHtml = `
+                            <div class="result-box">
+                                <h4><i class="fa-solid fa-circle-info"></i> حالة الرد:</h4>
+                                <p style="color:#64748b;">لم يتم الرد بعد. الإدارة تعمل على فحص الشكوى وسيتم إدراج الرد هنا قريباً.</p>
+                            </div>
+                        `;
+                    }
+
+                    resArea.innerHTML = `
+                        ${badgeHtml}
+                        <div class="result-box">
+                            <h4>نص شكواك المقدمة:</h4>
+                            <p>${data.text}</p>
+                        </div>
+                        ${replyHtml}
+                    `;
+                    resArea.style.display = "block";
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء البحث: " + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-search"></i> بحث وعرض النتيجة`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>بطاقة معلم الأجر - نظام مستر زيزو</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- ExcelJS & Supabase -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root { 
+            --primary: #334155; --dark: #0f172a; --bg: #f8fafc; 
+            --save-btn: #334155; --danger: #be123c; --warning: #d97706; --info: #0284c7; --success: #16a34a;
+        }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); padding: 10px 20px; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
+
+        .top-navigation { width: 100%; max-width: 1150px; background: var(--dark); padding: 12px 20px; border-radius: 12px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary); }
+        .nav-title { font-size: 16px; font-weight: 900; color: #ededee; display: flex; align-items: center; gap: 10px; }
+        .zizo-badge { background: #a80f04; color: #fff; padding: 5px 25px; border-radius: 20px; font-size: 13px; font-weight: 900; border: 1px solid #080805; }
+        .btn-nav { text-decoration: none; color: white; background: #02238f; padding: 6px 20px; border-radius: 6px; font-size: 13px; font-weight: 700; transition: 0.2s; }
+        .btn-nav:hover { background: var(--primary); }
+
+        .main-layout { display: flex; width: 100%; max-width: 1150px; gap: 15px; align-items: flex-start; }
+        .card-container { flex-grow: 1; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 6px solid var(--primary); }
+        .side-actions { width: 240px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid var(--dark); position: sticky; top: 15px; display: flex; flex-direction: column; gap: 10px; }
+
+        /* البحث */
+        .search-section { background: #f5f3ff; padding: 15px; border-radius: 12px; border: 2px solid #c4b5fd; margin-bottom: 20px; position: relative; }
+        .search-box { position: relative; }
+        .search-box input { width: 100%; padding: 12px 45px 12px 15px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px; font-weight: 700; outline: none; }
+        .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--primary); font-size: 18px; }
+        #search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 0 0 8px 8px; z-index: 1000; max-height: 400px; overflow-y: auto; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .result-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-weight: 700; display: flex; justify-content: space-between; }
+        .result-item:hover { background-color: var(--primary); color: white; }
+
+        /* الصورة الشخصية */
+        .profile-header { display: flex; gap: 20px; align-items: center; background: #f8fafc; padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        .avatar-container { position: relative; width: 90px; height: 90px; flex-shrink: 0; }
+        .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; }
+        .avatar-upload-btn { position: absolute; bottom: -5px; left: -5px; background: var(--info); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; }
+        .avatar-upload-btn:hover { background: var(--primary); transform: scale(1.1); }
+        .profile-info { flex-grow: 1; display: grid; grid-template-columns: 2fr 1fr; gap: 15px; align-items: center; }
+
+        /* الحقول */
+        .data-section { margin-bottom: 25px; }
+        .section-title { font-size: 15px; font-weight: 900; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f5f3ff; padding-bottom: 5px; }
+        .grid-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .field-group { display: flex; flex-direction: column; gap: 4px; }
+        .field-group label { font-size: 13px; font-weight: 800; color: #475569; }
+        .field-group input, .field-group select { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; font-weight: 700; outline: none; background: #fcfcfc; color: var(--dark); transition: 0.2s; }
+        .field-group input:focus, .field-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1); }
+        .readonly-field { background: #f1f5f9 !important; color: var(--primary); font-weight: 800; cursor: not-allowed; }
+
+        /* المرفقات (PDF) */
+        .file-controls-wrapper { display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap; }
+        .split-btn-group { display: flex; align-items: stretch; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-radius: 10px; overflow: hidden; transition: 0.3s; flex: 1; min-width: 200px; max-width: 300px; }
+        .btn-view-file { background: var(--primary); color: white; border: none; padding: 10px 15px; font-family: 'Cairo'; font-weight: 900; font-size: 13px; cursor: pointer; flex-grow: 1; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn-view-file:hover { background: #6d28d9; }
+        .btn-view-file.empty { background: #94a3b8; color: #f1f5f9; cursor: not-allowed; }
+        .btn-view-file.empty:hover { background: #94a3b8; }
+        .btn-upload-file { background: var(--warning); color: #000; border: none; padding: 10px 15px; cursor: pointer; font-size: 16px; border-right: 2px solid rgba(0,0,0,0.1); transition: 0.2s; }
+        .btn-upload-file:hover { background: #b45309; color: white; }
+
+        /* الشهور التفاعلية */
+        .months-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px dashed #cbd5e1; }
+        .month-box { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; text-align: center; }
+        .month-label { display: block; font-size: 13px; font-weight: 900; color: var(--primary); margin-bottom: 5px; transition: 0.2s; padding: 4px; border-radius: 4px; text-decoration: none; }
+        .month-label.has-file { color: #16a34a; cursor: pointer; background: #dcfce7; border: 1px dashed #16a34a; }
+        .month-label.has-file:hover { background: #bbf7d0; transform: translateY(-2px); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .month-box input { width: 100%; padding: 8px; text-align: center; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 900; font-family: Arial; font-size: 16px; outline: none; color: var(--danger); background: #f8fafc; }
+
+        .btn-action { border: none; padding: 12px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; width: 100%; }
+        .btn-add { background: var(--success); } .btn-update { background: var(--primary); } .btn-delete { background: var(--danger); } .btn-clear { background: #64748b; }
+        .btn-abs { background: var(--dark); } .btn-schedule { background: var(--info); } .btn-calc { background: #0ea5e9; } 
+        .btn-excel-gen { background: #16a34a; color: white; border: 2px solid #14532d; font-size: 14px; }
+        .btn-action:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        /* النوافذ المنبثقة */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: #f8fafc; width: 100%; max-width: 950px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 15px; overflow-y: auto; flex-grow: 1; }
+        .modal-footer { padding: 15px; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: center; gap: 15px; }
+
+        .abs-top-bar { display: flex; gap: 15px; align-items: center; background: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #e2e8f0; flex-wrap: wrap; }
+        .teacher-selector { flex-grow: 1; min-width: 250px; }
+        .teacher-selector label { font-size: 12px; font-weight: 900; color: var(--primary); display: block; margin-bottom: 5px; }
+        .teacher-selector select { width: 100%; padding: 8px; border-radius: 6px; border: 2px solid var(--primary); font-weight: 900; font-size: 14px; outline: none; background: #f5f3ff; color: var(--dark); cursor: pointer; }
+        
+        .abs-total-badge { background: var(--danger); color: white; padding: 8px 20px; border-radius: 10px; text-align: center; min-width: 120px; }
+        .abs-total-badge span { display: block; font-size: 10px; font-weight: bold; opacity: 0.9; }
+        .abs-total-badge b { font-size: 22px; line-height: 1; }
+        .abs-months-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+        .abs-month-card { background: white; border-radius: 10px; padding: 12px 10px; text-align: center; border: 1px solid #e2e8f0; }
+        .abs-month-name { font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 8px; display: block; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
+        .add-day-box { display: flex; gap: 5px; margin-bottom: 8px; }
+        .add-day-box input { flex: 1; padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center; font-weight: 900; font-size: 13px; }
+        .btn-plus { background: var(--success); color: white; border: none; width: 30px; border-radius: 6px; cursor: pointer; font-size: 16px; }
+        .tags-container { display: flex; flex-wrap: wrap; gap: 4px; min-height: 25px; padding: 4px; background: #f8fafc; border-radius: 6px; border: 1px dashed #cbd5e1; margin-top: 5px; }
+        .day-tag { background: #fef2f2; color: var(--danger); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 4px; border: 1px solid #fecaca; }
+        .day-tag i { cursor: pointer; color: #f87171; }
+
+        /* الجدول المدرسي */
+        .sch-info-banner { background: #eff6ff; border: 1px solid #bfdbfe; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 20px; flex-wrap: wrap; justify-content: space-between; font-size: 13px; display: none; }
+        .sch-info-item { display: flex; flex-direction: column; gap: 3px; }
+        .sch-info-item span { font-weight: 900; color: var(--primary); }
+        .sch-info-item b { color: var(--dark); background: white; padding: 3px 10px; border-radius: 4px; border: 1px solid #dbeafe; font-family: Arial, sans-serif; font-size: 14px; }
+        
+        .schedule-table { width: 100%; border-collapse: collapse; text-align: center; border: 2px solid #000; background: white; }
+        .schedule-table th, .schedule-table td { border: 1px solid #000; padding: 4px; font-weight: 900; font-size: 14px; color: #000; transition: 0.3s; }
+        .schedule-table thead th { background: #e2e8f0; padding: 8px; font-size: 15px; }
+        .schedule-table th:nth-child(2n+1), .schedule-table td:nth-child(2n+1) { border-left: 3px solid #000; }
+        .schedule-table th:first-child, .schedule-table td:first-child { border-left: 1px solid #000; background: #e2e8f0; width: 100px; }
+        
+        .row-high-freq { background-color: rgba(34, 197, 94, 0.25) !important; }
+        .row-low-freq { background-color: rgba(239, 68, 68, 0.2) !important; }
+        .sch-input { width: 100%; padding: 10px 5px; border: none; text-align: center; font-weight: 900; font-size: 16px; outline: none; background: transparent; font-family: 'Arial', sans-serif; color: var(--primary); }
+        .sch-input:focus { background: #fef3c7; border-radius: 4px; }
+
+        .sch-tracker { display: flex; justify-content: space-between; align-items: center; background: #f0fdf4; border: 2px solid #86efac; padding: 12px 20px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; color: #166534; flex-wrap: wrap; gap: 10px; }
+        .sch-tracker div { display: flex; flex-direction: column; align-items: center; }
+        .sch-tracker span { font-size: 12px; color: #14532d; }
+        .sch-tracker b { font-size: 22px; color: var(--danger); line-height: 1; }
+        .money-badge { background: var(--dark); color: #fcd34d !important; padding: 5px 15px; border-radius: 8px; border: 1px solid #fef08a; font-family: 'Cairo' !important; }
+
+        .calc-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .exceptions-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; background: #fef2f2; padding: 15px; border-radius: 10px; border: 1px dashed #fca5a5; margin-bottom: 20px; }
+        .exceptions-grid input { padding: 8px; border-radius: 6px; border: 1px solid #fca5a5; font-family: Arial; font-size: 12px; text-align: center; outline: none; }
+
+        .zizo-signature { position: fixed; bottom: 10px; left: 10px; background: white; padding: 5px 15px; border-radius: 20px; font-weight: 900; font-size: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); color: var(--dark); z-index: 1000; }
+        #status-msg { display: none; padding: 10px; border-radius: 8px; margin-top: 10px; text-align: center; font-weight: 800; font-size: 12px; }
+
+        @media (max-width: 800px) {
+            .main-layout { flex-direction: column; }
+            .profile-info { grid-template-columns: 1fr; }
+            .side-actions { width: 100%; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; flex-direction: row; flex-wrap: wrap; border-radius: 15px 15px 0 0; padding: 10px; border-top: 2px solid var(--primary); box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
+            .btn-action { flex: 1; min-width: 100px; padding: 8px; font-size: 11px; }
+            .card-container { margin-bottom: 120px; }
+            .calc-grid { grid-template-columns: 1fr; }
+            .exceptions-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-navigation">
+        <div class="nav-title"><i class="fa-solid fa-file-signature"></i> بطاقة معلم الأجر والحصة</div>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <div class="zizo-badge">إعداد مستر زيزو</div>
+            <a href="index.html" class="btn-nav" style="background:var(--primary)"><i class="fa-solid fa-house"></i> الرئيسية</a>
+        </div>
+    </nav>
+
+    <div class="main-layout">
+        
+        <div class="card-container">
+            <!-- قسم البحث -->
+            <div class="search-section">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="main-search" placeholder="ابحث عن معلم أجر بالاسم..." autocomplete="off" onclick="showAllTeachers()" oninput="filterTeachers(this.value)">
+                    <div id="search-results"></div>
+                </div>
+            </div>
+
+            <form id="teacher-form">
+                
+                <!-- الصورة والبيانات الأساسية -->
+                <div class="profile-header">
+                    <div class="avatar-container">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" id="profile-img" class="avatar-img" alt="صورة المعلم">
+                        <button type="button" class="avatar-upload-btn" onclick="document.getElementById('avatar-input').click()" title="تغيير الصورة"><i class="fa-solid fa-camera"></i></button>
+                        <input type="file" id="avatar-input" accept="image/jpeg, image/png" onchange="uploadToSupabase(this, 'photo')" style="display:none;">
+                    </div>
+                    <div class="profile-info">
+                        <div class="field-group"><label>الاسم الرباعي</label><input type="text" data-field="name" id="teacher_name" required></div>
+                        <div class="field-group"><label>الرقم القومي (إلزامي)</label><input type="text" data-field="nid" id="teacher_nid" maxlength="14" oninput="extractNID(this)" style="font-family:Arial; font-weight:bold; letter-spacing:1px; text-align:center; border-color:var(--danger);" required></div>
+                    </div>
+                </div>
+
+                <!-- بيانات شخصية -->
+                <div class="data-section">
+                    <div class="section-title"><i class="fa-solid fa-user"></i> بيانات شخصية وحالة العمل</div>
+                    <div class="grid-fields">
+                        <div class="field-group"><label>حالة العمل</label><select data-field="status" style="background:#fffbeb; border-color:var(--warning);"><option value="يعمل">يعمل</option><option value="موقوف">موقوف</option></select></div>
+                        <div class="field-group"><label>النوع</label><input type="text" data-field="gender" class="readonly-field" readonly></div>
+                        <div class="field-group"><label>تاريخ الميلاد</label><input type="text" data-field="dob" class="readonly-field" readonly></div>
+                        <div class="field-group"><label>الموطن / العنوان</label><input type="text" data-field="address"></div>
+                        <div class="field-group"><label>رقم الموبايل</label><input type="text" data-field="mobile" style="font-family:Arial;"></div>
+                    </div>
+                </div>
+
+                <!-- بيانات التعاقد -->
+                <div class="data-section">
+                    <div class="section-title"><i class="fa-solid fa-briefcase"></i> بيانات التعاقد والعمل</div>
+                    <div class="grid-fields">
+                        <div class="field-group"><label>تاريخ بداية العمل</label><input type="date" data-field="start_date" style="font-family:Arial;"></div>
+                        <div class="field-group"><label>المؤهل الدراسي</label><input type="text" data-field="qualification"></div>
+                        <div class="field-group"><label>الدرجة / التقدير</label><input type="text" data-field="qual_grade"></div>
+                        <div class="field-group"><label>مادة التدريس</label><input type="text" data-field="subject" id="teacher_subject"></div>
+                        <div class="field-group"><label>الصفوف المسندة</label><input type="text" data-field="grades" placeholder="مثال: الأول، الثاني"></div>
+                        
+                        <div class="field-group">
+                            <label>فئة الأجر</label>
+                            <select data-field="pay_rate" id="teacher_pay_rate">
+                                <option value="">اختر الفئة...</option>
+                                <option value="مؤقت دون سن (60)">مؤقت دون سن (60)</option>
+                                <option value="موقت فوق سن (60)">موقت فوق سن (60)</option>
+                                <option value="معين فوق النصاب">معين فوق النصاب</option>
+                            </select>
+                        </div>
+
+                        <div class="field-group"><label>حصص الأسبوع (آخر تحديث)</label><input type="number" data-field="weekly_quota" id="weekly_quota_input" readonly style="font-family:Arial; text-align:center; background:#f0fdf4; border-color:var(--success); color:#166534; font-size:16px;"></div>
+                    </div>
+                </div>
+
+                <!-- المرفقات الرسمية (PDF) -->
+                <div class="data-section">
+                    <div class="section-title"><i class="fa-solid fa-folder-open"></i> المرفقات والمستندات (PDF)</div>
+                    <div class="file-controls-wrapper">
+                        <!-- زر الرقم القومي -->
+                        <div class="split-btn-group">
+                            <button type="button" id="btn-view-nid" class="btn-view-file empty" onclick="viewSupabaseFile('nid_pdf')"><i class="fa-solid fa-id-card"></i> بطاقة الرقم القومي</button>
+                            <button type="button" class="btn-upload-file" onclick="document.getElementById('nid-file').click()" title="رفع أو تحديث ملف البطاقة"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                            <input type="file" id="nid-file" accept="application/pdf" onchange="uploadToSupabase(this, 'nid_pdf')" hidden>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- الأرشيف والشهور التفاعلية -->
+                <div class="data-section">
+                    <div class="section-title"><i class="fa-solid fa-calendar-days"></i> سجل الحصص المنفذة (أرشيف الاستمارات)</div>
+                    <div class="months-grid">
+                        <div class="month-box"><label id="lbl_m_sept" class="month-label">سبتمبر</label><input type="number" data-field="m_sept" id="m_sept" readonly></div>
+                        <div class="month-box"><label id="lbl_m_oct" class="month-label">أكتوبر</label><input type="number" data-field="m_oct" id="m_oct" readonly></div>
+                        <div class="month-box"><label id="lbl_m_nov" class="month-label">نوفمبر</label><input type="number" data-field="m_nov" id="m_nov" readonly></div>
+                        <div class="month-box"><label id="lbl_m_dec" class="month-label">ديسمبر</label><input type="number" data-field="m_dec" id="m_dec" readonly></div>
+                        <div class="month-box"><label id="lbl_m_jan" class="month-label">يناير</label><input type="number" data-field="m_jan" id="m_jan" readonly></div>
+                        <div class="month-box"><label id="lbl_m_feb" class="month-label">فبراير</label><input type="number" data-field="m_feb" id="m_feb" readonly></div>
+                        <div class="month-box"><label id="lbl_m_mar" class="month-label">مارس</label><input type="number" data-field="m_mar" id="m_mar" readonly></div>
+                        <div class="month-box"><label id="lbl_m_apr" class="month-label">أبريل</label><input type="number" data-field="m_apr" id="m_apr" readonly></div>
+                        <div class="month-box"><label id="lbl_m_may" class="month-label">مايو</label><input type="number" data-field="m_may" id="m_may" readonly></div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        <div class="side-actions">
+            <div style="font-size:13px; font-weight:900; color:var(--dark); text-align:center; margin-bottom:5px; border-bottom:2px solid #eee; padding-bottom:5px;">لوحة التحكم</div>
+            <button type="button" class="btn-action btn-add" onclick="saveTeacher('add')"><i class="fa-solid fa-user-plus"></i> حفظ كجديد</button>
+            <button type="button" class="btn-action btn-update" onclick="saveTeacher('update')"><i class="fa-solid fa-user-check"></i> حفظ التعديلات</button>
+            
+            <button type="button" class="btn-action btn-schedule" onclick="openScheduleModal()"><i class="fa-solid fa-table-cells"></i> الجدول والاستمارة</button>
+            <button type="button" class="btn-action btn-abs" onclick="openAbsenceModal()"><i class="fa-solid fa-calendar-check"></i> سجل الغياب</button>
+            
+            <button type="button" class="btn-action btn-calc" onclick="openPeriodSettingsModal()"><i class="fa-solid fa-cloud"></i> إعداد فترة الحساب</button>
+            
+            <button type="button" class="btn-action btn-clear" onclick="clearForm()"><i class="fa-solid fa-eraser"></i> تفريغ الخانات</button>
+            <button type="button" class="btn-action btn-delete" onclick="deleteTeacher()"><i class="fa-solid fa-trash"></i> حذف المعلم</button>
+
+<!-- الزر الجديد: استمارة اضافة -->
+<button type="button" class="btn-action" style="background: #f59e0b; margin-top: 5px;" onclick="window.open('https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/TEAMEZAN/ADD%20DATA%20AGR.pdf', '_blank')">
+    <i class="fa-solid fa-file-pdf"></i> استمارة اضافة
+</button>
+
+<div id="status-msg"></div>
+        </div>
+
+    </div>
+
+    <!-- نافذة إعداد فترة الحساب -->
+    <div class="modal-overlay" id="periodModal" onclick="if(event.target.id==='periodModal') document.getElementById('periodModal').classList.remove('active')">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2 style="font-size:15px; margin:0;"><i class="fa-solid fa-cloud"></i> إعداد فترة الحساب (أرشيف الشهور)</h2>
+                <button onclick="document.getElementById('periodModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="calc-grid">
+                    <div class="field-group">
+                        <label>اختر الشهر لضبط إعداداته:</label>
+                        <select id="set-target-month" onchange="loadMonthSettingsToUI(this.value)">
+                            <option value="m_sept">سبتمبر</option><option value="m_oct">أكتوبر</option><option value="m_nov">نوفمبر</option>
+                            <option value="m_dec">ديسمبر</option><option value="m_jan">يناير</option><option value="m_feb">فبراير</option>
+                            <option value="m_mar">مارس</option><option value="m_apr">أبريل</option><option value="m_may">مايو</option>
+                        </select>
+                    </div>
+                    <div class="field-group"><label>من تاريخ:</label><input type="date" id="set-start-date" style="font-family:Arial;"></div>
+                    <div class="field-group"><label>إلى تاريخ:</label><input type="date" id="set-end-date" style="font-family:Arial;"></div>
+                </div>
+                <label style="font-size:13px; font-weight:800; color:var(--danger); display:block; margin-bottom:5px;">أيام الإجازات الرسمية خلال هذا الشهر (لا تُحسب):</label>
+                <div class="exceptions-grid">
+                    <input type="date" class="exc-date"><input type="date" class="exc-date"><input type="date" class="exc-date">
+                    <input type="date" class="exc-date"><input type="date" class="exc-date"><input type="date" class="exc-date">
+                    <input type="date" class="exc-date">
+                </div>
+                <button class="btn-action btn-calc" style="width:100%; padding:15px; font-size:16px;" onclick="savePeriodSettingsToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ الإعدادات لهذا الشهر</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة الغياب -->
+    <div class="modal-overlay" id="absModal" onclick="if(event.target.id==='absModal') document.getElementById('absModal').classList.remove('active')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="font-size:15px; margin:0;"><i class="fa-solid fa-calendar-check"></i> سجل غياب معلمي الأجر</h2>
+                <button onclick="document.getElementById('absModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="abs-top-bar">
+                    <div class="teacher-selector">
+                        <label>اختر المعلم من القائمة لفتح سجله:</label>
+                        <select id="abs-teacher-select" onchange="switchTeacherInAbsenceModal(this.value)">
+                            <option value="" disabled selected>اختر المعلم...</option>
+                        </select>
+                    </div>
+                    <div class="abs-total-badge">
+                        <span>إجمالي غياب السنة</span>
+                        <b id="abs-grand-total">٠</b>
+                    </div>
+                </div>
+                <div class="abs-months-grid" id="abs-months-container"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action btn-add" style="width:auto; padding:10px 30px;" onclick="saveAbsenceToFirebase()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ السجل في السحابة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة الجدول المدرسي المدمجة (حفظ + ترحيل للإكسيل + رفع) -->
+    <div class="modal-overlay" id="scheduleModal" onclick="if(event.target.id==='scheduleModal') document.getElementById('scheduleModal').classList.remove('active')">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header">
+                <h2 style="font-size:15px; margin:0;"><i class="fa-solid fa-table-cells"></i> جدول حصص معلم الأجر وتوليد الاستمارة السحابية</h2>
+                <button onclick="document.getElementById('scheduleModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="abs-top-bar">
+                    <div class="teacher-selector">
+                        <label>اختر المعلم:</label>
+                        <select id="schedule-teacher-select" onchange="switchTeacherInScheduleModal(this.value)">
+                            <option value="" disabled selected>اختر المعلم...</option>
+                        </select>
+                    </div>
+                    <div class="teacher-selector">
+                        <label>اختر شهر الحساب:</label>
+                        <select id="schedule-month-select" onchange="switchTeacherInScheduleModal(document.getElementById('schedule-teacher-select').value)">
+                            <option value="m_sept">سبتمبر</option><option value="m_oct">أكتوبر</option><option value="m_nov">نوفمبر</option>
+                            <option value="m_dec">ديسمبر</option><option value="m_jan">يناير</option><option value="m_feb">فبراير</option>
+                            <option value="m_mar">مارس</option><option value="m_apr">أبريل</option><option value="m_may">مايو</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="sch-info-banner" id="sch-info-banner">
+                    <div class="sch-info-item"><span>تاريخ بداية ونهاية الفترة:</span> <b id="info-period-dates">--</b></div>
+                    <div class="sch-info-item"><span>أيام الإجازات الرسمية:</span> <b id="info-holidays-count">0</b></div>
+                    <div class="sch-info-item"><span>أيام غياب المعلم بالشهر:</span> <b id="info-absences-count">0</b></div>
+                </div>
+                
+                <div class="sch-tracker" id="sch-tracker" style="display:none;">
+                    <div><span>النصاب الأسبوعي</span><b id="trk-weekly">0</b></div>
+                    <div><span>الحصص بالفترة</span><b id="trk-gross">0</b></div>
+                    <div><span>خ. إجازات</span><b id="trk-holidays" style="color:var(--warning)">0</b></div>
+                    <div><span>خ. غياب</span><b id="trk-absences" style="color:var(--danger)">0</b></div>
+                    <div style="border-right:2px solid #86efac; padding-right:15px;"><span>الصافي المستحق</span><b id="trk-net" style="color:#166534; font-size:26px;">0</b></div>
+                    <div style="border-right:2px solid #86efac; padding-right:15px;"><span>المبلغ (35.80ج)</span><b id="trk-money" class="money-badge">0.00 ج.م</b></div>
+                </div>
+                
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">اليوم</th>
+                            <th colspan="2">الفتره الأولى</th>
+                            <th colspan="2">الفتره الثانية</th>
+                            <th colspan="2">الفتره الثالثة</th>
+                            <th colspan="2">الفتره الرابعة</th>
+                        </tr>
+                        <tr>
+                            <th>١</th><th>٢</th><th>٣</th><th>٤</th><th>٥</th><th>٦</th><th>٧</th><th>٨</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-body">
+                        <!-- سيتم ملؤه برمجياً -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <!-- الزر المدمج (الوحش) -->
+                <button class="btn-action btn-excel-gen" id="btn-master-save" style="width:auto; padding:12px 40px;" onclick="processScheduleAndExcel()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> حفظ الجدول وتوليد الاستمارة ورفعها
+                </button>
+            </div>
+            <div id="excel-status" style="display:none; text-align:center; padding:10px; font-weight:bold; color:var(--danger);">جاري المعالجة والرفع للسحابة... يرجى الانتظار.</div>
+        </div>
+    </div>
+
+<script>
+        // ================= إعدادات القواعد والاتصال =================
+const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
+firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
+db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+
+const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+let allTeachers = []; let currentDocId = null; let currentTeacherData = null;
+let activeAbsenceData = {}; let activeAbsenceTeacherId = null;
+
+const monthsList = [{id:"m_sept",name:"سبتمبر"},{id:"m_oct",name:"أكتوبر"},{id:"m_nov",name:"نوفمبر"},{id:"m_dec",name:"ديسمبر"},{id:"m_jan",name:"يناير"},{id:"m_feb",name:"فبراير"},{id:"m_mar",name:"مارس"},{id:"m_apr",name:"أبريل"},{id:"m_may",name:"مايو"}];
+const chronologicalMonths = ["m_sept", "m_oct", "m_nov", "m_dec", "m_jan", "m_feb", "m_mar", "m_apr", "m_may"];
+const days = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس"];
+const jsDaysMap = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس", "الجمعة", "السبت"];
+let CLOUD_PERIOD_SETTINGS = {}; let LIVE_NET_CLASSES = 0; let LIVE_WEEKLY_QUOTA = 0;
+
+window.addEventListener('DOMContentLoaded', async () => { 
+    await fetchAllTeachers(); 
+    await loadPeriodSettingsFromCloud(); 
+    initScheduleTable(); 
+});
+
+// ================= دوال مساعدة =================
+function toArabicNum(num) { const ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩']; return String(num).replace(/[0-9]/g, w => ar[w]); }
+
+function formatArDate(dStr) { 
+    if(!dStr) return ""; 
+    const d = new Date(dStr); 
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day} / ${month} / ${year}`; 
+}
+
+function getMonthNameOnly(select) { return select.options[select.selectedIndex].text.split(" ")[0]; }
+
+function tafqeet(num) {
+    if (num === 0) return "صفر";
+    const ones = ["", "واحد", "اثنتان", "ثلاث", "أربع", "خمس", "ست", "سبع", "ثمان", "تسع", "عشر"];
+    const teens = ["", "إحدى عشرة", "اثنتا عشرة", "ثلاث عشرة", "أربع عشرة", "خمس عشرة", "ست عشرة", "سبع عشرة", "ثماني عشرة", "تسع عشرة"];
+    const tens = ["", "عشر", "عشرون", "ثلاثون", "أربعون", "خمسون", "ستون", "سبعون", "ثمانون", "تسعون"];
+    if(num <= 10) return ones[num];
+    if(num < 20) return teens[num - 10];
+    if(num < 100) { let unit = num % 10; let ten = Math.floor(num / 10); if(unit === 0) return tens[ten]; return ones[unit] + " و " + tens[ten]; }
+    if(num === 100) return "مائة";
+    return num;
+}
+
+// ================= الرفع للسحابة (Supabase) للصور والبطاقة =================
+async function uploadToSupabase(inputElement, fieldName) {
+    const nid = document.getElementById("teacher_nid").value.trim();
+    if(!nid || nid.length !== 14) { alert("يرجى إدخال الرقم القومي (14 رقم) أولاً لرفع الملفات!"); inputElement.value = ""; return; }
+    const file = inputElement.files[0]; if(!file) return;
+
+    const fileExt = file.name.split('.').pop();
+    const safeFileName = `${fieldName}_${new Date().getTime()}.${fileExt}`;
+    const filePath = `contract_teachers/${nid}/${safeFileName}`;
+
+    let targetBtn;
+    if(fieldName === 'photo') { document.getElementById("profile-img").style.opacity = "0.5"; } 
+    else { targetBtn = document.getElementById("btn-view-nid"); targetBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الرفع...`; targetBtn.classList.remove("empty"); }
+
+    try {
+        const { data, error } = await supabaseClient.storage.from('uploads').upload(filePath, file, { upsert: true });
+        if (error) throw error;
+        const { data: publicUrlData } = supabaseClient.storage.from('uploads').getPublicUrl(filePath);
+        const publicUrl = publicUrlData.publicUrl;
+
+        await db.collection("contract_teachers").doc(String(currentDocId || nid)).set({ [fieldName]: publicUrl }, { merge: true });
+        if(currentTeacherData) currentTeacherData[fieldName] = publicUrl;
+        
+        if(fieldName === 'photo') { document.getElementById("profile-img").src = publicUrl; document.getElementById("profile-img").style.opacity = "1"; } 
+        else { targetBtn.innerHTML = `<i class="fa-solid fa-check-circle"></i> عرض البطاقة`; }
+        showStatus("✅ تم الرفع بنجاح", "success");
+        fetchAllTeachers(); 
+    } catch(e) { 
+        if(fieldName === 'photo') document.getElementById("profile-img").style.opacity = "1";
+        else { targetBtn.innerHTML = `<i class="fa-solid fa-xmark"></i> فشل الرفع`; targetBtn.classList.add("empty"); }
+        alert("❌ فشل الرفع: " + e.message); 
+    }
+}
+
+function viewSupabaseFile(fieldName) {
+    if(!currentTeacherData || !currentTeacherData[fieldName]) { alert("لا يوجد ملف مرفوع!"); return; }
+    window.open(currentTeacherData[fieldName], '_blank');
+}
+
+// ================= دوال المعلمين وإدارة البطاقة =================
+// 1. دالة توحيد الحروف العربية لتجاهل الفروق الإملائية
+function normalizeArabicSearch(text) {
+    if (!text) return "";
+    return text.trim()
+        .replace(/[أإآا]/g, "ا") // توحيد الألف
+        .replace(/ة/g, "ه")      // توحيد التاء المربوطة والهاء
+        .replace(/ى/g, "ي")      // توحيد الياء والألف المقصورة
+        .replace(/\s+/g, " ");   // إزالة المسافات الزائدة
+}
+
+async function fetchAllTeachers() {
+    try {
+        const snap = await db.collection("contract_teachers").get();
+        allTeachers = []; 
+        snap.forEach(doc => allTeachers.push({ id: doc.id, ...doc.data() }));
+        allTeachers.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
+        
+        const absSelect = document.getElementById("abs-teacher-select");
+        absSelect.innerHTML = '<option value="" disabled selected>اختر المعلم...</option>';
+        allTeachers.forEach(t => { absSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`; });
+
+        const schSelect = document.getElementById("schedule-teacher-select");
+        schSelect.innerHTML = '<option value="" disabled selected>اختر المعلم...</option>';
+        allTeachers.forEach(t => { if(t.status === "يعمل" || !t.status) schSelect.innerHTML += `<option value="${t.id}">${t.name}</option>`; });
+    } catch(e) { console.error("خطأ في جلب البيانات: ", e); }
+}
+
+function showAllTeachers() {
+    const resBox = document.getElementById("search-results");
+    resBox.innerHTML = "";
+    if (allTeachers.length === 0) {
+        resBox.innerHTML = "<div class='result-item'>جاري تحميل البيانات...</div>";
+    } else {
+        allTeachers.forEach(t => {
+            const item = document.createElement("div");
+            item.className = "result-item";
+            item.innerHTML = `<span>${t.name}</span> <small style="color:${t.status==='موقوف'?'red':'green'}">(${t.status || 'يعمل'})</small>`;
+            item.onclick = () => populateCard(t);
+            resBox.appendChild(item);
+        });
+    }
+    resBox.style.display = "block";
+}
+
+// دالة البحث الذكي (تبحث في بداية الاسم الأول فقط)
+function filterTeachers(val) {
+    const resBox = document.getElementById("search-results");
+    
+    // إذا كان المربع فارغاً، اعرض الكل
+    if (!val.trim()) {
+        showAllTeachers();
+        return;
+    }
+
+    // توحيد نص البحث وإزالة المسافات منه
+    const normalizedSearch = normalizeArabicSearch(val);
+    const spacelessSearch = normalizedSearch.replace(/\s/g, ""); 
+
+    // فلترة المصفوفة
+    const filtered = allTeachers.filter(t => {
+        if (!t.name) return false;
+        
+        // توحيد اسم المعلم وإزالة المسافات منه
+        const normalizedName = normalizeArabicSearch(t.name);
+        const spacelessName = normalizedName.replace(/\s/g, "");
+
+        // نتحقق هل الاسم بالكامل "يبدأ" بالنص المكتوب
+        return spacelessName.startsWith(spacelessSearch);
+    });
+
+    resBox.innerHTML = "";
+    
+    if (filtered.length === 0) {
+        resBox.innerHTML = `<div class="result-item" style="color:var(--danger); justify-content:center;">لا يوجد معلم يبدأ اسمه بهذا البحث</div>`;
+    } else {
+        filtered.forEach(t => {
+            const item = document.createElement("div");
+            item.className = "result-item";
+            // حافظنا على نفس التنسيق الخاص بحالة المعلم (يعمل/موقوف)
+            item.innerHTML = `<span>${t.name}</span> <small style="color:${t.status==='موقوف'?'red':'green'}">(${t.status || 'يعمل'})</small>`;
+            item.onclick = () => populateCard(t);
+            resBox.appendChild(item);
+        });
+    }
+    resBox.style.display = "block";
+}
+
+function extractNID(inp) {
+    const nid = inp.value;
+    if (nid.length === 14) {
+        const year = (nid[0] === '3' ? '20' : '19') + nid.substring(1, 3);
+        document.querySelector('[data-field="dob"]').value = `${year}-${nid.substring(3, 5)}-${nid.substring(5, 7)}`;
+        document.querySelector('[data-field="gender"]').value = (parseInt(nid[12]) % 2 === 0) ? "أنثى" : "ذكر";
+    }
+}
+
+function populateCard(data) {
+    currentDocId = data.id; currentTeacherData = data;
+    
+    document.querySelectorAll('#teacher-form input:not([type="file"]), #teacher-form select').forEach(inp => {
+        const field = inp.getAttribute('data-field'); if (field && data[field] !== undefined) inp.value = data[field];
+    });
+    document.getElementById("search-results").style.display = "none"; document.getElementById("main-search").value = data.name;
+    
+    document.getElementById("profile-img").src = data.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+    const btnNid = document.getElementById("btn-view-nid");
+    if(data.nid_pdf) { btnNid.classList.remove("empty"); btnNid.innerHTML = '<i class="fa-solid fa-check-circle"></i> عرض البطاقة'; }
+    else { btnNid.classList.add("empty"); btnNid.innerHTML = '<i class="fa-solid fa-id-card"></i> بطاقة الرقم القومي'; }
+
+    let latestQuota = "";
+    for (let i = chronologicalMonths.length - 1; i >= 0; i--) {
+        const m = chronologicalMonths[i];
+        if (data[`schedule_${m}`] && Object.keys(data[`schedule_${m}`]).length > 0) {
+            latestQuota = data.weekly_quota || Object.keys(data[`schedule_${m}`]).length; break;
+        }
+    }
+    document.getElementById('weekly_quota_input').value = latestQuota;
+
+    monthsList.forEach(m => {
+        const label = document.getElementById(`lbl_${m.id}`);
+        const formUrl = data[`form_${m.id}`];
+
+        if(formUrl) {
+            label.innerHTML = `<i class="fa-solid fa-download"></i> ${m.name}`;
+            label.className = "month-label has-file";
+            label.onclick = async () => {
+                try {
+                    const response = await fetch(formUrl);
+                    const blob = await response.blob();
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `استمارة_${data.name.replace(/\s+/g, '_')}_${m.name}.xlsx`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                } catch (err) { window.open(formUrl, '_blank'); }
+            };
+            label.title = "اضغط لتحميل الاستمارة المعتمدة";
+        } else {
+            label.innerHTML = m.name;
+            label.className = "month-label";
+            label.onclick = null;
+            label.title = "";
+        }
+    });
+}
+
+async function saveTeacher(mode) {
+    const nid = document.getElementById("teacher_nid").value.trim(); const name = document.getElementById("teacher_name").value.trim();
+    if(!nid || !name || nid.length !== 14) { alert("الاسم والرقم القومي (14 رقم) مطلوبان!"); return; }
+    if(mode === 'update' && !currentDocId) { alert("يرجى البحث عن معلم أولاً لتعديله."); return; }
+    let data = {};
+    document.querySelectorAll('#teacher-form input:not([type="file"]), #teacher-form select').forEach(inp => { const field = inp.getAttribute('data-field'); if(field) data[field] = inp.value; });
+    const docId = mode === 'add' ? nid : currentDocId;
+    try { await db.collection("contract_teachers").doc(String(docId)).set(data, { merge: true }); showStatus("✅ تم الحفظ", "success"); fetchAllTeachers(); } catch(e) { alert(e.message); }
+}
+
+function clearForm() { 
+    document.getElementById("teacher-form").reset(); document.getElementById("main-search").value = ""; currentDocId = null; currentTeacherData = null;
+    document.getElementById("profile-img").src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; 
+    const btnNid = document.getElementById("btn-view-nid"); btnNid.classList.add("empty"); btnNid.innerHTML = '<i class="fa-solid fa-id-card"></i> بطاقة الرقم القومي';
+    monthsList.forEach(m => { const l = document.getElementById(`lbl_${m.id}`); l.innerHTML = m.name; l.className = "month-label"; l.onclick = null; });
+}
+function showStatus(txt, type) { const msg = document.getElementById("status-msg"); msg.style.display = "block"; msg.style.background = type === "success" ? "#dcfce7" : "#fee2e2"; msg.innerText = txt; setTimeout(() => msg.style.display = "none", 3000); }
+document.addEventListener("click", (e) => { if (!e.target.closest(".search-box")) document.getElementById("search-results").style.display = "none"; });
+
+// ================= إعدادات الفترة =================
+async function loadPeriodSettingsFromCloud() {
+    try { const doc = await db.collection("settings").doc("contract_calc_period").get(); if(doc.exists) { CLOUD_PERIOD_SETTINGS = doc.data(); } loadMonthSettingsToUI(document.getElementById("set-target-month").value); } catch(e) {}
+}
+function loadMonthSettingsToUI(monthId) {
+    const data = CLOUD_PERIOD_SETTINGS[monthId] || {};
+    document.getElementById("set-start-date").value = data.startDate || ""; document.getElementById("set-end-date").value = data.endDate || "";
+    const holidayInputs = document.querySelectorAll(".exc-date"); const savedHolidays = data.holidays || [];
+    holidayInputs.forEach((inp, index) => { inp.value = savedHolidays[index] || ""; });
+}
+function openPeriodSettingsModal() { document.getElementById("periodModal").classList.add("active"); }
+async function savePeriodSettingsToCloud() {
+    const selectedMonth = document.getElementById("set-target-month").value;
+    let holidays = []; document.querySelectorAll(".exc-date").forEach(inp => { if(inp.value) holidays.push(inp.value); });
+    const monthData = { startDate: document.getElementById("set-start-date").value, endDate: document.getElementById("set-end-date").value, holidays: holidays };
+    await db.collection("settings").doc("contract_calc_period").set({ [selectedMonth]: monthData }, { merge: true });
+    CLOUD_PERIOD_SETTINGS[selectedMonth] = monthData; alert("✅ تم الحفظ"); document.getElementById("periodModal").classList.remove("active");
+}
+
+// ================= الغياب =================
+function openAbsenceModal() { document.getElementById("absModal").classList.add("active"); if(currentDocId) { document.getElementById("abs-teacher-select").value = currentDocId; switchTeacherInAbsenceModal(currentDocId); } }
+function switchTeacherInAbsenceModal(id) { const t = allTeachers.find(x => x.id === id); if(!t) return; activeAbsenceTeacherId = id; activeAbsenceData = t.absences ? JSON.parse(JSON.stringify(t.absences)) : {}; renderAbsenceUI(); }
+function renderAbsenceUI() {
+    const container = document.getElementById("abs-months-container"); container.innerHTML = ""; let grand = 0;
+    monthsList.forEach(m => {
+        if(!Array.isArray(activeAbsenceData[m.id])) activeAbsenceData[m.id] = []; const arr = activeAbsenceData[m.id]; grand += arr.length;
+        let tags = ""; arr.forEach(d => tags += `<div class="day-tag">${toArabicNum(d)} <i class="fa-solid fa-circle-xmark" onclick="removeAbsDay('${m.id}', ${d})"></i></div>`);
+        container.innerHTML += `<div class="abs-month-card"><span class="abs-month-name">${m.name}</span><div class="add-day-box"><input type="number" id="abs-inp-${m.id}" placeholder="يوم"><button class="btn-plus" onclick="addAbsDay('${m.id}')">+</button></div><div class="tags-container">${tags}</div></div>`;
+    });
+    document.getElementById("abs-grand-total").innerText = toArabicNum(grand);
+}
+function addAbsDay(mId) { const inp = document.getElementById(`abs-inp-${mId}`); const d = parseInt(inp.value); if(d>0 && d<32) { if(!activeAbsenceData[mId].includes(d)) { activeAbsenceData[mId].push(d); activeAbsenceData[mId].sort((a,b)=>a-b); renderAbsenceUI(); } } }
+function removeAbsDay(mId, d) { activeAbsenceData[mId] = activeAbsenceData[mId].filter(x => x !== d); renderAbsenceUI(); }
+async function saveAbsenceToFirebase() { await db.collection("contract_teachers").doc(String(activeAbsenceTeacherId)).set({ absences: activeAbsenceData }, { merge: true }); alert("✅ تم الحفظ"); fetchAllTeachers(); }
+
+// ================= الجدول المدرسي =================
+
+// تعديل 1: تفعيل الحفظ وتحديث الشاشة بمجرد الضغط خارج الخانة (blur)
+function initScheduleTable() {
+    const tbody = document.getElementById("schedule-body"); tbody.innerHTML = "";
+    days.forEach((day) => {
+        let tr = `<tr id="row-${day}"><td>${day}</td>`;
+        for(let i=1; i<=8; i++) { tr += `<td><input type="text" class="sch-input" data-day="${day}" data-session="${i}"></td>`; }
+        tbody.innerHTML += tr + `</tr>`;
+    });
+    const inputs = document.querySelectorAll('.sch-input');
+    inputs.forEach((inp, index) => { 
+        inp.addEventListener('keydown', function(e) { 
+            if (e.key === 'Enter') { 
+                e.preventDefault(); 
+                smartFormatSchedule(this); 
+                if (index + 1 < inputs.length) inputs[index + 1].focus(); 
+            } 
+        });
+        // تحديث بالماوس بدون إنتر
+        inp.addEventListener('blur', function() {
+            smartFormatSchedule(this);
+        });
+    });
+}
+
+function smartFormatSchedule(input) {
+    let val = input.value.trim(); let enVal = val.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+    if(/^[0-9]{2}$/.test(enVal)) { input.value = (enVal[0] + "/" + enVal[1]).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]); }
+    calculateLiveSchedule();
+}
+
+function openScheduleModal() { document.getElementById('scheduleModal').classList.add('active'); if(currentDocId) { document.getElementById("schedule-teacher-select").value = currentDocId; switchTeacherInScheduleModal(currentDocId); } }
+
+// تعديل 2: السماح بتحميل الخانات الفارغة في حال قام المستخدم بمسحها في المرة السابقة
+function switchTeacherInScheduleModal(id) {
+    const teacher = allTeachers.find(t => t.id === id); if(!teacher) return;
+    const targetMonth = document.getElementById("schedule-month-select").value;
+    
+    // تفريغ الخانات أولاً
+    document.querySelectorAll('.sch-input').forEach(inp => inp.value = "");
+
+    let savedSchedule = null; 
+    const targetIndex = chronologicalMonths.indexOf(targetMonth);
+    for(let i = targetIndex; i >= 0; i--) { 
+        const checkMonth = chronologicalMonths[i]; 
+        const sch = teacher[`schedule_${checkMonth}`];
+        if(sch && Object.keys(sch).length > 0) { savedSchedule = sch; break; } 
+    }
+    if(!savedSchedule) savedSchedule = {};
+
+    // استدعاء القيم (حتى لو كانت سلسلة نصية فارغة "" ستمسح القيمة القديمة من الشاشة)
+    document.querySelectorAll('.sch-input').forEach(inp => { 
+        const key = `${inp.getAttribute("data-day")}_${inp.getAttribute("data-session")}`; 
+        if(savedSchedule[key] !== undefined) {
+            inp.value = savedSchedule[key]; 
+        }
+    });
+    
+    document.getElementById("sch-tracker").style.display = "flex"; document.getElementById("sch-info-banner").style.display = "flex";
+    calculateLiveSchedule();
+}
+
+function calculateLiveSchedule() {
+    const id = document.getElementById("schedule-teacher-select").value; 
+    const teacher = allTeachers.find(t => t.id === id);
+    const targetMonthField = document.getElementById("schedule-month-select").value; 
+    const currentSettings = CLOUD_PERIOD_SETTINGS[targetMonthField];
+    
+    days.forEach(day => { 
+        const row = document.getElementById(`row-${day}`); 
+        if(row) { row.classList.remove('row-high-freq'); row.classList.remove('row-low-freq'); } 
+    });
+    
+    if(!teacher || !currentSettings || !currentSettings.startDate) { 
+        document.getElementById("trk-net").innerText = "إعدادات مفقودة"; return; 
+    }
+    
+    document.getElementById("info-period-dates").innerText = `${formatArDate(currentSettings.startDate)} إلى ${formatArDate(currentSettings.endDate)}`;
+    document.getElementById("info-holidays-count").innerText = (currentSettings.holidays || []).length;
+    
+    // التعديل هنا: قراءة عدد أيام الغياب بشكل صحيح بناءً على مفتاح الشهر (m_sept, m_oct ...)
+    const absCount = (teacher.absences && teacher.absences[targetMonthField]) ? teacher.absences[targetMonthField].length : 0;
+    document.getElementById("info-absences-count").innerText = absCount;
+
+    LIVE_WEEKLY_QUOTA = 0; let classesPerDay = {};
+    document.querySelectorAll('.sch-input').forEach(inp => { 
+        if(inp.value.trim() !== "") { 
+            const d = inp.getAttribute("data-day"); 
+            classesPerDay[d] = (classesPerDay[d]||0)+1; 
+            LIVE_WEEKLY_QUOTA++; 
+        } 
+    });
+
+    const st = new Date(currentSettings.startDate), en = new Date(currentSettings.endDate);
+    let freqPerDay = {}, totalGross = 0, holDed = 0, absDed = 0;
+    let curr = new Date(st);
+    
+    // خريطة تحويل رقم الشهر في الجافاسكربت إلى مفتاح الشهر في قاعدة البيانات
+    const jsMonthMap = { 8: "m_sept", 9: "m_oct", 10: "m_nov", 11: "m_dec", 0: "m_jan", 1: "m_feb", 2: "m_mar", 3: "m_apr", 4: "m_may" };
+
+    while(curr <= en) {
+        const arDay = jsDaysMap[curr.getDay()], dStr = curr.toISOString().split('T')[0];
+        const isHol = (currentSettings.holidays||[]).includes(dStr);
+        if(days.includes(arDay) && !isHol) freqPerDay[arDay] = (freqPerDay[arDay]||0)+1;
+        
+        const daily = classesPerDay[arDay] || 0;
+        if(daily > 0) {
+            totalGross += daily;
+            if(isHol) holDed += daily;
+            else {
+                // التعديل هنا: قراءة أيام الغياب بالاعتماد على خريطة الشهور الصحيحة
+                const loopMonthId = jsMonthMap[curr.getMonth()];
+                if(teacher.absences && teacher.absences[loopMonthId] && teacher.absences[loopMonthId].includes(curr.getDate())) {
+                    absDed += daily;
+                }
+            }
+        }
+        curr.setDate(curr.getDate()+1);
+    }
+    
+    LIVE_NET_CLASSES = totalGross - holDed - absDed;
+    let vals = Object.values(freqPerDay), maxF = Math.max(...vals), minF = Math.min(...vals);
+    if(maxF > minF) days.forEach(d => { 
+        const r = document.getElementById(`row-${d}`); 
+        if(freqPerDay[d]===maxF) r.classList.add('row-high-freq'); 
+        if(freqPerDay[d]===minF) r.classList.add('row-low-freq'); 
+    });
+    
+    document.getElementById("trk-weekly").innerText = toArabicNum(LIVE_WEEKLY_QUOTA);
+    document.getElementById("trk-gross").innerText = toArabicNum(totalGross);
+    document.getElementById("trk-absences").innerText = toArabicNum(absDed + holDed);
+    document.getElementById("trk-net").innerText = toArabicNum(LIVE_NET_CLASSES);
+    document.getElementById("trk-money").innerText = `${(LIVE_NET_CLASSES * 35.80).toFixed(2)} ج.م`;
+}
+
+// ================= الوحش: حفظ الجدول + التفنيط + الإكسيل + الرفع للسحابة =================
+async function processScheduleAndExcel() {
+    const id = document.getElementById("schedule-teacher-select").value;
+    const targetMonthField = document.getElementById("schedule-month-select").value;
+    const targetMonthName = getMonthNameOnly(document.getElementById("schedule-month-select"));
+    const currentSettings = CLOUD_PERIOD_SETTINGS[targetMonthField];
+    
+    if(!id) { alert("اختر المعلم أولاً!"); return; }
+    if(!currentSettings || !currentSettings.startDate) { alert("إعدادات الفترة مفقودة لهذا الشهر!"); return; }
+    if(!confirm(`تأكيد حفظ وترحيل الحصص واعتماد استمارة شهر ( ${targetMonthName} ) ؟`)) return;
+
+    const teacher = allTeachers.find(t => t.id === id);
+    const masterBtn = document.getElementById('btn-master-save');
+    const statusBox = document.getElementById('excel-status');
+    
+    masterBtn.disabled = true; statusBox.style.display = "block";
+    statusBox.innerText = "1. جاري حفظ بيانات الجدول في قاعدة البيانات...";
+
+    try {
+        let scheduleData = {};
+        document.querySelectorAll('.sch-input').forEach(inp => { 
+            const val = inp.value.trim(); 
+            const key = `${inp.getAttribute("data-day")}_${inp.getAttribute("data-session")}`; 
+            scheduleData[key] = val; 
+        });
+        const scheduleKey = `schedule_${targetMonthField}`;
+        
+        statusBox.innerText = "2. جاري تعبئة قالب الإكسيل بالبيانات وتفنيط التواريخ...";
+
+        const templateUrl = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/stcv27.xlsx";
+        const response = await fetch(templateUrl);
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(await response.arrayBuffer());
+        const ws = workbook.getWorksheet(1);
+
+        ws.getCell('Q1').value = targetMonthName;
+        ws.getCell('W1').value = teacher.pay_rate || "مؤقت دون سن (60)";
+        ws.getCell('R3').value = teacher.name || "";
+        ws.getCell('U5').value = teacher.nid || "";
+        ws.getCell('R7').value = teacher.subject || "";
+        
+        const startD = new Date(currentSettings.startDate);
+        const year = startD.getFullYear();
+        ws.getCell('B11').value = `جدول الحصص الاسبوعى خلال شهر : ${targetMonthName} لسنة ${year}`;
+        ws.getCell('T11').value = formatArDate(currentSettings.startDate);
+        ws.getCell('AA11').value = formatArDate(currentSettings.endDate);
+        
+        ws.getCell('AA10').value = LIVE_NET_CLASSES;
+
+        const sessionCols = ['J', 'L', 'N', 'P', 'R', 'T', 'V'];
+        const scheduleRows = { "الاحد": 13, "الاثنين": 14, "الثلاثاء": 15, "الاربعاء": 16, "الخميس": 17 };
+        let classesPerDay = {};
+        days.forEach(day => {
+            let rowTot = 0;
+            for(let i=1; i<=7; i++) { const val = scheduleData[`${day}_${i}`]; if(val) { ws.getCell(`${sessionCols[i-1]}${scheduleRows[day]}`).value = val; rowTot++; } }
+            classesPerDay[day] = rowTot; if(rowTot > 0) ws.getCell(`Z${scheduleRows[day]}`).value = rowTot;
+        });
+
+        const absDaysCols = ['F', 'I', 'L', 'O', 'R', 'U', 'X'];
+        
+        // التعديل هنا: استدعاء أيام الغياب للإكسيل باستخدام المفتاح الصحيح
+        const absArray = (teacher.absences && teacher.absences[targetMonthField]) ? teacher.absences[targetMonthField] : [];
+        const stDateObj = new Date(currentSettings.startDate);
+        
+        absDaysCols.forEach(col => { ws.getCell(`${col}19`).value = ""; ws.getCell(`${col}20`).value = ""; });
+        ws.getCell('AA20').value = "";
+        
+        if(absArray.length > 0) {
+            absArray.slice(0, 7).forEach((dayNum, index) => {
+                const absDateObj = new Date(stDateObj.getFullYear(), stDateObj.getMonth(), dayNum);
+                ws.getCell(`${absDaysCols[index]}19`).value = jsDaysMap[absDateObj.getDay()];
+                ws.getCell(`${absDaysCols[index]}20`).value = `${absDateObj.getMonth()+1}/${dayNum}`;
+            });
+            ws.getCell('AA20').value = absArray.length;
+        }
+
+        const weekCols = [ {d:'D',c:'F'}, {d:'J',c:'L'}, {d:'P',c:'R'}, {d:'V',c:'X'}, {d:'AB',c:'AD'} ];
+        const dayRows = { "الاحد": 23, "الاثنين": 24, "الثلاثاء": 25, "الاربعاء": 26, "الخميس": 27 };
+        let currentWeekIndex = 0; let weekTotals = [0,0,0,0,0];
+        let currentDate = new Date(currentSettings.startDate); const endDate = new Date(currentSettings.endDate);
+        const holidayDates = currentSettings.holidays || [];
+        
+        // خريطة تحويل رقم الشهر
+        const jsMonthMap = { 8: "m_sept", 9: "m_oct", 10: "m_nov", 11: "m_dec", 0: "m_jan", 1: "m_feb", 2: "m_mar", 3: "m_apr", 4: "m_may" };
+
+        while(currentDate <= endDate) {
+            const arabicDayName = jsDaysMap[currentDate.getDay()];
+            const dateString = currentDate.toISOString().split('T')[0];
+            let isHoliday = holidayDates.includes(dateString);
+            
+            // التعديل هنا: التحقق من الغياب أثناء تفنيط الحصص الأسبوعية
+            const loopMonthId = jsMonthMap[currentDate.getMonth()];
+            let isAbsence = (teacher.absences && teacher.absences[loopMonthId] && teacher.absences[loopMonthId].includes(currentDate.getDate()));
+
+            if(currentDate.getDay() === 0 && currentDate > new Date(currentSettings.startDate) && currentWeekIndex < 4) { currentWeekIndex++; }
+            if(days.includes(arabicDayName) && !isHoliday && !isAbsence) {
+                const classesToday = classesPerDay[arabicDayName] || 0;
+                if(classesToday > 0) {
+                    const row = dayRows[arabicDayName];
+                    ws.getCell(`${weekCols[currentWeekIndex].d}${row}`).value = `${currentDate.getDate()} / ${currentDate.getMonth()+1}`;
+                    ws.getCell(`${weekCols[currentWeekIndex].c}${row}`).value = classesToday;
+                    weekTotals[currentWeekIndex] += classesToday;
+                }
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        const weekTotalCols = ['F28', 'L28', 'R28', 'X28', 'AD28'];
+        weekTotals.forEach((tot, idx) => { if(tot > 0) ws.getCell(weekTotalCols[idx]).value = tot; });
+        ws.getCell('L29').value = LIVE_NET_CLASSES + " فقط لا غير";
+        ws.getCell('B32').value = `نقر نحن الموقعون أدناه أن عدد الحصص في المدة المذكورة هي (${tafqeet(LIVE_NET_CLASSES)}) حصة فقط لا غير.`;
+        ws.views = [{ rightToLeft: true }];
+
+        statusBox.innerText = "3. جاري حذف الصفوف غير المطلوبة وتجهيز الملف...";
+
+        const totalRows = ws.rowCount;
+        if (totalRows >= 42) {
+            ws.spliceRows(42, totalRows - 41);
+        }
+
+        statusBox.innerText = "4. جاري رفع الاستمارة إلى السحابة (Supabase)...";
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+        
+        const safeFileName = `form_${targetMonthField}_${new Date().getTime()}.xlsx`;
+        const filePath = `contract_forms/${teacher.nid}/${safeFileName}`;
+
+        const { data: uploadData, error } = await supabaseClient.storage.from('uploads').upload(filePath, blob, { upsert: true });
+        if (error) throw error;
+
+        const { data: publicUrlData } = supabaseClient.storage.from('uploads').getPublicUrl(filePath);
+        const publicUrl = publicUrlData.publicUrl;
+
+        statusBox.innerText = "5. جاري ربط الاستمارة ببطاقة المعلم وتحديث الواجهة...";
+
+        const formKey = `form_${targetMonthField}`;
+        await db.collection("contract_teachers").doc(String(id)).set({ 
+            [scheduleKey]: scheduleData, 
+            weekly_quota: LIVE_WEEKLY_QUOTA, 
+            [targetMonthField]: LIVE_NET_CLASSES,
+            [formKey]: publicUrl 
+        }, { merge: true });
+
+        await fetchAllTeachers(); 
+        
+        alert(`✅ اكتملت العملية بنجاح!\nتم حفظ الجدول وتوليد الاستمارة ورفعها لشهر ${targetMonthName}.`);
+        document.getElementById('scheduleModal').classList.remove('active');
+        
+        if(currentDocId === id) {
+            const updatedTeacher = allTeachers.find(t => t.id === id);
+            if(updatedTeacher) populateCard(updatedTeacher);
+        }
+
+    } catch (e) { alert("❌ خطأ أثناء العملية: " + e.message); } 
+    finally { masterBtn.disabled = false; statusBox.style.display = "none"; }
+}
+    </script>
+</body>
+</html>

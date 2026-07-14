@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة إدارة الشكاوى - مدرسة الشهيد أشرف حبيب</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root { 
+            --primary: #1e3a8a; --dark: #0f172a; --bg: #f1f5f9; 
+            --danger: #ef4444; --warning: #f59e0b; --success: #10b981; --info: #3b82f6;
+        }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); padding: 15px; }
+
+        /* ================= شاشة تسجيل الدخول ================= */
+        .login-overlay {
+            position: fixed; inset: 0; background: var(--dark);
+            display: flex; justify-content: center; align-items: center; z-index: 9999;
+        }
+        .login-box {
+            background: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 450px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center;
+        }
+        .login-box h2 { color: var(--primary); margin-bottom: 20px; font-size: 22px; font-weight: 900; }
+        .login-box i.fa-shield-halved { font-size: 50px; color: var(--warning); margin-bottom: 15px; }
+        .login-form-group { margin-bottom: 15px; text-align: right; }
+        .login-form-group label { font-size: 14px; font-weight: 800; color: #475569; display: block; margin-bottom: 5px; }
+        .login-box select, .login-box input {
+            width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #cbd5e1;
+            font-family: 'Cairo'; font-size: 15px; font-weight: 700; outline: none; transition: 0.2s;
+        }
+        .login-box select:focus, .login-box input:focus { border-color: var(--primary); }
+        .login-btn {
+            width: 100%; padding: 12px; background: var(--primary); color: white; border: none;
+            border-radius: 8px; font-weight: 900; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 10px;
+        }
+        .login-btn:hover { background: #1e40af; }
+
+        /* ================= باقي التنسيقات الأساسية ================= */
+        .top-navigation { width: 100%; background: var(--dark); padding: 15px 20px; border-radius: 12px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .nav-title { font-size: 18px; font-weight: 900; color: #fcd34d; display: flex; align-items: center; gap: 10px; }
+        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 8px 15px; border-radius: 8px; font-size: 14px; font-weight: 700; transition: 0.2s; }
+        .btn-nav:hover { background: var(--primary); }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-right: 5px solid; }
+        .stat-card.total { border-color: var(--info); }
+        .stat-card.new { border-color: var(--danger); }
+        .stat-card.replied { border-color: var(--success); }
+        .stat-info h3 { font-size: 14px; color: #64748b; font-weight: 800; }
+        .stat-info h2 { font-size: 30px; font-weight: 900; color: var(--dark); line-height: 1; margin-top: 5px; }
+        .stat-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
+        .total .stat-icon { background: var(--info); } .new .stat-icon { background: var(--danger); } .replied .stat-icon { background: var(--success); }
+
+        .controls-bar { background: white; padding: 15px; border-radius: 12px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .search-box { flex-grow: 1; min-width: 250px; position: relative; }
+        .search-box input { width: 100%; padding: 10px 40px 10px 15px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; outline: none; }
+        .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+        .filter-btns { display: flex; gap: 10px; }
+        .filter-btn { padding: 8px 15px; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; background: #f1f5f9; color: #475569; transition: 0.2s; }
+        .filter-btn.active { background: var(--dark); color: white; }
+
+        .complaints-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .comp-card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; transition: 0.2s; }
+        .comp-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        
+        .comp-header { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; color: white; font-weight: 900; }
+        .comp-header.new { background: var(--danger); }
+        .comp-header.replied { background: var(--success); }
+        .comp-code { font-family: Arial; font-size: 16px; letter-spacing: 1px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 6px; }
+
+        .comp-body { padding: 15px; flex-grow: 1; }
+        .info-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 800; margin-bottom: 8px; color: #475569; border-bottom: 1px dashed #e2e8f0; padding-bottom: 5px; }
+        .info-row b { color: var(--dark); }
+        
+        .comp-text-preview { background: #f8fafc; padding: 12px; border-radius: 8px; font-size: 13px; font-weight: 700; color: #64748b; margin-top: 10px; border: 1px solid #e2e8f0; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .comp-footer { padding: 12px 15px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; gap: 10px; }
+        .btn-action { flex: 1; border: none; padding: 10px; border-radius: 8px; font-weight: 900; cursor: pointer; color: white; transition: 0.2s; font-size: 14px; }
+        .btn-open { background: var(--primary); } .btn-open:hover { background: #1e40af; }
+        .btn-del { background: var(--danger); flex: 0.2; } .btn-del:hover { background: #991b1b; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: #f8fafc; width: 100%; max-width: 700px; border-radius: 15px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        
+        .modal-header { background: var(--dark); color: #fcd34d; padding: 15px 20px; font-weight: 900; font-size: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--primary); }
+        .modal-body { padding: 20px; overflow-y: auto; flex-grow: 1; }
+        
+        .modal-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .modal-info-box { background: white; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .modal-info-box span { display: block; font-size: 12px; color: #64748b; font-weight: 800; margin-bottom: 4px; }
+        .modal-info-box b { display: block; font-size: 15px; color: var(--dark); font-weight: 900; }
+        .phone-link { color: var(--info); text-decoration: none; display: flex; align-items: center; gap: 5px; }
+
+        .full-complaint-box { background: white; padding: 20px; border-radius: 12px; border: 2px solid #cbd5e1; margin-bottom: 20px; }
+        .full-complaint-box h4 { font-size: 14px; color: var(--danger); margin-bottom: 10px; border-bottom: 2px solid #fee2e2; padding-bottom: 5px; }
+        .full-complaint-box p { font-size: 16px; font-weight: 700; line-height: 1.8; color: var(--dark); white-space: pre-wrap; }
+
+        .reply-section h4 { font-size: 14px; color: var(--success); margin-bottom: 10px; }
+        .reply-textarea { width: 100%; height: 120px; padding: 15px; border-radius: 10px; border: 2px solid #10b981; font-weight: 700; font-size: 15px; outline: none; resize: vertical; background: #f0fdf4; color: #064e3b; transition: 0.2s; }
+        .reply-textarea:focus { box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+        
+        .modal-footer { padding: 15px 20px; background: white; border-top: 1px solid #e2e8f0; display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-save-reply { background: var(--success); color: white; padding: 12px 30px; font-weight: 900; font-size: 15px; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .btn-save-reply:hover { background: #059669; }
+        .btn-close { background: #64748b; color: white; padding: 12px 20px; font-weight: 900; border: none; border-radius: 8px; cursor: pointer; }
+
+        @media (max-width: 600px) {
+            .controls-bar { flex-direction: column; }
+            .filter-btns { width: 100%; }
+            .filter-btn { flex: 1; }
+            .modal-info-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- شاشة تسجيل الدخول والصلاحيات -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-box">
+            <i class="fa-solid fa-shield-halved"></i>
+            <h2>بوابة الدخول والصلاحيات</h2>
+            
+            <div class="login-form-group">
+                <label>اختر الصلاحية الخاصة بك:</label>
+                <select id="role-select" onchange="togglePassword()">
+                    <option value="" disabled selected>-- اختر الصلاحية --</option>
+                    <option value="zizo">مستر زيزو (مدير النظام)</option>
+                    <option value="admin">مدير المدرسة / مسئول الخدمة الاجتماعية</option>
+                    <option value="visitor">زائر (عرض الإحصائيات فقط)</option>
+                </select>
+            </div>
+
+            <div class="login-form-group" id="password-group" style="display: none;">
+                <label>كلمة المرور:</label>
+                <input type="password" id="login-password" placeholder="أدخل كلمة المرور...">
+            </div>
+
+            <button class="login-btn" onclick="checkLogin()">تسجيل الدخول <i class="fa-solid fa-arrow-right-to-bracket"></i></button>
+        </div>
+    </div>
+
+    <!-- التطبيق الرئيسي (مخفي حتى يتم تسجيل الدخول) -->
+    <div id="main-app" style="display: none;">
+        
+        <nav class="top-navigation">
+            <div class="nav-title"><i class="fa-solid fa-headset"></i> لوحة إدارة الشكاوى والمقترحات</div>
+            <!-- زر الرئيسية سيتم إخفاؤه أو إظهاره بناءً على الصلاحية -->
+            <div><a href="index.html" class="btn-nav" id="btn-home"><i class="fa-solid fa-house"></i> الرئيسية</a></div>
+        </nav>
+
+        <!-- العدادات (تظهر للجميع) -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-info"><h3>إجمالي الشكاوى</h3><h2 id="count-total">0</h2></div>
+                <div class="stat-icon"><i class="fa-solid fa-inbox"></i></div>
+            </div>
+            <div class="stat-card new">
+                <div class="stat-info"><h3>شكاوى جديدة (انتظار)</h3><h2 id="count-new">0</h2></div>
+                <div class="stat-icon"><i class="fa-solid fa-bell"></i></div>
+            </div>
+            <div class="stat-card replied">
+                <div class="stat-info"><h3>تم التعامل معها</h3><h2 id="count-replied">0</h2></div>
+                <div class="stat-icon"><i class="fa-solid fa-check-double"></i></div>
+            </div>
+        </div>
+
+        <!-- قسم الإدارة (مخفي عن الزائر) -->
+        <div id="admin-section">
+            <!-- أدوات التحكم -->
+            <div class="controls-bar">
+                <div class="search-box">
+                    <i class="fa-solid fa-search"></i>
+                    <input type="text" id="search-input" placeholder="ابحث برقم الشكوى، التلميذ، أو ولي الأمر..." onkeyup="renderComplaints()">
+                </div>
+                <div class="filter-btns">
+                    <button class="filter-btn active" onclick="setFilter('all', this)">عرض الكل</button>
+                    <button class="filter-btn" onclick="setFilter('جديدة', this)">الجديدة فقط</button>
+                    <button class="filter-btn" onclick="setFilter('تم الرد', this)">المُنجزة</button>
+                </div>
+            </div>
+
+            <!-- حاوية الكروت -->
+            <div class="complaints-grid" id="complaints-container"></div>
+        </div>
+        
+    </div> <!-- نهاية main-app -->
+
+    <!-- نافذة القراءة والرد (التفصيلية) -->
+    <div class="modal-overlay" id="readerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span><i class="fa-solid fa-folder-open"></i> ملف الشكوى رقم: <span id="modal-comp-code" style="font-family:Arial; letter-spacing:1px; background:#1e3a8a; padding:2px 8px; border-radius:4px; margin-right:5px;"></span></span>
+                <button onclick="closeReaderModal()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <input type="hidden" id="modal-doc-id">
+                
+                <div class="modal-info-grid">
+                    <div class="modal-info-box">
+                        <span>بيانات التلميذ</span>
+                        <b id="modal-stu-name"></b>
+                        <span style="margin-top:5px; color:#1e3a8a;" id="modal-stu-class"></span>
+                    </div>
+                    <div class="modal-info-box">
+                        <span>مقدم الشكوى (ولي الأمر)</span>
+                        <b id="modal-parent-name"></b>
+                        <span style="margin-top:5px;"><a href="#" id="modal-phone" class="phone-link"><i class="fa-solid fa-phone"></i> </a></span>
+                    </div>
+                </div>
+
+                <div class="full-complaint-box">
+                    <h4><i class="fa-solid fa-comment-dots"></i> نص الشكوى / المقترح:</h4>
+                    <p id="modal-comp-text"></p>
+                </div>
+
+                <div class="reply-section">
+                    <h4><i class="fa-solid fa-reply"></i> رد الإدارة واعتماد الإجراء:</h4>
+                    <textarea id="admin-reply-text" class="reply-textarea" placeholder="اكتب رد المدرسة والقرار المتخذ هنا... (سيظهر لولي الأمر عند استعلامه عن الشكوى)"></textarea>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-close" onclick="closeReaderModal()">إلغاء</button>
+                <button class="btn-save-reply" onclick="saveReply()"><i class="fa-solid fa-check"></i> حفظ الرد وإغلاق الشكوى</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= نظام تسجيل الدخول =================
+        function togglePassword() {
+            const role = document.getElementById("role-select").value;
+            const passGroup = document.getElementById("password-group");
+            const passInput = document.getElementById("login-password");
+            
+            // تصفير الباسورد عند التبديل
+            passInput.value = ""; 
+
+            if (role === "visitor" || role === "") {
+                passGroup.style.display = "none";
+            } else {
+                passGroup.style.display = "block";
+                passInput.focus();
+            }
+        }
+
+        function checkLogin() {
+            const role = document.getElementById("role-select").value;
+            const pass = document.getElementById("login-password").value;
+            
+            const overlay = document.getElementById("login-overlay");
+            const mainApp = document.getElementById("main-app");
+            const btnHome = document.getElementById("btn-home");
+            const adminSection = document.getElementById("admin-section");
+
+            if (!role) {
+                alert("الرجاء اختيار الصلاحية أولاً!");
+                return;
+            }
+
+            // مستر زيزو (عرض كل شيء + زر الرئيسية)
+            if (role === "zizo") {
+                if (pass === "2026") {
+                    overlay.style.display = "none";
+                    mainApp.style.display = "block";
+                    btnHome.style.display = "inline-block";
+                    adminSection.style.display = "block";
+                } else {
+                    alert("❌ كلمة المرور غير صحيحة لمستر زيزو!");
+                }
+            } 
+            // مدير المدرسة / أخصائي (عرض الإدارة، اخفاء زر الرئيسية)
+            else if (role === "admin") {
+                if (pass === "26") {
+                    overlay.style.display = "none";
+                    mainApp.style.display = "block";
+                    btnHome.style.display = "none";
+                    adminSection.style.display = "block";
+                } else {
+                    alert("❌ كلمة المرور غير صحيحة للمدير أو الأخصائي!");
+                }
+            } 
+            // زائر (عرض العدادات فقط، بدون باسورد، اخفاء الرئيسية والادارة)
+            else if (role === "visitor") {
+                overlay.style.display = "none";
+                mainApp.style.display = "block";
+                btnHome.style.display = "none";
+                adminSection.style.display = "none";
+            }
+        }
+
+        // ================= الاتصال بقاعدة البيانات =================
+        const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
+        firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
+
+        let allComplaints = [];
+        let currentFilter = 'all';
+
+        // الاستماع اللحظي لجلب الشكاوى
+        db.collection("complaints").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+            allComplaints = [];
+            let countTotal = 0, countNew = 0, countReplied = 0;
+
+            snapshot.forEach((doc) => {
+                const data = doc.data(); data.id = doc.id;
+                allComplaints.push(data);
+                countTotal++;
+                if(data.status === "جديدة") countNew++;
+                else if(data.status === "تم الرد") countReplied++;
+            });
+
+            document.getElementById("count-total").innerText = countTotal;
+            document.getElementById("count-new").innerText = countNew;
+            document.getElementById("count-replied").innerText = countReplied;
+            renderComplaints(); 
+        });
+
+        function setFilter(status, btnElement) {
+            currentFilter = status;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            renderComplaints();
+        }
+
+        function renderComplaints() {
+            const container = document.getElementById("complaints-container");
+            const searchTerm = document.getElementById("search-input").value.trim().toLowerCase();
+            container.innerHTML = "";
+
+            let filtered = allComplaints.filter(c => {
+                if(currentFilter !== 'all' && c.status !== currentFilter) return false;
+                if(searchTerm) {
+                    const txt = `${c.code} ${c.student_name} ${c.parent_name}`.toLowerCase();
+                    if(!txt.includes(searchTerm)) return false;
+                }
+                return true;
+            });
+
+            if(filtered.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding:50px; color:#94a3b8; font-weight:bold;">لا توجد شكاوى لعرضها حالياً.</div>`;
+                return;
+            }
+
+            filtered.forEach(c => {
+                const isNew = c.status === "جديدة";
+                const headerClass = isNew ? "new" : "replied";
+                const statusText = isNew ? "قيد الانتظار" : "مُنجزة";
+                const icon = isNew ? "fa-bell" : "fa-check-double";
+
+                const btnText = isNew ? '<i class="fa-solid fa-folder-open"></i> فتح الشكوى للرد' : '<i class="fa-solid fa-folder-open"></i> قراءة وتعديل الرد';
+                const btnColor = isNew ? 'var(--primary)' : 'var(--success)';
+
+                const cardHtml = `
+                    <div class="comp-card">
+                        <div class="comp-header ${headerClass}">
+                            <span><i class="fa-solid ${icon}"></i> ${statusText}</span>
+                            <span class="comp-code">#${c.code}</span>
+                        </div>
+                        <div class="comp-body">
+                            <div class="info-row"><span>التلميذ:</span> <b>${c.student_name}</b></div>
+                            <div class="info-row"><span>مقدم الشكوى:</span> <b>${c.parent_name}</b></div>
+                            <div class="comp-text-preview">${c.text}</div>
+                        </div>
+                        <div class="comp-footer">
+                            <button class="btn-action btn-open" style="background:${btnColor};" onclick="openReaderModal('${c.id}')">${btnText}</button>
+                            <button class="btn-action btn-del" title="حذف الشكوى" onclick="deleteComplaint('${c.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        // ================= نافذة العرض والتفاعل =================
+        function openReaderModal(docId) {
+            const c = allComplaints.find(x => x.id === docId);
+            if(!c) return;
+
+            document.getElementById("modal-doc-id").value = c.id;
+            document.getElementById("modal-comp-code").innerText = c.code;
+            document.getElementById("modal-stu-name").innerText = c.student_name;
+            document.getElementById("modal-stu-class").innerText = `الصف ${c.grade} - فصل ${c.class_name}`;
+            document.getElementById("modal-parent-name").innerText = c.parent_name;
+            
+            const phoneEl = document.getElementById("modal-phone");
+            phoneEl.href = `tel:${c.phone}`;
+            phoneEl.innerHTML = `<i class="fa-solid fa-phone"></i> ${c.phone}`;
+            
+            document.getElementById("modal-comp-text").innerText = c.text;
+            document.getElementById("admin-reply-text").value = c.admin_reply || "";
+
+            document.getElementById("readerModal").classList.add("active");
+        }
+
+        function closeReaderModal() {
+            document.getElementById("readerModal").classList.remove("active");
+        }
+
+        async function saveReply() {
+            const docId = document.getElementById("modal-doc-id").value;
+            const replyText = document.getElementById("admin-reply-text").value.trim();
+
+            if(!replyText) { alert("لا يمكن حفظ رد فارغ!"); return; }
+
+            try {
+                await db.collection("complaints").doc(docId).update({
+                    status: "تم الرد",
+                    admin_reply: replyText,
+                    reply_date: new Date().toLocaleString('ar-EG')
+                });
+                closeReaderModal();
+            } catch (error) {
+                alert("حدث خطأ أثناء الحفظ: " + error.message);
+            }
+        }
+
+        async function deleteComplaint(docId) {
+            if(prompt("هذا الإجراء لا يمكن التراجع عنه. أدخل الرقم السري للحذف (وهو نفس رقم مستر زيزو):") === "2026") {
+                try { await db.collection("complaints").doc(docId).delete(); } 
+                catch(e) { alert("خطأ في الحذف: " + e.message); }
+            } else { alert("الرقم السري خاطئ!"); }
+        }
+    </script>
+</body>
+</html>

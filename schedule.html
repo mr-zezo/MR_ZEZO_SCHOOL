@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>منظومة الجدول المدرسي - مستر زيزو</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        /* ================= المتغيرات الديناميكية ================= */
+        :root { 
+            --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; --success: #16a34a; --info: #0284c7; --warning: #d97706; --danger: #be123c; 
+            
+            /* إعدادات جدول المعلم (A5) */
+            --row-title-h: 50px; --row-period-h: 30px; --row-session-h: 30px; --row-data-h: 55px;
+            --col-day-w: 100px; --col-session-w: auto;
+            --space-top: 15px; --space-bottom: 20px;
+            --border-thick: 3px; --border-thin: 1px;
+            --font-title: 22px; --font-header: 15px; --font-cell: 18px; --font-footer: 16px;
+
+            /* إعدادات جدول اللفاف (A4) */
+            --master-row-h: 30px;
+            --master-col-w: auto;
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', 'Arial', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); color: #000; padding: 15px; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
+
+        /* ================= شريط التنقل ================= */
+        .top-nav { width: 100%; max-width: 1100px; background: var(--dark); padding: 10px 20px; border-radius: 10px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .nav-title { font-size: 16px; font-weight: 900; color: #fcd34d; display: flex; align-items: center; gap: 10px; }
+        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 6px 15px; border-radius: 6px; font-size: 13px; font-weight: 700; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+        .btn-nav:hover { background: var(--primary); }
+
+        /* ================= لوحة التحكم ================= */
+        .controls-wrapper { width: 100%; max-width: 1100px; display: flex; flex-wrap: wrap; gap: 15px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--primary); margin-bottom: 20px; align-items: flex-end; }
+        
+        .input-group { display: flex; flex-direction: column; gap: 5px; flex-grow: 1; min-width: 200px; }
+        .input-group label { font-size: 12px; font-weight: 900; color: var(--dark); }
+        .input-group select, .input-group input { padding: 8px 12px; border-radius: 6px; border: 2px solid #cbd5e1; font-weight: 800; font-size: 14px; outline: none; background: #f8fafc; color: var(--dark); }
+        .input-group select:focus, .input-group input:focus { border-color: var(--info); background: white; }
+        
+        .btn-action { border: none; padding: 10px 20px; border-radius: 6px; font-weight: 900; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; height: 40px; transition: 0.2s; }
+        .btn-save { background: var(--success); flex-grow: 1; }
+        .btn-print { background: var(--primary); }
+        .btn-settings { background: var(--dark); }
+        .btn-add-tea { background: var(--warning); color: #000; text-decoration: none; }
+        .btn-action:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        .btn-missing { background: #8b5cf6; }
+        .btn-master { background: #0ea5e9; }
+
+        /* ================= شريط المراقبة الحية ================= */
+        .live-tracker { width: 100%; max-width: 1000px; background: #eff6ff; border: 2px solid #bfdbfe; padding: 10px 20px; border-radius: 10px; display: none; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: 900; font-size: 14px; color: var(--dark); }
+        .tracker-item { display: flex; align-items: center; gap: 8px; }
+        .tracker-val { font-size: 18px; color: var(--primary); background: white; padding: 2px 10px; border-radius: 6px; border: 1px solid #93c5fd; }
+        .tracker-status { padding: 4px 12px; border-radius: 20px; font-size: 13px; color: white; }
+
+        /* ================= منطقة الطباعة والجدول (A5) ================= */
+        #print-area { width: 100%; max-width: 1000px; background: white; padding: 20px 30px; border: 1px solid #ccc; box-shadow: 0 0 20px rgba(0,0,0,0.1); margin: 0 auto; color: #000; }
+        
+        .print-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; margin-bottom: var(--space-top); font-weight: 900; font-size: 16px; line-height: 1.6; border-bottom: 2px solid #e2e8f0; }
+        .ph-right { text-align: right; }
+        .ph-left { text-align: center; border-right: 2px solid #000; padding-right: 20px; }
+
+        .main-table { width: 100%; border-collapse: collapse; text-align: center; border: var(--border-thick) solid #000; table-layout: fixed; }
+        .main-table th, .main-table td { border: var(--border-thin) solid #000; padding: 2px; font-weight: 900; }
+        
+        .table-title { font-size: var(--font-title); height: var(--row-title-h); border-bottom: var(--border-thick) solid #000 !important; letter-spacing: 1px; vertical-align: middle; }
+        .period-header { font-size: var(--font-header); height: var(--row-period-h); }
+        .main-table thead tr:last-child th { height: var(--row-session-h); font-size: var(--font-header); border-bottom: var(--border-thick) solid #000 !important; }
+        .main-table tbody td { height: var(--row-data-h); }
+
+        .main-table th:first-child, .main-table td:first-child { width: var(--col-day-w); font-size: var(--font-header); border-left: var(--border-thick) solid #000 !important; }
+        .main-table th:not(:first-child), .main-table td:not(:first-child) { width: var(--col-session-w); }
+        .main-table th:nth-child(2n+1):not(:first-child), .main-table td:nth-child(2n+1):not(:first-child) { border-left: var(--border-thick) solid #000 !important; }
+
+        .cell-input { width: 100%; height: 100%; text-align: center; border: none; background: transparent; font-weight: 900; font-size: var(--font-cell); font-family: 'Arial', sans-serif; outline: none; color: #000; }
+        .cell-input:focus { background: #fef3c7; box-shadow: inset 0 0 0 2px var(--warning); }
+        .cell-clash { color: red !important; background: #fee2e2 !important; }
+
+        .print-footer { display: flex; justify-content: space-between; margin-top: var(--space-bottom); padding: 10px 20px; font-weight: 900; font-size: var(--font-footer); border-top: 2px solid #000; color: #000; }
+
+        /* ================= النوافذ المنبثقة ================= */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: #f8fafc; width: 100%; max-width: 900px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-header { background: var(--dark); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 25px; overflow-y: auto; }
+        
+        .settings-section { background: white; padding: 15px; border-radius: 10px; border: 1px solid #cbd5e1; margin-bottom: 15px; }
+        .settings-section h3 { font-size: 14px; color: var(--primary); margin-bottom: 10px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; }
+        .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
+        .set-group { display: flex; flex-direction: column; gap: 5px; }
+        .set-group label { font-size: 12px; font-weight: 800; color: #475569; }
+        .set-group input, .set-group select { padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: bold; text-align: center; outline: none; }
+        .set-group input:focus, .set-group select:focus { border-color: var(--info); }
+
+        /* جدول الحصص الفارغة الجديد */
+        .missing-table { width: 100%; border-collapse: collapse; text-align: center; background: white; border: 2px solid var(--dark); }
+        .missing-table th, .missing-table td { border: 1px solid #cbd5e1; padding: 10px; font-weight: 900; font-size: 14px; }
+        .missing-table thead th { background: var(--dark); color: white; }
+        .missing-table td:nth-child(3) { text-align: right; color: var(--danger); line-height: 1.6; }
+
+        /* ================= جدول اللفاف (A4) ================= */
+        #master-print-area { display: none; background: white; padding: 20px; color: #000; width: 100%; max-width: 1000px; margin: 0 auto; border: 1px solid #ccc; box-shadow: 0 0 20px rgba(0,0,0,0.1); position: relative; }
+        .master-table { width: 100%; border-collapse: collapse; text-align: center; border: var(--border-thick) solid #000; table-layout: fixed; }
+        .master-table th, .master-table td { border: var(--border-thin) solid #000; padding: 2px; font-weight: 900; font-size: 13px; }
+        .master-table thead th { background: #f2f2f2; height: 30px; }
+        .master-table tbody td { height: var(--master-row-h); overflow: hidden; white-space: nowrap; }
+        .master-table th:first-child, .master-table td:first-child { width: 80px; font-size: 15px; border-left: var(--border-thick) solid #000 !important; }
+        .master-table th:not(:first-child), .master-table td:not(:first-child) { width: var(--master-col-w); }
+        .master-table th:nth-child(2n+1):not(:first-child), .master-table td:nth-child(2n+1):not(:first-child) { border-left: var(--border-thick) solid #000 !important; }
+
+        .btn-close-master { position: absolute; top: 20px; left: 20px; background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        .zizo-signature { position: fixed; bottom: 10px; left: 10px; background: white; padding: 5px 15px; border-radius: 20px; font-weight: 900; font-size: 11px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); z-index: 100; }
+
+        /* ================= إعدادات الطباعة ================= */
+        @media print {
+            body { background: white; padding: 0; direction: rtl !important; }
+            .top-nav, .controls-wrapper, .live-tracker, .zizo-signature, .modal-overlay, .btn-close-master { display: none !important; }
+            
+            /* طباعة جدول المعلم (الافتراضي) */
+            body:not(.print-master-mode) #print-area { display: block !important; border: none; box-shadow: none; padding: 0; width: 100%; max-width: 100%; margin: 0; }
+            body:not(.print-master-mode) .cell-input { background: transparent !important; border: none !important; }
+            
+            /* طباعة جدول اللفاف */
+            body.print-master-mode #master-print-area { display: block !important; border: none; box-shadow: none; padding: 0; width: 100%; max-width: 100%; margin: 0; }
+            body.print-master-mode #print-area { display: none !important; }
+        }
+    </style>
+    
+    <!-- ستايل ديناميكي لهوامش الطباعة -->
+    <style id="dynamic-print-style"></style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-title"><i class="fa-solid fa-table-cells"></i> منظومة الجدول المدرسي <span style="font-size:12px; color:white; background:#ca8a04; padding:2px 8px; border-radius:10px; margin-right:10px;">إعداد مستر زيزو</span></div>
+        <a href="index.html" class="btn-nav"><i class="fa-solid fa-house"></i> الرئيسية</a>
+    </nav>
+
+    <div class="controls-wrapper">
+        <!-- الصف الأول -->
+        <div style="display:flex; width:100%; gap:15px; flex-wrap:wrap;">
+            <div class="input-group">
+                <label>1. جدول معلم (المعلمين فقط):</label>
+                <div style="display:flex; gap:5px;">
+                    <select id="teacher-select" onchange="loadTeacherSchedule()" style="flex-grow:1;">
+                        <option value="" disabled selected>جاري التحميل...</option>
+                    </select>
+                    <a href="tea.html" target="_blank" class="btn-action btn-add-tea" title="إضافة معلم جديد"><i class="fa-solid fa-user-plus"></i></a>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>الاسم المختصر (قابل للتعديل):</label>
+                <input type="text" id="short-name" placeholder="يظهر تلقائياً...">
+            </div>
+
+            <div style="border-right: 2px dashed #cbd5e1; margin: 0 10px;"></div>
+
+            <div class="input-group">
+                <label>2. عرض جدول فصل:</label>
+                <select id="class-select" onchange="loadClassSchedule()">
+                    <option value="" disabled selected>اختر الفصل...</option>
+                </select>
+            </div>
+
+            <div style="border-right: 2px dashed #cbd5e1; margin: 0 10px;"></div>
+
+            <div class="input-group" style="min-width: 130px;">
+                <label>بدء العمل به من:</label>
+                <input type="date" id="start-date" onchange="saveStartDate(this.value)">
+            </div>
+        </div>
+
+        <!-- الصف الثاني (الأزرار) -->
+        <div style="display:flex; width:100%; gap:10px; flex-wrap:wrap; margin-top:10px;">
+            <button class="btn-action btn-missing" onclick="openMissingPeriodsModal()"><i class="fa-solid fa-triangle-exclamation"></i> الحصص غير المسندة</button>
+            <button class="btn-action btn-master" onclick="openMasterScheduleModal()"><i class="fa-solid fa-table-list"></i> جدول لفاف يومي</button>
+            
+            <div style="flex-grow:1"></div>
+
+            <button class="btn-action btn-settings" onclick="openSettingsModal()"><i class="fa-solid fa-sliders"></i> التنسيق</button>
+            <button class="btn-action btn-save" onclick="saveTeacherSchedule()"><i class="fa-solid fa-floppy-disk"></i> حفظ</button>
+            <button class="btn-action btn-print" onclick="printNormalSchedule()"><i class="fa-solid fa-print"></i> طباعة (A5)</button>
+        </div>
+    </div>
+
+    <div class="live-tracker" id="live-tracker">
+        <div class="tracker-item"><i class="fa-solid fa-medal"></i> الدرجة: <span class="tracker-val" id="tk-degree">-</span></div>
+        <div class="tracker-item"><i class="fa-solid fa-scale-balanced"></i> النصاب: <span class="tracker-val" id="tk-quota">0</span></div>
+        <div class="tracker-item"><i class="fa-solid fa-pen-to-square"></i> المسند: <span class="tracker-val" id="tk-assigned">0</span></div>
+        <div class="tracker-status" id="tk-status"></div>
+    </div>
+
+    <!-- منطقة طباعة جدول المعلم/الفصل (A5) -->
+    <div id="print-area">
+        <div class="print-header">
+            <div class="ph-right">
+                <div>إدارة الشهداء التعليمية</div>
+                <div>مدرسة الشهيد أشرف حبيب</div>
+            </div>
+            <div class="ph-left">
+                <div>يعمل بهذا الجدول بدء من</div>
+                <div id="p-date" style="font-family: Arial; letter-spacing: 1px;">.... / .... / ٢٠٢</div>
+            </div>
+        </div>
+
+        <table class="main-table">
+            <thead>
+                <tr>
+                    <td colspan="9" class="table-title" id="table-main-title">جدول حصص ........................................</td>
+                </tr>
+                <tr>
+                    <th rowspan="2">اليوم</th>
+                    <th colspan="2" class="period-header">الفتره الأولى</th>
+                    <th colspan="2" class="period-header">الفتره الثانية</th>
+                    <th colspan="2" class="period-header">الفتره الثالثة</th>
+                    <th colspan="2" class="period-header">الفتره الرابعة</th>
+                </tr>
+                <tr>
+                    <th id="th-s-1">١</th><th id="th-s-2">٢</th><th id="th-s-3">٣</th><th id="th-s-4">٤</th>
+                    <th id="th-s-5">٥</th><th id="th-s-6">٦</th><th id="th-s-7">٧</th><th id="th-s-8">٨</th>
+                </tr>
+            </thead>
+            <tbody id="schedule-body"></tbody>
+        </table>
+
+        <div class="print-footer">
+            <div>مسئول الجدول : أ / رضا زغلول</div>
+            <div>مدير المدرسة أ / أشرف عبدالستار</div>
+        </div>
+    </div>
+
+    <!-- منطقة طباعة جدول اللفاف (A4) -->
+    <div id="master-print-area">
+        <button class="btn-close-master" onclick="hideMasterOnScreen()"><i class="fa-solid fa-arrow-right"></i> عودة للجدول العادي</button>
+        <div class="print-header">
+            <div class="ph-right">
+                <div>إدارة الشهداء التعليمية</div>
+                <div>مدرسة الشهيد أشرف حبيب</div>
+            </div>
+            <div class="ph-left">
+                <div style="font-size:20px; font-weight:900; border-bottom:2px solid #000;" id="master-title">الجدول اليومي</div>
+            </div>
+        </div>
+        <div id="master-table-container"></div>
+        <!-- تم إزالة التذييل من هنا كما طلبت -->
+    </div>
+
+    <!-- نافذة الحصص غير المسندة (الجديدة) -->
+    <div class="modal-overlay" id="missingModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-triangle-exclamation"></i> تقرير الحصص الفارغة (غير المسندة)</h2>
+                <button onclick="document.getElementById('missingModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body" id="missing-body">
+                <!-- سيتم التعبئة برمجياً -->
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إعداد جدول اللفاف -->
+    <div class="modal-overlay" id="masterModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-table-list"></i> إعداد جدول اللفاف اليومي (A4)</h2>
+                <button onclick="document.getElementById('masterModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="display:flex; gap:15px; margin-bottom: 20px;">
+                    <div class="input-group">
+                        <label>اختر اليوم:</label>
+                        <select id="master-day-select">
+                            <option value="الاحد">الأحد</option>
+                            <option value="الاثنين">الإثنين</option>
+                            <option value="الثلاثاء">الثلاثاء</option>
+                            <option value="الاربعاء">الأربعاء</option>
+                            <option value="الخميس">الخميس</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>اختر الصفوف:</label>
+                        <select id="master-stage-select">
+                            <option value="lower">الصفوف الأولى (1 إلى 3)</option>
+                            <option value="upper">الصفوف العليا (4 إلى 6)</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-action btn-save" onclick="showMasterOnScreen()"><i class="fa-solid fa-eye"></i> عرض الجدول على الشاشة</button>
+                    <button class="btn-action btn-print" onclick="printMasterSchedule()"><i class="fa-solid fa-print"></i> طباعة (A4 عمودي)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة إعدادات التنسيق والطباعة -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-sliders"></i> إعدادات التنسيق والطباعة (تطبق فوراً)</h2>
+                <button onclick="document.getElementById('settingsModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="settings-section">
+                    <h3><i class="fa-solid fa-language"></i> لغة الأرقام</h3>
+                    <div class="settings-grid">
+                        <div class="set-group">
+                            <label>تنسيق الأرقام في الجدول</label>
+                            <select id="set-num-format">
+                                <option value="ar">أرقام عربية (٠١٢٣)</option>
+                                <option value="en">أرقام إنجليزية (0123)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3><i class="fa-solid fa-text-height"></i> أحجام الخطوط (px)</h3>
+                    <div class="settings-grid">
+                        <div class="set-group"><label>عنوان الجدول</label><input type="number" id="set-font-title"></div>
+                        <div class="set-group"><label>رؤوس الأعمدة</label><input type="number" id="set-font-header"></div>
+                        <div class="set-group"><label>بيانات الخلايا</label><input type="number" id="set-font-cell"></div>
+                        <div class="set-group"><label>التذييل</label><input type="number" id="set-font-footer"></div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3><i class="fa-solid fa-arrows-up-down"></i> ارتفاعات الصفوف (px)</h3>
+                    <div class="settings-grid">
+                        <div class="set-group"><label>صف اسم المعلم</label><input type="number" id="set-row-title"></div>
+                        <div class="set-group"><label>صف الفترات</label><input type="number" id="set-row-period"></div>
+                        <div class="set-group"><label>صف أرقام الحصص</label><input type="number" id="set-row-session"></div>
+                        <div class="set-group"><label>صفوف أيام الأسبوع (A5)</label><input type="number" id="set-row-data"></div>
+                        <div class="set-group"><label style="color:var(--danger)">صفوف جدول اللفاف (A4)</label><input type="number" id="set-master-row"></div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3><i class="fa-solid fa-arrows-left-right"></i> المسافات وعرض الأعمدة (px)</h3>
+                    <div class="settings-grid">
+                        <div class="set-group"><label>عرض عمود اليوم/الفصل</label><input type="number" id="set-col-day"></div>
+                        <div class="set-group"><label>عرض أعمدة الحصص (0=تلقائي)</label><input type="number" id="set-col-session"></div>
+                        <div class="set-group"><label style="color:var(--danger)">عرض حصص اللفاف (0=تلقائي)</label><input type="number" id="set-master-col"></div>
+                        <div class="set-group"><label>المسافة أعلى الجدول</label><input type="number" id="set-space-top"></div>
+                        <div class="set-group"><label>المسافة أسفل الجدول</label><input type="number" id="set-space-bottom"></div>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3><i class="fa-solid fa-border-all"></i> الحدود وهوامش الطباعة</h3>
+                    <div class="settings-grid">
+                        <div class="set-group"><label>الحد السميك (px)</label><input type="number" id="set-border-thick"></div>
+                        <div class="set-group"><label>الحد الرفيع (px)</label><input type="number" id="set-border-thin"></div>
+                        <div class="set-group"><label>هامش الطباعة العمودي (mm)</label><input type="number" id="set-margin-v"></div>
+                        <div class="set-group"><label>هامش الطباعة الأفقي (mm)</label><input type="number" id="set-margin-h"></div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button class="btn-action btn-save" style="width:100%" onclick="saveAndApplySettings()"><i class="fa-solid fa-check"></i> تطبيق وحفظ الإعدادات</button>
+                    <button class="btn-action" style="background:#64748b;" onclick="resetSettings()"><i class="fa-solid fa-rotate-left"></i> استعادة الافتراضي</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="zizo-signature">إعداد مستر زيزو</div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
+        firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
+        db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+
+        let TEACHERS = [];
+        let CURRENT_TEACHER = null;
+        const days = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس"];
+        const dayNamesAr = {"الاحد":"الأحد", "الاثنين":"الإثنين", "الثلاثاء":"الثلاثاء", "الاربعاء":"الأربعاء", "الخميس":"الخميس"};
+        
+        const predefinedClasses = [
+            "1/1", "2/1", "3/1", "4/1", "5/1", "6/1",
+            "1/2", "2/2", "3/2", "4/2", "5/2", "6/2",
+            "1/3", "2/3", "3/3", "4/3", "5/3", "6/3", "7/3", "8/3",
+            "1/4", "2/4", "3/4", "4/4", "5/4", "6/4", "7/4", "8/4",
+            "1/5", "2/5", "3/5", "4/5", "5/5", "6/5", "7/5", "8/5",
+            "1/6", "2/6", "3/6", "4/6", "5/6", "6/6", "7/6", "8/6"
+        ];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            loadSettings(); 
+            initEmptyTable();
+            loadClassesList();
+            loadSavedDate();
+            await loadTeachers();
+            setupEnterKeyNavigation();
+        });
+
+        // ================= دالة تنظيف النصوص =================
+        const clean = t => t ? t.trim().replace(/[أإآا]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, "") : "";
+
+        // ================= دالة تنسيق الأرقام =================
+        function formatNum(str) {
+            const format = JSON.parse(localStorage.getItem("schedule_settings"))?.numFormat || 'ar';
+            if (!str && str !== 0) return "";
+            str = String(str);
+            if (format === 'en') return str.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+            else return str.replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
+        }
+
+        // ================= إعدادات التنسيق والطباعة =================
+        const defaultSettings = {
+            rowTitle: 50, rowPeriod: 30, rowSession: 30, rowData: 55,
+            colDay: 100, colSession: 0, spaceTop: 15, spaceBottom: 20,
+            borderThick: 3, borderThin: 1, marginV: 5, marginH: 5,
+            fontTitle: 22, fontHeader: 15, fontCell: 18, fontFooter: 16,
+            numFormat: 'ar', masterRow: 30, masterCol: 0
+        };
+
+        function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); }
+
+        function loadSettings() {
+            const saved = JSON.parse(localStorage.getItem("schedule_settings")) || defaultSettings;
+            
+            document.getElementById("set-row-title").value = saved.rowTitle;
+            document.getElementById("set-row-period").value = saved.rowPeriod;
+            document.getElementById("set-row-session").value = saved.rowSession;
+            document.getElementById("set-row-data").value = saved.rowData;
+            document.getElementById("set-col-day").value = saved.colDay;
+            document.getElementById("set-col-session").value = saved.colSession;
+            document.getElementById("set-space-top").value = saved.spaceTop;
+            document.getElementById("set-space-bottom").value = saved.spaceBottom;
+            document.getElementById("set-border-thick").value = saved.borderThick;
+            document.getElementById("set-border-thin").value = saved.borderThin;
+            document.getElementById("set-margin-v").value = saved.marginV;
+            document.getElementById("set-margin-h").value = saved.marginH;
+            document.getElementById("set-font-title").value = saved.fontTitle;
+            document.getElementById("set-font-header").value = saved.fontHeader;
+            document.getElementById("set-font-cell").value = saved.fontCell;
+            document.getElementById("set-font-footer").value = saved.fontFooter;
+            document.getElementById("set-num-format").value = saved.numFormat;
+            document.getElementById("set-master-row").value = saved.masterRow || 30;
+            document.getElementById("set-master-col").value = saved.masterCol || 0;
+
+            applyCSSVariables(saved);
+            updateStaticNumbers();
+        }
+
+        function saveAndApplySettings() {
+            const settings = {
+                rowTitle: document.getElementById("set-row-title").value || defaultSettings.rowTitle,
+                rowPeriod: document.getElementById("set-row-period").value || defaultSettings.rowPeriod,
+                rowSession: document.getElementById("set-row-session").value || defaultSettings.rowSession,
+                rowData: document.getElementById("set-row-data").value || defaultSettings.rowData,
+                colDay: document.getElementById("set-col-day").value || defaultSettings.colDay,
+                colSession: document.getElementById("set-col-session").value || defaultSettings.colSession,
+                spaceTop: document.getElementById("set-space-top").value || defaultSettings.spaceTop,
+                spaceBottom: document.getElementById("set-space-bottom").value || defaultSettings.spaceBottom,
+                borderThick: document.getElementById("set-border-thick").value || defaultSettings.borderThick,
+                borderThin: document.getElementById("set-border-thin").value || defaultSettings.borderThin,
+                marginV: document.getElementById("set-margin-v").value || defaultSettings.marginV,
+                marginH: document.getElementById("set-margin-h").value || defaultSettings.marginH,
+                fontTitle: document.getElementById("set-font-title").value || defaultSettings.fontTitle,
+                fontHeader: document.getElementById("set-font-header").value || defaultSettings.fontHeader,
+                fontCell: document.getElementById("set-font-cell").value || defaultSettings.fontCell,
+                fontFooter: document.getElementById("set-font-footer").value || defaultSettings.fontFooter,
+                numFormat: document.getElementById("set-num-format").value || defaultSettings.numFormat,
+                masterRow: document.getElementById("set-master-row").value || defaultSettings.masterRow,
+                masterCol: document.getElementById("set-master-col").value || defaultSettings.masterCol
+            };
+
+            localStorage.setItem("schedule_settings", JSON.stringify(settings));
+            applyCSSVariables(settings);
+            updateStaticNumbers();
+            
+            document.querySelectorAll('.cell-input').forEach(inp => { if(inp.value) inp.value = formatNum(inp.value); });
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function resetSettings() { localStorage.removeItem("schedule_settings"); loadSettings(); }
+
+        function applyCSSVariables(s) {
+            const root = document.documentElement;
+            root.style.setProperty('--row-title-h', s.rowTitle + 'px');
+            root.style.setProperty('--row-period-h', s.rowPeriod + 'px');
+            root.style.setProperty('--row-session-h', s.rowSession + 'px');
+            root.style.setProperty('--row-data-h', s.rowData + 'px');
+            root.style.setProperty('--col-day-w', s.colDay + 'px');
+            root.style.setProperty('--col-session-w', s.colSession == 0 ? 'auto' : s.colSession + 'px');
+            root.style.setProperty('--space-top', s.spaceTop + 'px');
+            root.style.setProperty('--space-bottom', s.spaceBottom + 'px');
+            root.style.setProperty('--border-thick', s.borderThick + 'px');
+            root.style.setProperty('--border-thin', s.borderThin + 'px');
+            root.style.setProperty('--font-title', s.fontTitle + 'px');
+            root.style.setProperty('--font-header', s.fontHeader + 'px');
+            root.style.setProperty('--font-cell', s.fontCell + 'px');
+            root.style.setProperty('--font-footer', s.fontFooter + 'px');
+            root.style.setProperty('--master-row-h', s.masterRow + 'px');
+            root.style.setProperty('--master-col-w', s.masterCol == 0 ? 'auto' : s.masterCol + 'px');
+
+            document.getElementById("dynamic-print-style").innerHTML = `
+                @media print { 
+                    body:not(.print-master-mode) @page { size: A5 landscape; margin: ${s.marginV}mm ${s.marginH}mm; } 
+                    body.print-master-mode @page { size: A4 portrait; margin: ${s.marginV}mm ${s.marginH}mm; }
+                }
+            `;
+        }
+
+        function updateStaticNumbers() {
+            for(let i=1; i<=8; i++) { document.getElementById(`th-s-${i}`).innerText = formatNum(i); }
+            const dateVal = document.getElementById("start-date").value;
+            if(dateVal) document.getElementById('p-date').innerText = formatNum(dateVal.split('-').reverse().join(' / '));
+        }
+
+        // ================= باقي العمليات الأساسية =================
+        function loadSavedDate() {
+            const savedDate = localStorage.getItem("schedule_start_date");
+            if(savedDate) {
+                document.getElementById("start-date").value = savedDate;
+                document.getElementById('p-date').innerText = formatNum(savedDate.split('-').reverse().join(' / '));
+            }
+        }
+        function saveStartDate(val) {
+            localStorage.setItem("schedule_start_date", val);
+            document.getElementById('p-date').innerText = formatNum(val.split('-').reverse().join(' / '));
+        }
+
+        function initEmptyTable() {
+            const tbody = document.getElementById("schedule-body");
+            tbody.innerHTML = "";
+            days.forEach(day => {
+                let tr = `<tr><td>${dayNamesAr[day]}</td>`;
+                for(let i=1; i<=8; i++) {
+                    tr += `<td><input type="text" class="cell-input" data-day="${day}" data-session="${i}" onblur="smartFormat(this)" oninput="updateLiveStats()"></td>`;
+                }
+                tr += `</tr>`;
+                tbody.innerHTML += tr;
+            });
+        }
+
+        function setupEnterKeyNavigation() {
+            const inputs = document.querySelectorAll('.cell-input');
+            inputs.forEach((inp, index) => {
+                inp.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        smartFormat(inp); 
+                        if (index + 1 < inputs.length) inputs[index + 1].focus();
+                    }
+                });
+            });
+        }
+
+        function smartFormat(input) {
+            if(input.readOnly) return;
+            let val = input.value.trim();
+            let enVal = val.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+            if(/^[0-9]{2}$/.test(enVal)) {
+                let formatted = enVal[0] + "/" + enVal[1];
+                input.value = formatNum(formatted);
+            } else if (val !== "") {
+                input.value = formatNum(val);
+            }
+            updateLiveStats();
+        }
+
+        async function loadTeachers() {
+            const select = document.getElementById("teacher-select");
+            try {
+                const snap = await db.collection("teachers").where("emp_status", "==", "على رأس العمل").get();
+                snap.forEach(doc => {
+                    const t = doc.data();
+                    const job = clean(t.cadre_job);
+                    // استبعاد الإداريين والعمال
+                    const isNonTeacher = job.includes("عامل") || job.includes("اداري") || job.includes("اخصائي") || job.includes("مشرف") || job.includes("سكرتير") || job.includes("امين") || job.includes("حارس") || job.includes("فني") || job.includes("فنى");
+                    
+                    if(!isNonTeacher) {
+                        TEACHERS.push(t);
+                    }
+                });
+                TEACHERS.sort((a,b) => (a.name || "").localeCompare(b.name, 'ar'));
+                
+                select.innerHTML = '<option value="" disabled selected>اختر المعلم...</option>';
+                TEACHERS.forEach(t => { select.innerHTML += `<option value="${t.code}">${t.name}</option>`; });
+            } catch(e) { select.innerHTML = '<option value="" disabled>خطأ</option>'; }
+        }
+
+        function loadClassesList() {
+            const select = document.getElementById("class-select");
+            select.innerHTML = '<option value="" disabled selected>اختر الفصل...</option>';
+            predefinedClasses.forEach(c => { select.innerHTML += `<option value="${c}">${formatNum(c)}</option>`; });
+        }
+
+        function loadTeacherSchedule() {
+            document.getElementById("class-select").selectedIndex = 0; 
+            
+            const code = document.getElementById("teacher-select").value;
+            CURRENT_TEACHER = TEACHERS.find(x => x.code === code);
+            if(!CURRENT_TEACHER) return;
+
+            let sName = CURRENT_TEACHER.short_name;
+            if(!sName) {
+                const parts = CURRENT_TEACHER.name.trim().split(/\s+/);
+                if(parts.length === 1) sName = parts[0];
+                else if (parts[0] === "عبد" || parts[0] === "ابو" || parts[0] === "أبو") sName = parts[0] + " " + parts[1] + " " + parts[parts.length - 1];
+                else sName = parts[0] + " " + parts[parts.length - 1];
+            }
+            
+            document.getElementById("short-name").value = sName;
+            document.getElementById("table-main-title").innerHTML = `جدول حصص أ / <span style="color:var(--primary)">${sName}</span>`;
+
+            document.getElementById("live-tracker").style.display = "flex";
+            document.getElementById("tk-degree").innerText = CURRENT_TEACHER.fin_degree || "غير مسجل";
+            document.getElementById("tk-quota").innerText = formatNum(CURRENT_TEACHER.quota || "0");
+
+            const savedSchedule = CURRENT_TEACHER.schedule || {};
+            document.querySelectorAll('.cell-input').forEach(inp => {
+                inp.readOnly = false;
+                inp.style.color = "#000";
+                inp.classList.remove("cell-clash");
+                
+                const key = `${inp.getAttribute("data-day")}_${inp.getAttribute("data-session")}`;
+                inp.value = formatNum(savedSchedule[key] || "");
+            });
+
+            updateLiveStats();
+        }
+
+        function updateLiveStats() {
+            if(!CURRENT_TEACHER) return;
+            let count = 0;
+            document.querySelectorAll('.cell-input').forEach(inp => { if(inp.value.trim() !== "") count++; });
+            
+            document.getElementById("tk-assigned").innerText = formatNum(count);
+            
+            let quota = parseInt(CURRENT_TEACHER.quota) || 0;
+            let statusEl = document.getElementById("tk-status");
+            
+            if(count > quota) {
+                statusEl.innerText = "تجاوز النصاب!";
+                statusEl.style.background = "var(--danger)";
+            } else if (count < quota) {
+                statusEl.innerText = "أقل من النصاب";
+                statusEl.style.background = "var(--warning)";
+            } else {
+                statusEl.innerText = "مكتمل";
+                statusEl.style.background = "var(--success)";
+            }
+        }
+
+        async function saveTeacherSchedule() {
+            const code = document.getElementById("teacher-select").value;
+            if(!code) { alert("اختر المعلم أولاً!"); return; }
+
+            const shortName = document.getElementById("short-name").value.trim();
+            if(!shortName) { alert("الاسم المختصر مطلوب!"); return; }
+
+            let scheduleData = {};
+            let clashes = [];
+
+            document.querySelectorAll('.cell-input').forEach(inp => {
+                const val = inp.value.trim();
+                if(val) {
+                    const key = `${inp.getAttribute("data-day")}_${inp.getAttribute("data-session")}`;
+                    const enVal = val.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+                    scheduleData[key] = enVal;
+
+                    TEACHERS.forEach(t => {
+                        if(t.code !== code && t.schedule && t.schedule[key] === enVal) {
+                            clashes.push(`فصل (${formatNum(enVal)}) في ${dayNamesAr[key.split('_')[0]]} الحصة ${formatNum(key.split('_')[1])} مسند لـ (أ. ${t.short_name || t.name})`);
+                        }
+                    });
+                }
+            });
+
+            if(clashes.length > 0) {
+                const msg = "⚠️ تحذير: يوجد تعارض في الجدول!\n\n" + clashes.join("\n") + "\n\nهل تريد الحفظ على أي حال؟";
+                if(!confirm(msg)) return; 
+            }
+
+            const btn = document.querySelector('.btn-save'); const oldHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+
+            try {
+                await db.collection("teachers").doc(code).set({ short_name: shortName, schedule: scheduleData }, { merge: true });
+                const tIndex = TEACHERS.findIndex(t => t.code === code);
+                if(tIndex > -1) { TEACHERS[tIndex].short_name = shortName; TEACHERS[tIndex].schedule = scheduleData; }
+                document.getElementById("table-main-title").innerHTML = `جدول حصص أ / <span style="color:var(--primary)">${shortName}</span>`;
+                alert("✅ تم الحفظ بنجاح!");
+            } catch(e) { alert("❌ خطأ: " + e.message); }
+            finally { btn.innerHTML = oldHtml; }
+        }
+
+        function loadClassSchedule() {
+            document.getElementById("teacher-select").selectedIndex = 0; 
+            document.getElementById("short-name").value = "";
+            document.getElementById("live-tracker").style.display = "none";
+            CURRENT_TEACHER = null;
+
+            const className = document.getElementById("class-select").value; 
+            if(!className) return;
+
+            document.getElementById("table-main-title").innerHTML = `جدول حصص فصل / <span style="color:var(--danger)">${formatNum(className)}</span>`;
+
+            document.querySelectorAll('.cell-input').forEach(inp => {
+                inp.value = "";
+                inp.readOnly = true; 
+                inp.classList.remove("cell-clash");
+                inp.style.color = "var(--primary)";
+
+                const key = `${inp.getAttribute("data-day")}_${inp.getAttribute("data-session")}`;
+                let teachersInThisSlot = [];
+                
+                TEACHERS.forEach(t => {
+                    if(t.schedule && t.schedule[key] === className) {
+                        teachersInThisSlot.push(t.short_name || t.name.split(' ')[0]);
+                    }
+                });
+
+                if(teachersInThisSlot.length === 1) {
+                    inp.value = teachersInThisSlot[0];
+                } else if (teachersInThisSlot.length > 1) {
+                    inp.value = "تعارض!";
+                    inp.classList.add("cell-clash");
+                }
+            });
+        }
+
+        // ================= الميزات الجديدة (الحصص الفارغة + جدول اللفاف) =================
+
+        // 1. الحصص غير المسندة (الجدول الجديد)
+        function openMissingPeriodsModal() {
+            const body = document.getElementById("missing-body");
+            body.innerHTML = "<div style='text-align:center;'><i class='fa-solid fa-spinner fa-spin'></i> جاري فحص الجداول...</div>";
+            document.getElementById("missingModal").classList.add("active");
+
+            setTimeout(() => {
+                let html = `<table class="missing-table">
+                    <thead><tr><th style="width:80px">اليوم</th><th style="width:80px">الحصة</th><th>الفصول التي بدون معلم</th></tr></thead>
+                    <tbody>`;
+                
+                let totalMissing = 0;
+
+                days.forEach(day => {
+                    let dayHasMissing = false;
+                    let dayHtml = "";
+                    
+                    for(let i=1; i<=8; i++) {
+                        let missingClasses = [];
+                        predefinedClasses.forEach(cls => {
+                            const key = `${day}_${i}`;
+                            const isAssigned = TEACHERS.some(t => t.schedule && t.schedule[key] === cls);
+                            if(!isAssigned) missingClasses.push(formatNum(cls));
+                        });
+                        
+                        if(missingClasses.length > 0) {
+                            dayHtml += `<tr>
+                                ${!dayHasMissing ? `<td rowspan="ROWSPAN_PLACEHOLDER" style="background:#f8fafc; color:var(--primary);">${dayNamesAr[day]}</td>` : ''}
+                                <td>${formatNum(i)}</td>
+                                <td>${missingClasses.join(' ، ')}</td>
+                            </tr>`;
+                            dayHasMissing = true;
+                            totalMissing += missingClasses.length;
+                        }
+                    }
+                    
+                    if(dayHasMissing) {
+                        // حساب عدد الصفوف لليوم لضبط الـ rowspan
+                        const rowCount = (dayHtml.match(/<tr>/g) || []).length;
+                        dayHtml = dayHtml.replace("ROWSPAN_PLACEHOLDER", rowCount);
+                        html += dayHtml;
+                    }
+                });
+
+                html += `</tbody></table>`;
+
+                if(totalMissing === 0) {
+                    body.innerHTML = `<div style="text-align:center; color:var(--success); font-size:18px;"><i class="fa-solid fa-check-circle"></i> جميع حصص المدرسة مسندة بالكامل!</div>`;
+                } else {
+                    body.innerHTML = `<div style="margin-bottom:15px; background:#fef2f2; padding:10px; border-radius:8px; color:var(--danger); text-align:center;">إجمالي الحصص الفارغة: ${formatNum(totalMissing)} حصة</div>` + html;
+                }
+            }, 500);
+        }
+
+        // 2. جدول اللفاف اليومي
+        function openMasterScheduleModal() {
+            document.getElementById("masterModal").classList.add("active");
+        }
+
+        function generateMasterSchedule() {
+            const day = document.getElementById("master-day-select").value;
+            const stage = document.getElementById("master-stage-select").value;
+            const dayName = document.getElementById("master-day-select").options[document.getElementById("master-day-select").selectedIndex].text;
+            const stageName = document.getElementById("master-stage-select").options[document.getElementById("master-stage-select").selectedIndex].text;
+
+            document.getElementById("master-title").innerText = `الجدول اليومي - يوم ${dayName} - ${stageName}`;
+
+            const targetClasses = predefinedClasses.filter(c => {
+                const grade = parseInt(c.split('/')[1]);
+                if(stage === "lower") return grade <= 3;
+                else return grade >= 4;
+            });
+
+            let html = `
+                <table class="master-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">الفصل</th>
+                            <th colspan="2">الفترة الأولى</th><th colspan="2">الفترة الثانية</th>
+                            <th colspan="2">الفترة الثالثة</th><th colspan="2">الفترة الرابعة</th>
+                        </tr>
+                        <tr>
+                            <th>${formatNum(1)}</th><th>${formatNum(2)}</th><th>${formatNum(3)}</th><th>${formatNum(4)}</th>
+                            <th>${formatNum(5)}</th><th>${formatNum(6)}</th><th>${formatNum(7)}</th><th>${formatNum(8)}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            targetClasses.forEach(cls => {
+                html += `<tr><td>${formatNum(cls)}</td>`;
+                for(let i=1; i<=8; i++) {
+                    const key = `${day}_${i}`;
+                    let assignedTeachers = [];
+                    TEACHERS.forEach(t => {
+                        if(t.schedule && t.schedule[key] === cls) assignedTeachers.push(t.short_name || t.name.split(' ')[0]);
+                    });
+
+                    if(assignedTeachers.length === 1) {
+                        html += `<td>${assignedTeachers[0]}</td>`;
+                    } else if(assignedTeachers.length > 1) {
+                        html += `<td style="color:red; font-weight:bold;">تعارض</td>`;
+                    } else {
+                        html += `<td></td>`;
+                    }
+                }
+                html += `</tr>`;
+            });
+
+            html += `</tbody></table>`;
+            document.getElementById("master-table-container").innerHTML = html;
+        }
+
+        function showMasterOnScreen() {
+            generateMasterSchedule();
+            document.getElementById("print-area").style.display = "none";
+            document.getElementById("master-print-area").style.display = "block";
+            document.getElementById("masterModal").classList.remove("active");
+        }
+
+        function hideMasterOnScreen() {
+            document.getElementById("print-area").style.display = "block";
+            document.getElementById("master-print-area").style.display = "none";
+        }
+
+        // 3. الطباعة الذكية
+        function printNormalSchedule() {
+            document.body.classList.remove("print-master-mode");
+            window.print();
+        }
+
+        function printMasterSchedule() {
+            generateMasterSchedule(); 
+            document.body.classList.add("print-master-mode");
+            window.print();
+            setTimeout(() => { document.body.classList.remove("print-master-mode"); }, 1000);
+        }
+    </script>
+</body>
+</html>

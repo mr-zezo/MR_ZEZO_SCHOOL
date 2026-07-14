@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>بطاقة تلميذ - نظام مستر زيزو</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; 
+            --save-btn: #4f46e5; --danger: #be123c; --warning: #d97706; --info: #0284c7;
+        }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        .top-navigation { width: 100%; max-width: 950px; background: var(--dark); padding: 10px 20px; border-radius: 10px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .nav-title { font-size: 15px; font-weight: 900; color: #93c5fd; }
+        .nav-buttons { display: flex; gap: 10px; }
+        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn-nav:hover { background: var(--info); transform: translateY(-2px); }
+        .btn-home:hover { background: var(--save-btn); }
+
+        .form-container { background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 950px; border-top: 5px solid var(--primary); }
+        h2 { color: var(--dark); font-weight: 900; font-size: 20px; margin-bottom: 15px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 700; color: #111827; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600; outline: none; }
+        input:focus, select:focus { border-color: var(--info); box-shadow: 0 0 0 2px rgba(2,132,199,0.2); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;}
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 15px;}
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px;}
+
+        .highlight-box { background: #f1f5f9; padding: 15px; border-radius: 10px; border: 2px solid var(--primary); margin-bottom: 20px; }
+        .search-container { position: relative; margin-bottom: 12px; }
+        #search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 0 0 8px 8px; z-index: 1000; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+        .result-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: var(--dark); display: flex; justify-content: space-between; }
+        .result-item:hover { background-color: var(--info); color: white; }
+
+        .readonly-field { background-color: #e2e8f0; color: var(--primary); font-weight: 800; pointer-events: none;}
+        
+        .actions-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
+        .btn { border: none; padding: 12px; font-size: 14px; border-radius: 6px; cursor: pointer; font-weight: 900; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn-add { background-color: var(--save-btn); }
+        .btn-edit { background-color: var(--warning); }
+        .btn-delete { background-color: var(--danger); }
+        .btn-absence { background-color: var(--dark); }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        /* ================= نافذة سجل الغياب ================= */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; width: 90%; max-width: 600px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .modal-header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; }
+        
+        .abs-stats { display: flex; gap: 15px; margin-bottom: 20px; }
+        .abs-card { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 10px; text-align: center; }
+        .abs-card h4 { font-size: 13px; color: #64748b; margin-bottom: 5px; }
+        .abs-card h2 { font-size: 22px; font-weight: 900; direction: ltr; }
+        .abs-danger { color: var(--danger); } .abs-safe { color: #16a34a; }
+
+        .abs-list { max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .abs-item { display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f1f5f9; font-weight: 700; font-size: 14px; }
+        .abs-item:last-child { border: none; }
+        .abs-item span:last-child { color: var(--danger); font-weight: 900; }
+
+        .zizo-signature { position: fixed; bottom: 10px; left: 10px; background: white; padding: 5px 15px; border-radius: 20px; font-weight: 900; font-size: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); color: var(--dark); }
+        #status-msg { display: none; padding: 10px; border-radius: 6px; margin-top: 10px; text-align: center; font-weight: 800; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+    <nav class="top-navigation">
+        <div class="nav-title"><i class="fa-solid fa-school"></i> مدرسة الشهيد أشرف حبيب</div>
+        <div class="nav-buttons">
+            <a href="index.html" class="btn-nav btn-home"><i class="fa-solid fa-house"></i> الرئيسية</a>
+        </div>
+    </nav>
+
+    <div class="form-container">
+        <h2><i class="fa-solid fa-id-card-clip" style="color:var(--info)"></i> بطاقة بيانات تلميذ</h2>
+        
+        <div class="highlight-box">
+            <div class="search-container">
+                <label><i class="fa-solid fa-magnifying-glass"></i> اسم التلميذ رباعي (ابحث بالاسم هنا أو سجل جديد)</label>
+                <input type="text" id="student_name" autocomplete="off" placeholder="اكتب أول حروف الاسم..." oninput="smartSearchByName(this.value)">
+                <div id="search-results"></div>
+            </div>
+            <div class="grid-2" style="margin-bottom: 0;">
+                <div>
+                    <label>الصف الدراسي</label>
+                    <select id="grade_level">
+                        <option value="KG1">KG1</option><option value="KG2">KG2</option>
+                        <option value="الأول">الأول</option><option value="الثاني">الثاني</option>
+                        <option value="الثالث">الثالث</option><option value="الرابع">الرابع</option>
+                        <option value="الخامس">الخامس</option><option value="السادس">السادس</option>
+                    </select>
+                </div>
+                <div><label>الفصل</label><input type="text" id="class_name" placeholder="مثال: 1/2"></div>
+            </div>
+        </div>
+
+        <div class="grid-3">
+            <div><label>كود التلميذ (إلزامي)</label><input type="text" id="student_code" placeholder="رقم الكود..."></div>
+            <div><label>الرقم القومي</label><input type="text" id="national_id" maxlength="14" oninput="extractDataFromNID()"></div>
+            <div><label>رقم السجل (m)</label><input type="text" id="register_num"></div>
+        </div>
+
+        <div class="grid-3">
+            <div><label>تاريخ الميلاد</label><input type="text" id="dob" class="readonly-field" readonly></div>
+            <div><label>النوع</label><input type="text" id="gender" class="readonly-field" readonly></div>
+            <div><label>السن في 1 أكتوبر</label><input type="text" id="age_october" class="readonly-field" readonly></div>
+        </div>
+
+        <div class="grid-4">
+            <div><label>حالة القيد</label><select id="status"><option value="منقول">منقول</option><option value="باقي">باقي</option></select></div>
+            <div><label>الديانة</label><select id="religion"><option value="مسلم">مسلم</option><option value="مسيحي">مسيحي</option></select></div>
+            <div><label>الدمج</label><input type="text" id="dmj" placeholder="فارغ=طبيعي / دمج"></div>
+            <div><label>الانتماء</label>
+                <select id="transfer_type" style="background:#fffbeb; border-color:#f59e0b;">
+                    <option value="أساسي">أساسي</option><option value="محول من">محول من</option><option value="محول إلى">محول إلى</option>
+                </select>
+            </div>
+        </div>
+        
+        <div><label>موبايل ولي الأمر (واتساب)</label><input type="text" id="father_mobile"></div>
+
+        <div class="actions-bar">
+            <button class="btn btn-add" onclick="saveNew()"><i class="fa-solid fa-floppy-disk"></i> حفظ كـ جديد</button>
+            <button class="btn btn-edit" onclick="updateExisting()"><i class="fa-solid fa-pen-to-square"></i> تعديل التلميذ</button>
+            <button class="btn btn-delete" onclick="safeDelete()"><i class="fa-solid fa-trash"></i> حذف</button>
+            <!-- الزر الجديد لعرض الغياب -->
+            <button class="btn btn-absence" onclick="showAbsenceRecord()"><i class="fa-solid fa-calendar-xmark"></i> عرض الغياب</button>
+        </div>
+
+        <div id="status-msg"></div>
+    </div>
+
+    <!-- نافذة سجل الغياب -->
+    <div class="modal-overlay" id="absModal" onclick="if(event.target.id==='absModal') document.getElementById('absModal').classList.remove('active')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-clipboard-user"></i> سجل الغياب: <span id="abs-student-name" style="color:#fcd34d;"></span></h2>
+                <button onclick="document.getElementById('absModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="abs-stats">
+                    <div class="abs-card"><h4>إجمالي أيام الغياب</h4><h2 id="abs-total-days" style="color:var(--dark)">٠</h2></div>
+                    <div class="abs-card"><h4>حضور الترم الأول</h4><h2 id="abs-term1" class="abs-safe">%٠</h2></div>
+                    <div class="abs-card"><h4>حضور الترم الثاني</h4><h2 id="abs-term2" class="abs-safe">%٠</h2></div>
+                </div>
+                <h4 style="margin-bottom:10px; color:var(--dark); border-bottom:2px solid #eee; padding-bottom:5px;">تفاصيل الأسابيع</h4>
+                <div class="abs-list" id="abs-list-container">
+                    <!-- سيتم ملؤها برمجياً -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="zizo-signature">إعداد مستر زيزو</div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
+        firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
+
+        const arabicWeeks = ["الأول","الثاني","الثالث","الرابع","الخامس","السادس","السابع","الثامن","التاسع","العاشر","الحادي عشر","الثاني عشر","الثالث عشر","الرابع عشر","الخامس عشر","السادس عشر","السابع عشر","الثامن عشر","التاسع عشر","العشرون","الحادي والعشرون","الثاني والعشرون","الثالث والعشرون","الرابع والعشرون","الخامس والعشرون","السادس والعشرون","السابع والعشرون","الثامن والعشرون","التاسع والعشرون","الثلاثون"];
+
+        let currentStudentData = null; // لتخزين بيانات الطالب المفتوح حالياً
+
+        function toArabicNum(num) {
+            if(num === 0) return "٠";
+            if(!num) return "-";
+            return String(num).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const incomingId = new URLSearchParams(window.location.search).get('id');
+            if (incomingId) { fetchStudentByCode(incomingId); }
+        });
+
+        function smartSearchByName(val) {
+            const resBox = document.getElementById("search-results");
+            if (val.trim().length < 2) { resBox.style.display = "none"; return; }
+
+            db.collection("students").where("name", ">=", val).where("name", "<=", val + "\uf8ff").limit(6).get()
+            .then(snap => {
+                resBox.innerHTML = "";
+                if(snap.empty) { resBox.style.display = "none"; return; }
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const item = document.createElement("div");
+                    item.className = "result-item";
+                    item.innerHTML = `<span>${d.name}</span> <small style="color:#64748b">(${d.grade}/${d.class})</small>`;
+                    item.onclick = () => populateCard(doc.id, d);
+                    resBox.appendChild(item);
+                });
+                resBox.style.display = "block";
+            });
+        }
+
+        function fetchStudentByCode(code) {
+            db.collection("students").doc(code).get().then(doc => {
+                if (doc.exists) populateCard(doc.id, doc.data());
+            });
+        }
+
+        function populateCard(id, data) {
+            currentStudentData = data; // حفظ البيانات لاستخدامها في الغياب
+            document.getElementById("student_name").value = data.name || "";
+            document.getElementById("student_code").value = id;
+            document.getElementById("national_id").value = data.nid || "";
+            document.getElementById("register_num").value = data.register_num || "";
+            document.getElementById("grade_level").value = data.grade || "الأول";
+            document.getElementById("class_name").value = data.class || "";
+            document.getElementById("status").value = data.status || "منقول";
+            document.getElementById("religion").value = data.religion || "مسلم";
+            document.getElementById("father_mobile").value = data.father_mobile || "";
+            document.getElementById("dmj").value = data.dmj || "";
+            document.getElementById("transfer_type").value = data.transfer_type || "أساسي";
+            
+            document.getElementById("search-results").style.display = "none";
+            extractDataFromNID();
+            showStatus("✅ تم جلب بيانات التلميذ بنجاح", "success");
+        }
+
+        // ================= دالة عرض الغياب =================
+        function showAbsenceRecord() {
+            if(!currentStudentData) {
+                alert("يرجى البحث عن تلميذ أولاً لعرض غيابه!");
+                return;
+            }
+
+            document.getElementById("abs-student-name").innerText = currentStudentData.name;
+            
+            const abs = currentStudentData.absences || {};
+            let t1Days = 0, t2Days = 0;
+            let listHtml = "";
+
+            for(let i=1; i<=30; i++) {
+                const weekKey = 'W' + i;
+                if(abs[weekKey] && parseInt(abs[weekKey]) > 0) {
+                    const days = parseInt(abs[weekKey]);
+                    if(i <= 17) t1Days += days; else t2Days += days;
+                    
+                    listHtml += `<div class="abs-item">
+                        <span>الأسبوع ${arabicWeeks[i-1]}</span>
+                        <span>${toArabicNum(days)} أيام</span>
+                    </div>`;
+                }
+            }
+
+            if(listHtml === "") {
+                listHtml = `<div style="padding:20px; text-align:center; color:#16a34a; font-weight:bold;">لم يتم تسجيل أي غياب لهذا التلميذ.</div>`;
+            }
+
+            // حساب النسب (بافتراض 85 يوم للترم الأول و 65 للثاني)
+            const p1 = (((85 - t1Days) / 85) * 100).toFixed(1);
+            const p2 = (((65 - t2Days) / 65) * 100).toFixed(1);
+
+            const elT1 = document.getElementById("abs-term1");
+            const elT2 = document.getElementById("abs-term2");
+
+            elT1.innerText = `%${toArabicNum(p1)}`;
+            elT1.className = p1 < 85 ? "abs-danger" : "abs-safe";
+
+            elT2.innerText = `%${toArabicNum(p2)}`;
+            elT2.className = p2 < 85 ? "abs-danger" : "abs-safe";
+
+            document.getElementById("abs-total-days").innerText = toArabicNum(t1Days + t2Days);
+            document.getElementById("abs-list-container").innerHTML = listHtml;
+
+            document.getElementById("absModal").classList.add("active");
+        }
+
+        function saveNew() { processSave("تم الحفظ بنجاح"); }
+        function updateExisting() { if(confirm("تأكيد التعديل؟")) processSave("تم التعديل بنجاح"); }
+
+        function processSave(msgText) {
+            const code = document.getElementById("student_code").value;
+            const name = document.getElementById("student_name").value;
+            if (!code || !name) { alert("الكود والاسم مطلوبان!"); return; }
+            const data = {
+                name: name, code: code, nid: document.getElementById("national_id").value,
+                register_num: document.getElementById("register_num").value,
+                dob: document.getElementById("dob").value, gender: document.getElementById("gender").value,
+                age_october: document.getElementById("age_october").value,
+                grade: document.getElementById("grade_level").value, class: document.getElementById("class_name").value,
+                status: document.getElementById("status").value, religion: document.getElementById("religion").value,
+                father_mobile: document.getElementById("father_mobile").value, 
+                dmj: document.getElementById("dmj").value, transfer_type: document.getElementById("transfer_type").value
+            };
+            db.collection("students").doc(code).set(data, { merge: true }).then(() => { 
+                currentStudentData = {...currentStudentData, ...data}; // تحديث البيانات المحلية
+                showStatus("✅ " + msgText, "success"); 
+            });
+        }
+
+        function safeDelete() {
+            const code = document.getElementById("student_code").value;
+            const type = document.getElementById("transfer_type").value;
+            if (!code) return;
+            if (type === "محول من") { alert("لا يمكن حذف (محول من) للحفاظ على الأرشيف."); return; }
+            if (prompt("أدخل كلمة المرور للحذف:") === "2006") {
+                if (confirm("حذف نهائي؟")) {
+                    db.collection("students").doc(code).delete().then(() => {
+                        showStatus("🗑️ تم الحذف", "danger"); setTimeout(() => location.reload(), 1500);
+                    });
+                }
+            } else { alert("كلمة مرور خاطئة"); }
+        }
+
+        function extractDataFromNID() {
+            let nid = document.getElementById("national_id").value;
+            if (nid.length === 14) {
+                let year = (nid.charAt(0) === '3' ? '20' : '19') + nid.substring(1, 3);
+                document.getElementById("dob").value = `${year}-${nid.substring(3,5)}-${nid.substring(5,7)}`;
+                document.getElementById("gender").value = (parseInt(nid.charAt(12)) % 2 === 0) ? "أنثى" : "ذكر";
+                calculateAgeOnOct1(year, nid.substring(3,5), nid.substring(5,7));
+            }
+        }
+
+        function calculateAgeOnOct1(bYear, bMonth, bDay) {
+            let targetDate = new Date("2024-10-01");
+            let birthDate = new Date(`${bYear}-${bMonth}-${bDay}`);
+            let years = targetDate.getFullYear() - birthDate.getFullYear();
+            let months = targetDate.getMonth() - birthDate.getMonth();
+            let days = targetDate.getDate() - birthDate.getDate();
+            if (days < 0) { months--; days += new Date(targetDate.getFullYear(), targetDate.getMonth(), 0).getDate(); }
+            if (months < 0) { years--; months += 12; }
+            document.getElementById("age_october").value = `${toArabicNum(years)} سنة، ${toArabicNum(months)} شهر، ${toArabicNum(days)} يوم`;
+        }
+
+        function showStatus(text, type) {
+            const msg = document.getElementById("status-msg");
+            msg.style.display = "block";
+            msg.style.backgroundColor = type === "success" ? "#dcfce7" : "#fee2e2";
+            msg.style.color = type === "success" ? "#166534" : "#991b1b";
+            msg.innerHTML = text;
+        }
+
+        document.addEventListener("click", (e) => { if (!e.target.closest(".search-container")) document.getElementById("search-results").style.display = "none"; });
+    </script>
+</body>
+</html>

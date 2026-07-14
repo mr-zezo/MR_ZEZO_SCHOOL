@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>بطاقة المعلم - نظام مستر زيزو</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root { 
+            --primary: #1e3a8a; --dark: #0f172a; --bg: #f1f5f9; 
+            --save-btn: #4f46e5; --danger: #be123c; --warning: #d97706; --info: #0284c7; --success: #16a34a;
+        }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); padding: 10px 20px; display: flex; flex-direction: column; align-items: center; }
+
+        .top-navigation { width: 100%; max-width: 1150px; background: var(--dark); padding: 12px 20px; border-radius: 12px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .nav-title { font-size: 16px; font-weight: 900; color: #ebe9e4; display: flex; align-items: center; gap: 10px; }
+        .zizo-badge { background: #ca0b04; color: #fff; padding: 4px 25px; border-radius: 20px; font-size: 14px; font-weight: 900; border: 1px solid #181710; }
+        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 6px 20px; border-radius: 6px; font-size: 13px; font-weight: 700; transition: 0.2s; }
+        .btn-nav:hover { background: var(--info); }
+
+        .main-layout { display: flex; width: 100%; max-width: 1150px; gap: 15px; align-items: flex-start; }
+        .card-container { flex-grow: 1; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 6px solid var(--primary); }
+        .side-actions { width: 240px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 5px solid var(--dark); position: sticky; top: 15px; display: flex; flex-direction: column; gap: 10px; }
+
+        .search-section { background: #eff6ff; padding: 15px; border-radius: 12px; border: 2px solid var(--info); margin-bottom: 20px; position: relative; }
+        .search-box { position: relative; }
+        .search-box input { width: 100%; padding: 12px 45px 12px 15px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px; font-weight: 700; outline: none; }
+        .search-box i { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--info); font-size: 18px; }
+        #search-results { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 0 0 8px 8px; z-index: 1000; max-height: 600px; overflow-y: auto; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .result-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-weight: 700; display: flex; justify-content: space-between; }
+        .result-item:hover { background-color: var(--info); color: white; }
+
+        .profile-header { display: flex; gap: 20px; align-items: center; background: #f8fafc; padding: 15px 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        .avatar-container { position: relative; width: 85px; height: 85px; flex-shrink: 0; }
+        .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: 0.3s; }
+        .avatar-upload-btn { position: absolute; bottom: -5px; left: -5px; background: var(--info); color: white; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: 0.2s; }
+        .avatar-upload-btn:hover { transform: scale(1.1); background: var(--primary); }
+        #avatar-input { display: none; }
+
+        .profile-info { flex-grow: 1; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; align-items: center; }
+
+        .data-section { margin-bottom: 20px; }
+        .section-title { font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #eff6ff; padding-bottom: 5px; }
+        .grid-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+        .field-group { display: flex; flex-direction: column; gap: 3px; }
+        .field-group label { font-size: 12px; font-weight: 700; color: #475569; }
+        .field-group input, .field-group select { padding: 9px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 14px; font-weight: 700; outline: none; background: #fcfcfc; color: var(--dark); }
+        .field-group input:focus { border-color: var(--info); box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.1); }
+        .readonly-field { background: #f1f5f9 !important; color: var(--primary); font-weight: 800; cursor: not-allowed; }
+
+        /* ================= تصميم أزرار المرفقات العصرية ================= */
+        .file-controls-wrapper { display: flex; gap: 20px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
+        .split-btn-group { display: flex; align-items: stretch; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-radius: 10px; overflow: hidden; transition: 0.3s; min-width: 220px; }
+        .split-btn-group:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+        
+        .btn-view-file { background: var(--primary); color: white; border: none; padding: 12px 20px; font-family: 'Cairo'; font-weight: 900; font-size: 14px; cursor: pointer; flex-grow: 1; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .btn-view-file:hover { background: #1e40af; }
+        
+        /* حالة الزر إذا لم يكن هناك ملف */
+        .btn-view-file.empty { background: #94a3b8; color: #f1f5f9; cursor: not-allowed; }
+        .btn-view-file.empty:hover { background: #94a3b8; }
+
+        .btn-upload-file { background: var(--warning); color: #000; border: none; padding: 12px 18px; cursor: pointer; font-size: 16px; transition: 0.2s; border-right: 2px solid rgba(0,0,0,0.1); }
+        .btn-upload-file:hover { background: #b45309; color: white; }
+
+        .btn-action { border: none; padding: 12px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; width: 100%; }
+        .btn-add { background: var(--success); } .btn-update { background: var(--save-btn); } .btn-delete { background: var(--danger); } .btn-abs { background: var(--dark); } .btn-clear { background: #64748b; }
+        .btn-action:hover { opacity: 0.9; transform: translateY(-2px); }
+
+        /* نافذة الغياب */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: #f8fafc; width: 95%; max-width: 900px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 15px; overflow-y: auto; flex-grow: 1; }
+        
+        .abs-top-bar { display: flex; gap: 15px; align-items: center; background: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
+        .teacher-selector { flex-grow: 1; }
+        .teacher-selector label { font-size: 12px; font-weight: 900; color: var(--primary); display: block; margin-bottom: 5px; }
+        .teacher-selector select { width: 100%; padding: 8px; border-radius: 6px; border: 2px solid var(--info); font-weight: 900; font-size: 14px; outline: none; background: #eff6ff; color: var(--dark); cursor: pointer; }
+        
+        .abs-total-badge { background: var(--danger); color: white; padding: 8px 20px; border-radius: 10px; text-align: center; min-width: 120px; }
+        .abs-total-badge span { display: block; font-size: 10px; font-weight: bold; opacity: 0.9; }
+        .abs-total-badge b { font-size: 22px; line-height: 1; }
+
+        .months-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+        .month-card { background: white; border-radius: 10px; padding: 12px 10px; text-align: center; border: 1px solid #e2e8f0; }
+        .month-name { font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 8px; display: block; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
+        
+        .add-day-box { display: flex; gap: 5px; margin-bottom: 8px; }
+        .add-day-box input { flex: 1; padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center; font-weight: 900; font-size: 13px; }
+        .btn-plus { background: var(--success); color: white; border: none; width: 30px; border-radius: 6px; cursor: pointer; font-size: 16px; }
+
+        .tags-container { display: flex; flex-wrap: wrap; gap: 4px; min-height: 25px; padding: 4px; background: #f8fafc; border-radius: 6px; border: 1px dashed #cbd5e1; margin-top: 5px; }
+        .day-tag { background: #fef2f2; color: var(--danger); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; display: flex; align-items: center; gap: 4px; border: 1px solid #fecaca; }
+        .day-tag i { cursor: pointer; color: #f87171; }
+
+        .modal-footer { padding: 15px; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: center; }
+        .btn-save-abs { background: var(--success); color: white; border: none; padding: 10px 30px; border-radius: 8px; font-size: 14px; font-weight: 900; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2); transition: 0.2s; }
+        .btn-save-abs:hover { background: #15803d; transform: translateY(-2px); }
+
+        .zizo-signature { position: fixed; bottom: 10px; left: 10px; background: white; padding: 5px 15px; border-radius: 20px; font-weight: 900; font-size: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); color: var(--dark); }
+        #status-msg { display: none; padding: 10px; border-radius: 8px; margin-top: 10px; text-align: center; font-weight: 800; font-size: 12px; }
+
+        @media (max-width: 800px) {
+            .main-layout { flex-direction: column; }
+            .profile-info { grid-template-columns: 1fr; }
+            .side-actions { width: 100%; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; flex-direction: row; flex-wrap: wrap; border-radius: 15px 15px 0 0; padding: 10px; border-top: 2px solid var(--primary); box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
+            .btn-action { flex: 1; min-width: 100px; padding: 8px; font-size: 11px; }
+            .card-container { margin-bottom: 80px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-navigation">
+        <div class="nav-title"><i class="fa-solid fa-id-card"></i> ملف بيانات الموظف / المعلم</div>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <div class="zizo-badge">إعداد مستر زيزو</div>
+            <a href="index.html" class="btn-nav" style="background:#1e3a8a"><i class="fa-solid fa-house"></i> الرئيسية</a>
+        </div>
+    </nav>
+
+    <div class="main-layout">
+        
+        <div class="card-container">
+            <div class="search-section">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="main-search" placeholder="اضغط هنا للاختيار من القائمة أو اكتب للبحث عن معلم..." autocomplete="off" onclick="showAllTeachers()" oninput="filterTeachers(this.value)">
+                    <div id="search-results"></div>
+                </div>
+            </div>
+
+            <form id="teacher-form">
+                
+                <div class="profile-header">
+                    <div class="avatar-container">
+                        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" id="profile-img" class="avatar-img" alt="صورة المعلم">
+                        <button type="button" class="avatar-upload-btn" onclick="document.getElementById('avatar-input').click()" title="تغيير الصورة"><i class="fa-solid fa-camera"></i></button>
+                        <input type="file" id="avatar-input" accept="image/jpeg, image/png" onchange="uploadToSupabase(this, 'photo')" style="display:none;">
+                    </div>
+                    <div class="profile-info">
+                        <div class="field-group"><label>الاسم الرباعي</label><input type="text" data-field="name" id="teacher_name" required></div>
+                        <div class="field-group"><label>الكود (إلزامي)</label><input type="text" data-field="code" id="teacher_code" required style="font-family:Arial; font-weight:bold; letter-spacing:1px; text-align:center;"></div>
+                        <div class="field-group"><label>الرقم القومي</label><input type="text" data-field="nid" maxlength="14" oninput="extractNID(this)" style="font-family:Arial; font-weight:bold; letter-spacing:1px; text-align:center;"></div>
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <div class="section-title"><i class="fa-solid fa-user"></i> بيانات شخصية إضافية</div>
+                    <div class="grid-fields">
+                        <div class="field-group"><label>النوع</label><input type="text" data-field="gender" class="readonly-field" readonly></div>
+                        <div class="field-group"><label>تاريخ الميلاد</label><input type="text" data-field="dob" class="readonly-field" readonly></div>
+                        <div class="field-group"><label>الموطن / العنوان</label><input type="text" data-field="address"></div>
+                        <div class="field-group"><label>رقم الموبايل</label><input type="text" data-field="mobile" style="font-family:Arial;"></div>
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <div class="section-title"><i class="fa-solid fa-graduation-cap"></i> المؤهلات الدراسية</div>
+                    <div class="grid-fields">
+                        <div class="field-group"><label>المؤهل الدراسي</label><input type="text" data-field="qualification"></div>
+                        <div class="field-group"><label>تاريخ الحصول عليه</label><input type="text" data-field="qual_date"></div>
+                        <div class="field-group"><label>التقدير</label><input type="text" data-field="qual_grade"></div>
+                        <div class="field-group"><label>جهة الحصول عليه</label><input type="text" data-field="qual_source"></div>
+                        <div class="field-group"><label>تخصص المؤهل</label><input type="text" data-field="specialization"></div>
+                        <div class="field-group"><label>علمي / أدبي</label><select data-field="sci_lit"><option value="">اختر...</option><option value="علمي">علمي</option><option value="أدبي">أدبي</option></select></div>
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <div class="section-title"><i class="fa-solid fa-briefcase"></i> البيانات الوظيفية والكادر</div>
+                    <div class="grid-fields">
+                        <div class="field-group"><label>الوظيفة على الكادر</label><input type="text" data-field="cadre_job"></div>
+                        <div class="field-group"><label>الدرجة المالية</label><input type="text" data-field="fin_degree"></div>
+                        <div class="field-group"><label>تاريخ الدرجة</label><input type="text" data-field="degree_date"></div>
+                        <div class="field-group"><label>تاريخ التعيين</label><input type="text" data-field="hire_date"></div>
+                        <div class="field-group"><label>تاريخ استلام العمل</label><input type="text" data-field="start_date"></div>
+                        <div class="field-group"><label>مادة التدريس</label><input type="text" data-field="subject"></div>
+                        <div class="field-group"><label>فئة التدريس</label><input type="text" data-field="teaching_category"></div>
+                        <div class="field-group"><label>أصلي / منتدب</label><select data-field="status"><option value="أصلي">أصلي بالمدرسة</option><option value="منتدب كلي">منتدب كلي</option><option value="منتدب جزئي">منتدب جزئي</option></select></div>
+                        <div class="field-group"><label>أيام الانتداب</label><input type="text" data-field="secondment_days"></div>
+                        <div class="field-group"><label>النصاب القانوني</label><input type="text" data-field="quota" style="background:#fffbeb; border-color:var(--warning); font-family:Arial; text-align:center;"></div>
+                        <div class="field-group"><label>حالة الموظف</label><select data-field="emp_status"><option value="على رأس العمل">على رأس العمل</option><option value="معاش">معاش</option><option value="متوفى">متوفى</option><option value="تم نقله">تم نقله</option></select></div>
+                    </div>
+                </div>
+
+                <!-- قسم المرفقات الجديد (الأزرار المدمجة) -->
+                <div class="data-section">
+                    <div class="section-title"><i class="fa-solid fa-folder-open"></i> المرفقات والمستندات (PDF)</div>
+                    <div class="file-controls-wrapper">
+                        
+                        <!-- زر الرقم القومي -->
+                        <div class="split-btn-group">
+                            <button type="button" id="btn-view-nid" class="btn-view-file empty" onclick="viewSupabaseFile('nid_pdf')">
+                                <i class="fa-solid fa-id-card"></i> الرقم القومي
+                            </button>
+                            <button type="button" class="btn-upload-file" onclick="document.getElementById('nid-file').click()" title="رفع أو تحديث الملف">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </button>
+                            <input type="file" id="nid-file" accept="application/pdf" onchange="uploadToSupabase(this, 'nid_pdf')" hidden>
+                        </div>
+
+                        <!-- زر بيان الحالة -->
+                        <div class="split-btn-group">
+                            <button type="button" id="btn-view-status" class="btn-view-file empty" onclick="viewSupabaseFile('status_pdf')">
+                                <i class="fa-solid fa-file-contract"></i> بيان الحالة
+                            </button>
+                            <button type="button" class="btn-upload-file" onclick="document.getElementById('status-file').click()" title="رفع أو تحديث الملف">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </button>
+                            <input type="file" id="status-file" accept="application/pdf" onchange="uploadToSupabase(this, 'status_pdf')" hidden>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="data-section">
+                    <div class="section-title"><i class="fa-solid fa-lock"></i> بيانات الدخول للنظام</div>
+                    <div class="grid-fields">
+                        <div class="field-group"><label>اسم المستخدم (USER)</label><input type="text" data-field="username" style="font-family:Arial; color:var(--danger)"></div>
+                        <div class="field-group"><label>كلمة المرور (PASS)</label><input type="text" data-field="password" style="font-family:Arial; color:var(--danger)"></div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        <div class="side-actions">
+            <div style="font-size:13px; font-weight:900; color:var(--dark); text-align:center; margin-bottom:5px; border-bottom:2px solid #eee; padding-bottom:5px;">لوحة التحكم</div>
+            <button type="button" class="btn-action btn-add" onclick="saveTeacher('add')"><i class="fa-solid fa-user-plus"></i> إضافة كجديد</button>
+            <button type="button" class="btn-action btn-update" onclick="saveTeacher('update')"><i class="fa-solid fa-user-check"></i> حفظ التعديلات</button>
+            <button type="button" class="btn-action btn-abs" onclick="openAbsenceModal()"><i class="fa-solid fa-calendar-check"></i> سجل الغياب</button>
+            <button type="button" class="btn-action btn-clear" onclick="clearForm()"><i class="fa-solid fa-eraser"></i> تفريغ الخانات</button>
+            <button type="button" class="btn-action btn-delete" onclick="deleteTeacher()"><i class="fa-solid fa-trash"></i> حذف الموظف</button>
+            <div id="status-msg"></div>
+        </div>
+
+    </div>
+
+    <!-- نافذة الغياب -->
+    <div class="modal-overlay" id="absModal" onclick="if(event.target.id==='absModal') document.getElementById('absModal').classList.remove('active')">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="font-size:15px; margin:0;"><i class="fa-solid fa-calendar-check"></i> منظومة رصد غياب المعلمين - ٢٠٢٦ / ٢٠٢٧</h2>
+                <button onclick="document.getElementById('absModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="abs-top-bar">
+                    <div class="teacher-selector">
+                        <label>اختر المعلم من القائمة لفتح سجله:</label>
+                        <select id="abs-teacher-select" onchange="switchTeacherInModal(this.value)">
+                            <option value="" disabled selected>اختر المعلم...</option>
+                        </select>
+                    </div>
+                    <div class="abs-total-badge">
+                        <span>إجمالي غياب السنة</span>
+                        <b id="abs-grand-total">٠</b>
+                    </div>
+                </div>
+                <div class="months-grid" id="months-container"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-save-abs" onclick="saveAbsenceToFirebase()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ السجل في السحابة</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="zizo-signature">إعداد مستر زيزو</div>
+
+    <script>
+        let originalTeacherCode = null; // متغير جديد لحفظ الكود القديم قبل التعديل
+        // ================= إعدادات Firebase =================
+        const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
+        firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
+        db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+
+        // ================= إعدادات Supabase =================
+        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        let allTeachers = []; let currentTeacherData = null;
+        let activeAbsenceData = {}; let activeTeacherCode = null;
+
+        const monthsList = [{id:"m9",name:"سبتمبر"},{id:"m10",name:"أكتوبر"},{id:"m11",name:"نوفمبر"},{id:"m12",name:"ديسمبر"},{id:"m1",name:"يناير"},{id:"m2",name:"فبراير"},{id:"m3",name:"مارس"},{id:"m4",name:"أبريل"},{id:"m5",name:"مايو"},{id:"m6",name:"يونيو"}];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchAllTeachers();
+            const incomingId = new URLSearchParams(window.location.search).get('id');
+            if (incomingId) fetchTeacherByCode(incomingId);
+        });
+
+        function toArabicNum(num) { const ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩']; return String(num).replace(/[0-9]/g, w => ar[w]); }
+
+      async function fetchAllTeachers() {
+            const snap = await db.collection("teachers").get();
+            allTeachers = []; snap.forEach(doc => allTeachers.push({ id: doc.id, ...doc.data() }));
+            allTeachers.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
+            
+            const absSelect = document.getElementById("abs-teacher-select");
+            absSelect.innerHTML = '<option value="" disabled selected>اختر المعلم...</option>';
+            allTeachers.forEach(t => { absSelect.innerHTML += `<option value="${t.code}">${t.name}</option>`; });
+        }
+
+        // 1. دالة توحيد الحروف العربية لتجاهل الفروق الإملائية
+        function normalizeArabicSearch(text) {
+            if (!text) return "";
+            return text.trim()
+                .replace(/[أإآا]/g, "ا") // توحيد الألف
+                .replace(/ة/g, "ه")      // توحيد التاء المربوطة والهاء
+                .replace(/ى/g, "ي")      // توحيد الياء والألف المقصورة
+                .replace(/\s+/g, " ");   // إزالة المسافات الزائدة
+        }
+
+        // 2. دالة عرض كل المعلمين عند الضغط على المربع
+        function showAllTeachers() {
+            const resBox = document.getElementById("search-results"); 
+            resBox.innerHTML = "";
+            
+            if (allTeachers.length === 0) {
+                resBox.innerHTML = `<div class="result-item" style="text-align:center; color:#94a3b8;">جاري تحميل البيانات...</div>`;
+            } else {
+                allTeachers.forEach(t => {
+                    const item = document.createElement("div"); 
+                    item.className = "result-item";
+                    item.innerHTML = `<span>${t.name}</span> <small style="color:var(--info)">(${t.subject || 'بدون مادة'})</small>`;
+                    item.onclick = () => populateCard(t); 
+                    resBox.appendChild(item);
+                });
+            }
+            resBox.style.display = "block";
+        }
+
+        // 3. دالة البحث الذكي (الفلترة)
+           function filterTeachers(val) {
+            const resBox = document.getElementById("search-results");
+            
+            // إذا كان المربع فارغاً، اعرض الكل
+            if (!val.trim()) {
+                showAllTeachers();
+                return;
+            }
+
+            // توحيد نص البحث وإزالة المسافات منه
+            const normalizedSearch = normalizeArabicSearch(val);
+            const spacelessSearch = normalizedSearch.replace(/\s/g, ""); 
+
+            // فلترة المصفوفة
+            const filtered = allTeachers.filter(t => {
+                if (!t.name) return false;
+                
+                // توحيد اسم المعلم وإزالة المسافات منه
+                const normalizedName = normalizeArabicSearch(t.name);
+                const spacelessName = normalizedName.replace(/\s/g, "");
+
+                // التعديل هنا: نتحقق هل الاسم بالكامل "يبدأ" بالنص المكتوب
+                return spacelessName.startsWith(spacelessSearch);
+            });
+
+            resBox.innerHTML = "";
+            
+            if (filtered.length === 0) {
+                resBox.innerHTML = `<div class="result-item" style="color:var(--danger); justify-content:center;">لا يوجد معلم يبدأ اسمه بهذا البحث</div>`;
+            } else {
+                filtered.forEach(t => {
+                    const item = document.createElement("div"); 
+                    item.className = "result-item";
+                    item.innerHTML = `<span>${t.name}</span> <small style="color:var(--info)">(${t.subject || 'بدون مادة'})</small>`;
+                    item.onclick = () => populateCard(t); 
+                    resBox.appendChild(item);
+                });
+            }
+            
+            resBox.style.display = "block";
+        }
+
+       function populateCard(data) {
+    currentTeacherData = data;
+    originalTeacherCode = data.id || data.code; // حفظ الكود الأصلي هنا
+
+    document.querySelectorAll('#teacher-form input:not([type="file"]), #teacher-form select').forEach(inp => {
+        const field = inp.getAttribute('data-field');
+        if (field && data[field] !== undefined) inp.value = data[field];
+    });
+    document.getElementById("search-results").style.display = "none";
+    document.getElementById("main-search").value = data.name;
+
+    // عرض الصورة
+    document.getElementById("profile-img").src = data.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+    
+    // تحديث حالة أزرار الـ PDF
+    const btnNid = document.getElementById("btn-view-nid");
+    if(data.nid_pdf) {
+        btnNid.classList.remove("empty");
+        btnNid.innerHTML = `<i class="fa-solid fa-check-circle"></i> عرض الرقم القومي`;
+    } else {
+        btnNid.classList.add("empty");
+        btnNid.innerHTML = `<i class="fa-solid fa-id-card"></i> الرقم القومي`;
+    }
+
+    const btnStatus = document.getElementById("btn-view-status");
+    if(data.status_pdf) {
+        btnStatus.classList.remove("empty");
+        btnStatus.innerHTML = `<i class="fa-solid fa-check-circle"></i> عرض بيان الحالة`;
+    } else {
+        btnStatus.classList.add("empty");
+        btnStatus.innerHTML = `<i class="fa-solid fa-file-contract"></i> بيان الحالة`;
+    }
+}
+
+        // ================= دالة عرض الملفات =================
+        function viewSupabaseFile(fieldName) {
+            if(!currentTeacherData || !currentTeacherData[fieldName]) {
+                alert("لا يوجد ملف مرفوع لهذا المعلم بعد!");
+                return;
+            }
+            window.open(currentTeacherData[fieldName], '_blank');
+        }
+
+        // ================= دالة الرفع إلى Supabase =================
+          async function uploadToSupabase(inputElement, fieldName) {
+            const code = document.getElementById("teacher_code").value.trim();
+            
+            if(!code) { 
+                alert("يرجى إدخال كود المعلم أولاً قبل رفع الملفات!"); 
+                inputElement.value = ""; 
+                return; 
+            }
+            
+            const file = inputElement.files[0]; 
+            if(!file) return;
+
+            // 💡 التعديل السحري: استخدام اسم إنجليزي آمن جداً للسحابة بدون مسافات أو عربي
+            const fileExt = file.name.split('.').pop();
+            const safeFileName = `${fieldName}_${new Date().getTime()}.${fileExt}`;
+            const filePath = `teachers/${code}/${safeFileName}`; 
+
+            // تغيير شكل الزر أثناء الرفع
+            let targetBtn;
+            if(fieldName === 'photo') {
+                document.getElementById("profile-img").style.opacity = "0.5";
+            } else {
+                targetBtn = fieldName === 'nid_pdf' ? document.getElementById("btn-view-nid") : document.getElementById("btn-view-status");
+                targetBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الرفع...`;
+                targetBtn.classList.remove("empty");
+            }
+
+            try {
+                // الرفع إلى Supabase
+                const { data, error } = await supabaseClient.storage
+                    .from('uploads')
+                    .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+                if (error) throw error;
+
+                // الحصول على الرابط العام
+                const { data: publicUrlData } = supabaseClient.storage
+                    .from('uploads')
+                    .getPublicUrl(filePath);
+                
+                const publicUrl = publicUrlData.publicUrl;
+
+                // حفظ الرابط في Firebase
+                await db.collection("teachers").doc(String(code)).set({ [fieldName]: publicUrl }, { merge: true });
+
+                // تحديث البيانات المحلية لكي يعمل زر العرض فوراً
+                if(currentTeacherData) currentTeacherData[fieldName] = publicUrl;
+
+                // تحديث واجهة المستخدم
+                if(fieldName === 'photo') {
+                    document.getElementById("profile-img").src = publicUrl;
+                    document.getElementById("profile-img").style.opacity = "1";
+                    showStatus("✅ تم حفظ الصورة بنجاح!", "success");
+                } else {
+                    let title = fieldName === 'nid_pdf' ? 'عرض الرقم القومي' : 'عرض بيان الحالة';
+                    targetBtn.innerHTML = `<i class="fa-solid fa-check-circle"></i> ${title}`;
+                    showStatus("✅ تم رفع الملف بنجاح!", "success");
+                }
+
+            } catch(error) { 
+                if(fieldName === 'photo') document.getElementById("profile-img").style.opacity = "1";
+                else {
+                    let title = fieldName === 'nid_pdf' ? 'الرقم القومي' : 'بيان الحالة';
+                    targetBtn.innerHTML = `<i class="fa-solid fa-xmark"></i> فشل الرفع`;
+                    targetBtn.classList.add("empty");
+                }
+                showStatus("❌ فشل الرفع: " + error.message, "danger"); 
+            }
+        }
+
+        function extractNID(inp) {
+            const nid = inp.value;
+            if (nid.length === 14) {
+                const year = (nid[0] === '3' ? '20' : '19') + nid.substring(1, 3);
+                document.querySelector('[data-field="dob"]').value = `${year}-${nid.substring(3, 5)}-${nid.substring(5, 7)}`;
+                document.querySelector('[data-field="gender"]').value = (parseInt(nid[12]) % 2 === 0) ? "أنثى" : "ذكر";
+            }
+        }
+
+     async function saveTeacher(mode) {
+    const code = document.querySelector('[data-field="code"]').value.trim();
+    const name = document.querySelector('[data-field="name"]').value.trim();
+    if(!code || !name) { alert("الاسم والكود مطلوبان!"); return; }
+    if(mode === 'update' && !confirm("تأكيد التعديل؟")) return;
+
+    let data = {};
+    document.querySelectorAll('#teacher-form input:not([type="file"]), #teacher-form select').forEach(inp => {
+        const field = inp.getAttribute('data-field'); if(field) data[field] = inp.value;
+    });
+
+    try {
+        // التعديل الجذري: التحقق مما إذا كان الكود قد تغير
+        if (mode === 'update' && originalTeacherCode && originalTeacherCode !== code) {
+            // 1. حفظ البيانات بالكود الجديد
+            await db.collection("teachers").doc(String(code)).set(data);
+            // 2. حذف الملف ذو الكود القديم لمنع التكرار
+            await db.collection("teachers").doc(String(originalTeacherCode)).delete();
+            originalTeacherCode = code; // تحديث المرجع
+        } else {
+            // حفظ أو تحديث عادي لنفس الكود
+            await db.collection("teachers").doc(String(code)).set(data, { merge: true });
+        }
+
+        showStatus(mode === 'add' ? "✅ تم الإضافة بنجاح" : "✅ تم التحديث بنجاح", "success");
+        fetchAllTeachers(); 
+    } catch(e) { alert("خطأ في الحفظ: " + e.message); }
+}
+
+        async function deleteTeacher() {
+            const code = document.querySelector('[data-field="code"]').value;
+            if(!code) return;
+            if(prompt("كلمة المرور للحذف:") === "2006") {
+                await db.collection("teachers").doc(String(code)).delete();
+                showStatus("🗑️ تم الحذف بنجاح", "danger");
+                clearForm(); fetchAllTeachers();
+            } else { alert("كلمة مرور خاطئة!"); }
+        }
+
+     function clearForm() { 
+    document.getElementById("teacher-form").reset(); 
+    document.getElementById("main-search").value = ""; 
+    document.getElementById("profile-img").src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; 
+    
+    const btnNid = document.getElementById("btn-view-nid");
+    btnNid.classList.add("empty"); btnNid.innerHTML = `<i class="fa-solid fa-id-card"></i> الرقم القومي`;
+    
+    const btnStatus = document.getElementById("btn-view-status");
+    btnStatus.classList.add("empty"); btnStatus.innerHTML = `<i class="fa-solid fa-file-contract"></i> بيان الحالة`;
+    
+    currentTeacherData = null; 
+    originalTeacherCode = null; // تصفير الكود القديم
+}
+        
+        function showStatus(txt, type) { const msg = document.getElementById("status-msg"); msg.style.display = "block"; msg.style.background = type === "success" ? "#dcfce7" : "#fee2e2"; msg.style.color = type === "success" ? "#166534" : "#991b1b"; msg.innerText = txt; setTimeout(() => msg.style.display = "none", 3000); }
+        document.addEventListener("click", (e) => { if (!e.target.closest(".search-box")) document.getElementById("search-results").style.display = "none"; });
+
+        // ================= منظومة الغياب =================
+        function openAbsenceModal() {
+            const code = document.querySelector('[data-field="code"]').value;
+            document.getElementById("absModal").classList.add("active");
+            if(code) { document.getElementById("abs-teacher-select").value = code; switchTeacherInModal(code); } 
+            else { renderEmptyMonths(); }
+        }
+
+        function switchTeacherInModal(code) {
+            const teacher = allTeachers.find(t => t.code === code);
+            if(!teacher) return;
+            activeTeacherCode = code;
+            activeAbsenceData = teacher.absences ? JSON.parse(JSON.stringify(teacher.absences)) : {}; 
+            renderAbsenceUI();
+        }
+
+        function renderEmptyMonths() {
+            const container = document.getElementById("months-container"); container.innerHTML = "";
+            monthsList.forEach(m => { container.innerHTML += `<div class="month-card"><div class="month-name">${m.name}</div><div style="color:#94a3b8; font-size:11px; margin-top:10px;">اختر معلماً أولاً</div></div>`; });
+            document.getElementById("abs-grand-total").innerText = "٠";
+        }
+
+        function renderAbsenceUI() {
+            const container = document.getElementById("months-container"); container.innerHTML = ""; let grandTotal = 0;
+            monthsList.forEach(m => {
+                if(!Array.isArray(activeAbsenceData[m.id])) activeAbsenceData[m.id] = [];
+                const daysArray = activeAbsenceData[m.id]; const monthTotal = daysArray.length; grandTotal += monthTotal;
+                let tagsHtml = ""; daysArray.forEach(day => { tagsHtml += `<div class="day-tag">${toArabicNum(day)} <i class="fa-solid fa-circle-xmark" onclick="removeDay('${m.id}', ${day})"></i></div>`; });
+                container.innerHTML += `
+                    <div class="month-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px dashed #cbd5e1; padding-bottom:5px; margin-bottom:8px;">
+                            <span class="month-name" style="border:none; margin:0; padding:0;">${m.name}</span>
+                            <span style="font-size:12px; font-weight:900; color:var(--danger); background:#fef2f2; padding:2px 6px; border-radius:4px;">${toArabicNum(monthTotal)} أيام</span>
+                        </div>
+                        <div class="add-day-box">
+                            <input type="number" id="inp-${m.id}" placeholder="يوم (1-31)" onkeypress="if(event.key==='Enter') addDay('${m.id}')">
+                            <button class="btn-plus" onclick="addDay('${m.id}')">+</button>
+                        </div>
+                        <div class="tags-container" id="tags-${m.id}">${tagsHtml || '<span style="color:#cbd5e1; font-size:10px;">لا يوجد غياب مسجل</span>'}</div>
+                    </div>`;
+            });
+            document.getElementById("abs-grand-total").innerText = toArabicNum(grandTotal);
+        }
+
+        function addDay(monthId) {
+            const input = document.getElementById(`inp-${monthId}`); const day = parseInt(input.value);
+            if(isNaN(day) || day < 1 || day > 31) { alert("يرجى إدخال يوم صحيح من 1 إلى 31"); return; }
+            if(!Array.isArray(activeAbsenceData[monthId])) activeAbsenceData[monthId] = [];
+            if(activeAbsenceData[monthId].includes(day)) { alert("هذا اليوم مسجل بالفعل في هذا الشهر!"); input.value = ""; return; }
+            activeAbsenceData[monthId].push(day); activeAbsenceData[monthId].sort((a,b) => a - b);
+            renderAbsenceUI(); const newInput = document.getElementById(`inp-${monthId}`); newInput.focus();
+        }
+
+        function removeDay(monthId, day) { activeAbsenceData[monthId] = activeAbsenceData[monthId].filter(d => d !== day); renderAbsenceUI(); }
+
+        async function saveAbsenceToFirebase() {
+            if(!activeTeacherCode) { alert("يرجى اختيار معلم أولاً!"); return; }
+            const btn = document.querySelector('.btn-save-abs'); btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> جاري الحفظ...";
+            try {
+                await db.collection("teachers").doc(String(activeTeacherCode)).set({ absences: activeAbsenceData }, { merge: true });
+                const teacherIndex = allTeachers.findIndex(t => t.code === activeTeacherCode);
+                if(teacherIndex > -1) allTeachers[teacherIndex].absences = activeAbsenceData;
+                if(currentTeacherData && currentTeacherData.code === activeTeacherCode) currentTeacherData.absences = activeAbsenceData;
+                alert("✅ تم حفظ سجل الغياب بنجاح!");
+            } catch(e) { alert("❌ حدث خطأ في الحفظ: " + e.message); } 
+            finally { btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> حفظ السجل في السحابة'; }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إدارة معلمي الأجر والحصة - مستر زيزو</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root { 
+            --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; 
+            --save-btn: #4f46e5; --danger: #be123c; --warning: #d97706; --info: #0284c7; --success: #16a34a;
+            --contract: #0e11bb; /* لون مميز لمعلمي الأجر */
+        }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); height: 100vh; display: flex; flex-direction: column; overflow: hidden; padding: 10px 20px; }
+
+        .top-navigation { width: 100%; background: var(--dark); padding: 10px 20px; border-radius: 10px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-bottom: 4px solid var(--contract); }
+        .nav-title { font-size: 16px; font-weight: 900; color: #ddd6fe; display: flex; align-items: center; gap: 10px; }
+        .zizo-badge { background: #ca0404f8; color: #fff; padding: 4px 15px; border-radius: 20px; font-size: 13px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid #0c0c08; }
+        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn-nav:hover { background: var(--contract); }
+
+        .tool-bar { background: white; padding: 8px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid #cbd5e1; flex-wrap: wrap; gap: 10px; }
+        .controls-group { display: flex; gap: 8px; align-items: center; }
+        
+        .btn { border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; color: white; display: flex; align-items: center; gap: 6px; font-size: 12px; transition: 0.2s; }
+        .btn-excel { background: var(--success); } 
+        .btn-import { background: #0835b1; } /* لون زر الاستيراد */
+        .btn-save { background: var(--save-btn); box-shadow: 0 0 12px rgba(79, 70, 229, 0.3); }
+        .btn-add { background: var(--warning); color: #000; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        #file-input { display: none; }
+
+        .table-wrapper { flex-grow: 1; overflow: auto; background: white; border-radius: 10px; border: 1px solid #cbd5e1; }
+        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 2800px; table-layout: fixed; }
+        
+        /* مقاسات الأعمدة */
+        th:nth-child(1) { width: 40px; text-align: center; }   /* Checkbox */
+        th:nth-child(2) { width: 100px; }  /* الحالة */
+        th:nth-child(3) { width: 45px; }   /* م */
+        th:nth-child(4) { width: 220px; }  /* الاسم */
+        th:nth-child(5) { width: 140px; }  /* الرقم القومي */
+        th:nth-child(6) { width: 120px; }  /* الموطن */
+        th:nth-child(7) { width: 110px; }  /* الموبايل */
+        th:nth-child(8) { width: 110px; }  /* تاريخ العمل */
+        th:nth-child(9) { width: 130px; }  /* المؤهل */
+        th:nth-child(10) { width: 90px; }  /* الدرجة */
+        th:nth-child(11) { width: 120px; } /* المادة */
+        th:nth-child(12) { width: 120px; } /* الصفوف */
+        th:nth-child(13) { width: 120px; }  /* فئة الأجر */
+        th:nth-child(14) { width: 90px; }  /* حصص أسبوعي */
+        /* الشهور */
+        th:nth-child(15), th:nth-child(16), th:nth-child(17), th:nth-child(18), th:nth-child(19), 
+        th:nth-child(20), th:nth-child(21), th:nth-child(22), th:nth-child(23) { width: 80px; background: #f8fafc; color: var(--dark); border-bottom: 2px solid var(--contract); }
+
+        thead th { position: sticky; top: 0; background: var(--dark); color: #ddd6fe; padding: 8px 4px; font-size: 12px; z-index: 5; border: 1px solid #334155; }
+        .th-content { display: flex; align-items: center; gap: 5px; }
+        .export-cb { accent-color: var(--contract); cursor: pointer; }
+        .row-cb { accent-color: var(--success); cursor: pointer; width: 16px; height: 16px; }
+
+        tbody td { padding: 2px; border: 1px solid #e2e8f0; }
+        .editable-input { width: 100%; border: none; background: transparent; font-size: 13px; font-weight: 700; font-family: 'Cairo'; padding: 6px; outline: none; }
+        .editable-input:focus { background: #f3e8ff; box-shadow: inset 0 0 0 2px var(--contract); border-radius: 3px; }
+        
+        .month-input { text-align: center; font-family: Arial, sans-serif; font-weight: 900; color: var(--primary); }
+        .status-select { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px; font-weight: bold; font-family: 'Cairo'; width: 100%; outline: none; color: var(--dark); }
+
+        .zizo-signature { position: fixed; bottom: 5px; left: 5px; background: white; padding: 2px 12px; border-radius: 10px; font-size: 10px; font-weight: 900; border: 1px solid #ddd; z-index: 100; }
+    </style>
+</head>
+<body>
+
+    <nav class="top-navigation">
+        <div class="nav-title"><i class="fa-solid fa-file-signature"></i> إدارة بيانات معلمي الأجر والحصة</div>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <div class="zizo-badge"><i class="fa-solid fa-laptop-code"></i> إعداد مستر زيزو</div>
+            <a href="index.html" class="btn-nav" style="background:var(--contract)"><i class="fa-solid fa-house"></i> الرئيسية</a>
+        </div>
+    </nav>
+
+    <div class="tool-bar">
+        <div class="controls-group">
+            <button class="btn btn-add" onclick="addNewRow()"><i class="fa-solid fa-plus"></i> إضافة معلم أجر جديد</button>
+        </div>
+        <div class="controls-group">
+            <!-- زر الاستيراد الجديد -->
+            <input type="file" id="file-input" accept=".xlsx, .xls" onchange="handleFile(event)">
+            <button class="btn btn-import" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-file-import"></i> استيراد إكسيل</button>
+            
+            <button class="btn btn-excel" onclick="customExportToExcel()"><i class="fa-solid fa-file-excel"></i> تصدير المحدد للإكسيل</button>
+            <button class="btn btn-save" onclick="saveAllToFirebase()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ السحابة</button>
+        </div>
+    </div>
+
+    <div class="table-wrapper">
+        <table id="main-table">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="selectAllRows" checked onchange="toggleAllRows(this)" title="تحديد/إلغاء تحديد الكل"></th>
+                    <th>حالة العمل</th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="index" checked> <span>م</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="name" checked> <span>الاسم الرباعي</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="nid" checked> <span>الرقم القومي</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="address" checked> <span>الموطن</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="mobile" checked> <span>الموبايل</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="start_date" checked> <span>تاريخ بدء العمل</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="qualification" checked> <span>المؤهل</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="qual_grade" checked> <span>الدرجة/التقدير</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="subject" checked> <span>مادة التدريس</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="grades" checked> <span>الصفوف</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="pay_rate" checked> <span>فئة الأجر</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="weekly_quota" checked> <span>حصص أسبوعي</span></div></th>
+                    
+                    <!-- الشهور -->
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="m_sept" checked> <span>سبتمبر</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="m_oct" checked> <span>أكتوبر</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="m_nov" checked> <span>نوفمبر</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="m_dec" checked> <span>ديسمبر</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="m_jan" checked> <span>يناير</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="m_feb" checked> <span>فبراير</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="m_mar" checked> <span>مارس</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="m_apr" checked> <span>أبريل</span></div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="m_may" checked> <span>مايو</span></div></th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <tr><td colspan="23" style="text-align:center; padding:50px; color:#94a3b8; font-size:15px;">جاري تحميل بيانات معلمي الأجر...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="zizo-signature">إعداد مستر زيزو</div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
+        firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
+        db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+
+        window.addEventListener('DOMContentLoaded', loadFromFirebase);
+
+        function toggleAllRows(source) {
+            document.querySelectorAll('.row-cb').forEach(cb => {
+                const row = cb.closest('tr');
+                const status = row.querySelector('.status-select').value;
+                if(status === "يعمل") cb.checked = source.checked;
+            });
+        }
+
+        function handleStatusChange(selectElement) {
+            const row = selectElement.closest('tr');
+            const cb = row.querySelector('.row-cb');
+            if (selectElement.value === "موقوف") {
+                cb.checked = false; 
+                row.style.opacity = "0.5";
+                row.style.background = "#f1f5f9";
+            } else {
+                cb.checked = true; 
+                row.style.opacity = "1";
+                row.style.background = "transparent";
+            }
+        }
+
+        // ================= دالة تنسيق التاريخ من الإكسيل =================
+        function formatExcelDate(excelDate) {
+            if (!excelDate || isNaN(excelDate)) return String(excelDate || "");
+            let date = new Date((excelDate - (25567 + 2)) * 86400 * 1000); 
+            return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+        }
+
+        // ================= دالة الاستيراد من الإكسيل =================
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const workbook = XLSX.read(new Uint8Array(event.target.result), { type: 'array' });
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    let arr = [];
+                    
+                    jsonData.forEach(row => {
+                        const nid = String(row.nid || row["الرقم القومي"] || row["الرقم القومى"] || "");
+                        let dob = "", gen = "";
+                        if (nid.length === 14) {
+                            const y = (nid[0] === '3' ? '20' : '19') + nid.substring(1, 3);
+                            dob = `${y}-${nid.substring(3, 5)}-${nid.substring(5, 7)}`;
+                            gen = (parseInt(nid[12]) % 2 === 0) ? "أنثى" : "ذكر";
+                        }
+
+                        arr.push({
+                            status: row.status || row["حالة العمل"] || "يعمل",
+                            name: row.name || row["الاسم الرباعي"] || row["الاسم"] || "",
+                            nid: nid,
+                            gender: gen,
+                            dob: dob,
+                            address: row.address || row["الموطن"] || row["العنوان"] || "",
+                            mobile: row.mobile || row["الموبايل"] || "",
+                            start_date: formatExcelDate(row.start_date || row["تاريخ بدء العمل"]),
+                            qualification: row.qualification || row["المؤهل"] || "",
+                            qual_grade: row.qual_grade || row["الدرجة/التقدير"] || row["التقدير"] || "",
+                            subject: row.subject || row["مادة التدريس"] || "",
+                            grades: row.grades || row["الصفوف"] || "",
+                            pay_rate: row.pay_rate || row["فئة الأجر"] || "",
+                            weekly_quota: row.weekly_quota || row["حصص أسبوعي"] || "",
+                            m_sept: row.m_sept || row["سبتمبر"] || "",
+                            m_oct: row.m_oct || row["أكتوبر"] || "",
+                            m_nov: row.m_nov || row["نوفمبر"] || "",
+                            m_dec: row.m_dec || row["ديسمبر"] || "",
+                            m_jan: row.m_jan || row["يناير"] || "",
+                            m_feb: row.m_feb || row["فبراير"] || "",
+                            m_mar: row.m_mar || row["مارس"] || "",
+                            m_apr: row.m_apr || row["أبريل"] || "",
+                            m_may: row.m_may || row["مايو"] || ""
+                        });
+                    });
+
+                    // ترتيب أبجدي
+                    arr.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar')); 
+                    
+                    document.getElementById("table-body").innerHTML = "";
+                    arr.forEach((s, i) => renderRow(s, i + 1));
+                    
+                    alert("✅ تم استيراد الملف بنجاح! يرجى مراجعة البيانات ثم الضغط على (حفظ السحابة).");
+                } catch(err) { alert("❌ فشل قراءة الملف: " + err.message); }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function loadFromFirebase() {
+            const tbody = document.getElementById("table-body");
+            db.collection("contract_teachers").get().then(snap => {
+                if(snap.empty) {
+                    tbody.innerHTML = `<tr><td colspan='23' style='text-align:center; padding:40px; color:var(--contract); font-weight:bold;'>لا توجد بيانات مسجلة لمعلمي الأجر. اضغط على إضافة معلم جديد للبدء.</td></tr>`;
+                    return;
+                }
+                let arr = [];
+                snap.forEach(d => arr.push({ id: d.id, ...d.data() }));
+                
+                arr.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar')); 
+                
+                tbody.innerHTML = "";
+                arr.forEach((s, i) => renderRow(s, i + 1));
+            }).catch(err => {
+                tbody.innerHTML = `<tr><td colspan='23' style='text-align:center; padding:40px; color:red;'>❌ خطأ في جلب البيانات: ${err.message}</td></tr>`;
+            });
+        }
+
+        function addNewRow() {
+            const tbody = document.getElementById("table-body");
+            if(tbody.querySelector('td[colspan]')) tbody.innerHTML = ""; 
+            renderRow({}, tbody.children.length + 1);
+        }
+
+        function renderRow(d, i) {
+            const tr = document.createElement("tr");
+            const status = d.status || "يعمل";
+            const isChecked = status === "يعمل" ? "checked" : "";
+            
+            if(status === "موقوف") {
+                tr.style.opacity = "0.5";
+                tr.style.background = "#f1f5f9";
+            }
+
+            tr.setAttribute("data-doc-id", d.id || "");
+
+            tr.innerHTML = `
+                <td style="text-align:center;"><input type="checkbox" class="row-cb" ${isChecked}></td>
+                <td>
+                    <select class="status-select" data-field="status" onchange="handleStatusChange(this)">
+                        <option value="يعمل" ${status==="يعمل"?"selected":""}>يعمل</option>
+                        <option value="موقوف" ${status==="موقوف"?"selected":""}>موقوف</option>
+                    </select>
+                </td>
+                <td style="text-align:center; font-weight:bold;">${i}</td>
+                <td><input class="editable-input" value="${d.name || ''}" data-field="name" placeholder="الاسم الرباعي"></td>
+                <td><input class="editable-input" value="${d.nid || ''}" data-field="nid" style="font-family:Arial; text-align:center;" maxlength="14"></td>
+                <td><input class="editable-input" value="${d.address || ''}" data-field="address"></td>
+                <td><input class="editable-input" value="${d.mobile || ''}" data-field="mobile" style="font-family:Arial; text-align:center;"></td>
+                <td><input class="editable-input" value="${d.start_date || ''}" data-field="start_date" type="date" style="font-family:Arial;"></td>
+                <td><input class="editable-input" value="${d.qualification || ''}" data-field="qualification"></td>
+                <td><input class="editable-input" value="${d.qual_grade || ''}" data-field="qual_grade"></td>
+                <td><input class="editable-input" value="${d.subject || ''}" data-field="subject"></td>
+                <td><input class="editable-input" value="${d.grades || ''}" data-field="grades" placeholder="مثال: الأول، الثاني"></td>
+                
+                <td>
+                    <select class="editable-input" data-field="pay_rate" style="padding:4px;">
+                        <option value="">اختر الفئة...</option>
+                        <option value="مؤقت دون سن (60)" ${d.pay_rate==="مؤقت دون سن (60)"?"selected":""}>مؤقت دون سن (60)</option>
+                        <option value="موقت فوق سن (60)" ${d.pay_rate==="موقت فوق سن (60)"?"selected":""}>موقت فوق سن (60)</option>
+                        <option value="معين فوق النصاب" ${d.pay_rate==="معين فوق النصاب"?"selected":""}>معين فوق النصاب</option>
+                    </select>
+                </td>
+
+                <td><input class="editable-input month-input" value="${d.weekly_quota || ''}" data-field="weekly_quota"></td>
+                
+                <td><input class="editable-input month-input" value="${d.m_sept || ''}" data-field="m_sept"></td>
+                <td><input class="editable-input month-input" value="${d.m_oct || ''}" data-field="m_oct"></td>
+                <td><input class="editable-input month-input" value="${d.m_nov || ''}" data-field="m_nov"></td>
+                <td><input class="editable-input month-input" value="${d.m_dec || ''}" data-field="m_dec"></td>
+                <td><input class="editable-input month-input" value="${d.m_jan || ''}" data-field="m_jan"></td>
+                <td><input class="editable-input month-input" value="${d.m_feb || ''}" data-field="m_feb"></td>
+                <td><input class="editable-input month-input" value="${d.m_mar || ''}" data-field="m_mar"></td>
+                <td><input class="editable-input month-input" value="${d.m_apr || ''}" data-field="m_apr"></td>
+                <td><input class="editable-input month-input" value="${d.m_may || ''}" data-field="m_may"></td>
+            `;
+            document.getElementById("table-body").appendChild(tr);
+        }
+
+        async function saveAllToFirebase() {
+            const rows = document.querySelectorAll("#table-body tr");
+            if(rows.length === 0 || rows[0].cells.length < 2) return;
+
+            const btn = document.querySelector('.btn-save');
+            const oldHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+
+            let batch = db.batch();
+            let count = 0;
+
+            rows.forEach(row => {
+                const ins = row.querySelectorAll("input.editable-input, select.status-select, select.editable-input");
+                if (ins.length > 0) {
+                    let t = {};
+                    ins.forEach(i => {
+                        if(i.getAttribute("data-field")) {
+                            t[i.getAttribute("data-field")] = i.value;
+                        }
+                    });
+                    
+                    if(t.nid && t.nid.length === 14) {
+                        const year = (t.nid[0] === '3' ? '20' : '19') + t.nid.substring(1, 3);
+                        t.dob = `${year}-${t.nid.substring(3, 5)}-${t.nid.substring(5, 7)}`;
+                        t.gender = (parseInt(t.nid[12]) % 2 === 0) ? "أنثى" : "ذكر";
+                    }
+
+                    if (t.name && t.name.trim() !== "") { 
+                        let docId = row.getAttribute("data-doc-id");
+                        // إذا لم يكن له ID سابق (جديد)، نستخدم الرقم القومي كـ ID لمنع التكرار
+                        if(!docId) docId = t.nid && t.nid.length === 14 ? t.nid : db.collection("contract_teachers").doc().id;
+                        
+                        batch.set(db.collection("contract_teachers").doc(docId), t, { merge: true });
+                        count++;
+                    }
+                }
+            });
+
+            if (count > 0) {
+                try {
+                    await batch.commit();
+                    alert(`✅ تم حفظ وتحديث بيانات ${count} معلم أجر في السحابة بنجاح!`);
+                    loadFromFirebase(); 
+                } catch(e) {
+                    alert("❌ خطأ في الحفظ: " + e.message);
+                }
+            } else {
+                alert("لا توجد بيانات صالحة للحفظ (تأكد من كتابة الأسماء).");
+            }
+            
+            btn.innerHTML = oldHtml;
+        }
+
+        function customExportToExcel() {
+            const colChecks = document.querySelectorAll('.export-cb:checked');
+            if(colChecks.length === 0) { alert("اختر عموداً واحداً على الأقل للتصدير!"); return; }
+            
+            const selectedCols = Array.from(colChecks).map(cb => ({ 
+                key: cb.getAttribute('data-key'), 
+                label: cb.nextElementSibling.innerText.trim() 
+            }));
+            
+            let data = [];
+            document.querySelectorAll("#table-body tr").forEach(row => {
+                if (row.cells.length < 2) return; 
+                
+                const rowCb = row.querySelector('.row-cb');
+                if(!rowCb || !rowCb.checked) return; 
+                
+                let obj = {};
+                selectedCols.forEach(col => {
+                    if (col.key === 'index') {
+                        obj[col.label] = row.cells[2].innerText; 
+                    } else {
+                        const input = row.querySelector(`[data-field="${col.key}"]`);
+                        obj[col.label] = input ? input.value : "";
+                    }
+                });
+                data.push(obj);
+            });
+
+            if(data.length === 0) { alert("لم يتم تحديد أي صفوف للتصدير!"); return; }
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "معلمي الأجر");
+            XLSX.writeFile(wb, `سجل_معلمي_الأجر.xlsx`);
+        }
+    </script>
+</body>
+</html>
