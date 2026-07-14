@@ -70,7 +70,7 @@
         .plan-table input:focus { border-color: var(--info); }
         .btn-save-plan { background: var(--success); color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 900; cursor: pointer; margin-top: 20px; width: 100%; font-size: 16px; }
 
-        /* جدول المعاينة السريعة */
+        /* جدول المعاينة السريعة والجداول العامة */
         .preview-container { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; }
         .preview-top-table { width: 100%; border-collapse: collapse; text-align: center; border: 3px solid #000; margin-bottom: 20px; background: white; }
         .preview-top-table th, .preview-top-table td { border: 1px solid #000; padding: 6px; font-size: 14px; font-weight: 900; color: #000; }
@@ -79,12 +79,12 @@
         .pt-cell-danger { font-size: 20px; color: var(--danger); vertical-align: middle; }
         .pt-cell-success { font-size: 20px; color: var(--info); vertical-align: middle; }
 
-        .preview-teachers-table { width: 100%; border-collapse: collapse; text-align: center; border: 3px solid #000; background: white; }
-        .preview-teachers-table th, .preview-teachers-table td { border: 1px solid #000; padding: 8px; font-size: 14px; font-weight: 900; color: #000; }
-        .preview-teachers-table thead th { background: #e2e8f0; border-bottom: 2px solid #000; }
+        .preview-teachers-table { width: 100%; border-collapse: collapse; text-align: center; border: 3px solid #cbd5e1; background: white; }
+        .preview-teachers-table th, .preview-teachers-table td { border: 1px solid #cbd5e1; padding: 10px; font-size: 15px; font-weight: 800; color: #1e293b; }
+        .preview-teachers-table thead th { background: #f1f5f9; border-bottom: 2px solid #94a3b8; }
         .preview-teachers-table td:nth-child(2) { text-align: right; padding-right: 15px; }
 
-        /* جدول الميزانية الشاملة */
+        /* جدول الميزانية الشاملة (يستخدم ايضاً لجدول المعاشات) */
         .modern-budget-table { width: 100%; border-collapse: separate; border-spacing: 0; }
         .modern-budget-table th, .modern-budget-table td { padding: 12px 15px; text-align: center; font-size: 14px; font-weight: 800; border-bottom: 1px solid #e2e8f0; }
         .modern-budget-table thead th { background: var(--primary); color: white; position: sticky; top: 0; z-index: 10; }
@@ -148,6 +148,11 @@
                 <button class="btn-action btn-all-budget" onclick="buildAllBudgetTable()"><i class="fa-solid fa-table"></i> عرض ميزانية جميع المواد</button>
                 <button class="btn-action btn-plan" onclick="toggleModal('planModal', true)"><i class="fa-solid fa-gear"></i> إعداد خطة المدرسة</button>
                 
+                <!-- الزر الجديد لفتح نافذة المعاشات -->
+                <button class="btn-action" style="background: var(--danger); box-shadow: 0 4px 15px rgba(190, 24, 60, 0.3);" onclick="toggleModal('retirementModal', true)">
+                    <i class="fa-solid fa-hourglass-half"></i> ترقب المحالين للمعاش
+                </button>
+                
                 <div style="border-top:1px dashed #cbd5e1; margin:5px 0;"></div>
                 
                 <div style="font-size:12px; font-weight:800; color:#64748b; margin-bottom:5px;">ترحيل الاستمارة إلى إكسيل:</div>
@@ -176,6 +181,31 @@
     <div id="excel-loader">
         <i class="fa-solid fa-spinner fa-spin fa-3x" style="color: #fcd34d; margin-bottom: 20px;"></i>
         <div>جاري جلب قالب الإكسيل وتعبئته بالبيانات...</div>
+    </div>
+
+    <!-- نافذة المعاشات الجديدة -->
+    <div class="modal-overlay" id="retirementModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-hourglass-half"></i> شاشة ترقب: أقرب ١٠ عاملين لبلوغ سن المعاش</h2>
+                <button onclick="toggleModal('retirementModal', false)" style="background:none; border:none; color:#fcd34d; font-size:28px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <table class="modern-budget-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">م</th>
+                            <th style="text-align: right; width: 40%;">اسم الموظف</th>
+                            <th style="width: 25%;">تاريخ الإحالة للمعاش</th>
+                            <th style="width: 25%;">العداد الزمني (بالأيام)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="retirement-body">
+                        <tr><td colspan="4" style="padding:20px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i> جاري حساب البيانات...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- نافذة المعاينة السريعة للمادة المحددة -->
@@ -208,13 +238,13 @@
                     <h3 style="font-size: 16px; font-weight: 900; margin-bottom: 10px; color: var(--dark); border-bottom: 2px solid #cbd5e1; padding-bottom: 5px;">
                         <i class="fa-solid fa-users"></i> أسماء المعلمين المسكنين
                     </h3>
-                    <table class="preview-teachers-table">
+                    <table class="preview-teachers-table" style="border-color: #000;">
                         <thead>
-                            <tr>
-                                <th style="width: 5%;">م</th>
-                                <th style="width: 45%; text-align: right;">اسم المعلم</th>
-                                <th style="width: 25%;">الدرجة المالية / الكادر</th>
-                                <th style="width: 25%;">النصاب القانوني</th>
+                            <tr style="background:#e2e8f0;">
+                                <th style="border: 1px solid #000; width: 5%;">م</th>
+                                <th style="border: 1px solid #000; width: 45%; text-align: right;">اسم المعلم</th>
+                                <th style="border: 1px solid #000; width: 25%;">الدرجة المالية / الكادر</th>
+                                <th style="border: 1px solid #000; width: 25%;">النصاب القانوني</th>
                             </tr>
                         </thead>
                         <tbody id="prev-teachers-body">
@@ -304,10 +334,95 @@
                 
                 initPlanTable();
                 calculateDashboardStats(); 
+                renderRetirementList(); // تحميل وتجهيز بيانات المعاشات برمجياً
             } catch (error) {
                 console.error("Error loading initial data:", error);
             }
         });
+
+        // ================= دوال حساب الإحالة للمعاش المحدثة =================
+        function getDOBFromNID(nid) {
+            if (!nid || nid.length !== 14) return null;
+            let century = parseInt(nid.charAt(0)) === 2 ? 1900 : 2000;
+            let year = century + parseInt(nid.substring(1, 3));
+            let month = parseInt(nid.substring(3, 5)) - 1; 
+            let day = parseInt(nid.substring(5, 7));
+            let dob = new Date(year, month, day);
+            
+            if (dob.getFullYear() === year && dob.getMonth() === month && dob.getDate() === day) {
+                return dob;
+            }
+            return null;
+        }
+
+        function getRetirementInfo(dob) {
+            if (!dob) return null;
+            
+            let retirementDate = new Date(dob.getFullYear() + 60, dob.getMonth(), dob.getDate());
+            retirementDate.setDate(retirementDate.getDate() - 1);
+            
+            let today = new Date();
+            today.setHours(0, 0, 0, 0); 
+            
+            let diffTime = retirementDate - today;
+            let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            // تحويل التاريخ ليكون رقماً مثل 15/03/2024
+            let dd = String(retirementDate.getDate()).padStart(2, '0');
+            let mm = String(retirementDate.getMonth() + 1).padStart(2, '0');
+            let yyyy = retirementDate.getFullYear();
+            let dateStrNum = `${dd}/${mm}/${yyyy}`;
+            
+            return {
+                dateStr: dateStrNum,
+                daysLeft: diffDays
+            };
+        }
+
+        function renderRetirementList() {
+            let list = [];
+            
+            TEACHERS.forEach(t => {
+                if((t.emp_status || "على رأس العمل") !== "على رأس العمل") return;
+                
+                let dob = getDOBFromNID(t.nid); 
+                if (dob) {
+                    let rInfo = getRetirementInfo(dob);
+                    if (rInfo && rInfo.daysLeft >= 0) {
+                        list.push({
+                            name: t.name,
+                            retirementDate: rInfo.dateStr,
+                            daysLeft: rInfo.daysLeft
+                        });
+                    }
+                }
+            });
+
+            list.sort((a, b) => a.daysLeft - b.daysLeft);
+            let top10 = list.slice(0, 10);
+            
+            let tbody = document.getElementById("retirement-body");
+            tbody.innerHTML = "";
+            
+            if(top10.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="padding:20px; color:#94a3b8; text-align:center;">لا توجد بيانات متاحة أو لا يوجد الرقم القومي مسجل بشكل صحيح</td></tr>`;
+                return;
+            }
+
+            top10.forEach((item, index) => {
+                let warningStyle = item.daysLeft <= 60 ? 'color: var(--danger); font-size: 16px;' : 'color: var(--primary);';
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="text-align:center;">${toAr(index + 1)}</td>
+                        <td style="text-align: right;">${item.name}</td>
+                        <td style="text-align:center; color: var(--info); font-weight: 900; font-size:16px;">${item.retirementDate}</td>
+                        <td style="text-align:center; font-weight: 900; font-size: 16px; ${warningStyle}">${item.daysLeft}</td>
+                    </tr>
+                `;
+            });
+        }
+        // =========================================================
 
         function toggleModal(id, show) { document.getElementById(id).classList.toggle("active", show); }
 
@@ -411,7 +526,6 @@
             toggleModal('allBudgetModal', true);
         }
 
-        // ================= فتح نافذة المعاينة السريعة (النسخة الآمنة والمحمية) =================
         function openQuickPreview() {
             try {
                 const selectEl = document.getElementById("subject-selector");
@@ -512,15 +626,15 @@
                 teachersBody.innerHTML = "";
                 
                 if(!data.teachersList || data.teachersList.length === 0) {
-                    teachersBody.innerHTML = `<tr><td colspan="4" style="padding:20px; color:#94a3b8;">لا يوجد معلمون مسكنون في هذه المادة!</td></tr>`;
+                    teachersBody.innerHTML = `<tr><td colspan="4" style="padding:20px; color:#94a3b8; border:1px solid #000;">لا يوجد معلمون مسكنون في هذه المادة!</td></tr>`;
                 } else {
                     data.teachersList.sort((a,b)=>a.name.localeCompare(b.name,'ar')).forEach((t, i) => {
                         teachersBody.innerHTML += `
                             <tr>
-                                <td>${toAr(i+1)}</td>
-                                <td>${t.name}</td>
-                                <td>${t.fin_degree || '-'}</td>
-                                <td style="color:var(--primary);">${t.quota ? toAr(t.quota) + ' حصة' : '-'}</td>
+                                <td style="border:1px solid #000;">${toAr(i+1)}</td>
+                                <td style="border:1px solid #000; text-align:right;">${t.name}</td>
+                                <td style="border:1px solid #000;">${t.fin_degree || '-'}</td>
+                                <td style="border:1px solid #000; color:var(--primary);">${t.quota ? toAr(t.quota) + ' حصة' : '-'}</td>
                             </tr>
                         `;
                     });
