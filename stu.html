@@ -8,6 +8,8 @@
     
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- مكتبة التقاط الشاشة -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         :root {
@@ -23,11 +25,13 @@
         .btn-nav { text-decoration: none; color: white; background: #334155; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
         .btn-nav:hover { background: var(--info); transform: translateY(-2px); }
         .btn-home:hover { background: var(--save-btn); }
+        .btn-screenshot { background: var(--success); cursor: pointer; color: white; border: none; }
 
-        .form-container { background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 950px; border-top: 5px solid var(--primary); }
-        h2 { color: var(--dark); font-weight: 900; font-size: 20px; margin-bottom: 15px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .form-container { background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 950px; border-top: 5px solid var(--primary); position: relative; }
+        h2 { color: var(--dark); font-weight: 900; font-size: 20px; margin-bottom: 15px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 10px; display: flex; justify-content: center; gap: 10px; align-items: center; }
+        
         label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 700; color: #111827; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600; outline: none; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600; outline: none; background-color: #fff; }
         input:focus, select:focus { border-color: var(--info); box-shadow: 0 0 0 2px rgba(2,132,199,0.2); }
 
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;}
@@ -51,45 +55,56 @@
         .btn:hover { opacity: 0.9; transform: translateY(-2px); }
 
         /* ================= نافذة سجل الغياب ================= */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: white; width: 90%; max-width: 600px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        .modal-header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 20px; }
+        .modal-content { background: white; width: 100%; max-width: 700px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
+        
+        .modal-header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--danger); }
+        .modal-header-titles h2 { font-size: 16px; font-weight: 900; margin: 0; color: #fcd34d; border:none; padding:0; display:flex; gap:8px;}
+        .watermark-text { font-size: 12px; font-weight: 900; margin-top: 5px; opacity: 0.9; color: #fff; }
+        
+        .modal-body { padding: 20px; background: #fff; overflow-y:auto; max-height: 80vh; }
         
         .abs-stats { display: flex; gap: 15px; margin-bottom: 20px; }
         .abs-card { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 10px; text-align: center; }
-        .abs-card h4 { font-size: 13px; color: #64748b; margin-bottom: 5px; }
+        .abs-card h4 { font-size: 13px; color: #64748b; margin-bottom: 5px; font-weight:800; }
         .abs-card h2 { font-size: 22px; font-weight: 900; direction: ltr; }
         .abs-danger { color: var(--danger); } .abs-safe { color: #16a34a; }
 
-        .abs-list { max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
-        .abs-item { display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f1f5f9; font-weight: 700; font-size: 14px; }
+        .abs-list { max-height: 300px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px; }
+        .abs-item { display: flex; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid #f1f5f9; font-weight: 800; font-size: 14px; }
         .abs-item:last-child { border: none; }
         .abs-item span:last-child { color: var(--danger); font-weight: 900; }
 
-        .zizo-signature { position: fixed; bottom: 10px; left: 10px; background: white; padding: 5px 15px; border-radius: 20px; font-weight: 900; font-size: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); color: var(--dark); }
+        .zizo-signature { position: fixed; bottom: 10px; left: 10px; background: white; padding: 5px 15px; border-radius: 20px; font-weight: 900; font-size: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); color: var(--dark); z-index: 100;}
         #status-msg { display: none; padding: 10px; border-radius: 6px; margin-top: 10px; text-align: center; font-weight: 800; font-size: 14px; }
+        
+        .watermark-form { display: none; text-align: center; font-size: 13px; font-weight: 900; color: #64748b; margin-top: 15px; border-top: 2px dashed #cbd5e1; padding-top: 10px; }
     </style>
 </head>
 <body>
 
-    <nav class="top-navigation">
+    <nav class="top-navigation hide-in-shot">
         <div class="nav-title"><i class="fa-solid fa-school"></i> مدرسة الشهيد أشرف حبيب</div>
         <div class="nav-buttons">
+            <button onclick="takeScreenshot('capture-card')" class="btn-nav btn-screenshot"><i class="fa-solid fa-camera"></i> لقطة للبطاقة</button>
             <a href="index.html" class="btn-nav btn-home"><i class="fa-solid fa-house"></i> الرئيسية</a>
         </div>
     </nav>
 
-    <div class="form-container">
-        <h2><i class="fa-solid fa-id-card-clip" style="color:var(--info)"></i> بطاقة بيانات تلميذ</h2>
+    <div class="form-container" id="capture-card">
+        <h2>
+            <i class="fa-solid fa-id-card-clip" style="color:var(--info)"></i> بطاقة بيانات تلميذ
+            <span class="watermark-form" style="display:inline; border:none; padding:0; margin:0; font-size:12px; color:var(--primary)">- إعداد وتصميم / مستر زيزو</span>
+        </h2>
         
         <div class="highlight-box">
             <div class="search-container">
                 <label><i class="fa-solid fa-magnifying-glass"></i> اسم التلميذ رباعي (ابحث بالاسم هنا أو سجل جديد)</label>
-                <input type="text" id="student_name" autocomplete="off" placeholder="اكتب أول حروف الاسم..." oninput="smartSearchByName(this.value)">
-                <div id="search-results"></div>
+                <input type="text" id="student_name" autocomplete="off" placeholder="اكتب أول حروف الاسم للبحث..." oninput="smartSearchByName(this.value)" style="border-color:var(--primary); font-weight:900;">
+                <div id="search-results" class="hide-in-shot"></div>
             </div>
+            
             <div class="grid-2" style="margin-bottom: 0;">
                 <div>
                     <label>الصف الدراسي</label>
@@ -129,31 +144,38 @@
         
         <div><label>موبايل ولي الأمر (واتساب)</label><input type="text" id="father_mobile"></div>
 
-        <div class="actions-bar">
-            <button class="btn btn-add" onclick="saveNew()"><i class="fa-solid fa-floppy-disk"></i> حفظ كـ جديد</button>
-            <button class="btn btn-edit" onclick="updateExisting()"><i class="fa-solid fa-pen-to-square"></i> تعديل التلميذ</button>
+        <div class="actions-bar hide-in-shot">
+            <button class="btn btn-add" onclick="saveNew()"><i class="fa-solid fa-floppy-disk"></i> حفظ جديد</button>
+            <button class="btn btn-edit" onclick="updateExisting()"><i class="fa-solid fa-pen-to-square"></i> تعديل</button>
             <button class="btn btn-delete" onclick="safeDelete()"><i class="fa-solid fa-trash"></i> حذف</button>
-            <!-- الزر الجديد لعرض الغياب -->
             <button class="btn btn-absence" onclick="showAbsenceRecord()"><i class="fa-solid fa-calendar-xmark"></i> عرض الغياب</button>
         </div>
+        
+        <div class="watermark-form show-in-shot" id="card-watermark"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
 
-        <div id="status-msg"></div>
+        <div id="status-msg" class="hide-in-shot"></div>
     </div>
 
     <!-- نافذة سجل الغياب -->
-    <div class="modal-overlay" id="absModal" onclick="if(event.target.id==='absModal') document.getElementById('absModal').classList.remove('active')">
-        <div class="modal-content">
+    <div class="modal-overlay" id="absModal">
+        <div class="modal-content" id="capture-abs">
             <div class="modal-header">
-                <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-clipboard-user"></i> سجل الغياب: <span id="abs-student-name" style="color:#fcd34d;"></span></h2>
-                <button onclick="document.getElementById('absModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+                <div class="modal-header-titles">
+                    <h2><i class="fa-solid fa-clipboard-user"></i> سجل الغياب: <span id="abs-student-name"></span></h2>
+                    <div class="watermark-text"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
+                </div>
+                <div class="hide-in-shot" style="display: flex; gap: 15px; align-items: center;">
+                    <button onclick="takeScreenshot('capture-abs')" class="btn-nav btn-screenshot" style="margin:0;"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
+                    <button onclick="document.getElementById('absModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:28px; cursor:pointer; line-height:1;">&times;</button>
+                </div>
             </div>
             <div class="modal-body">
                 <div class="abs-stats">
-                    <div class="abs-card"><h4>إجمالي أيام الغياب</h4><h2 id="abs-total-days" style="color:var(--dark)">٠</h2></div>
+                    <div class="abs-card"><h4>إجمالي الغياب</h4><h2 id="abs-total-days" style="color:var(--dark)">٠</h2></div>
                     <div class="abs-card"><h4>حضور الترم الأول</h4><h2 id="abs-term1" class="abs-safe">%٠</h2></div>
                     <div class="abs-card"><h4>حضور الترم الثاني</h4><h2 id="abs-term2" class="abs-safe">%٠</h2></div>
                 </div>
-                <h4 style="margin-bottom:10px; color:var(--dark); border-bottom:2px solid #eee; padding-bottom:5px;">تفاصيل الأسابيع</h4>
+                <h4 style="margin-bottom:10px; color:var(--dark); border-bottom:2px solid #eee; padding-bottom:5px; font-weight:900;">تفاصيل الأسابيع (أيام الغياب)</h4>
                 <div class="abs-list" id="abs-list-container">
                     <!-- سيتم ملؤها برمجياً -->
                 </div>
@@ -161,7 +183,7 @@
         </div>
     </div>
 
-    <div class="zizo-signature">إعداد مستر زيزو</div>
+    <div class="zizo-signature hide-in-shot">إعداد مستر زيزو</div>
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
@@ -169,13 +191,71 @@
 
         const arabicWeeks = ["الأول","الثاني","الثالث","الرابع","الخامس","السادس","السابع","الثامن","التاسع","العاشر","الحادي عشر","الثاني عشر","الثالث عشر","الرابع عشر","الخامس عشر","السادس عشر","السابع عشر","الثامن عشر","التاسع عشر","العشرون","الحادي والعشرون","الثاني والعشرون","الثالث والعشرون","الرابع والعشرون","الخامس والعشرون","السادس والعشرون","السابع والعشرون","الثامن والعشرون","التاسع والعشرون","الثلاثون"];
 
-        let currentStudentData = null; // لتخزين بيانات الطالب المفتوح حالياً
+        let currentStudentData = null;
 
         function toArabicNum(num) {
             if(num === 0) return "٠";
             if(!num) return "-";
             return String(num).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
         }
+
+        // ================= دالة التقاط الشاشة (محدثة) =================
+        function takeScreenshot(targetId) {
+            const targetEl = document.getElementById(targetId);
+            const hiddenElements = targetEl.querySelectorAll('.hide-in-shot');
+            const showElements = targetEl.querySelectorAll('.show-in-shot');
+            
+            // تحديد اسم الملف بناءً على اسم التلميذ
+            let fileName = "صورة";
+            if (targetId === 'capture-card') {
+                let sName = document.getElementById('student_name').value.trim();
+                fileName = sName ? `بطاقة_${sName}` : 'بطاقة_تلميذ';
+            } else if (targetId === 'capture-abs') {
+                let sName = document.getElementById('abs-student-name').innerText.trim();
+                fileName = sName ? `غياب_${sName}` : 'سجل_غياب';
+            }
+
+            // إخفاء الأزرار وقائمة البحث
+            hiddenElements.forEach(el => el.style.display = 'none');
+            // إظهار التوقيع المائي
+            showElements.forEach(el => el.style.display = 'block');
+            
+            // فك الـ scroll لتصوير كل المحتوى في نافذة الغياب
+            const scrollArea = targetEl.querySelector('.abs-list');
+            let origMaxHeight = "", origOverflow = "";
+            if(scrollArea) {
+                origMaxHeight = scrollArea.style.maxHeight;
+                origOverflow = scrollArea.style.overflowY;
+                scrollArea.style.maxHeight = 'none';
+                scrollArea.style.overflowY = 'visible';
+            }
+
+            html2canvas(targetEl, {
+                scale: 2, 
+                backgroundColor: "#ffffff",
+                useCORS: true
+            }).then(canvas => {
+                // إرجاع كل شيء لأصله
+                hiddenElements.forEach(el => el.style.display = ''); 
+                showElements.forEach(el => el.style.display = 'none');
+                if(scrollArea) {
+                    scrollArea.style.maxHeight = origMaxHeight;
+                    scrollArea.style.overflowY = origOverflow;
+                }
+
+                // حفظ الصورة بصيغة JPEG
+                let imgData = canvas.toDataURL("image/jpeg", 0.95);
+                let link = document.createElement('a');
+                link.download = fileName + '.jpg';
+                link.href = imgData;
+                link.click();
+            }).catch(err => {
+                console.error(err);
+                alert("حدث خطأ أثناء الالتقاط");
+                location.reload(); 
+            });
+        }
+        // ======================================================
 
         window.addEventListener('DOMContentLoaded', () => {
             const incomingId = new URLSearchParams(window.location.search).get('id');
@@ -209,7 +289,7 @@
         }
 
         function populateCard(id, data) {
-            currentStudentData = data; // حفظ البيانات لاستخدامها في الغياب
+            currentStudentData = data;
             document.getElementById("student_name").value = data.name || "";
             document.getElementById("student_code").value = id;
             document.getElementById("national_id").value = data.nid || "";
@@ -227,7 +307,6 @@
             showStatus("✅ تم جلب بيانات التلميذ بنجاح", "success");
         }
 
-        // ================= دالة عرض الغياب =================
         function showAbsenceRecord() {
             if(!currentStudentData) {
                 alert("يرجى البحث عن تلميذ أولاً لعرض غيابه!");
@@ -248,7 +327,7 @@
                     
                     listHtml += `<div class="abs-item">
                         <span>الأسبوع ${arabicWeeks[i-1]}</span>
-                        <span>${toArabicNum(days)} أيام</span>
+                        <span dir="ltr">${days} أيام</span>
                     </div>`;
                 }
             }
@@ -257,20 +336,19 @@
                 listHtml = `<div style="padding:20px; text-align:center; color:#16a34a; font-weight:bold;">لم يتم تسجيل أي غياب لهذا التلميذ.</div>`;
             }
 
-            // حساب النسب (بافتراض 85 يوم للترم الأول و 65 للثاني)
             const p1 = (((85 - t1Days) / 85) * 100).toFixed(1);
             const p2 = (((65 - t2Days) / 65) * 100).toFixed(1);
 
             const elT1 = document.getElementById("abs-term1");
             const elT2 = document.getElementById("abs-term2");
 
-            elT1.innerText = `%${toArabicNum(p1)}`;
+            elT1.innerHTML = `<bdo dir="ltr">%${p1}</bdo>`;
             elT1.className = p1 < 85 ? "abs-danger" : "abs-safe";
 
-            elT2.innerText = `%${toArabicNum(p2)}`;
+            elT2.innerHTML = `<bdo dir="ltr">%${p2}</bdo>`;
             elT2.className = p2 < 85 ? "abs-danger" : "abs-safe";
 
-            document.getElementById("abs-total-days").innerText = toArabicNum(t1Days + t2Days);
+            document.getElementById("abs-total-days").innerText = (t1Days + t2Days);
             document.getElementById("abs-list-container").innerHTML = listHtml;
 
             document.getElementById("absModal").classList.add("active");
@@ -294,7 +372,7 @@
                 dmj: document.getElementById("dmj").value, transfer_type: document.getElementById("transfer_type").value
             };
             db.collection("students").doc(code).set(data, { merge: true }).then(() => { 
-                currentStudentData = {...currentStudentData, ...data}; // تحديث البيانات المحلية
+                currentStudentData = {...currentStudentData, ...data}; 
                 showStatus("✅ " + msgText, "success"); 
             });
         }
