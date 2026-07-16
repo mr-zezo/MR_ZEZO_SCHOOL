@@ -67,18 +67,11 @@
         .field-group { display: flex; flex-direction: column; gap: 3px; }
         .field-group label { font-size: 12px; font-weight: 700; color: #475569; }
         
-        /* ================= إرشادات تعديل مربعات النص ================= */
         .field-group input, .field-group select { 
-            /* 1. لتغيير ارتفاع مربع النص (أبعاده)، قم بتعديل هذا الرقم (مثلاً 12px أو 15px) */
             padding: 10px; 
-            
-            /* 2. لتكبير أو تصغير حجم الخط داخل مربع النص، قم بتغيير هذا الرقم */
             font-size: 15px; 
             font-weight: 800; 
-            
-            /* 3. لجعل النص يظهر في منتصف مربع النص تماماً */
             text-align: center; 
-            
             border-radius: 6px; 
             border: 1px solid #cbd5e1; 
             outline: none; 
@@ -86,7 +79,6 @@
             color: var(--dark); 
             width: 100%;
         }
-        /* ============================================================== */
 
         .field-group input:focus, .field-group select:focus { border-color: var(--info); box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.1); }
         .readonly-field { background: #f1f5f9 !important; color: var(--primary); font-weight: 900; cursor: not-allowed; }
@@ -148,20 +140,20 @@
       /* ================= التجاوب مع الموبايل ================= */
         @media (max-width: 800px) {
             .main-layout { flex-direction: column; }
-            .profile-info { grid-template-columns: 1fr; }
             
-            /* التعديل الجذري هنا لحل مشكلة الأزرار */
+            .profile-header { flex-direction: column; text-align: center; }
+            .profile-info { grid-template-columns: 1fr; width: 100%; }
+            
             .side-actions { 
                 width: 100%; 
-                position: static; /* إلغاء التثبيت فوق الشاشة */
+                position: static; 
                 display: grid; 
-                grid-template-columns: 1fr 1fr; /* عرض زرين في كل صف */
+                grid-template-columns: 1fr 1fr; 
                 gap: 10px;
                 border-radius: 12px; 
                 padding: 15px; 
                 box-shadow: 0 5px 15px rgba(0,0,0,0.05);
             }
-            /* جعل عنوان لوحة التحكم يملأ العرض كله */
             .side-actions > div:first-child, #status-msg { grid-column: 1 / -1; } 
             
             .btn-action { width: 100%; padding: 10px; font-size: 12px; }
@@ -180,9 +172,7 @@
         <div class="nav-title"><i class="fa-solid fa-id-card"></i> ملف بيانات الموظف / المعلم</div>
         <div class="nav-center-sig">إعداد وتصميم / مستر زيزو</div>
         <div class="nav-buttons">
-            <!-- الزر الأول يظهر على اليمين: زر لقطة الشاشة -->
             <button onclick="takeScreenshot('capture-card')" class="btn-nav btn-screenshot"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
-            <!-- الزر الثاني يظهر على اليسار: زر الرئيسية -->
             <a href="index.html" class="btn-nav btn-home"><i class="fa-solid fa-house"></i> الرئيسية</a>
         </div>
     </nav>
@@ -255,7 +245,6 @@
                 <div class="data-section hide-in-shot">
                     <div class="section-title"><i class="fa-solid fa-folder-open"></i> المرفقات والمستندات (PDF)</div>
                     <div class="file-controls-wrapper">
-                        <!-- زر الرقم القومي -->
                         <div class="split-btn-group">
                             <button type="button" id="btn-view-nid" class="btn-view-file empty" onclick="viewSupabaseFile('nid_pdf')">
                                 <i class="fa-solid fa-id-card"></i> الرقم القومي
@@ -265,7 +254,6 @@
                             </button>
                             <input type="file" id="nid-file" accept="application/pdf" onchange="uploadToSupabase(this, 'nid_pdf')" hidden>
                         </div>
-                        <!-- زر بيان الحالة -->
                         <div class="split-btn-group">
                             <button type="button" id="btn-view-status" class="btn-view-file empty" onclick="viewSupabaseFile('status_pdf')">
                                 <i class="fa-solid fa-file-contract"></i> بيان الحالة
@@ -323,7 +311,6 @@
                             <option value="" disabled selected>اختر المعلم...</option>
                         </select>
                     </div>
-                    <!-- إظهار اسم المعلم فقط في لقطة الشاشة -->
                     <div class="show-in-shot" style="display:none; flex-grow:1; text-align:right;">
                         <span style="font-weight:900; font-size:18px; color:var(--primary);" id="print-teacher-name"></span>
                     </div>
@@ -358,14 +345,12 @@
 
         const monthsList = [{id:"m9",name:"سبتمبر"},{id:"m10",name:"أكتوبر"},{id:"m11",name:"نوفمبر"},{id:"m12",name:"ديسمبر"},{id:"m1",name:"يناير"},{id:"m2",name:"فبراير"},{id:"m3",name:"مارس"},{id:"m4",name:"أبريل"},{id:"m5",name:"مايو"},{id:"m6",name:"يونيو"}];
 
-        // ================= دالة التقاط الشاشة =================
-        // ================= دالة التقاط الشاشة (المطورة للموبايل) =================
+        // ================= دالة التقاط الشاشة (المطورة لحل مشكلة القص) =================
         function takeScreenshot(targetId) {
             const hiddenElements = document.querySelectorAll('.hide-in-shot');
             const showElements = document.querySelectorAll('.show-in-shot');
             const targetEl = document.getElementById(targetId);
             
-            // تحديد اسم الملف واسم المعلم للمودال
             let fileName = "صورة";
             if (targetId === 'capture-card') {
                 let tName = document.getElementById('teacher_name').value.trim();
@@ -377,11 +362,50 @@
                 document.getElementById('print-teacher-name').innerText = "المعلم: " + (sel.value ? tName : "");
             }
 
-            // إخفاء التحكم وإظهار العلامات المائية
             hiddenElements.forEach(el => el.style.display = 'none');
             showElements.forEach(el => el.style.display = 'block');
 
-            // إيقاف التمرير (Scroll) في نافذة الغياب
+            // تحويل الـ Input إلى Div مؤقتاً لتجنب قص النص الطويل (يعمل بشكل ممتاز)
+            const inputsToReplace = targetEl.querySelectorAll('input[type="text"], select');
+            const replacementDivs = [];
+            
+            inputsToReplace.forEach(input => {
+                const div = document.createElement('div');
+                const computedStyle = window.getComputedStyle(input);
+                
+                let textValue = "";
+                if(input.tagName.toLowerCase() === 'select') {
+                    textValue = input.options[input.selectedIndex]?.text || "";
+                } else {
+                    textValue = input.value || "";
+                }
+
+                div.style.cssText = `
+                    padding: ${computedStyle.padding};
+                    font-size: ${computedStyle.fontSize};
+                    font-weight: ${computedStyle.fontWeight};
+                    font-family: ${computedStyle.fontFamily};
+                    text-align: ${computedStyle.textAlign};
+                    border-radius: ${computedStyle.borderRadius};
+                    border: ${computedStyle.border};
+                    background: ${computedStyle.background};
+                    color: ${computedStyle.color};
+                    width: 100%;
+                    box-sizing: border-box;
+                    word-wrap: break-word;
+                    white-space: normal;
+                    min-height: ${input.offsetHeight}px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                `;
+                div.innerText = textValue;
+                
+                input.parentNode.insertBefore(div, input);
+                input.style.display = 'none';
+                replacementDivs.push({ input: input, div: div });
+            });
+
             const scrollArea = targetEl.querySelector('.modal-body');
             let origMaxHeight = "", origOverflow = "";
             if(scrollArea && targetId === 'capture-abs') {
@@ -391,35 +415,34 @@
                 scrollArea.style.overflowY = 'visible';
             }
 
-            // 💡 [ التعديل الجديد ] : إجبار الأداة على أخذ الصورة بمقاس شاشة الكمبيوتر (950px)
-            const originalWidth = targetEl.style.width;
-            const originalMaxWidth = targetEl.style.maxWidth;
-            targetEl.style.width = "950px";
-            targetEl.style.maxWidth = "950px";
+            // إرجاع الشاشة للأعلى مؤقتاً لتجنب أي قص ناتج عن الـ Scroll
+            const originalScroll = window.scrollY;
+            window.scrollTo(0, 0);
 
-            // التقاط الصورة
+            // التقاط الصورة بحجمها الطبيعي دون إجبارها على مقاس ثابت
             html2canvas(targetEl, {
                 scale: 2, 
                 backgroundColor: "#f1f5f9",
                 useCORS: true,
-                windowWidth: 950, // إجبار المتصفح على مقاس الكمبيوتر
-                width: 950        // إجبار الصورة على مقاس الكمبيوتر
+                scrollY: 0,
+                scrollX: 0
             }).then(canvas => {
                 
-                // 💡 [ التعديل الجديد ] : إرجاع مقاس الموبايل لطبيعته بعد أخذ الصورة
-                targetEl.style.width = originalWidth;
-                targetEl.style.maxWidth = originalMaxWidth;
-
-                // إرجاع الأزرار لطبيعتها
+                // إرجاع كل شيء لأصله
+                window.scrollTo(0, originalScroll);
                 hiddenElements.forEach(el => el.style.display = ''); 
                 showElements.forEach(el => el.style.display = 'none');
                 
+                replacementDivs.forEach(item => {
+                    item.input.style.display = '';
+                    item.div.remove();
+                });
+
                 if(scrollArea && targetId === 'capture-abs') {
                     scrollArea.style.maxHeight = origMaxHeight;
                     scrollArea.style.overflowY = origOverflow;
                 }
 
-                // تنزيل الصورة
                 let imgData = canvas.toDataURL("image/jpeg", 0.95);
                 let link = document.createElement('a');
                 link.download = fileName + '.jpg';
@@ -429,11 +452,19 @@
                 console.error(err);
                 alert("حدث خطأ أثناء الالتقاط");
                 
-                // التأكد من إرجاع المقاسات حتى لو حدث خطأ
-                targetEl.style.width = originalWidth;
-                targetEl.style.maxWidth = originalMaxWidth;
+                window.scrollTo(0, originalScroll);
+                hiddenElements.forEach(el => el.style.display = ''); 
+                showElements.forEach(el => el.style.display = 'none');
+
+                replacementDivs.forEach(item => {
+                    item.input.style.display = '';
+                    if(item.div) item.div.remove();
+                });
                 
-                location.reload(); 
+                if(scrollArea && targetId === 'capture-abs') {
+                    scrollArea.style.maxHeight = origMaxHeight;
+                    scrollArea.style.overflowY = origOverflow;
+                }
             });
         }
         
