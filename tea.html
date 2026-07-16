@@ -144,13 +144,29 @@
         /* العلامة المائية للقطة الشاشة */
         .watermark-form { display: none; text-align: center; font-size: 14px; font-weight: 900; color: #64748b; margin-top: 20px; border-top: 2px dashed #cbd5e1; padding-top: 15px; }
 
-        /* ================= التجاوب مع الموبايل ================= */
+      
+      /* ================= التجاوب مع الموبايل ================= */
         @media (max-width: 800px) {
             .main-layout { flex-direction: column; }
             .profile-info { grid-template-columns: 1fr; }
-            .side-actions { width: 100%; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; flex-direction: row; flex-wrap: wrap; border-radius: 15px 15px 0 0; padding: 10px; border-top: 2px solid var(--primary); box-shadow: 0 -5px 15px rgba(0,0,0,0.1); }
-            .btn-action { flex: 1; min-width: 100px; padding: 8px; font-size: 11px; }
-            .card-container { margin-bottom: 80px; }
+            
+            /* التعديل الجذري هنا لحل مشكلة الأزرار */
+            .side-actions { 
+                width: 100%; 
+                position: static; /* إلغاء التثبيت فوق الشاشة */
+                display: grid; 
+                grid-template-columns: 1fr 1fr; /* عرض زرين في كل صف */
+                gap: 10px;
+                border-radius: 12px; 
+                padding: 15px; 
+                box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            }
+            /* جعل عنوان لوحة التحكم يملأ العرض كله */
+            .side-actions > div:first-child, #status-msg { grid-column: 1 / -1; } 
+            
+            .btn-action { width: 100%; padding: 10px; font-size: 12px; }
+            .card-container { margin-bottom: 10px; } 
+            
             .top-navigation { flex-direction: column; gap: 15px; padding: 15px; }
             .nav-title, .nav-center-sig, .nav-buttons { text-align: center; width: 100%; justify-content: center; }
             .nav-buttons { flex-direction: row-reverse; } 
