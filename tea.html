@@ -359,6 +359,7 @@
         const monthsList = [{id:"m9",name:"سبتمبر"},{id:"m10",name:"أكتوبر"},{id:"m11",name:"نوفمبر"},{id:"m12",name:"ديسمبر"},{id:"m1",name:"يناير"},{id:"m2",name:"فبراير"},{id:"m3",name:"مارس"},{id:"m4",name:"أبريل"},{id:"m5",name:"مايو"},{id:"m6",name:"يونيو"}];
 
         // ================= دالة التقاط الشاشة =================
+        // ================= دالة التقاط الشاشة (المطورة للموبايل) =================
         function takeScreenshot(targetId) {
             const hiddenElements = document.querySelectorAll('.hide-in-shot');
             const showElements = document.querySelectorAll('.show-in-shot');
@@ -390,18 +391,35 @@
                 scrollArea.style.overflowY = 'visible';
             }
 
+            // 💡 [ التعديل الجديد ] : إجبار الأداة على أخذ الصورة بمقاس شاشة الكمبيوتر (950px)
+            const originalWidth = targetEl.style.width;
+            const originalMaxWidth = targetEl.style.maxWidth;
+            targetEl.style.width = "950px";
+            targetEl.style.maxWidth = "950px";
+
+            // التقاط الصورة
             html2canvas(targetEl, {
                 scale: 2, 
                 backgroundColor: "#f1f5f9",
-                useCORS: true
+                useCORS: true,
+                windowWidth: 950, // إجبار المتصفح على مقاس الكمبيوتر
+                width: 950        // إجبار الصورة على مقاس الكمبيوتر
             }).then(canvas => {
+                
+                // 💡 [ التعديل الجديد ] : إرجاع مقاس الموبايل لطبيعته بعد أخذ الصورة
+                targetEl.style.width = originalWidth;
+                targetEl.style.maxWidth = originalMaxWidth;
+
+                // إرجاع الأزرار لطبيعتها
                 hiddenElements.forEach(el => el.style.display = ''); 
                 showElements.forEach(el => el.style.display = 'none');
+                
                 if(scrollArea && targetId === 'capture-abs') {
                     scrollArea.style.maxHeight = origMaxHeight;
                     scrollArea.style.overflowY = origOverflow;
                 }
 
+                // تنزيل الصورة
                 let imgData = canvas.toDataURL("image/jpeg", 0.95);
                 let link = document.createElement('a');
                 link.download = fileName + '.jpg';
@@ -410,9 +428,15 @@
             }).catch(err => {
                 console.error(err);
                 alert("حدث خطأ أثناء الالتقاط");
+                
+                // التأكد من إرجاع المقاسات حتى لو حدث خطأ
+                targetEl.style.width = originalWidth;
+                targetEl.style.maxWidth = originalMaxWidth;
+                
                 location.reload(); 
             });
         }
+        
         // ======================================================
 
         window.addEventListener('DOMContentLoaded', () => {
