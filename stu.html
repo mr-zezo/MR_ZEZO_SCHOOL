@@ -2,13 +2,17 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- هام لتجاوب الشاشة مع الموبايل -->
     <title>بطاقة تلميذ - نظام مستر زيزو</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- مكتبات فايربيز -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <!-- مكتبة التقاط الشاشة -->
+    
+    <!-- مكتبة التقاط الشاشة (Screenshot) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
@@ -19,19 +23,45 @@
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
         body { background-color: var(--bg); padding: 20px; display: flex; flex-direction: column; align-items: center; }
         
+        /* ================= الشريط العلوي والتوقيع ================= */
         .top-navigation { width: 100%; max-width: 950px; background: var(--dark); padding: 10px 20px; border-radius: 10px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .nav-title { font-size: 15px; font-weight: 900; color: #93c5fd; }
-        .nav-buttons { display: flex; gap: 10px; }
-        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-        .btn-nav:hover { background: var(--info); transform: translateY(-2px); }
-        .btn-home:hover { background: var(--save-btn); }
-        .btn-screenshot { background: var(--success); cursor: pointer; color: white; border: none; }
+        .nav-title { font-size: 15px; font-weight: 900; color: #93c5fd; flex: 1; text-align: right; }
+        .nav-center-sig { flex: 1; text-align: center; font-size: 16px; font-weight: 900; color: #fcd34d; }
+        .nav-buttons { display: flex; gap: 15px; flex: 1; justify-content: flex-end; align-items: center; }
+        
+        .btn-nav { text-decoration: none; border: none; cursor: pointer; color: white; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn-nav:hover { transform: translateY(-2px); }
+        
+        .btn-home { background: #1e3a8a !important; font-size: 16px !important; padding: 10px 20px !important; }
+        .btn-home:hover { background: #172554 !important; }
+        .btn-screenshot { background: silver !important; color: #111827 !important; font-size: 15px !important; padding: 10px 15px !important; }
+        .btn-screenshot:hover { background: #a3a3a3 !important; }
 
         .form-container { background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 950px; border-top: 5px solid var(--primary); position: relative; }
         h2 { color: var(--dark); font-weight: 900; font-size: 20px; margin-bottom: 15px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 10px; display: flex; justify-content: center; gap: 10px; align-items: center; }
         
         label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 700; color: #111827; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; font-weight: 600; outline: none; background-color: #fff; }
+        
+        /* ================= إرشادات تعديل مربعات النص ================= */
+        input, select { 
+            width: 100%; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 6px; 
+            outline: none; 
+            background-color: #fff; 
+            
+            /* 1. لتغيير ارتفاع مربع النص (أبعاده)، قم بتعديل هذا الرقم (مثلاً 12px أو 15px) */
+            padding: 10px; 
+            
+            /* 2. لتكبير أو تصغير حجم الخط داخل مربع النص، قم بتغيير هذا الرقم */
+            font-size: 16px; 
+            font-weight: 800; 
+            
+            /* 3. لجعل النص يظهر في منتصف مربع النص تماماً */
+            text-align: center; 
+        }
+        /* ============================================================== */
+
         input:focus, select:focus { border-color: var(--info); box-shadow: 0 0 0 2px rgba(2,132,199,0.2); }
 
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;}
@@ -76,18 +106,31 @@
         .abs-item:last-child { border: none; }
         .abs-item span:last-child { color: var(--danger); font-weight: 900; }
 
-        .zizo-signature { position: fixed; bottom: 10px; left: 10px; background: white; padding: 5px 15px; border-radius: 20px; font-weight: 900; font-size: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); color: var(--dark); z-index: 100;}
         #status-msg { display: none; padding: 10px; border-radius: 6px; margin-top: 10px; text-align: center; font-weight: 800; font-size: 14px; }
         
+        /* علامة مائية تظهر فقط في لقطة الشاشة */
         .watermark-form { display: none; text-align: center; font-size: 13px; font-weight: 900; color: #64748b; margin-top: 15px; border-top: 2px dashed #cbd5e1; padding-top: 10px; }
+
+        /* ================= التجاوب مع الموبايل ================= */
+        @media (max-width: 768px) {
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } 
+            .actions-bar { grid-template-columns: 1fr 1fr; } 
+            .top-navigation { flex-direction: column; gap: 15px; padding: 15px; }
+            .nav-title, .nav-center-sig, .nav-buttons { text-align: center; width: 100%; justify-content: center; }
+            .abs-stats { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
 
     <nav class="top-navigation hide-in-shot">
         <div class="nav-title"><i class="fa-solid fa-school"></i> مدرسة الشهيد أشرف حبيب</div>
+        <div class="nav-center-sig">إعداد وتصميم / مستر زيزو</div>
         <div class="nav-buttons">
-            <button onclick="takeScreenshot('capture-card')" class="btn-nav btn-screenshot"><i class="fa-solid fa-camera"></i> لقطة للبطاقة</button>
+            <!-- الزر الأول يظهر على اليمين: زر لقطة الشاشة -->
+            <button onclick="takeScreenshot('capture-card')" class="btn-nav btn-screenshot"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
+            
+            <!-- الزر الثاني يظهر على اليسار: زر الرئيسية -->
             <a href="index.html" class="btn-nav btn-home"><i class="fa-solid fa-house"></i> الرئيسية</a>
         </div>
     </nav>
@@ -95,13 +138,15 @@
     <div class="form-container" id="capture-card">
         <h2>
             <i class="fa-solid fa-id-card-clip" style="color:var(--info)"></i> بطاقة بيانات تلميذ
-            <span class="watermark-form" style="display:inline; border:none; padding:0; margin:0; font-size:12px; color:var(--primary)">- إعداد وتصميم / مستر زيزو</span>
+            <span class="watermark-form" style="display:none; border:none; padding:0; margin:0; font-size:12px; color:var(--primary)">- إعداد وتصميم / مستر زيزو</span>
         </h2>
         
         <div class="highlight-box">
+            <!-- تم إزالة كود الإخفاء من هنا ليظهر الاسم في الصورة -->
             <div class="search-container">
                 <label><i class="fa-solid fa-magnifying-glass"></i> اسم التلميذ رباعي (ابحث بالاسم هنا أو سجل جديد)</label>
                 <input type="text" id="student_name" autocomplete="off" placeholder="اكتب أول حروف الاسم للبحث..." oninput="smartSearchByName(this.value)" style="border-color:var(--primary); font-weight:900;">
+                <!-- تم وضع كود الإخفاء هنا فقط لنتائج البحث حتى لا تظهر في الصورة -->
                 <div id="search-results" class="hide-in-shot"></div>
             </div>
             
@@ -162,7 +207,7 @@
             <div class="modal-header">
                 <div class="modal-header-titles">
                     <h2><i class="fa-solid fa-clipboard-user"></i> سجل الغياب: <span id="abs-student-name"></span></h2>
-                    <div class="watermark-text"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
+                    <div class="watermark-text show-in-shot" style="display:none;"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
                 </div>
                 <div class="hide-in-shot" style="display: flex; gap: 15px; align-items: center;">
                     <button onclick="takeScreenshot('capture-abs')" class="btn-nav btn-screenshot" style="margin:0;"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
@@ -183,8 +228,6 @@
         </div>
     </div>
 
-    <div class="zizo-signature hide-in-shot">إعداد مستر زيزو</div>
-
     <script>
         const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
         firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
@@ -199,11 +242,11 @@
             return String(num).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
         }
 
-        // ================= دالة التقاط الشاشة (محدثة) =================
+        // ================= دالة التقاط الشاشة =================
         function takeScreenshot(targetId) {
+            const hiddenElements = document.querySelectorAll('.hide-in-shot');
+            const showElements = document.querySelectorAll('.show-in-shot');
             const targetEl = document.getElementById(targetId);
-            const hiddenElements = targetEl.querySelectorAll('.hide-in-shot');
-            const showElements = targetEl.querySelectorAll('.show-in-shot');
             
             // تحديد اسم الملف بناءً على اسم التلميذ
             let fileName = "صورة";
@@ -215,12 +258,11 @@
                 fileName = sName ? `غياب_${sName}` : 'سجل_غياب';
             }
 
-            // إخفاء الأزرار وقائمة البحث
+            // إخفاء الأزرار وإظهار العلامة المائية
             hiddenElements.forEach(el => el.style.display = 'none');
-            // إظهار التوقيع المائي
             showElements.forEach(el => el.style.display = 'block');
-            
-            // فك الـ scroll لتصوير كل المحتوى في نافذة الغياب
+
+            // فك التمرير (Scroll) مؤقتاً لتصوير الغياب بالكامل
             const scrollArea = targetEl.querySelector('.abs-list');
             let origMaxHeight = "", origOverflow = "";
             if(scrollArea) {
@@ -230,12 +272,13 @@
                 scrollArea.style.overflowY = 'visible';
             }
 
+            // التقاط الصورة وتنزيلها
             html2canvas(targetEl, {
                 scale: 2, 
                 backgroundColor: "#ffffff",
                 useCORS: true
             }).then(canvas => {
-                // إرجاع كل شيء لأصله
+                // إعادة كل شيء لأصله
                 hiddenElements.forEach(el => el.style.display = ''); 
                 showElements.forEach(el => el.style.display = 'none');
                 if(scrollArea) {
@@ -243,7 +286,7 @@
                     scrollArea.style.overflowY = origOverflow;
                 }
 
-                // حفظ الصورة بصيغة JPEG
+                // تنزيل الصورة تلقائياً كملف JPG
                 let imgData = canvas.toDataURL("image/jpeg", 0.95);
                 let link = document.createElement('a');
                 link.download = fileName + '.jpg';
