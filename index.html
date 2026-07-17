@@ -73,7 +73,7 @@
         .stat-info h2 { color: var(--dark); font-size: 30px; font-weight: 900; }
         .stat-icon { font-size: 40px; opacity: 0.15; }
 
-        /* ================= أقسام النظام (4 أقسام بجوار بعضها) ================= */
+        /* ================= أقسام النظام ================= */
         .modules-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
         
         @media (max-width: 1200px) { .modules-container { grid-template-columns: repeat(2, 1fr); } }
@@ -118,6 +118,37 @@
         .form-group input { padding: 12px; border-radius: 8px; border: 2px solid #cbd5e1; font-size: 15px; font-weight: 700; outline: none; transition: 0.2s; }
         .form-group input:focus { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.1); }
         
+        /* تصميم فريم حسابات نظم المعلومات */
+        .info-systems-frame {
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        .frame-title {
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--admin);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 12px;
+        }
+        .account-section-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 10px;
+            background: #f1f5f9;
+            padding: 5px 10px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
         .btn-save-settings { background: var(--success); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: 900; cursor: pointer; width: 100%; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; }
         .btn-save-settings:hover { background: #15803d; }
 
@@ -135,7 +166,6 @@
             </div>
         </div>
 
-        <!-- إضافة حقوق الأستاذ عبدالعزيز في المنتصف -->
         <div class="developer-credit-wrapper">
             <div class="developer-credit">
                 <i class="fa-solid fa-medal"></i>
@@ -259,14 +289,34 @@
                         <div class="form-group"><label>مسلسل المدرسة</label><input type="text" id="set_school_serial" placeholder="رقم المسلسل"></div>
                         <div class="form-group"><label>مسلسل رياض الأطفال</label><input type="text" id="set_kg_serial" placeholder="مسلسل الـ KG"></div>
                         <div class="form-group"><label>تليفون المدرسة</label><input type="text" id="set_school_phone" placeholder="رقم التليفون الأرضي"></div>
+                        
+                        <!-- إضافة إيميل المدرسة Gmail -->
+                        <div class="form-group"><label>إيميل المدرسة (Gmail)</label><input type="text" id="set_school_email" placeholder="example@gmail.com"></div>
+                        <div class="form-group"><label>كلمة المرور (Gmail)</label><input type="text" id="set_school_email_pass" placeholder="كلمة المرور"></div>
                     </div>
+
+                    <!-- فريم حسابات نظم المعلومات -->
+                    <div class="info-systems-frame">
+                        <h3 class="frame-title"><i class="fa-solid fa-server"></i> حسابات نظم المعلومات</h3>
+                        
+                        <div class="account-section-title"><i class="fa-solid fa-school"></i> حساب المدرسة</div>
+                        <div class="form-grid" style="margin-bottom: 15px;">
+                            <div class="form-group"><label>الإيميل / اسم المستخدم</label><input type="text" id="set_sys_school_email" placeholder="أدخل الإيميل أو الكود"></div>
+                            <div class="form-group"><label>كلمة المرور</label><input type="text" id="set_sys_school_pass" placeholder="أدخل كلمة المرور"></div>
+                        </div>
+
+                        <div class="account-section-title"><i class="fa-solid fa-child-reaching"></i> حساب رياض الأطفال</div>
+                        <div class="form-grid" style="margin-bottom: 0;">
+                            <div class="form-group"><label>الإيميل / اسم المستخدم</label><input type="text" id="set_sys_kg_email" placeholder="أدخل الإيميل أو الكود"></div>
+                            <div class="form-group"><label>كلمة المرور</label><input type="text" id="set_sys_kg_pass" placeholder="أدخل كلمة المرور"></div>
+                        </div>
+                    </div>
+
                     <button type="button" class="btn-save-settings" onclick="saveSchoolSettings()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ البيانات في السحابة</button>
                 </form>
             </div>
         </div>
     </div>
-
-    
 
     <script>
         const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
@@ -322,6 +372,14 @@
                     document.getElementById("set_school_serial").value = data.school_serial || "";
                     document.getElementById("set_kg_serial").value = data.kg_serial || "";
                     document.getElementById("set_school_phone").value = data.school_phone || "";
+                    
+                    // الحقول الجديدة
+                    document.getElementById("set_school_email").value = data.school_email || "";
+                    document.getElementById("set_school_email_pass").value = data.school_email_pass || "";
+                    document.getElementById("set_sys_school_email").value = data.sys_school_email || "";
+                    document.getElementById("set_sys_school_pass").value = data.sys_school_pass || "";
+                    document.getElementById("set_sys_kg_email").value = data.sys_kg_email || "";
+                    document.getElementById("set_sys_kg_pass").value = data.sys_kg_pass || "";
                 }
             } catch(e) { console.log("لا توجد بيانات سابقة."); }
         }
@@ -339,7 +397,15 @@
                 school_id: document.getElementById("set_school_id").value,
                 school_serial: document.getElementById("set_school_serial").value,
                 kg_serial: document.getElementById("set_kg_serial").value,
-                school_phone: document.getElementById("set_school_phone").value
+                school_phone: document.getElementById("set_school_phone").value,
+                
+                // الحقول الجديدة
+                school_email: document.getElementById("set_school_email").value,
+                school_email_pass: document.getElementById("set_school_email_pass").value,
+                sys_school_email: document.getElementById("set_sys_school_email").value,
+                sys_school_pass: document.getElementById("set_sys_school_pass").value,
+                sys_kg_email: document.getElementById("set_sys_kg_email").value,
+                sys_kg_pass: document.getElementById("set_sys_kg_pass").value
             };
 
             try {
