@@ -3,27 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة الطلاب المتقدم</title>
+    <title>إلزام الصف الأول - مستر زيزو</title>
     <!-- مكتبة تصدير الإكسيل -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- أيقونات FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
 
         body { font-family: 'Cairo', sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative;}
+        h2 { text-align: center; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-top: 5px;}
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: 600; margin-bottom: 5px; color: #34495e; }
         
         input[type="text"], input[type="number"], select {
-            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Cairo', sans-serif; box-sizing: border-box;
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Cairo', sans-serif; box-sizing: border-box; font-weight: bold;
         }
         input:focus, select:focus { outline: none; border-color: #3498db; box-shadow: 0 0 5px rgba(52, 152, 219, 0.3); }
 
         .split-container { display: flex; gap: 10px; margin-top: 5px; }
         .split-container input { background-color: #e8f4f8; border-color: #bde0ec; text-align: center; color: #2980b9; font-size: 13px; font-weight: bold; }
 
-        .btn-submit { background-color: #27ae60; color: white; border: none; padding: 15px; width: 100%; font-size: 18px; font-family: 'Cairo', sans-serif; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+        .btn-submit { background-color: #27ae60; color: white; border: none; padding: 15px; width: 100%; font-size: 18px; font-family: 'Cairo', sans-serif; font-weight: bold; border-radius: 5px; cursor: pointer; margin-top: 10px; transition: 0.3s;}
         .btn-submit:hover { background-color: #2ecc71; }
         
         /* الإحصائيات */
@@ -32,23 +34,30 @@
         .stat-box span { display: block; font-size: 14px; color: #7f8c8d; margin-top: 5px; }
         .stat-val { color: #e74c3c; font-size: 18px; }
 
-        /* أزرار التصدير */
+        /* أزرار التصدير والرجوع */
         .export-group { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;}
-        .export-group button { flex: 1; padding: 10px; font-family: 'Cairo'; font-size: 15px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; color: white;}
+        .export-group button { flex: 1; padding: 10px; font-family: 'Cairo'; font-size: 15px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; color: white; transition: 0.3s;}
         .btn-csv { background-color: #e67e22; } .btn-csv:hover { background-color: #d35400; }
         .btn-excel { background-color: #207245; } .btn-excel:hover { background-color: #1e5e39; }
+        
+        .btn-back { display: inline-flex; align-items: center; gap: 8px; background-color: #34495e; color: white; text-decoration: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; transition: 0.3s; margin-bottom: 15px; font-size: 14px;}
+        .btn-back:hover { background-color: #2c3e50; transform: translateX(5px); }
 
         table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
         table, th, td { border: 1px solid #ddd; }
-        th, td { padding: 8px; text-align: center; }
+        th, td { padding: 8px; text-align: center; font-weight: bold; }
         th { background-color: #34495e; color: white; }
-        .btn-edit { background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        .btn-edit { background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; font-family: 'Cairo'; font-weight: bold;}
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>نظام إدارة بيانات الطلاب (مربوط بـ Firebase)</h2>
+        <!-- زر العودة للرئيسية -->
+        <a href="index.html" class="btn-back"><i class="fa-solid fa-arrow-right"></i> العودة للرئيسية</a>
+
+        <!-- تعديل العنوان كما طلبت -->
+        <h2>نظام إدارة بيانات الطلاب (إعداد وتصميم مستر زيزو)</h2>
 
         <!-- الحقول -->
         <div class="form-group"><label>اسم التلميذ الخماسي:</label><input type="text" id="studentFullName" class="enter-nav" placeholder="اكتب الاسم واضغط المسطرة..."><div class="split-container"><input type="text" id="st1" readonly placeholder="الأول"><input type="text" id="st2" readonly placeholder="الثاني"><input type="text" id="st3" readonly placeholder="الثالث"><input type="text" id="st4" readonly placeholder="الرابع"><input type="text" id="st5" readonly placeholder="الخامس"></div></div>
@@ -64,7 +73,7 @@
         <div class="form-group"><label>المرحلة:</label><select id="stage" class="enter-nav"><option value="مدرسة">مدرسة</option><option value="رياض أطفال">رياض أطفال</option></select></div>
         <div class="form-group"><label>حالة التسجيل:</label><select id="status" class="enter-nav"><option value="غير مسجل">غير مسجل</option><option value="مسجل">مسجل</option></select></div>
 
-        <button id="submitBtn" class="btn-submit enter-nav" onclick="saveData()">إدخال وحفظ البيانات (Enter)</button>
+        <button id="submitBtn" class="btn-submit enter-nav" onclick="saveData()"><i class="fa-solid fa-save"></i> إدخال وحفظ البيانات (Enter)</button>
 
         <!-- الإحصائيات -->
         <div class="stats-dashboard">
@@ -75,18 +84,22 @@
 
         <!-- أزرار التصدير الذكية -->
         <div class="export-group">
-            <button class="btn-csv" onclick="exportFilteredData('مدرسة', 'csv')">تصدير مدرسة (CSV)</button>
-            <button class="btn-excel" onclick="exportFilteredData('مدرسة', 'excel')">تصدير مدرسة (Excel)</button>
-            <button class="btn-csv" onclick="exportFilteredData('رياض أطفال', 'csv')">تصدير رياض أطفال (CSV)</button>
-            <button class="btn-excel" onclick="exportFilteredData('رياض أطفال', 'excel')">تصدير رياض أطفال (Excel)</button>
+            <button class="btn-csv" onclick="exportFilteredData('مدرسة', 'csv')"><i class="fa-solid fa-file-csv"></i> تصدير مدرسة (CSV)</button>
+            <button class="btn-excel" onclick="exportFilteredData('مدرسة', 'excel')"><i class="fa-solid fa-file-excel"></i> تصدير مدرسة (Excel)</button>
+            <button class="btn-csv" onclick="exportFilteredData('رياض أطفال', 'csv')"><i class="fa-solid fa-file-csv"></i> تصدير رياض (CSV)</button>
+            <button class="btn-excel" onclick="exportFilteredData('رياض أطفال', 'excel')"><i class="fa-solid fa-file-excel"></i> تصدير رياض (Excel)</button>
         </div>
 
-        <h3 style="margin-top: 30px;">البيانات المسجلة</h3>
+        <h3 style="margin-top: 30px;"><i class="fa-solid fa-users-viewfinder"></i> البيانات المسجلة</h3>
         <table>
             <thead><tr><th>اسم الطالب</th><th>المرحلة</th><th>الحالة</th><th>القومي للطالب</th><th>إجراء</th></tr></thead>
             <tbody id="dataTableBody"></tbody>
         </table>
-        <button onclick="clearServerData()" style="margin-top:10px; background:#c0392b; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer;">مسح قاعدة البيانات</button>
+        
+        <!-- زر مسح البيانات المحمي بكلمة مرور -->
+        <button onclick="clearServerData()" style="margin-top:15px; background:#c0392b; color:white; border:none; padding:10px 15px; border-radius:5px; cursor:pointer; font-weight:bold; font-family:'Cairo'; width:100%; font-size:16px;">
+            <i class="fa-solid fa-trash-can"></i> مسح قاعدة البيانات (يتطلب كلمة مرور)
+        </button>
     </div>
 
     <script>
@@ -94,7 +107,7 @@
         const dbEndpoint = FIREBASE_BASE + ".json";
         
         let studentsData = [];
-        let currentEditId = null; // متغير يحفظ ID الطالب الجاري تعديله
+        let currentEditId = null;
 
         // تقسيم الأسماء
         function setupSplitter(mainId, ids) {
@@ -122,14 +135,12 @@
             try {
                 const res = await fetch(dbEndpoint);
                 const data = await res.json();
-                // حفظ البيانات مع الـ Key الخاص بفايربيز لسهولة التعديل لاحقاً
                 studentsData = data ? Object.keys(data).map(key => ({ id: key, ...data[key] })) : [];
                 updateTable();
                 updateDashboard();
             } catch (err) { console.error(err); }
         }
 
-        // تحديث لوحة الإحصائيات
         function updateDashboard() {
             let sr=0, su=0, kr=0, ku=0;
             studentsData.forEach(s => {
@@ -141,13 +152,13 @@
             document.getElementById('totalCount').innerText = studentsData.length;
         }
 
-        // الحفظ (جديد أو تعديل)
         async function saveData() {
             const studentName = document.getElementById('studentFullName').value.trim();
             if(!studentName) { alert("أدخل اسم الطالب!"); return; }
 
             const btn = document.getElementById('submitBtn');
-            btn.innerText = "جاري الحفظ..."; btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...'; 
+            btn.disabled = true;
 
             const record = {
                 c1: studentName, c2: document.getElementById('st1').value, c3: document.getElementById('st2').value, c4: document.getElementById('st3').value, c5: document.getElementById('st4').value, c6: document.getElementById('st5').value,
@@ -158,23 +169,21 @@
 
             try {
                 if (currentEditId) {
-                    // تحديث سجل موجود
                     await fetch(`${FIREBASE_BASE}/${currentEditId}.json`, { method: 'PUT', body: JSON.stringify(record) });
                     currentEditId = null;
                 } else {
-                    // إضافة سجل جديد
                     await fetch(dbEndpoint, { method: 'POST', body: JSON.stringify(record) });
                 }
                 await loadDataFromServer();
                 clearForm();
             } catch (err) { alert("خطأ في الحفظ"); } 
             finally {
-                btn.innerText = "إدخال وحفظ البيانات (Enter)"; btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-save"></i> إدخال وحفظ البيانات (Enter)'; 
+                btn.disabled = false;
                 document.getElementById('studentFullName').focus();
             }
         }
 
-        // عرض السجل للتعديل
         function editRecord(id) {
             const r = studentsData.find(s => s.id === id);
             if(!r) return;
@@ -187,7 +196,7 @@
             document.getElementById('religion').value = r.c16 || 'مسلم'; document.getElementById('stage').value = r.c17 || 'مدرسة'; document.getElementById('status').value = r.status || 'غير مسجل';
 
             currentEditId = id;
-            document.getElementById('submitBtn').innerText = "تحديث البيانات (Enter)";
+            document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> تحديث البيانات (Enter)';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -195,8 +204,8 @@
             const tbody = document.getElementById('dataTableBody'); tbody.innerHTML = '';
             studentsData.forEach(r => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${r.c1}</td><td>${r.c17}</td><td style="color:${r.status==='مسجل'?'green':'red'}; font-weight:bold;">${r.status}</td><td>${r.c13}</td>
-                <td><button class="btn-edit" onclick="editRecord('${r.id}')">تعديل/عرض</button></td>`;
+                tr.innerHTML = `<td>${r.c1}</td><td>${r.c17}</td><td style="color:${r.status==='مسجل'?'green':'red'}; font-weight:900;">${r.status}</td><td>${r.c13}</td>
+                <td><button class="btn-edit" onclick="editRecord('${r.id}')"><i class="fa-solid fa-pen"></i> عرض</button></td>`;
                 tbody.appendChild(tr);
             });
         }
@@ -204,25 +213,35 @@
         function clearForm() {
             document.querySelectorAll('input[type="text"]').forEach(i => i.value = '');
             document.getElementById('religion').value = 'مسلم'; document.getElementById('stage').value = 'مدرسة'; document.getElementById('status').value = 'غير مسجل';
-            currentEditId = null; document.getElementById('submitBtn').innerText = "إدخال وحفظ البيانات (Enter)";
+            currentEditId = null; document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-save"></i> إدخال وحفظ البيانات (Enter)';
         }
 
+        // ============================================
+        // كود مسح البيانات محمي بكلمة مرور 2026
+        // ============================================
         async function clearServerData() {
-            if(confirm('متأكد من مسح الكل؟')) { await fetch(dbEndpoint, { method: 'DELETE' }); loadDataFromServer(); }
+            const pass = prompt('الرجاء إدخال كلمة المرور لمسح قاعدة البيانات:');
+            
+            if (pass === '2026') {
+                if(confirm('تحذير نهائي: هل أنت متأكد من مسح جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                    await fetch(dbEndpoint, { method: 'DELETE' });
+                    studentsData = [];
+                    updateTable();
+                    updateDashboard();
+                    alert('تم مسح جميع البيانات بنجاح.');
+                }
+            } else if (pass !== null) {
+                alert('كلمة المرور خاطئة! تم إلغاء عملية المسح للحفاظ على البيانات.');
+            }
         }
 
-        // دالة التصدير المتقدمة (فرز + تحويل الأسماء)
         async function exportFilteredData(stageTarget, format) {
-            await loadDataFromServer(); // تأكيد أحدث بيانات
-            
-            // تصفية البيانات حسب المرحلة المطلوبة
+            await loadDataFromServer(); 
             const filteredData = studentsData.filter(s => s.c17 === stageTarget);
             if (filteredData.length === 0) { alert(`لا توجد بيانات مرحلة (${stageTarget}) لتصديرها`); return; }
 
-            // رؤوس الأعمدة العربية كما طلبت
             const headers = ["اسم التلميذ الخماسي", "الاسم الأول", "الاسم الثاني", "الاسم الثالث", "الاسم الرابع", "الاسم الخامس", "اسم الأم الرباعي", "اسم الأم الأول", "اسم الأم الثاني", "اسم الأم الثالث", "اسم الأم الرابع", "رقم الموبايل", "الرقم القومي للطالب", "الرقم القومي للأب", "الرقم القومي للأم", "الديانة", "المرحلة", "حالة التسجيل"];
 
-            // تحضير مصفوفة ثنائية الأبعاد (صفوف وأعمدة)
             const rowsArray = [headers];
             filteredData.forEach(r => {
                 rowsArray.push([
@@ -233,7 +252,6 @@
             });
 
             if (format === 'csv') {
-                // التصدير إلى CSV (بالفاصلة المنقوطة للـ Katalon)
                 let csvContent = rowsArray.map(row => row.map(item => `"${item || ''}"`).join(";")).join("\n");
                 const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement("a");
@@ -242,7 +260,6 @@
                 link.click();
             } 
             else if (format === 'excel') {
-                // التصدير إلى Excel باستخدام SheetJS
                 const worksheet = XLSX.utils.aoa_to_sheet(rowsArray);
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, stageTarget);
