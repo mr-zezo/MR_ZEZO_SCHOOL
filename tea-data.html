@@ -6,8 +6,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- تم استبدال Firebase بـ Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
@@ -69,7 +69,7 @@
         th:nth-child(26) { width: 60px; }  
         th:nth-child(27) { width: 100px; } 
         th:nth-child(28) { width: 100px; } 
-        th:nth-child(29) { width: 60px; text-align: center; } /* عمود الحذف الجديد */
+        th:nth-child(29) { width: 60px; text-align: center; } 
 
         thead th { position: sticky; top: 0; background: var(--dark); color: #fcd34d; padding: 8px 4px; font-size: 12px; z-index: 5; border: 1px solid #334155; }
         .th-content { display: flex; align-items: center; gap: 5px; }
@@ -83,13 +83,11 @@
         .auth-cell { background-color: #fffbeb; color: var(--danger); font-family: Arial, sans-serif; font-weight: bold; }
         .status-select { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px; font-weight: bold; font-family: 'Cairo'; width: 100%; outline: none; }
 
-        /* تنسيق زر الحذف الجديد */
         .btn-delete-row { background: var(--danger); color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 13px; }
         .btn-delete-row:hover { background: #9f1239; transform: scale(1.1); }
 
         #file-input { display: none; }
 
-        /* النافذة المنبثقة للإحصائيات */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; }
         .modal-overlay.active { display: flex; }
         .modal-content { background: var(--bg); width: 90%; max-width: 900px; border-radius: 12px; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
@@ -132,7 +130,7 @@
             <input type="file" id="file-input" accept=".xlsx, .xls" onchange="handleFile(event)">
             <button class="btn btn-import" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-file-import"></i> استيراد إكسيل</button>
             <button class="btn btn-excel" onclick="customExportToExcel()"><i class="fa-solid fa-file-excel"></i> تصدير المحدد</button>
-            <button class="btn btn-save" onclick="saveAllToFirebase()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ السحابة</button>
+            <button class="btn btn-save" onclick="saveAllToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ السحابة</button>
         </div>
     </div>
 
@@ -209,11 +207,11 @@
     <div class="zizo-signature">إعداد مستر زيزو</div>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
-        firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
-        db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        window.addEventListener('DOMContentLoaded', loadFromFirebase);
+        window.addEventListener('DOMContentLoaded', loadFromSupabase);
 
         function toggleAllRows(source) {
             document.querySelectorAll('.row-cb').forEach(cb => cb.checked = source.checked);
@@ -254,23 +252,25 @@
             }
         }
 
- function loadFromFirebase() {
-    const tbody = document.getElementById("table-body");
-    db.collection("teachers").get().then(snap => {
-        if(snap.empty) {
-            tbody.innerHTML = `<tr><td colspan='29' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة. يمكنك إضافة موظف جديد أو استيراد ملف إكسيل.</td></tr>`;
-            return;
+        async function loadFromSupabase() {
+            const tbody = document.getElementById("table-body");
+            try {
+                const { data, error } = await supabaseClient.from('teachers').select('*');
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan='29' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة. يمكنك إضافة موظف جديد أو استيراد ملف إكسيل.</td></tr>`;
+                    return;
+                }
+                
+                let arr = sortTeachers(data); 
+                tbody.innerHTML = "";
+                arr.forEach((s, i) => renderRow(s, i + 1));
+            } catch(err) {
+                tbody.innerHTML = `<tr><td colspan='29' style='text-align:center; padding:40px; color:red;'>❌ خطأ في جلب البيانات: ${err.message}</td></tr>`;
+            }
         }
-        let arr = [];
-        // التعديل هنا: جلب الـ ID المخفي من السحابة
-        snap.forEach(d => arr.push({ id: d.id, ...d.data() }));
-        arr = sortTeachers(arr); 
-        tbody.innerHTML = "";
-        arr.forEach((s, i) => renderRow(s, i + 1));
-    }).catch(err => {
-        tbody.innerHTML = `<tr><td colspan='29' style='text-align:center; padding:40px; color:red;'>❌ خطأ في جلب البيانات: ${err.message}</td></tr>`;
-    });
-}
+
         function handleFile(e) {
             const file = e.target.files[0];
             if(!file) return;
@@ -300,10 +300,13 @@
                             else if (degree.includes("كبير")) quota = "16";
                         }
 
+                        let codeVal = row.code || row["الكود"] || "";
+                        if (!codeVal) codeVal = "TEMP_" + Math.random().toString(36).substr(2, 9); // إنشاء كود مؤقت لعملية الاستيراد
+
                         arr.push({
                             emp_status: row.emp_status || row["حالة المعلم"] || "على رأس العمل",
                             name: row.name || row["الاسم"] || "",
-                            code: row.code || row["الكود"] || "",
+                            code: String(codeVal),
                             nid: nid, gender: gen, dob: dob,
                             address: row.address || row["الموطن"] || row["العنوان"] || "",
                             mobile: row.mobile || row["الموبايل"] || "",
@@ -345,7 +348,7 @@
 
         function renderRow(d, i) {
             const tr = document.createElement("tr");
-            tr.setAttribute("data-docid", d.id || ""); // زرع الـ ID المخفي في الصف
+            tr.setAttribute("data-docid", d.code || ""); 
             const empStatus = d.emp_status || "على رأس العمل";
             const isChecked = empStatus === "على رأس العمل" ? "checked" : "";
             tr.style.opacity = empStatus === "على رأس العمل" ? "1" : "0.6";
@@ -363,7 +366,7 @@
                 </td>
                 <td>${i}</td>
                 <td><input class="editable-input" value="${d.name || ''}" data-field="name"></td>
-                <td><input class="editable-input" value="${d.code || ''}" data-field="code"></td>
+                <td><input class="editable-input" value="${(d.code && !d.code.startsWith('TEMP_')) ? d.code : ''}" data-field="code"></td>
                 <td><input class="editable-input" value="${d.nid || ''}" data-field="nid" oninput="extractNID(this)"></td>
                 <td class="readonly-cell"><input class="editable-input" value="${d.gender || ''}" data-field="gender" readonly></td>
                 <td class="readonly-cell"><input class="editable-input" value="${d.dob || ''}" data-field="dob" readonly></td>
@@ -394,48 +397,37 @@
             document.getElementById("table-body").appendChild(tr);
         }
 
-        // الدالة الجديدة الخاصة بحذف الصف
-async function deleteTeacherRow(btn) {
-    const row = btn.closest('tr');
-    
-    // التعديل هنا: قراءة الـ ID المخفي أولاً (للقضاء على الصفوف الفارغة)
-    let docId = row.getAttribute("data-docid");
-    
-    // إذا لم يكن هناك ID مخفي (صف جديد لم يحفظ بعد)، نعتمد على الكود أو الرقم القومي
-    if (!docId) {
-        const codeInput = row.querySelector('[data-field="code"]');
-        const nidInput = row.querySelector('[data-field="nid"]');
-        docId = (codeInput && codeInput.value.trim() !== "") ? codeInput.value.trim() : 
-                ((nidInput && nidInput.value.trim() !== "") ? nidInput.value.trim() : null);
-    }
+        async function deleteTeacherRow(btn) {
+            const row = btn.closest('tr');
+            
+            const codeInput = row.querySelector('[data-field="code"]');
+            const docId = codeInput ? codeInput.value.trim() : null;
 
-    if (confirm("هل أنت متأكد من حذف هذا الموظف نهائياً؟")) {
-        if (docId) {
-            try {
-                // الحذف من قاعدة البيانات بقوة باستخدام الـ ID
-                await db.collection("teachers").doc(docId).delete();
-            } catch (error) {
-                console.error("Error deleting from Firebase:", error);
-                alert("حدث خطأ أثناء الحذف من قاعدة البيانات.");
-                return; 
+            if (confirm("هل أنت متأكد من حذف هذا الموظف نهائياً؟")) {
+                if (docId && !docId.startsWith("TEMP_")) {
+                    try {
+                        const { error } = await supabaseClient.from('teachers').delete().eq('code', docId);
+                        if(error) throw error;
+                    } catch (error) {
+                        console.error("Error deleting from Supabase:", error);
+                        alert("حدث خطأ أثناء الحذف من قاعدة البيانات.");
+                        return; 
+                    }
+                }
+                row.remove();
+                
+                const tbody = document.getElementById("table-body");
+                if (tbody.children.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan='29' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة. يمكنك إضافة موظف جديد أو استيراد ملف إكسيل.</td></tr>`;
+                }
             }
         }
-        // الحذف من الشاشة
-        row.remove();
-        
-        const tbody = document.getElementById("table-body");
-        if (tbody.children.length === 0) {
-            tbody.innerHTML = `<tr><td colspan='29' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة. يمكنك إضافة موظف جديد أو استيراد ملف إكسيل.</td></tr>`;
-        }
-    }
-}
 
-        async function saveAllToFirebase() {
+        async function saveAllToCloud() {
             const rows = document.querySelectorAll("#table-body tr");
             if(rows.length === 0 || rows[0].cells.length < 2) return;
 
-            let batch = db.batch();
-            let count = 0;
+            let teachersToSave = [];
             rows.forEach(row => {
                 const ins = row.querySelectorAll("input, select");
                 if (ins.length > 0) {
@@ -446,18 +438,23 @@ async function deleteTeacherRow(btn) {
                         }
                     });
                     
-                    let docId = t.code ? String(t.code).trim() : (t.nid ? String(t.nid).trim() : db.collection("teachers").doc().id);
+                    if (!t.code) t.code = "TEMP_" + Math.random().toString(36).substr(2, 9);
                     
                     if (t.name && t.name.trim() !== "") { 
-                        batch.set(db.collection("teachers").doc(docId), t, { merge: true });
-                        count++;
+                        teachersToSave.push(t);
                     }
                 }
             });
-            if (count > 0) {
-                await batch.commit();
-                alert(`✅ تم حفظ وتحديث بيانات ${count} موظف في السحابة بنجاح!`);
-                loadFromFirebase(); 
+
+            if (teachersToSave.length > 0) {
+                try {
+                    const { error } = await supabaseClient.from('teachers').upsert(teachersToSave, { onConflict: 'code' });
+                    if (error) throw error;
+                    alert(`✅ تم حفظ وتحديث بيانات ${teachersToSave.length} موظف في السحابة بنجاح!`);
+                    loadFromSupabase(); 
+                } catch(err) {
+                    alert("حدث خطأ أثناء الحفظ: " + err.message);
+                }
             } else {
                 alert("لا توجد بيانات صالحة للحفظ (تأكد من كتابة الأسماء).");
             }
@@ -477,7 +474,7 @@ async function deleteTeacherRow(btn) {
                 if (row.cells.length < 2) return; 
                 
                 const rowCb = row.querySelector('.row-cb');
-                if(!rowCb || !rowCb.checked) return; // تصدير المحددين فقط
+                if(!rowCb || !rowCb.checked) return; 
                 
                 let obj = {};
                 selectedCols.forEach(col => {
@@ -485,7 +482,9 @@ async function deleteTeacherRow(btn) {
                         obj[col.label] = row.cells[2].innerText; 
                     } else {
                         const input = row.querySelector(`[data-field="${col.key}"]`);
-                        obj[col.label] = input ? input.value : "";
+                        let val = input ? input.value : "";
+                        if(col.key === 'code' && val.startsWith('TEMP_')) val = "";
+                        obj[col.label] = val;
                     }
                 });
                 data.push(obj);
@@ -556,15 +555,17 @@ async function deleteTeacherRow(btn) {
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحساب...`;
             
             try {
-                const planDoc = await db.collection("settings").doc("school_plan").get();
-                const teachersSnap = await db.collection("teachers").get();
+                const { data: planDoc, error: planError } = await supabaseClient.from("system_capsules").select("data").eq("id", "school_plan").maybeSingle();
+                const { data: teachersSnap, error: teachersError } = await supabaseClient.from("teachers").select("*");
                 
-                if(!planDoc.exists) { 
+                if(planError || teachersError) throw new Error("فشل الاتصال بقاعدة البيانات");
+
+                if(!planDoc || !planDoc.data) { 
                     alert("⚠️ تنبيه: لم يتم إعداد الخطة الدراسية بعد!\nاذهب لصفحة (إحصاء وميزانية المواد) واضغط على زر (إعداد خطة المدرسة) أولاً."); 
                     btn.innerHTML = oldText; return; 
                 }
                 
-                const plan = planDoc.data();
+                const plan = planDoc.data;
                 
                 const subjectsMap = { 
                     "arabic": { name: "اللغة العربية", keywords: ["عرب"] }, 
@@ -588,15 +589,13 @@ async function deleteTeacherRow(btn) {
                 let arabicSurplus123 = 0;
                 let arabicSurplus456 = 0;
 
-                // 1. حساب اللغة العربية أولاً
                 const arabicInfo = subjectsMap["arabic"];
                 let arReq123 = 0, arReq456 = 0, arAv123 = 0, arAv456 = 0, arCount123 = 0, arCount456 = 0;
                 
                 ["الأول", "الثاني", "الثالث"].forEach(g => { if(plan[g]) arReq123 += (plan[g].classes * (plan[g].subjects["arabic"] || 0)); });
                 ["الرابع", "الخامس", "السادس"].forEach(g => { if(plan[g]) arReq456 += (plan[g].classes * (plan[g].subjects["arabic"] || 0)); });
 
-                teachersSnap.forEach(doc => {
-                    const t = doc.data();
+                (teachersSnap || []).forEach(t => {
                     if((t.emp_status||"على رأس العمل") !== "على رأس العمل") return;
                     const tSub = normalizeArabic(t.subject); const tCat = normalizeArabic(t.teaching_category); const q = parseInt(t.quota) || 0;
                     
@@ -612,7 +611,6 @@ async function deleteTeacherRow(btn) {
 
                 finalBudget.push({ name: arabicInfo.name, req123: arReq123, req456: arReq456, av123: arAv123, av456: arAv456, count123: arCount123, count456: arCount456, isCond: true });
 
-                // 2. حساب باقي المواد
                 Object.keys(subjectsMap).forEach(key => {
                     if(key === "arabic") return; 
 
@@ -622,8 +620,7 @@ async function deleteTeacherRow(btn) {
                     ["الأول", "الثاني", "الثالث"].forEach(g => { if(plan[g]) req123 += (plan[g].classes * (plan[g].subjects[key] || 0)); });
                     ["الرابع", "الخامس", "السادس"].forEach(g => { if(plan[g]) req456 += (plan[g].classes * (plan[g].subjects[key] || 0)); });
 
-                    teachersSnap.forEach(doc => {
-                        const t = doc.data();
+                    (teachersSnap || []).forEach(t => {
                         if((t.emp_status||"على رأس العمل") !== "على رأس العمل") return;
                         const tSub = normalizeArabic(t.subject); const tCat = normalizeArabic(t.teaching_category); const q = parseInt(t.quota) || 0;
 
@@ -646,7 +643,8 @@ async function deleteTeacherRow(btn) {
                     finalBudget.push({ name: subInfo.name, req123, req456, av123, av456, count123, count456, isCond: (key==="religion"||key==="math") });
                 });
 
-                await db.collection("system_capsules").doc("teacher_budget").set({ data: finalBudget, updatedAt: new Date().toLocaleString('ar-EG') });
+                await supabaseClient.from("system_capsules").upsert({ id: "teacher_budget", data: finalBudget, updatedAt: new Date().toLocaleString('ar-EG') });
+                
                 btn.innerHTML = oldText;
                 alert(`🚀 نجاح! تم حصر أنصبة (${matchedTeachersCount}) معلم وتحديث الميزانية.`);
             } catch(err) {
