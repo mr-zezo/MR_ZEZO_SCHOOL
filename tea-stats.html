@@ -6,8 +6,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- تم استبدال Firebase بـ Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     
@@ -72,7 +72,7 @@
         .btn-close-modal { background: none; border: none; color: #cbd5e1; font-size: 32px; cursor: pointer; transition: 0.2s; line-height: 1; }
         .btn-close-modal:hover { color: #ef4444; }
 
-        .modal-body { padding: 25px; overflow-y: auto; background: #ffffff; } /* خلفية بيضاء لتجنب سواد الصورة */
+        .modal-body { padding: 25px; overflow-y: auto; background: #ffffff; } 
         
         /* الجداول العامة */
         .preview-container { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; }
@@ -314,9 +314,10 @@
     <div class="zizo-signature-bottom">إعداد مستر زيزو</div>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
-        firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
-        db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+        // إعدادات Supabase
+        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         const toAr = n => { if(n===0) return "٠"; if(!n) return "-"; return String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]); };
         const clean = t => t ? t.trim().replace(/[أإآا]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, "") : "";
@@ -343,14 +344,17 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             try {
-                const tSnap = await db.collection("teachers").get();
-                tSnap.forEach(doc => TEACHERS.push(doc.data()));
+                // جلب بيانات المعلمين
+                const { data: tSnap, error: tError } = await supabaseClient.from("teachers").select("*");
+                if (tSnap) TEACHERS = tSnap;
                 
-                const pDoc = await db.collection("settings").doc("school_plan").get();
-                if(pDoc.exists) PLAN = pDoc.data();
+                // جلب بيانات الخطة
+                const { data: pDoc, error: pError } = await supabaseClient.from("system_capsules").select("data").eq("id", "school_plan").maybeSingle();
+                if (pDoc && pDoc.data) PLAN = pDoc.data;
                 
-                const iDoc = await db.collection("settings").doc("school_info").get();
-                if(iDoc.exists) INFO = iDoc.data();
+                // جلب بيانات معلومات المدرسة (إن وجدت مستقبلاً)
+                const { data: iDoc, error: iError } = await supabaseClient.from("system_capsules").select("data").eq("id", "school_info").maybeSingle();
+                if (iDoc && iDoc.data) INFO = iDoc.data;
                 
                 initPlanTable();
                 calculateDashboardStats(); 
@@ -429,7 +433,6 @@
             let diffTime = retirementDate - today;
             let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
-            // التعديل: إجبار المتصفح على قراءة التاريخ من اليسار لليمين ليظهر اليوم/الشهر/السنة بشكل صحيح
             let dd = String(retirementDate.getDate()).padStart(2, '0');
             let mm = String(retirementDate.getMonth() + 1).padStart(2, '0');
             let yyyy = retirementDate.getFullYear();
@@ -720,6 +723,7 @@
             loader.style.display = "flex";
 
             try {
+                // الكود هنا يعمل من خلال Supabase بشكل ممتاز ومباشر
                 const response = await fetch("https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/TEAMEZAN/MEZAN.xlsx");
                 const arrayBuffer = await response.arrayBuffer();
 
@@ -822,11 +826,27 @@
         }
 
         async function saveSchoolPlan() {
-            let d = {}; document.querySelectorAll("#plan-rows tr").forEach(r => {
-                const g = r.dataset.grade; d[g] = { classes: parseInt(r.querySelector(".inp-classes").value)||0, subjects: {} };
+            let d = {}; 
+            document.querySelectorAll("#plan-rows tr").forEach(r => {
+                const g = r.dataset.grade; 
+                d[g] = { classes: parseInt(r.querySelector(".inp-classes").value)||0, subjects: {} };
                 r.querySelectorAll(".inp-sub").forEach(i => d[g].subjects[i.dataset.sub] = parseInt(i.value)||0);
             });
-            await db.collection("settings").doc("school_plan").set(d); alert("✅ تم الحفظ بنجاح!"); location.reload();
+            
+            try {
+                const { error } = await supabaseClient.from("system_capsules").upsert({
+                    id: "school_plan",
+                    data: d,
+                    updatedat: new Date().toLocaleString('ar-EG')
+                });
+                
+                if (error) throw error;
+                
+                alert("✅ تم حفظ واعتماد الخطة بنجاح!"); 
+                location.reload();
+            } catch (error) {
+                alert("❌ حدث خطأ أثناء الحفظ: " + error.message);
+            }
         }
     </script>
 </body>
