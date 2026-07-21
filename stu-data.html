@@ -6,8 +6,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <!-- تم استبدال Firebase بـ Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
@@ -42,7 +42,6 @@
         .table-wrapper { flex-grow: 1; overflow: auto; background: white; border-radius: 10px; border: 1px solid #cbd5e1; }
         table { width: 100%; border-collapse: collapse; text-align: right; min-width: 1550px; table-layout: fixed; }
         
-        /* ضبط عرض الأعمدة لتشمل عمود النتيجة */
         th:nth-child(1) { width: 40px; }  
         th:nth-child(2) { width: 230px; } 
         th:nth-child(3) { width: 65px; }  
@@ -53,7 +52,7 @@
         th:nth-child(8) { width: 85px; }  
         th:nth-child(9) { width: 65px; }  
         th:nth-child(10) { width: 70px; } 
-        th:nth-child(11) { width: 90px; } /* النتيجة */
+        th:nth-child(11) { width: 90px; } 
         th:nth-child(12) { width: 70px; } 
         th:nth-child(13) { width: 60px; } 
         th:nth-child(14) { width: 85px; } 
@@ -98,17 +97,14 @@
 <body>
 
  <nav class="top-navigation" style="display: flex; justify-content: space-between; align-items: center; min-height: 80px; padding: 0 20px; background-color: #081f36;">
-    <!-- الجزء الأيمن: العنوان -->
     <div class="nav-title">
         <i class="fa-solid fa-database"></i> مركز إدارة البيانات المجمعة لشئون التلاميذ
     </div>
 
-    <!-- الجزء الأوسط: النص الجديد -->
     <div class="nav-middle" style="font-weight: bold; font-size: 24px; color: #b8b6b6;">
         إعداد / مستر زيزو
     </div>
 
-    <!-- الجزء الأيسر: الأزرار -->
     <div style="display:flex; gap:8px;">
         <a href="index.html" class="btn-nav" style="background:#1e3a8a; padding: 10px 30px; color: white; text-decoration: none; border-radius: 5px;">
             <i class="fa-solid fa-house"></i> الرئيسية
@@ -118,7 +114,7 @@
 
     <div class="tool-bar">
         <div class="controls-group">
-            <select id="grade-filter" onchange="loadFromFirebase()">
+            <select id="grade-filter" onchange="loadFromSupabase()">
                 <option value="" disabled selected>اختر الصف لفلترة البيانات...</option>
                 <option value="KG1">KG1</option><option value="KG2">KG2</option>
                 <option value="الأول">الصف الأول</option><option value="الثاني">الصف الثاني</option>
@@ -133,11 +129,11 @@
         <div class="controls-group">
             <button class="btn btn-pass-all" onclick="markVisibleAsPass()"><i class="fa-solid fa-check-double"></i> الكل ناجح</button>
             <button class="btn btn-promote" id="btn-promote" onclick="promoteStudents()"><i class="fa-solid fa-angles-up"></i> ترحيل الصف</button>
-            <div style="width: 1px; height: 25px; background: #cbd5e1; margin: 0 5px;"></div> <!-- فاصل -->
+            <div style="width: 1px; height: 25px; background: #cbd5e1; margin: 0 5px;"></div>
             <input type="file" id="file-input" accept=".xlsx, .xls" onchange="handleFile(event)">
             <button class="btn btn-import" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-file-import"></i> إكسيل</button>
             <button class="btn btn-excel" onclick="customExportToExcel()"><i class="fa-solid fa-file-excel"></i> تصدير</button>
-            <button class="btn btn-save" onclick="saveAllToFirebase()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ</button>
+            <button class="btn btn-save" onclick="saveAllToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ</button>
         </div>
     </div>
 
@@ -211,18 +207,10 @@
     <div class="zizo-signature">إعداد مستر زيزو</div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac",
-            authDomain: "zizo-school.firebaseapp.com",
-            projectId: "zizo-school",
-            storageBucket: "zizo-school.firebasestorage.app",
-            messagingSenderId: "46708980196",
-            appId: "1:46708980196:web:9349e311d3a1bf5309eff1"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+        // إعدادات Supabase
+        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         const stdGrades = ["KG1", "KG2", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
 
@@ -234,34 +222,30 @@
             });
         }
 
-        // --- 1. جلب البيانات ---
-        function loadFromFirebase() {
+        // --- 1. جلب البيانات (تعديل ليعمل مع Supabase) ---
+        async function loadFromSupabase() {
             const g = document.getElementById("grade-filter").value;
             if(!g) return;
             const tbody = document.getElementById("table-body");
             tbody.innerHTML = "<tr><td colspan='15' style='text-align:center; padding:50px;'>⏳ جاري الاتصال بالسحابة وجلب بيانات الصف...</td></tr>";
-            document.getElementById("search-student").value = ""; // تصفير البحث عند تبديل الصف
+            document.getElementById("search-student").value = ""; 
             
-            db.collection("students").where("grade", "==", g).get()
-            .then(snap => {
-                if(snap.empty) {
+            try {
+                const { data, error } = await supabaseClient.from("students").select("*").eq("grade", g);
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
                     tbody.innerHTML = `<tr><td colspan='15' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة في السحابة لهذا الصف (${g}). يمكنك استيراد ملف إكسيل.</td></tr>`;
                     return;
                 }
-                let arr = [];
-                snap.forEach(d => {
-                    let studentData = d.data();
-                    if (studentData.transfer_type !== "محول من") {
-                        arr.push(studentData);
-                    }
-                });
+
+                let arr = data.filter(d => d.transfer_type !== "محول من");
                 arr = sortStudents(arr);
                 tbody.innerHTML = "";
                 arr.forEach((s, i) => renderRow(s, i + 1));
-            })
-            .catch(err => {
-                tbody.innerHTML = `<tr><td colspan='15' style='text-align:center; padding:40px; color:red;'>❌ المتصفح يمنع جلب البيانات: ${err.message}</td></tr>`;
-            });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan='15' style='text-align:center; padding:40px; color:red;'>❌ خطأ في جلب البيانات: ${err.message}</td></tr>`;
+            }
         }
 
         // --- 2. البحث داخل الصف المعروض ---
@@ -304,11 +288,14 @@
                         let reg = row.register_num || row["السجل"] || "";
 
                         if (tType === "محول من") { cls = ""; reg = ""; }
+                        
+                        let codeVal = row.code || row["الكود"] || "";
+                        if (!codeVal) codeVal = "TEMP_STD_" + Math.random().toString(36).substr(2, 9); // كود وهمي لو غير موجود
 
                         arr.push({
                             name: row.name || row["اسم التلميذ"] || "",
                             class: cls,
-                            code: row.code || row["الكود"] || "",
+                            code: String(codeVal),
                             nid: nid, dob: dob, gender: gen, age_october: age,
                             register_num: reg,
                             status: row.status || row["القيد"] || "منقول",
@@ -328,14 +315,14 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // --- 4. رسم الصفوف (مع إضافة النتيجة) ---
+        // --- 4. رسم الصفوف ---
         function renderRow(d, i) {
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${i}</td>
                 <td><input class="editable-input" value="${d.name || ''}" data-field="name"></td>
                 <td><input class="editable-input" value="${d.class || ''}" data-field="class"></td>
-                <td><input class="editable-input" value="${d.code || ''}" data-field="code"></td>
+                <td><input class="editable-input" value="${(d.code && !d.code.startsWith('TEMP_')) ? d.code : ''}" data-field="code"></td>
                 <td><input class="editable-input" value="${d.nid || ''}" data-field="nid"></td>
                 <td class="readonly-cell"><input class="editable-input" value="${d.dob || ''}" data-field="dob" readonly></td>
                 <td class="readonly-cell"><input class="editable-input" value="${d.gender || ''}" data-field="gender" readonly></td>
@@ -357,16 +344,15 @@
             document.getElementById("table-body").appendChild(tr);
         }
 
-        // --- 5. تحديد الكل ناجح (يطبق على الظاهر في البحث فقط) ---
+        // --- 5. تحديد الكل ناجح ---
         function markVisibleAsPass() {
             let rows = document.querySelectorAll("#table-body tr");
             let count = 0;
             rows.forEach(row => {
                 if(row.cells.length < 2) return; 
-                // نطبق فقط على التلاميذ الظاهرين (لو كان هناك بحث نشط)
                 if(row.style.display !== "none") { 
                     let select = row.querySelector('[data-field="result"]');
-                    if(select && !select.value) { // نضع ناجح لمن لم يتم اختيار نتيجته
+                    if(select && !select.value) { 
                         select.value = "ناجح";
                         count++;
                     }
@@ -376,7 +362,7 @@
             else alert("جميع التلاميذ الظاهرين محددة نتيجتهم بالفعل!");
         }
 
-       // --- دالة مساعدة: تعديل رقم الفصل بذكاء (مثال 1/2 تصبح 1/3) ---
+       // --- دالة مساعدة: تعديل رقم الفصل بذكاء ---
         function getNextClassName(oldClass, currentGradeText, nextGradeText) {
             if(!oldClass) return "";
             const gradeNums = {"KG1":"1", "KG2":"2", "الأول":"1", "الثاني":"2", "الثالث":"3", "الرابع":"4", "الخامس":"5", "السادس":"6"};
@@ -386,16 +372,14 @@
             if(currNum && nextNum) {
                 let parts = oldClass.split('/');
                 if(parts.length === 2) {
-                    // إذا كان الرقم الأول هو الذي يعبر عن الصف (مثال: 2/1 تصبح 3/1)
                     if(parts[0] === currNum) return nextNum + '/' + parts[1];
-                    // إذا كان الرقم الثاني هو الذي يعبر عن الصف (مثال: 1/2 تصبح 1/3)
                     if(parts[1] === currNum) return parts[0] + '/' + nextNum;
                 }
             }
-            return oldClass; // إعادة الاسم كما هو لو لم يتعرف على النمط
+            return oldClass; 
         }
 
-        // --- 6. الترحيل الذكي للصف (مع الحذف النهائي للخريج) ---
+        // --- 6. الترحيل الذكي للصف (تعديل لـ Supabase) ---
         async function promoteStudents() {
             const currentGrade = document.getElementById("grade-filter").value;
             if (!currentGrade) { alert("اختر الصف أولاً من القائمة!"); return; }
@@ -408,7 +392,6 @@
             let deleteCount = 0;
             const nextGradeMap = {"KG1":"KG2", "KG2":"الأول", "الأول":"الثاني", "الثاني":"الثالث", "الثالث":"الرابع", "الرابع":"الخامس", "الخامس":"السادس", "السادس":"خريج"};
 
-            // فحص وجود نتائج فارغة أولاً
             rows.forEach(row => {
                 if(row.cells.length > 2) {
                     if(!row.querySelector('[data-field="result"]').value) missingCount++;
@@ -425,7 +408,8 @@
             const oldText = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الترحيل...`;
             
-            let batch = db.batch();
+            let upsertList = [];
+            let deleteList = [];
 
             rows.forEach(row => {
                 if(row.cells.length < 2) return;
@@ -440,10 +424,9 @@
 
                 let shouldDelete = false;
 
-                // 💡 تطبيق قوانين الترحيل والحذف
                 if(s.result === "ناجح") {
                     if (currentGrade === "السادس") {
-                        shouldDelete = true; // خريج ناجح يُحذف
+                        shouldDelete = true;
                     } else {
                         s.grade = nextGradeMap[currentGrade];
                         s.status = "منقول";
@@ -451,139 +434,157 @@
                     }
                 } 
                 else if (s.result === "راسب") {
-                    if(s.status === "باقي") { // راسب للمرة الثانية (بقوة القانون)
+                    if(s.status === "باقي") { 
                         if (currentGrade === "السادس") {
-                            shouldDelete = true; // يُحذف أيضاً لتخطيه السن أو تحويله لمهني
+                            shouldDelete = true; 
                         } else {
                             s.grade = nextGradeMap[currentGrade];
                             s.status = "منقول";
                             s.class = getNextClassName(s.class, currentGrade, s.grade);
                         }
-                    } else { // راسب منقول
+                    } else {
                         s.status = "باقي";
-                        // الصف والفصل يبقيان كما هما
                     }
                 }
 
                 if (shouldDelete) {
-                    batch.delete(db.collection("students").doc(String(s.code)));
+                    deleteList.push(String(s.code));
                     deleteCount++;
                 } else {
                     s.last_result = s.result;
-                    delete s.result; // مسح حقل النتيجة بعد الترحيل
-                    batch.set(db.collection("students").doc(String(s.code)), s, { merge: true });
+                    delete s.result; // إزالة الحقل حتى لا يتعارض
+                    upsertList.push(s);
                     processCount++;
                 }
             });
 
-            if (processCount > 0 || deleteCount > 0) {
-                await batch.commit();
-                alert(`🚀 تمت عملية الترحيل بنجاح!\n- تم تحديث ونقل: (${processCount}) تلميذ.\n- تم طي قيد وحذف: (${deleteCount}) خريج من المنظومة.`);
-                btn.innerHTML = oldText;
-                loadFromFirebase(); 
-            } else {
-                alert("لم يتم العثور على أي تلميذ جاهز للترحيل.");
+            try {
+                if (deleteList.length > 0) {
+                    await supabaseClient.from("students").delete().in('code', deleteList);
+                }
+                
+                if (upsertList.length > 0) {
+                    await supabaseClient.from("students").upsert(upsertList, { onConflict: 'code' });
+                }
+
+                if (processCount > 0 || deleteCount > 0) {
+                    alert(`🚀 تمت عملية الترحيل بنجاح!\n- تم تحديث ونقل: (${processCount}) تلميذ.\n- تم طي قيد وحذف: (${deleteCount}) خريج من المنظومة.`);
+                    loadFromSupabase(); 
+                } else {
+                    alert("لم يتم العثور على أي تلميذ جاهز للترحيل.");
+                }
+            } catch (err) {
+                alert("حدث خطأ أثناء الترحيل: " + err.message);
+            } finally {
                 btn.innerHTML = oldText;
             }
         }
 
-        // --- 7. حفظ السحابة العادي (بدون ترحيل) ---
-        async function saveAllToFirebase() {
+        // --- 7. حفظ السحابة العادي (تعديل لـ Supabase) ---
+        async function saveAllToCloud() {
             const g = document.getElementById("grade-filter").value;
             if (!g) { alert("اختر الصف أولاً!"); return; }
             const rows = document.querySelectorAll("#table-body tr");
             if(rows.length === 0 || rows[0].cells.length < 2) return;
 
-            let batch = db.batch();
-            let count = 0;
+            let studentsToSave = [];
+            
             rows.forEach(row => {
-                // نجمع القيم من الـ input والـ select
                 const ins = row.querySelectorAll("input, select");
                 if (ins.length > 0) {
                     let s = { grade: g };
                     ins.forEach(i => {
                         if(i.getAttribute("data-field")) s[i.getAttribute("data-field")] = i.value;
                     });
-                    if (s.code) {
-                        batch.set(db.collection("students").doc(String(s.code)), s, { merge: true });
-                        count++;
+                    
+                    if (!s.code) s.code = "TEMP_STD_" + Math.random().toString(36).substr(2, 9);
+                    
+                    if (s.name && s.name.trim() !== "") {
+                        studentsToSave.push(s);
                     }
                 }
             });
-            if (count > 0) {
-                await batch.commit();
-                alert(`✅ تم حفظ وتحديث بيانات ${count} تلميذ في السحابة بنجاح!`);
-                loadFromFirebase();
+
+            if (studentsToSave.length > 0) {
+                try {
+                    const { error } = await supabaseClient.from("students").upsert(studentsToSave, { onConflict: 'code' });
+                    if (error) throw error;
+                    alert(`✅ تم حفظ وتحديث بيانات ${studentsToSave.length} تلميذ في السحابة بنجاح!`);
+                    loadFromSupabase();
+                } catch (err) {
+                    alert("حدث خطأ أثناء الحفظ: " + err.message);
+                }
             }
         }
 
         // --- 8. التصدير للإكسيل ---
         function customExportToExcel() {
-    const rows = document.querySelectorAll("#table-body tr");
-    
-    // التحقق من وجود بيانات أصلاً في الجدول
-    if(rows.length === 0 || rows[0].cells.length < 2) {
-        alert("لا توجد بيانات لتصديرها! يرجى اختيار الصف أو استيراد البيانات أولاً.");
-        return;
-    }
-
-    const checks = document.querySelectorAll('.export-cb:checked');
-    if(checks.length === 0) { 
-        alert("اختر عموداً واحداً على الأقل من رأس الجدول!"); 
-        return; 
-    }
-    
-    // جلب أسماء ومفاتيح الأعمدة المحددة من علامات الصح
-    const selectedCols = Array.from(checks).map(cb => ({ 
-        key: cb.getAttribute('data-key'), 
-        label: cb.parentElement.textContent.trim() 
-    }));
-    
-    let data = [];
-    rows.forEach(r => {
-        // تخطي رسالة "اختر الصف" وتخطي التلاميذ المخفيين بسبب البحث
-        if (r.cells.length < 2 || r.style.display === "none") return;
-
-        let obj = {};
-        selectedCols.forEach(c => {
-            if (c.key === 'index') {
-                obj[c.label] = r.cells[0].innerText.trim();
-            } else {
-                let el = r.querySelector(`[data-field="${c.key}"]`);
-                obj[c.label] = el ? el.value : "";
+            const rows = document.querySelectorAll("#table-body tr");
+            if(rows.length === 0 || rows[0].cells.length < 2) {
+                alert("لا توجد بيانات لتصديرها! يرجى اختيار الصف أو استيراد البيانات أولاً.");
+                return;
             }
-        });
-        data.push(obj);
-    });
 
-    if (data.length === 0) {
-        alert("لا يوجد تلاميذ متطابقون مع عملية البحث الحالية لتصديرهم.");
-        return;
-    }
+            const checks = document.querySelectorAll('.export-cb:checked');
+            if(checks.length === 0) { 
+                alert("اختر عموداً واحداً على الأقل من رأس الجدول!"); 
+                return; 
+            }
+            
+            const selectedCols = Array.from(checks).map(cb => ({ 
+                key: cb.getAttribute('data-key'), 
+                label: cb.parentElement.textContent.trim() 
+            }));
+            
+            let data = [];
+            rows.forEach(r => {
+                if (r.cells.length < 2 || r.style.display === "none") return;
 
-    try {
-        // 1. تحويل البيانات إلى شيت إكسيل (Worksheet)
-        const ws = XLSX.utils.json_to_sheet(data);
-        
-        // 2. جعل اتجاه الشيت في الإكسيل من اليمين لليسار (RTL) ليتوافق مع العربي
-        if(!ws['!views']) ws['!views'] = [];
-        ws['!views'].push({ rightToLeft: true });
+                let obj = {};
+                selectedCols.forEach(c => {
+                    if (c.key === 'index') {
+                        obj[c.label] = r.cells[0].innerText.trim();
+                    } else {
+                        let el = r.querySelector(`[data-field="${c.key}"]`);
+                        let val = el ? el.value : "";
+                        if(c.key === 'code' && val.startsWith('TEMP_')) val = "";
+                        obj[c.label] = val;
+                    }
+                });
+                data.push(obj);
+            });
 
-        // 3. إنشاء كتاب عمل جديد (Workbook) وإضافة الشيت داخله (هذا هو الجزء الذي كان يسبب المشكلة)
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "بيانات التلاميذ");
+            if (data.length === 0) {
+                alert("لا يوجد تلاميذ متطابقون مع عملية البحث الحالية لتصديرهم.");
+                return;
+            }
 
-        // 4. استخراج اسم الملف وتصديره
-        let gradeName = document.getElementById("grade-filter").value;
-        let fileName = gradeName ? `كشف_تلاميذ_الصف_${gradeName}.xlsx` : `كشف_تلاميذ_مخصص.xlsx`;
+            try {
+                const ws = XLSX.utils.json_to_sheet(data);
+                if(!ws['!views']) ws['!views'] = [];
+                ws['!views'].push({ rightToLeft: true });
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "بيانات التلاميذ");
 
-        XLSX.writeFile(wb, fileName);
-    } catch(err) {
-        alert("حدث خطأ أثناء التصدير: " + err.message);
-    }
-}
+                let gradeName = document.getElementById("grade-filter").value;
+                let fileName = gradeName ? `كشف_تلاميذ_الصف_${gradeName}.xlsx` : `كشف_تلاميذ_مخصص.xlsx`;
 
-        // --- 9. الإحصاء السريع (لم يتأثر بالإضافات) ---
+                XLSX.writeFile(wb, fileName);
+            } catch(err) {
+                alert("حدث خطأ أثناء التصدير: " + err.message);
+            }
+        }
+
+        // --- 9. الإحصاء السريع ---
+        function toggleModal(show) {
+            const modal = document.getElementById('statsModal');
+            if(show) {
+                document.getElementById('modal-grade-title').innerText = document.getElementById("grade-filter").value || "";
+                calculateStats(); 
+                modal.classList.add('active');
+            } else { modal.classList.remove('active'); }
+        }
+
         function calculateStats() {
             let st = {tb:0, tg:0, mb:0, mg:0, cb:0, cg:0, mon:0, baq:0, dmj:0, cls:{}};
             
@@ -625,20 +626,22 @@
             });
         }
 
-        // --- 10. كبسولة الإحصاء (تتجاهل الخريجين والمحولين بشكل تلقائي) ---
+        // --- 10. كبسولة الإحصاء (تعديل لـ Supabase وحل updatedat) ---
         async function generateMasterCapsule() {
             const btn = document.querySelector('.btn-golden');
             const oldText = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري فحص السحابة...`;
             
             try {
-                const snap = await db.collection("students").get();
-                if (snap.size === 0) {
+                const { data: snap, error } = await supabaseClient.from("students").select("*");
+                if (error) throw error;
+                
+                if (!snap || snap.length === 0) {
                     alert("⚠️ تنبيه حرج: قاعدة بيانات التلاميذ فارغة!");
                     btn.innerHTML = oldText; return;
                 }
 
-                let capsule = { updatedAt: new Date().toLocaleDateString('ar-EG'), general: {}, gradesBreakdown: {} };
+                let capsule = { general: {}, gradesBreakdown: {} };
                 stdGrades.forEach(g => {
                     capsule.general[g] = { mb:0, mg:0, cb:0, cg:0, db:0, dg:0, tb:0, tg:0, cSet: new Set() };
                     capsule.gradesBreakdown[g] = { tb:0, tg:0, mb:0, mg:0, cb:0, cg:0, mon:0, baq:0, dmj:0, trans:0, cls:{} };
@@ -646,9 +649,8 @@
                 let grand = { mb:0, mg:0, cb:0, cg:0, db:0, dg:0, tb:0, tg:0, cSet: new Set() };
                 let matchedCount = 0;
 
-                snap.forEach(doc => {
-                    const s = doc.data();
-                    if(s.transfer_type === "محول من" || s.grade === "خريج") return; // 💡 استبعاد خريجي السادس والمحولين
+                snap.forEach(s => {
+                    if(s.transfer_type === "محول من" || s.grade === "خريج") return; 
 
                     let rawG = String(s.grade || "").trim();
                     let g = null;
@@ -686,10 +688,19 @@
                 grand.cCount = grand.cSet.size; delete grand.cSet;
                 capsule.general["إجمالي"] = grand;
 
-                await db.collection("system_capsules").doc("stats_2026").set(capsule);
+                // تحديث جدول settings بدلاً من collections بفضل استخدام Supabase
+                await supabaseClient.from("system_capsules").upsert({
+                    id: "stats_2026",
+                    data: capsule,
+                    updatedat: new Date().toLocaleString('ar-EG') // تم كتابتها بالحروف الصغيرة كما اتفقنا
+                });
+                
                 btn.innerHTML = oldText;
                 alert(`🚀 تم ضغط وحفظ إحصاء (${matchedCount}) تلميذ في الكبسولة بنجاح!`);
-            } catch(err) { btn.innerHTML = oldText; alert("فشل الاعتماد: " + err.message); }
+            } catch(err) { 
+                btn.innerHTML = oldText; 
+                alert("فشل الاعتماد: " + err.message); 
+            }
         }
     </script>
 </body>
