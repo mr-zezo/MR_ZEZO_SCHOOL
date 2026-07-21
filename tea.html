@@ -2,20 +2,14 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- هام لتجاوب الشاشة مع الموبايل -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <title>بطاقة المعلم - نظام مستر زيزو</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    
-    <!-- Supabase -->
+    <!-- Supabase فقط -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- مكتبة التقاط الشاشة (Screenshot) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
@@ -26,7 +20,6 @@
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
         body { background-color: var(--bg); padding: 10px 20px; display: flex; flex-direction: column; align-items: center; }
 
-        /* ================= الشريط العلوي والتوقيع ================= */
         .top-navigation { width: 100%; max-width: 1150px; background: var(--dark); padding: 10px 20px; border-radius: 12px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .nav-title { font-size: 15px; font-weight: 900; color: #93c5fd; flex: 1; text-align: right; }
         .nav-center-sig { flex: 1; text-align: center; font-size: 16px; font-weight: 900; color: #fcd34d; }
@@ -35,7 +28,6 @@
         .btn-nav { text-decoration: none; border: none; cursor: pointer; color: white; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
         .btn-nav:hover { transform: translateY(-2px); }
         
-        /* زر الرئيسية وزر لقطة الشاشة */
         .btn-home { background: #1e3a8a !important; font-size: 16px !important; padding: 10px 20px !important; }
         .btn-home:hover { background: #172554 !important; }
         .btn-screenshot { background: silver !important; color: #111827 !important; font-size: 15px !important; padding: 10px 15px !important; }
@@ -83,7 +75,6 @@
         .field-group input:focus, .field-group select:focus { border-color: var(--info); box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.1); }
         .readonly-field { background: #f1f5f9 !important; color: var(--primary); font-weight: 900; cursor: not-allowed; }
 
-        /* أزرار المرفقات */
         .file-controls-wrapper { display: flex; gap: 20px; justify-content: center; margin-top: 15px; flex-wrap: wrap; }
         .split-btn-group { display: flex; align-items: stretch; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border-radius: 10px; overflow: hidden; transition: 0.3s; min-width: 220px; }
         .split-btn-group:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
@@ -97,7 +88,6 @@
         .btn-add { background: var(--success); } .btn-update { background: var(--save-btn); } .btn-delete { background: var(--danger); } .btn-abs { background: var(--dark); } .btn-clear { background: #64748b; }
         .btn-action:hover { opacity: 0.9; transform: translateY(-2px); }
 
-        /* نافذة الغياب */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px;}
         .modal-overlay.active { display: flex; }
         .modal-content { background: #f8fafc; width: 100%; max-width: 900px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
@@ -133,32 +123,19 @@
 
         #status-msg { display: none; padding: 10px; border-radius: 8px; margin-top: 10px; text-align: center; font-weight: 800; font-size: 12px; }
 
-        /* العلامة المائية للقطة الشاشة */
         .watermark-form { display: none; text-align: center; font-size: 14px; font-weight: 900; color: #64748b; margin-top: 20px; border-top: 2px dashed #cbd5e1; padding-top: 15px; }
 
-      
-      /* ================= التجاوب مع الموبايل ================= */
         @media (max-width: 800px) {
             .main-layout { flex-direction: column; }
-            
             .profile-header { flex-direction: column; text-align: center; }
             .profile-info { grid-template-columns: 1fr; width: 100%; }
-            
             .side-actions { 
-                width: 100%; 
-                position: static; 
-                display: grid; 
-                grid-template-columns: 1fr 1fr; 
-                gap: 10px;
-                border-radius: 12px; 
-                padding: 15px; 
-                box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+                width: 100%; position: static; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+                border-radius: 12px; padding: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
             }
             .side-actions > div:first-child, #status-msg { grid-column: 1 / -1; } 
-            
             .btn-action { width: 100%; padding: 10px; font-size: 12px; }
             .card-container { margin-bottom: 10px; } 
-            
             .top-navigation { flex-direction: column; gap: 15px; padding: 15px; }
             .nav-title, .nav-center-sig, .nav-buttons { text-align: center; width: 100%; justify-content: center; }
             .nav-buttons { flex-direction: row-reverse; } 
@@ -290,7 +267,6 @@
 
     </div>
 
-    <!-- نافذة الغياب -->
     <div class="modal-overlay" id="absModal">
         <div class="modal-content" id="capture-abs">
             <div class="modal-header">
@@ -322,7 +298,7 @@
                 <div class="months-grid" id="months-container"></div>
             </div>
             <div class="modal-footer hide-in-shot">
-                <button class="btn-save-abs" onclick="saveAbsenceToFirebase()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ السجل في السحابة</button>
+                <button class="btn-save-abs" onclick="saveAbsenceToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ السجل في السحابة</button>
             </div>
         </div>
     </div>
@@ -330,12 +306,6 @@
     <script>
         let originalTeacherCode = null; 
         
-        // ================= إعدادات Firebase =================
-        const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
-        firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
-        db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
-
-        // ================= إعدادات Supabase =================
         const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -345,7 +315,6 @@
 
         const monthsList = [{id:"m9",name:"سبتمبر"},{id:"m10",name:"أكتوبر"},{id:"m11",name:"نوفمبر"},{id:"m12",name:"ديسمبر"},{id:"m1",name:"يناير"},{id:"m2",name:"فبراير"},{id:"m3",name:"مارس"},{id:"m4",name:"أبريل"},{id:"m5",name:"مايو"},{id:"m6",name:"يونيو"}];
 
-        // ================= دالة التقاط الشاشة (المطورة لحل مشكلة القص) =================
         function takeScreenshot(targetId) {
             const hiddenElements = document.querySelectorAll('.hide-in-shot');
             const showElements = document.querySelectorAll('.show-in-shot');
@@ -365,7 +334,6 @@
             hiddenElements.forEach(el => el.style.display = 'none');
             showElements.forEach(el => el.style.display = 'block');
 
-            // تحويل الـ Input إلى Div مؤقتاً لتجنب قص النص الطويل (يعمل بشكل ممتاز)
             const inputsToReplace = targetEl.querySelectorAll('input[type="text"], select');
             const replacementDivs = [];
             
@@ -415,11 +383,9 @@
                 scrollArea.style.overflowY = 'visible';
             }
 
-            // إرجاع الشاشة للأعلى مؤقتاً لتجنب أي قص ناتج عن الـ Scroll
             const originalScroll = window.scrollY;
             window.scrollTo(0, 0);
 
-            // التقاط الصورة بحجمها الطبيعي دون إجبارها على مقاس ثابت
             html2canvas(targetEl, {
                 scale: 2, 
                 backgroundColor: "#f1f5f9",
@@ -428,7 +394,6 @@
                 scrollX: 0
             }).then(canvas => {
                 
-                // إرجاع كل شيء لأصله
                 window.scrollTo(0, originalScroll);
                 hiddenElements.forEach(el => el.style.display = ''); 
                 showElements.forEach(el => el.style.display = 'none');
@@ -468,8 +433,6 @@
             });
         }
         
-        // ======================================================
-
         window.addEventListener('DOMContentLoaded', () => {
             fetchAllTeachers();
             const incomingId = new URLSearchParams(window.location.search).get('id');
@@ -479,8 +442,10 @@
         function toArabicNum(num) { const ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩']; return String(num).replace(/[0-9]/g, w => ar[w]); }
 
         async function fetchAllTeachers() {
-            const snap = await db.collection("teachers").get();
-            allTeachers = []; snap.forEach(doc => allTeachers.push({ id: doc.id, ...doc.data() }));
+            const { data, error } = await supabaseClient.from('teachers').select('*');
+            if (error) { console.error("Error fetching teachers:", error); return; }
+            
+            allTeachers = data || [];
             allTeachers.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
             
             const absSelect = document.getElementById("abs-teacher-select");
@@ -488,13 +453,14 @@
             allTeachers.forEach(t => { absSelect.innerHTML += `<option value="${t.code}">${t.name}</option>`; });
         }
 
+        async function fetchTeacherByCode(codeId) {
+            const { data, error } = await supabaseClient.from('teachers').select('*').eq('code', codeId).maybeSingle();
+            if(data) populateCard(data);
+        }
+
         function normalizeArabicSearch(text) {
             if (!text) return "";
-            return text.trim()
-                .replace(/[أإآا]/g, "ا") 
-                .replace(/ة/g, "ه")      
-                .replace(/ى/g, "ي")      
-                .replace(/\s+/g, " ");   
+            return text.trim().replace(/[أإآا]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, " ");   
         }
 
         function showAllTeachers() {
@@ -547,7 +513,7 @@
 
         function populateCard(data) {
             currentTeacherData = data;
-            originalTeacherCode = data.id || data.code; 
+            originalTeacherCode = data.code; 
 
             document.querySelectorAll('#teacher-form input:not([type="file"]), #teacher-form select').forEach(inp => {
                 const field = inp.getAttribute('data-field');
@@ -623,7 +589,7 @@
                 
                 const publicUrl = publicUrlData.publicUrl;
 
-                await db.collection("teachers").doc(String(code)).set({ [fieldName]: publicUrl }, { merge: true });
+                await supabaseClient.from('teachers').update({ [fieldName]: publicUrl }).eq('code', String(code));
 
                 if(currentTeacherData) currentTeacherData[fieldName] = publicUrl;
 
@@ -663,18 +629,19 @@
             if(!code || !name) { alert("الاسم والكود مطلوبان!"); return; }
             if(mode === 'update' && !confirm("تأكيد التعديل؟")) return;
 
-            let data = {};
+            let formData = {};
             document.querySelectorAll('#teacher-form input:not([type="file"]), #teacher-form select').forEach(inp => {
-                const field = inp.getAttribute('data-field'); if(field) data[field] = inp.value;
+                const field = inp.getAttribute('data-field'); if(field) formData[field] = inp.value;
             });
 
             try {
                 if (mode === 'update' && originalTeacherCode && originalTeacherCode !== code) {
-                    await db.collection("teachers").doc(String(code)).set(data);
-                    await db.collection("teachers").doc(String(originalTeacherCode)).delete();
+                    await supabaseClient.from('teachers').insert([formData]);
+                    await supabaseClient.from('teachers').delete().eq('code', originalTeacherCode);
                     originalTeacherCode = code; 
                 } else {
-                    await db.collection("teachers").doc(String(code)).set(data, { merge: true });
+                    const { error } = await supabaseClient.from('teachers').upsert(formData, { onConflict: 'code' });
+                    if(error) throw error;
                 }
 
                 showStatus(mode === 'add' ? "✅ تم الإضافة بنجاح" : "✅ تم التحديث بنجاح", "success");
@@ -686,9 +653,13 @@
             const code = document.querySelector('[data-field="code"]').value;
             if(!code) return;
             if(prompt("كلمة المرور للحذف:") === "2006") {
-                await db.collection("teachers").doc(String(code)).delete();
-                showStatus("🗑️ تم الحذف بنجاح", "danger");
-                clearForm(); fetchAllTeachers();
+                const { error } = await supabaseClient.from('teachers').delete().eq('code', code);
+                if(!error) {
+                    showStatus("🗑️ تم الحذف بنجاح", "danger");
+                    clearForm(); fetchAllTeachers();
+                } else {
+                    alert("خطأ أثناء الحذف!");
+                }
             } else { alert("كلمة مرور خاطئة!"); }
         }
 
@@ -711,7 +682,6 @@
         
         document.addEventListener("click", (e) => { if (!e.target.closest(".search-box")) document.getElementById("search-results").style.display = "none"; });
 
-        // ================= منظومة الغياب =================
         function openAbsenceModal() {
             const code = document.querySelector('[data-field="code"]').value;
             document.getElementById("absModal").classList.add("active");
@@ -766,17 +736,24 @@
 
         function removeDay(monthId, day) { activeAbsenceData[monthId] = activeAbsenceData[monthId].filter(d => d !== day); renderAbsenceUI(); }
 
-        async function saveAbsenceToFirebase() {
+        async function saveAbsenceToCloud() {
             if(!activeTeacherCode) { alert("يرجى اختيار معلم أولاً!"); return; }
             const btn = document.querySelector('.btn-save-abs'); btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> جاري الحفظ...";
+            
             try {
-                await db.collection("teachers").doc(String(activeTeacherCode)).set({ absences: activeAbsenceData }, { merge: true });
+                const { error } = await supabaseClient.from('teachers').update({ absences: activeAbsenceData }).eq('code', String(activeTeacherCode));
+                if (error) throw error;
+                
                 const teacherIndex = allTeachers.findIndex(t => t.code === activeTeacherCode);
                 if(teacherIndex > -1) allTeachers[teacherIndex].absences = activeAbsenceData;
                 if(currentTeacherData && currentTeacherData.code === activeTeacherCode) currentTeacherData.absences = activeAbsenceData;
+                
                 alert("✅ تم حفظ سجل الغياب بنجاح!");
-            } catch(e) { alert("❌ حدث خطأ في الحفظ: " + e.message); } 
-            finally { btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> حفظ السجل في السحابة'; }
+            } catch(e) { 
+                alert("❌ حدث خطأ في الحفظ: " + e.message); 
+            } finally { 
+                btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> حفظ السجل في السحابة'; 
+            }
         }
     </script>
 </body>
