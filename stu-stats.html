@@ -2,515 +2,361 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>مركز الطباعة والمخرجات - ٢٠٢٦ / ٢٠٢٧</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>ميزانية المدرسة المعتمدة - الشهيد أشرف حبيب</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- مكتبة Supabase -->
+    <!-- استدعاء مكتبة Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        /* 
-        ====================================================================
-        🛠️ لوحة التحكم الشاملة في المقاسات
-        ====================================================================
-        */
-        :root { 
-            --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; 
-            --logo-width: 65px; 
-
-            /* 1️⃣ إعدادات القوائم المزدوجة (A4) */
-            --list-row-height: 30px;      
-            --list-font-size: 13px;       
-            --list-col-m: 32px;           
-            --list-col-code: 90px;        
-
-            /* 2️⃣ إعدادات قوائم الصحة (A4) */
-            --health-row-height: 34px;    
-            --health-name-font: 11.5px;   
-            --health-num-font: 11px;      
-            --health-col-m: 35px;         
-            --health-col-name: 210px;     
-            --health-col-nid: 125px;      
-            --health-col-mob: 95px;       
-            --health-col-empty: 45px;     
-
-            /* 3️⃣ إعدادات الكشوف الخاصة (A4) */
-            --special-row-height: 30px;   
-
-            /* 4️⃣ إعدادات دفتر 5 سلوك (A3 أفقي) */
-            --beh-row-height: 28px;       
-            --beh-font-size: 12px;        
-            --beh-col-m: 30px;            
-            --beh-col-name: 230px;        
-            --beh-col-day: 33px;          
-            --beh-col-sum: 18px;          
-            --beh-col-code: 55px;         
-        }
-
+        :root { --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; --info: #0284c7; --danger: #be123c; --success: #059669; --warning: #d97706; }
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
-        body { background-color: var(--bg); padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        body { background-color: var(--bg); color: #111827; padding: 15px; display: flex; flex-direction: column; align-items: center; }
 
-        .no-print { width: 100%; max-width: 1100px; margin-bottom: 30px; }
-        .top-nav { background: var(--dark); color: white; padding: 12px 25px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .nav-title { font-size: 16px; font-weight: 900; color: #93c5fd; display: flex; align-items: center; gap: 10px; }
-        .btn-back { background: #334155; color: white; text-decoration: none; padding: 6px 15px; border-radius: 6px; font-size: 13px; font-weight: 700; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
-        .btn-back:hover { background: #475569; }
+        #capsule-status { width: 100%; max-width: 1250px; padding: 10px 15px; border-radius: 8px; font-weight: 800; font-size: 13px; margin-bottom: 12px; text-align: center; border: 1px solid #ddd; background: #fff; }
 
-        .control-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 15px; }
-        .panel-title { font-size: 14px; font-weight: 900; color: var(--dark); border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-        
-        .input-group { display: flex; gap: 10px; flex-wrap: wrap; }
-        select { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; cursor: pointer; font-size: 13px; outline: none; background: #f8fafc; min-width: 100px; }
+        .top-nav { width: 100%; max-width: 1250px; background: var(--dark); padding: 10px 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 12px; }
+        .btn-link { background: #334155; color: white; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
 
-        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
-        .btn-action { flex: 1; color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
-        .btn-action:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
-        
-        .btn-list { background: #16a34a; } .btn-health { background: #be123c; } .btn-behavior { background: #0284c7; }
-        .btn-damj { background: #ea580c; } .btn-trans-from { background: #8b5cf6; } .btn-trans-to { background: #0ea5e9; }
-        
-        .print-master-btn { background: var(--primary); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 900; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; margin: 20px auto 0 auto; width: 100%; max-width: 400px; box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3); transition: 0.2s; }
-        .print-master-btn:hover { background: #1e40af; transform: scale(1.02); }
+        .grades-bar { width: 100%; max-width: 1250px; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; justify-content: center; flex-wrap: wrap; }
+        .btn-grade { background: white; border: 2px solid #cbd5e1; color: var(--dark); padding: 8px 16px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 13px; transition: 0.2s; }
+        .btn-grade.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(30,58,138,0.3); }
+        .btn-stage-main { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; font-size: 14px; }
 
-        /* ================= حاويات الأوراق ================= */
-        .a4-sheet { background: white; width: 210mm; height: 296mm; padding: 10mm 12mm; position: relative; border: 1px solid #ccc; margin-bottom: 25px; display: none; overflow: hidden; }
-        .a3-sheet { background: white; width: 420mm; height: 296mm; padding: 10mm 15mm; position: relative; border: 1px solid #ccc; margin-bottom: 25px; display: none; overflow: hidden; }
+        .print-tools { width: 100%; max-width: 1250px; display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px; }
+        .btn-action { padding: 6px 15px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; color: white; font-size: 13px; }
 
-        /* ================= التنسيقات الداخلية للجداول ================= */
-        .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 5px; }
-        .header-logo-area { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 11px; line-height: 1.4; color: #000; }
-        .header-logo-area img { width: var(--logo-width); }
-        .header-title-box { border: 2px solid #000; border-radius: 12px; padding: 6px 15px; text-align: center; width: 340px; }
-        .header-title-box h2 { font-size: 13px; font-weight: 900; color: #000; margin-bottom: 4px; white-space: nowrap; }
-        .header-title-box .sub-info { font-size: 12.5px; font-weight: 900; display: flex; justify-content: space-around; }
+        /* ================= حاوية ورقة A4 الأفقية ================= */
+        #ministry-view { 
+            background: white; width: 100%; max-width: 1250px; 
+            padding: 30px 40px; border-radius: 12px; border: 1px solid #cbd5e1; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+        }
 
-        .info-grid-table { width: 100%; border-collapse: collapse; border: 2px solid #000; margin-bottom: 10px; }
-        .info-grid-table td { border: 1px solid #000; padding: 3px 10px; font-size: 13px; font-weight: 900; color: #000; width: 50%; }
-
-        .students-table { width: 100%; border-collapse: collapse; border: 2.5px solid #000; table-layout: fixed; }
-        .students-table th, .students-table td { border: 1px solid #000; padding: 1px 4px; color: #000; font-size: var(--list-font-size); height: var(--list-row-height); overflow: hidden; white-space: normal; line-height: 1.1; }
-        .students-table thead th { background-color: #f2f2f2; font-weight: 900; height: 28px; white-space: nowrap; }
-        .th-m { width: var(--list-col-m); text-align: center; font-weight: 800; }
-        .th-code { width: var(--list-col-code); text-align: center; font-family: Arial, sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; }
-        .th-name { width: auto; text-align: right !important; padding-right: 8px !important; font-weight: 800; }
-
-        .health-pro-header { display: flex; justify-content: space-between; align-items: stretch; border: 2.5px solid #000; border-radius: 8px; margin-bottom: 15px; overflow: hidden; }
-        .hp-right { padding: 8px 15px; font-weight: 900; font-size: 13px; line-height: 1.6; background: #fff; border-left: 2.5px solid #000; display: flex; flex-direction: column; justify-content: center; }
-        .hp-center { flex-grow: 1; text-align: center; padding: 10px; background: #f8fafc; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .hp-center h1 { font-size: 18px; font-weight: 900; color: #000; margin-bottom: 5px; }
-        .hp-center .hp-year { font-size: 14px; font-weight: 800; border-top: 1px dashed #94a3b8; padding-top: 5px; width: 80%; }
-        .hp-left { padding: 8px 15px; background: #fff; border-right: 2.5px solid #000; display: flex; flex-direction: column; justify-content: center; gap: 8px; }
-        .hp-badge { border: 1.5px solid #000; border-radius: 5px; padding: 2px 10px; font-weight: 900; font-size: 14px; text-align: center; background: #f1f5f9; }
-        
-        .health-pro-header-sub { border: 2.5px solid #000; border-radius: 8px; margin-bottom: 15px; display: flex; background: #f8fafc; overflow: hidden; }
-        .hp-sub-title { flex-grow: 1; text-align: center; font-size: 18px; font-weight: 900; padding: 8px; letter-spacing: 2px; }
-        .hp-sub-badge { width: 150px; background: #fff; border-right: 2.5px solid #000; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 16px; }
-        
-        .health-table { width: 100%; border-collapse: collapse; border: 2.5px solid #000; table-layout: fixed; }
-        .health-table th, .health-table td { border: 1px solid #000; padding: 2px; font-weight: 800; color: #000; height: var(--health-row-height); text-align: center; overflow: hidden; }
-        .health-table thead th { background-color: #f2f2f2; font-size: 13px; font-weight: 900; height: 35px; white-space: nowrap; }
-        .h-m { width: var(--health-col-m); font-size: 12px; }
-        .h-name-val { width: var(--health-col-name); text-align: right !important; padding-right: 8px !important; font-size: var(--health-name-font) !important; white-space: normal; line-height: 1.1; }
-        .h-nid, .h-mob { width: var(--health-col-nid); font-family: Arial, sans-serif !important; font-size: var(--health-num-font) !important; letter-spacing: 0.5px; }
-        .h-metric { width: var(--health-col-empty); } 
-
-        .special-table { width: 100%; border-collapse: collapse; border: 2.5px solid #000; table-layout: fixed; }
-        .special-table th, .special-table td { border: 1px solid #000; padding: 2px 5px; color: #000; font-size: 13px; font-weight: 800; height: var(--special-row-height); overflow: hidden; white-space: nowrap; text-align: center; }
-        .special-table thead th { background-color: #f2f2f2; font-weight: 900; height: 32px; }
-        .sp-m { width: 40px; } .sp-grade { width: 80px; } .sp-name { width: auto; text-align: right !important; padding-right: 10px !important; white-space: normal; line-height: 1.2; } .sp-class { width: 60px; } .sp-code { width: 100px; font-family: Arial, sans-serif; font-size: 12px; letter-spacing: 0.5px; } .sp-notes { width: 150px; }
-
-        .behavior-header-unified {
+        .official-header {
             display: flex; justify-content: space-between; align-items: center;
-            background-color: #f8fafc; border: 2.5px solid #000; border-radius: 8px;
-            padding: 10px 20px; margin-bottom: 15px; font-weight: 900; font-size: 18px; color: #000;
-            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+            margin-bottom: 20px; border-bottom: 3px double #000; padding-bottom: 15px;
         }
-        .bh-highlight {
-            background-color: #e2e8f0; padding: 4px 20px; border: 1.5px solid #000; border-radius: 6px;
-            -webkit-print-color-adjust: exact; print-color-adjust: exact;
-        }
+        .header-right { text-align: right; font-weight: 900; font-size: 15px; line-height: 1.6; color: #000; width: 250px; }
+        .header-center { text-align: center; flex-grow: 1; }
+        .header-center h1 { font-size: 19px; font-weight: 900; color: #000; margin: 0; }
+        .header-left { width: 250px; }
 
-        .behavior-table { width: 100%; border-collapse: collapse; border: 2.5px solid #000; table-layout: fixed; }
-        .behavior-table th, .behavior-table td { border: 1px solid #000; text-align: center; font-weight: 800; color: #000; padding: 0; height: var(--beh-row-height); font-size: var(--beh-font-size); overflow: hidden; }
-        .behavior-table thead th { background-color: #f2f2f2; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .ministry-table { width: 100%; border-collapse: collapse; border: 4px solid #000; text-align: center; table-layout: fixed; }
+        .ministry-table th, .ministry-table td { border: 1px solid #000; padding: 6px 2px; font-size: 13.5px; font-weight: 800; color: #000; overflow: hidden; }
+        .ministry-table thead th { background-color: #f1f5f9; border-bottom: 2px solid #000; font-size: 13px; }
         
-        .vertical-text { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11px; padding: 2px 0; height: 85px; }
-        .day-num { font-size: 12px; height: 25px; }
-        .weekend-cell { background-color: #d1d5db !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        .col-total { background-color: #f1f5f9 !important; font-weight: 900; }
+        .row-grand-total { background-color: #e2e8f0 !important; font-weight: 900; border-top: 3px solid #000; }
 
-        .col-b-m { width: var(--beh-col-m); }
-        .col-b-name { width: var(--beh-col-name); text-align: right !important; padding-right: 5px !important; font-size: 13px; white-space: normal; line-height: 1.1; }
-        .col-b-day { width: var(--beh-col-day); }
-        .col-b-summary { width: var(--beh-col-sum); font-size: 10px; writing-mode: vertical-rl; transform: rotate(180deg); }
-        .col-b-code { width: var(--beh-col-code); font-size: 11px; font-family: Arial; }
-
-        .footer-note { text-align: center; font-weight: 900; font-size: 13px; margin-top: 10px; }
-        .signatures { display: flex; justify-content: space-between; margin-top: 15px; padding: 0 40px; font-weight: 900; font-size: 15px; }
-        .sig-dots { font-weight: 400; color: #9ca3af; letter-spacing: 2px; font-size: 12px; }
-
-        @media print {
-            body { background: white; padding: 0; }
-            .no-print { display: none !important; }
-            .a4-sheet { display: block !important; border: none; margin: 0; page-break-after: always; box-shadow: none; width: 100%; height: 100%; }
-            .a3-sheet { display: block !important; border: none; margin: 0; page-break-after: always; box-shadow: none; width: 100%; height: 100%; }
-            @page { margin: 0; }
-            .a4-sheet { page: a4-portrait; }
-            .a3-sheet { page: a3-landscape; }
-            @page a4-portrait { size: A4 portrait; }
-            @page a3-landscape { size: A3 landscape; }
+        .signatures-footer {
+            display: flex; justify-content: space-between; margin-top: 35px;
+            padding: 0 30px; font-size: 15px; font-weight: 900; color: #000;
         }
-        .show-preview { display: block !important; }
+
+        #modern-cards-view { display: none; width: 100%; max-width: 1100px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 15px; border-radius: 10px; border-top: 4px solid var(--info); }
+        .stat-line { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: #475569; }
+        .stat-val { color: var(--primary); font-weight: 900; font-size: 15px; }
+        .radar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        .class-chip { padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #ddd; background: white; display: flex; flex-direction: column; gap: 6px; }
+        .density-low { border-bottom: 4px solid var(--info); } .density-mid { border-bottom: 4px solid var(--warning); } .density-high { border-bottom: 4px solid var(--danger); background: #fef2f2; }
+
+        .zizo-signature { position: fixed; bottom: 5px; left: 5px; background: white; padding: 2px 12px; border-radius: 10px; font-size: 10px; font-weight: 900; border: 1px solid #ddd; }
+        
+        @page { size: A4 landscape; margin: 10mm 12mm 10mm 12mm; }
+        @media print { 
+            body { padding: 0; background: white; } 
+            .top-nav, .grades-bar, .print-tools, #capsule-status, .zizo-signature { display: none !important; } 
+            #ministry-view { border: none !important; padding: 0 !important; width: 100% !important; box-shadow: none !important; } 
+            .ministry-table { font-size: 11pt !important; }
+            .ministry-table th, .ministry-table td { padding: 5px 2px !important; }
+            .signatures-footer { margin-top: 30px !important; page-break-inside: avoid; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="no-print">
-        <div class="top-nav">
-            <div class="nav-title"><i class="fa-solid fa-print"></i> مركز الطباعة والمخرجات الحكومية</div>
-            <a href="index.html" class="btn-back"><i class="fa-solid fa-arrow-right"></i> الرئيسية</a>
+    <div id="capsule-status">⏳ جاري الاتصال بالسحابة (Supabase) وسحب الكبسولة...</div>
+
+    <nav class="top-nav">
+        <div style="font-weight:900; color:#93c5fd;"><i class="fa-solid fa-file-invoice"></i> الإحصاء الاستقراري المعتمد (ميزانية المدرسة)</div>
+        <div style="display:flex; gap:10px;">
+            <a href="index.html" class="btn-link" style="background:#1e3a8a">الرئيسية</a>
         </div>
+    </nav>
 
-        <div class="control-panels">
-            <div class="panel">
-                <div class="panel-title"><i class="fa-solid fa-layer-group" style="color:var(--primary)"></i> طباعة قوائم الفصول ودفاتر السلوك</div>
-                <div class="input-group">
-                    <select id="grade-select" onchange="updateClasses()">
-                        <option value="" disabled selected>اختر الصف...</option>
-                        <option value="KG1">KG1</option><option value="KG2">KG2</option>
-                        <option value="الأول">الصف الأول</option><option value="الثاني">الصف الثاني</option>
-                        <option value="الثالث">الصف الثالث</option><option value="الرابع">الصف الرابع</option>
-                        <option value="الخامس">الصف الخامس</option><option value="السادس">الصف السادس</option>
-                    </select>
-                    <select id="class-select">
-                        <option value="" disabled selected>اختر الفصل...</option>
-                    </select>
-                </div>
-                
-                <div class="input-group" style="background:#f8fafc; padding:10px; border-radius:8px; border:1px dashed #cbd5e1;">
-                    <div style="font-size:12px; font-weight:bold; width:100%; color:#475569;">إعدادات دفتر 5 سلوك (لتظليل الجمعة والسبت):</div>
-                    <select id="month-select">
-                        <option value="8">سبتمبر</option><option value="9">أكتوبر</option><option value="10">نوفمبر</option><option value="11">ديسمبر</option>
-                        <option value="0">يناير</option><option value="1">فبراير</option><option value="2">مارس</option><option value="3">أبريل</option><option value="4">مايو</option>
-                    </select>
-                    <select id="year-select">
-                        <option value="2026">2026</option><option value="2027">2027</option>
-                    </select>
-                </div>
+    <div class="grades-bar">
+        <button class="btn-grade btn-stage-main active" onclick="renderStageReport('primary', this)">🏫 ميزانية المرحلة الابتدائية</button>
+        <button class="btn-grade btn-stage-main" onclick="renderStageReport('kg', this)">🧸 ميزانية رياض الأطفال</button>
+        
+        <div style="width:2px; background:#cbd5e1; margin:0 4px;"></div>
 
-                <div class="btn-group">
-                    <button class="btn-action btn-list" onclick="generateReport('list')"><i class="fa-solid fa-list-ol"></i> القوائم المزدوجة</button>
-                    <button class="btn-action btn-health" onclick="generateReport('health')"><i class="fa-solid fa-notes-medical"></i> قوائم الصحة</button>
-                    <button class="btn-action btn-behavior" onclick="generateReport('behavior')"><i class="fa-solid fa-calendar-days"></i> دفتر 5 سلوك (A3)</button>
-                </div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-title"><i class="fa-solid fa-file-signature" style="color:var(--danger)"></i> الكشوف المجمعة للمدرسة</div>
-                <div class="btn-group" style="margin-top: 5px;">
-                    <button class="btn-action btn-damj" onclick="generateSpecialReport('damj')"><i class="fa-solid fa-wheelchair"></i> كشف الدمج</button>
-                    <button class="btn-action btn-trans-from" onclick="generateSpecialReport('trans_from')"><i class="fa-solid fa-arrow-right-from-bracket"></i> المحولون من</button>
-                    <button class="btn-action btn-trans-to" onclick="generateSpecialReport('trans_to')"><i class="fa-solid fa-arrow-right-to-bracket"></i> المحولون إلى</button>
-                </div>
-            </div>
-        </div>
-
-        <button class="print-master-btn" onclick="window.print()"><i class="fa-solid fa-print fa-lg"></i> طباعة الأوراق المعروضة</button>
+        <button class="btn-grade" onclick="renderGradeCards('KG1', this)">KG1</button>
+        <button class="btn-grade" onclick="renderGradeCards('KG2', this)">KG2</button>
+        <button class="btn-grade" onclick="renderGradeCards('الأول', this)">الأول</button>
+        <button class="btn-grade" onclick="renderGradeCards('الثاني', this)">الثاني</button>
+        <button class="btn-grade" onclick="renderGradeCards('الثالث', this)">الثالث</button>
+        <button class="btn-grade" onclick="renderGradeCards('الرابع', this)">الرابع</button>
+        <button class="btn-grade" onclick="renderGradeCards('الخامس', this)">الخامس</button>
+        <button class="btn-grade" onclick="renderGradeCards('السادس', this)">السادس</button>
     </div>
 
-    <div id="print-area"></div>
+    <div class="print-tools">
+        <button class="btn-action" style="background:#ca8a04" onclick="exportExcel()"><i class="fa-solid fa-file-excel"></i> تصدير إكسيل</button>
+        <button class="btn-action" style="background:#16a34a" onclick="window.print()"><i class="fa-solid fa-print"></i> طباعة رسمية (A4 أفقي)</button>
+    </div>
+
+    <div id="ministry-view">
+        <div class="official-header">
+            <div class="header-right">
+                <div>محافظة المنوفية</div>
+                <div>إدارة الشهداء التعليمية</div>
+                <div>مدرسة الشهيد أشرف حبيب</div>
+            </div>
+            <div class="header-center">
+                <h1 id="stage-paper-title">ميزانية المرحلة الابتدائية فصول وتلاميذ للعام الدراسي ٢٠٢٦ / ٢٠٢٧ م</h1>
+            </div>
+            <div class="header-left"></div>
+        </div>
+
+        <table class="ministry-table" id="dom-table">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 100px;">الصف</th>
+                    <th rowspan="2" style="width: 65px;">عدد الفصول</th>
+                    <th colspan="3">مسلم</th><th colspan="3">مسيحي</th><th colspan="3">دمج</th><th colspan="3">جملة التلاميذ</th>
+                    <th rowspan="2" style="width: 60px;">الكثافة</th>
+                </tr>
+                <tr>
+                    <th>بنون</th><th>بنات</th><th class="col-total">جملة</th>
+                    <th>بنون</th><th>بنات</th><th class="col-total">جملة</th>
+                    <th>بنون</th><th>بنات</th><th class="col-total">جملة</th>
+                    <th>بنون</th><th>بنات</th><th class="col-total" style="background:#e2e8f0 !important">جملة</th>
+                </tr>
+            </thead>
+            <tbody id="ministry-tbody"></tbody>
+        </table>
+
+        <div class="signatures-footer">
+            <div>شئون الطلبة / .....................................</div>
+            <div>مدير المدرسة / .....................................</div>
+        </div>
+    </div>
+
+    <div id="modern-cards-view">
+        <h2 id="modern-title" style="text-align:center; margin-bottom:15px; color:var(--primary); font-size:18px;"></h2>
+        <div class="stats-grid">
+            <div class="stat-card"><h4>القوة الإجمالية</h4><div class="stat-line"><span>بنين:</span><span class="stat-val" id="mc-b">٠</span></div><div class="stat-line"><span>بنات:</span><span class="stat-val" id="mc-g">٠</span></div><div class="stat-line" style="border-top:1px solid #eee;padding-top:5px"><span>إجمالي:</span><span class="stat-val" style="color:var(--danger)" id="mc-all">٠</span></div></div>
+            <div class="stat-card"><h4>مسلم</h4><div class="stat-line"><span>بنين:</span><span class="stat-val" id="mc-mb">٠</span></div><div class="stat-line"><span>بنات:</span><span class="stat-val" id="mc-mg">٠</span></div><div class="stat-line"><span>جملة:</span><span class="stat-val" id="mc-mall">٠</span></div></div>
+            <div class="stat-card"><h4>مسيحي</h4><div class="stat-line"><span>بنين:</span><span class="stat-val" id="mc-cb">٠</span></div><div class="stat-line"><span>بنات:</span><span class="stat-val" id="mc-cg">٠</span></div><div class="stat-line"><span>جملة:</span><span class="stat-val" id="mc-call">٠</span></div></div>
+            <div class="stat-card"><h4>حالات وقيد</h4><div class="stat-line"><span>منقول:</span><span class="stat-val" id="mc-mon">٠</span></div><div class="stat-line"><span>باقي:</span><span class="stat-val" id="mc-baq">٠</span></div><div class="stat-line"><span>دمج:</span><span class="stat-val" id="mc-dmj">٠</span></div><div class="stat-line"><span>محول إلى:</span><span class="stat-val" id="mc-trs">٠</span></div></div>
+        </div>
+        <h4 style="margin-bottom:10px; border-bottom:2px solid #cbd5e1; padding-bottom:5px;">رادار الفصول</h4>
+        <div class="radar-grid" id="modern-radar-dom"></div>
+    </div>
+
+    <div class="zizo-signature">إعداد مستر زيزو</div>
 
     <script>
-        // تغيير اسم المتغير إلى dbClient لمنع التعارض مع الكائن العالمي supabase
+        // إعدادات اتصال Supabase
         const supabaseUrl = "https://xgsyktjoerrymqoutqcb.supabase.co";
         const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
         
-        const dbClient = supabase.createClient(supabaseUrl, supabaseKey);
+        const dbClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        const gradeOrder = {"KG1":1, "KG2":2, "الأول":3, "الثاني":4, "الثالث":5, "الرابع":6, "الخامس":7, "السادس":8};
+        let CAPSULE = null;
+        const kgGrades = ["KG1", "KG2"];
+        const primaryGrades = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
 
         function toArabicNum(num) {
-            if(!num && num !== 0) return "";
+            if (num === null || num === undefined || num === '') return '٠';
             const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
             return String(num).replace(/[0-9]/g, w => arabicDigits[w]);
         }
 
-        async function updateClasses() {
-            const grade = document.getElementById("grade-select").value;
-            const clsSelect = document.getElementById("class-select");
-            
-            // إظهار حالة التحميل للمستخدم
-            clsSelect.innerHTML = '<option value="" disabled selected>⏳ جاري جلب الفصول...</option>';
-
-            try {
-                const { data: students, error } = await dbClient
-                    .from("students")
-                    .select("class")
-                    .eq("grade", grade)
-                    .limit(2000); // زيادة الحد لضمان جلب كل طلاب الصف
-
-                if (error) throw error;
-
-                clsSelect.innerHTML = '<option value="" disabled selected>اختر الفصل...</option><option value="all">كل فصول الصف</option>';
-                
-                let cSet = new Set(); 
-                (students || []).forEach(doc => { 
-                    if(doc.class) cSet.add(String(doc.class).trim()); 
-                });
-                
-                let classesArray = Array.from(cSet).sort((a, b) => a.localeCompare(b, 'ar', {numeric: true}));
-                
-                if (classesArray.length === 0) {
-                    clsSelect.innerHTML = '<option value="" disabled selected>لا توجد بيانات (فارغ)</option>';
-                } else {
-                    classesArray.forEach(c => { 
-                        clsSelect.innerHTML += `<option value="${c}">فصل ${c}</option>`; 
-                    });
-                }
-            } catch (err) {
-                console.error("خطأ في الاتصال:", err);
-                clsSelect.innerHTML = '<option value="" disabled selected>❌ فشل الاتصال بالقاعدة</option>';
-                alert("حدث خطأ أثناء جلب الفصول. يرجى التحقق من الاتصال.");
-            }
+        // دالة تنظيف النصوص (تزيل المسافات، توحد الألف، وتحذف كلمة الصف)
+        function normalizeArabic(text) {
+            if (!text) return "";
+            return String(text)
+                .replace(/أ|إ|آ/g, "ا") // توحيد الألف
+                .replace(/\s+/g, "")    // إزالة كل المسافات
+                .replace(/الصف/g, "");  // إزالة كلمة الصف
         }
 
-        async function generateReport(type) {
-            const grade = document.getElementById("grade-select").value;
-            const targetCls = document.getElementById("class-select").value;
-            const area = document.getElementById("print-area");
+        // دالة بحث فائقة الذكاء (مضادة للأخطاء الإملائية والمسافات)
+        function getGradeData(section, gName) {
+            if (!section) return null;
             
-            if(!grade || !targetCls) { alert("اختر الصف والفصل أولاً!"); return; }
-            area.innerHTML = "<h3 class='no-print' style='text-align:center; margin-top:40px; color:#1e3a8a;'><i class='fa-solid fa-circle-notch fa-spin'></i> جاري تجهيز الأوراق وجلب البيانات...</h3>";
+            // 1. بحث مباشر سريع
+            if (section[gName]) return section[gName];
+            if (section[gName.trim()]) return section[gName.trim()];
+            
+            // 2. بحث بالتنظيف الشامل (يحل مشكلة الرابع والخامس)
+            let normalizedSearch = normalizeArabic(gName);
+            
+            for (let key in section) {
+                let normalizedKey = normalizeArabic(key);
+                if (normalizedKey === normalizedSearch || normalizedKey.includes(normalizedSearch) || normalizedSearch.includes(normalizedKey)) {
+                    return section[key];
+                }
+            }
+            
+            // تسجيل الخطأ في الكونسول للمطور في حال عدم وجود البيانات نهائياً
+            console.warn("لم يتم العثور على بيانات لـ:", gName, "الموجود في الكبسولة هو:", Object.keys(section));
+            return null;
+        }
 
+        window.addEventListener('DOMContentLoaded', async () => {
+            const banner = document.getElementById("capsule-status");
             try {
-                const { data: list, error } = await dbClient
-                    .from("students")
-                    .select("*")
-                    .eq("grade", grade)
-                    .limit(2000);
+                const { data, error } = await dbClient
+                    .from("system_capsules")
+                    .select("data")
+                    .eq("id", "stats_2026")
+                    .single();
 
-                if (error) throw error;
-
-                let studentsList = list || [];
-
-                studentsList.sort((a, b) => {
-                    if (a.gender === "ذكر" && b.gender !== "ذكر") return -1;
-                    if (a.gender !== "ذكر" && b.gender === "ذكر") return 1;
-                    return (a.name || "").localeCompare((b.name || ""), 'ar');
-                });
-
-                area.innerHTML = "";
-                let uniqueClasses = targetCls === "all" ? [...new Set(studentsList.map(s => String(s.class).trim()))].sort((a,b)=>a.localeCompare(b,'ar',{numeric:true})) : [targetCls];
-
-                if(studentsList.length === 0) {
-                    area.innerHTML = "<h3 class='no-print' style='text-align:center; color:red; margin-top:40px;'>لا يوجد تلاميذ مسجلين في هذا الصف.</h3>";
+                if (error || !data) {
+                    banner.innerHTML = "❌ الكبسولة غير موجودة أو لم يتم اعتمادها بعد! اذهب لوحة البيانات واضغط زر الاعتماد."; 
+                    banner.style.background = "#fee2e2"; 
+                    banner.style.color = "#991b1b"; 
                     return;
                 }
 
-                uniqueClasses.forEach(cName => {
-                    const classList = studentsList.filter(s => String(s.class).trim() === cName);
-                    if(classList.length === 0) return;
-
-                    if(type === 'list') area.appendChild(buildStandardList(grade, cName, classList));
-                    else if(type === 'health') {
-                        area.appendChild(buildHealthPage1(grade, cName, classList));
-                        area.appendChild(buildHealthPage2(grade, cName, classList));
-                    }
-                    else if(type === 'behavior') {
-                        const monthIdx = parseInt(document.getElementById("month-select").value);
-                        const year = parseInt(document.getElementById("year-select").value);
-                        area.appendChild(buildBehaviorPage(grade, cName, classList, monthIdx, year, 1));
-                        area.appendChild(buildBehaviorPage(grade, cName, classList, monthIdx, year, 2));
-                    }
-                });
-            } catch(err) {
-                console.error("خطأ التقرير:", err);
-                area.innerHTML = "<h3 class='no-print' style='text-align:center; color:red; margin-top:40px;'>❌ حدث خطأ أثناء تحميل البيانات. تأكد من اتصال الإنترنت.</h3>";
-            }
-        }
-
-        async function generateSpecialReport(type) {
-            const area = document.getElementById("print-area");
-            area.innerHTML = "<h3 class='no-print' style='text-align:center; margin-top:40px; color:#1e3a8a;'><i class='fa-solid fa-circle-notch fa-spin'></i> جاري مسح قاعدة بيانات المدرسة بالكامل...</h3>";
-
-            try {
-                // استخدام limit عالي جداً لجلب كافة طلاب المدرسة
-                const { data: list, error } = await dbClient
-                    .from("students")
-                    .select("*")
-                    .limit(5000); 
+                CAPSULE = data.data; 
+                const tot = CAPSULE.general && CAPSULE.general["إجمالي"] ? (CAPSULE.general["إجمالي"].tb + CAPSULE.general["إجمالي"].tg) : 0;
                 
-                if (error) throw error;
-
-                let studentsList = list || [];
-                let filteredList = []; let reportTitle = "";
+                banner.innerHTML = `✅ تم الاتصال بنجاح عبر Supabase | إجمالي تلاميذ المدرسة داخل الكبسولة: <b>${toArabicNum(tot)}</b> تلميذ`;
+                banner.style.background = "#dcfce7"; 
+                banner.style.color = "#166534";
                 
-                if (type === 'damj') { filteredList = studentsList.filter(s => s.dmj === "دمج" || s.dmj === "نعم"); reportTitle = "كشف بأسماء تلاميذ ( الدمج ) بالمدرسة"; }
-                else if (type === 'trans_from') { filteredList = studentsList.filter(s => s.transfer_type === "محول من"); reportTitle = "كشف بأسماء التلاميذ ( المحولين من ) المدرسة"; }
-                else if (type === 'trans_to') { filteredList = studentsList.filter(s => s.transfer_type === "محول إلى"); reportTitle = "كشف بأسماء التلاميذ ( المحولين إلى ) المدرسة"; }
-
-                if(filteredList.length === 0) { area.innerHTML = `<h3 class='no-print' style='text-align:center; color:red; margin-top:40px;'>لا يوجد تلاميذ مسجلين في هذا التصنيف.</h3>`; return; }
-
-                filteredList.sort((a, b) => {
-                    let gA = gradeOrder[a.grade] || 99; let gB = gradeOrder[b.grade] || 99;
-                    if(gA !== gB) return gA - gB;
-                    if(a.class !== b.class) return (String(a.class) || "").localeCompare((String(b.class) || ""), 'ar', {numeric:true});
-                    if (a.gender === "ذكر" && b.gender !== "ذكر") return -1;
-                    if (a.gender !== "ذكر" && b.gender === "ذكر") return 1;
-                    return (a.name || "").localeCompare((b.name || ""), 'ar');
-                });
-
-                area.innerHTML = "";
-                for (let i = 0; i < filteredList.length; i += 30) {
-                    area.appendChild(buildSpecialPage(reportTitle, filteredList.slice(i, i + 30), i, filteredList.length));
-                }
-            } catch(err) {
-                console.error("خطأ التقرير الخاص:", err);
-                area.innerHTML = "<h3 class='no-print' style='text-align:center; color:red; margin-top:40px;'>❌ حدث خطأ أثناء مسح البيانات.</h3>";
+                renderStageReport('primary', document.querySelector('.btn-grade.active'));
+            } catch (err) {
+                console.error("خطأ في جلب الكبسولة:", err);
+                banner.innerHTML = "❌ حدث خطأ غير متوقع أثناء الاتصال بقاعدة البيانات."; 
+                banner.style.background = "#fee2e2"; 
+                banner.style.color = "#991b1b";
             }
+        });
+
+        function switchTab(b) { 
+            document.querySelectorAll('.btn-grade').forEach(x => x.classList.remove('active')); 
+            if(b) b.classList.add('active'); 
         }
 
-        // ================== دوال بناء وتشكيل الـ HTML ================== //
-        function buildSpecialPage(title, studentsChunk, startIndex, totalCount) {
-            const sheet = document.createElement("div"); sheet.className = "a4-sheet show-preview";
-            sheet.innerHTML = `
-                <div class="sheet-header"><div class="header-logo-area"><img src="logo.png" onerror="this.style.display='none'"><div>الإدارة المركزية لتكنولوجيا التعليم<br>الإدارة العامة لقواعد البيانات المركزية</div></div><div class="header-title-box" style="width: 400px;"><h2 style="font-size:15px; margin-bottom:8px;">${title}</h2><div class="sub-info"><span>إجمالي العدد: ( ${toArabicNum(totalCount)} ) تلميذ</span><span>للعام: ٢٠٢٦ - ٢٠٢٧</span></div></div></div>
-                <table class="info-grid-table"><tr><td>المديرية : المنوفية</td><td>الإدارة : الشهداء</td></tr><tr><td>التبعيـــة : رسمي</td><td>المدرسة : الشهيد أشرف حبيب الابتدائية</td></tr></table>
-                <table class="special-table"><thead><tr><th class="sp-m">م</th><th class="sp-grade">الصف</th><th class="sp-name">اسم الطالب</th><th class="sp-class">الفصل</th><th class="sp-code">كود الطالب</th><th class="sp-notes">ملاحظات</th></tr></thead><tbody>${buildSpecialRows(studentsChunk, startIndex)}</tbody></table>
-                <div class="signatures" style="margin-top: 30px;"><div>شئون الطلبة : <span class="sig-dots">......................................</span></div><div>مدير المدرسة : <span class="sig-dots">......................................</span></div></div>
-            `; return sheet;
-        }
-        function buildSpecialRows(studentsChunk, startIndex) {
-            let html = "";
-            for (let i = 0; i < 30; i++) {
-                const s = studentsChunk[i];
-                html += `<tr><td class="sp-m">${s?toArabicNum(startIndex+i+1):""}</td><td class="sp-grade">${s?s.grade:""}</td><td class="sp-name">${s?s.name:""}</td><td class="sp-class">${s?toArabicNum(s.class):""}</td><td class="sp-code">${s?(s.code||""):""}</td><td class="sp-notes"></td></tr>`;
-            } return html;
+        function createEmptyStat() { return { cCount: 0, mb: 0, mg: 0, cb: 0, cg: 0, db: 0, dg: 0, tb: 0, tg: 0, mon: 0, baq: 0, dmj: 0, trans: 0, cls: {} }; }
+        
+        function accumulateStats(target, source) {
+            target.cCount += (source.cCount || 0); target.mb += (source.mb || 0); target.mg += (source.mg || 0);
+            target.cb += (source.cb || 0); target.cg += (source.cg || 0); target.db += (source.db || 0); target.dg += (source.dg || 0);
+            target.tb += (source.tb || 0); target.tg += (source.tg || 0);
         }
 
-        function buildStandardList(grade, clsName, students) {
-            const sheet = document.createElement("div"); sheet.className = "a4-sheet show-preview";
-            sheet.innerHTML = `
-                <div class="sheet-header"><div class="header-logo-area"><img src="logo.png" onerror="this.style.display='none'"><div>الإدارة المركزية لتكنولوجيا التعليم<br>الإدارة العامة لقواعد البيانات المركزية</div></div><div class="header-title-box"><h2>كشف باسماء التلاميذ حسب الفصل ( ٢٠٢٦ - ٢٠٢٧ )</h2><div class="sub-info"><span>عدد الطلبه ( ${toArabicNum(students.length)} ) طالب</span><span>فصل &nbsp; ${toArabicNum(clsName)}</span></div></div></div>
-                <table class="info-grid-table"><tr><td>المديرية : المنوفية</td><td>الإدارة : الشهداء</td></tr><tr><td>التبعيـــة : رسمي</td><td>المرحلة : الابتدائية</td></tr><tr><td>المدرسة : الشهيد أشرف حبيب الابتدائية</td><td>الصف : ${grade}</td></tr></table>
-                <table class="students-table"><thead><tr><th class="th-m">م</th><th class="th-code">كود الطالب</th><th class="th-name">اسم الطالب</th><th class="th-m">م</th><th class="th-code">كود الطالب</th><th class="th-name">اسم الطالب</th></tr></thead><tbody>${buildStandardRows(students)}</tbody></table>
-                <div class="footer-note">تمت مراجعة بيانات الطلبة بمعرفة شئون الطلبة والبيانات مطابقة لما ورد بملفات الطلبة</div><div class="signatures"><div>شئون الطلبة : <span class="sig-dots">......................................</span></div><div>مدير المدرسة : <span class="sig-dots">......................................</span></div></div>
-            `; return sheet;
-        }
-        function buildStandardRows(students) {
-            let html = "";
-            for (let i = 0; i < 25; i++) {
-                const sR = students[i]; const sL = students[i + 25];
-                html += `<tr><td class="th-m">${sR?toArabicNum(i+1):""}</td><td class="th-code">${sR?(sR.code||""):""}</td><td class="th-name">${sR?sR.name:""}</td><td class="th-m">${sL?toArabicNum(i+26):""}</td><td class="th-code">${sL?(sL.code||""):""}</td><td class="th-name">${sL?sL.name:""}</td></tr>`;
-            } return html;
-        }
+        function renderStageReport(stageType, btn) {
+            if(!CAPSULE) return; 
+            switchTab(btn);
+            document.getElementById("ministry-view").style.display = "block"; 
+            document.getElementById("modern-cards-view").style.display = "none";
+            const tb = document.getElementById("ministry-tbody"); 
+            tb.innerHTML = "";
+            const titleEl = document.getElementById("stage-paper-title");
 
-        function buildHealthPage1(grade, clsName, students) {
-            const sheet = document.createElement("div"); sheet.className = "a4-sheet show-preview";
-            sheet.innerHTML = `
-                <div class="health-pro-header"><div class="hp-right"><div>مدرسة الشهيد أشرف حبيب</div><div></div></div><div class="hp-center"><h1>كشف المتابعة الطبية وحملات التطعيم</h1><div class="hp-year">للعام الدراسي ٢٠٢٦ / ٢٠٢٧ م</div></div><div class="hp-left"><div class="hp-badge">الصف: ${grade}</div><div class="hp-badge">فصل: <span dir="ltr">${toArabicNum(clsName)}</span></div></div></div>
-                <table class="health-table"><thead><tr><th class="h-m">م</th><th class="h-name-val" style="text-align:center !important">الاسم</th><th class="h-nid">الرقم القومى</th><th class="h-mob">موبايل</th><th class="h-metric">الطول</th><th class="h-metric">الوزن</th><th class="h-metric">Hgb</th><th class="h-metric">الكتلة</th><th class="h-metric">نتيجة</th></tr></thead><tbody>${buildHealthRows(students, 0, 25)}</tbody></table>
-                <div class="signatures"><div>شئون الطلبة : <span class="sig-dots">......................................</span></div><div>مدير المدرسة : <span class="sig-dots">......................................</span></div></div>
-            `; return sheet;
-        }
-        function buildHealthPage2(grade, clsName, students) {
-            const sheet = document.createElement("div"); sheet.className = "a4-sheet show-preview";
-            sheet.innerHTML = `
-                <div class="health-pro-header-sub"><div class="hp-sub-title">تابـــــــــــع قائمـــــــة المتابعــــة الطبيــــة</div><div class="hp-sub-badge">فصل <span dir="ltr" style="margin-right:8px;">${toArabicNum(clsName)}</span></div></div>
-                <table class="health-table"><thead><tr><th class="h-m">م</th><th class="h-name-val" style="text-align:center !important">اسم التلميذ</th><th class="h-nid">الرقم القومى</th><th class="h-mob">موبايل<br><small>ولى الامر</small></th><th class="h-metric">الوزن</th><th class="h-metric">الطول</th><th class="h-metric">Hgb</th><th class="h-metric">كتله</th><th class="h-metric">نتيجة</th></tr></thead><tbody>${buildHealthRows(students, 25, 50)}</tbody></table>
-                <div class="signatures" style="margin-top: 30px;"><div>شئون الطلبة : <span class="sig-dots">......................................</span></div><div>مدير المدرسة : <span class="sig-dots">......................................</span></div></div>
-            `; return sheet;
-        }
-        function buildHealthRows(students, start, end) {
-            let html = "";
-            for (let i = start; i < end; i++) {
-                const s = students[i];
-                html += `<tr><td class="h-m">${s?toArabicNum(i+1):""}</td><td class="h-name-val">${s?s.name:""}</td><td class="h-nid">${s?(s.nid||""):""}</td><td class="h-mob">${s?(s.father_mobile||""):""}</td><td></td><td></td><td></td><td></td><td></td></tr>`;
-            } return html;
-        }
+            let targetGrades = [];
+            let stageTotal = createEmptyStat();
+            let footerText = "";
 
-        function buildBehaviorPage(grade, clsName, students, monthIdx, year, pageNum) {
-            const sheet = document.createElement("div");
-            sheet.className = "a3-sheet show-preview";
-            
-            const monthName = document.getElementById("month-select").options[document.getElementById("month-select").selectedIndex].text;
-            const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
-            
-            let dayHeaders = ""; let dayNumbers = "";
-            const dayNames = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-            
-            for(let d=1; d<=31; d++) {
-                let dayName = ""; let isWeekend = false;
-                if(d <= daysInMonth) {
-                    let dateObj = new Date(year, monthIdx, d);
-                    dayName = dayNames[dateObj.getDay()];
-                    if(dateObj.getDay() === 5 || dateObj.getDay() === 6) isWeekend = true;
-                }
-                dayHeaders += `<th class="col-b-day ${isWeekend?'weekend-cell':''}"><div class="vertical-text">${dayName}</div></th>`;
-                dayNumbers += `<th class="col-b-day day-num ${isWeekend?'weekend-cell':''}">${toArabicNum(d)}</th>`;
+            if(stageType === 'primary') {
+                titleEl.innerText = "ميزانية المرحلة الابتدائية فصول وتلاميذ للعام الدراسي ٢٠٢٦ / ٢٠٢٧ م";
+                targetGrades = primaryGrades; footerText = "إجمالي المرحلة الابتدائية";
+            } else {
+                titleEl.innerText = "ميزانية رياض الأطفال فصول وتلاميذ للعام الدراسي ٢٠٢٦ / ٢٠٢٧ م";
+                targetGrades = kgGrades; footerText = "إجمالي رياض الأطفال";
             }
 
-            sheet.innerHTML = `
-                <div class="behavior-header-unified">
-                    <span>مدرسة الشهيد أشرف حبيب</span>
-                    <span>${pageNum===1?'':'تابع '}دفتر ٥ سلوك عن العام الدراسى ٢٠٢٦ / ٢٠٢٧ م &nbsp;&nbsp;&nbsp; شهر ${monthName}</span>
-                    <span class="bh-highlight">فصل: ${toArabicNum(clsName)}</span>
-                </div>
+            targetGrades.forEach(g => {
+                let gData = getGradeData(CAPSULE.general, g);
+                if(gData) {
+                    drawMRow(tb, g, gData.cCount, gData);
+                    accumulateStats(stageTotal, gData);
+                } else {
+                    drawMRow(tb, g, 0, createEmptyStat());
+                }
+            });
 
-                <table class="behavior-table">
-                    <thead>
-                        <tr>
-                            <th rowspan="2" class="col-b-m">م</th>
-                            <th rowspan="2" class="col-b-name">اسم التلميذ</th>
-                            ${dayHeaders}
-                            <th colspan="2" style="font-size:10px">الغياب</th>
-                            <th colspan="2" style="font-size:10px">التأخر</th>
-                            <th rowspan="2" class="col-b-code">الكود</th>
-                        </tr>
-                        <tr>
-                            ${dayNumbers}
-                            <th class="col-b-summary">بدون</th><th class="col-b-summary">عذر</th>
-                            <th class="col-b-summary">بدون</th><th class="col-b-summary">عذر</th>
-                        </tr>
-                    </thead>
-                    <tbody>${buildBehaviorRows(students, pageNum, year, monthIdx)}</tbody>
-                </table>
+            drawMRow(tb, footerText, stageTotal.cCount, stageTotal, "row-grand-total");
+        }
 
-                <div class="signatures">
-                    <div>شئون الطلبة : <span class="sig-dots">......................................</span></div>
-                    <div>مدير المدرسة : <span class="sig-dots">......................................</span></div>
-                </div>
+        function drawMRow(tb, tit, cnt, st, customClass="") {
+            const tr = document.createElement("tr"); 
+            if(customClass) tr.className = customClass;
+            const tot = (st.tb || 0) + (st.tg || 0); 
+            const dns = cnt > 0 ? Math.round(tot / cnt) : 0;
+
+            tr.innerHTML = `
+                <td>${tit}</td><td>${toArabicNum(cnt)}</td>
+                <td>${toArabicNum(st.mb)}</td><td>${toArabicNum(st.mg)}</td><td class="col-total">${toArabicNum((st.mb || 0) + (st.mg || 0))}</td>
+                <td>${toArabicNum(st.cb)}</td><td>${toArabicNum(st.cg)}</td><td class="col-total">${toArabicNum((st.cb || 0) + (st.cg || 0))}</td>
+                <td>${toArabicNum(st.db)}</td><td>${toArabicNum(st.dg)}</td><td class="col-total">${toArabicNum((st.db || 0) + (st.dg || 0))}</td>
+                <td>${toArabicNum(st.tb)}</td><td>${toArabicNum(st.tg)}</td><td class="col-total" style="background:#cbd5e1">${toArabicNum(tot)}</td>
+                <td style="color:#be123c">${toArabicNum(dns)}</td>
             `;
-            return sheet;
+            tb.appendChild(tr);
         }
 
-        function buildBehaviorRows(students, pageNum, year, monthIdx) {
-            let html = "";
-            const start = (pageNum - 1) * 26; 
-            const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
-
-            for (let i = 0; i < 26; i++) {
-                const s = students[start + i];
-                let dayCells = "";
-                for(let d=1; d<=31; d++) {
-                    let isWeekend = false;
-                    if(d <= daysInMonth) {
-                        let dateObj = new Date(year, monthIdx, d);
-                        if(dateObj.getDay() === 5 || dateObj.getDay() === 6) isWeekend = true;
-                    }
-                    dayCells += `<td class="${isWeekend?'weekend-cell':''}"></td>`;
-                }
-
-                html += `<tr>
-                    <td>${s ? toArabicNum(start + i + 1) : ""}</td>
-                    <td class="col-b-name">${s ? s.name : ""}</td>
-                    ${dayCells}
-                    <td></td><td></td><td></td><td></td>
-                    <td class="col-b-code">${s ? (s.code || "") : ""}</td>
-                </tr>`;
+        function renderGradeCards(gName, btn) {
+            if(!CAPSULE || !CAPSULE.gradesBreakdown) return; 
+            
+            const st = getGradeData(CAPSULE.gradesBreakdown, gName);
+            
+            if (!st) {
+                alert(`لا توجد بيانات مسجلة لـ ( ${gName} ) في الكبسولة الحالية. يرجى تحديث الكبسولة من شاشة البيانات.`);
+                return;
             }
-            return html;
+
+            switchTab(btn);
+            document.getElementById("ministry-view").style.display = "none"; 
+            document.getElementById("modern-cards-view").style.display = "block";
+            document.getElementById("modern-title").innerText = `إحصاء فصول ( الصف ${gName} )`;
+            
+            document.getElementById("mc-b").innerText = toArabicNum(st.tb); 
+            document.getElementById("mc-g").innerText = toArabicNum(st.tg); 
+            document.getElementById("mc-all").innerText = toArabicNum((st.tb || 0) + (st.tg || 0));
+            
+            document.getElementById("mc-mb").innerText = toArabicNum(st.mb); 
+            document.getElementById("mc-mg").innerText = toArabicNum(st.mg); 
+            document.getElementById("mc-mall").innerText = toArabicNum((st.mb || 0) + (st.mg || 0));
+            
+            document.getElementById("mc-cb").innerText = toArabicNum(st.cb); 
+            document.getElementById("mc-cg").innerText = toArabicNum(st.cg); 
+            document.getElementById("mc-call").innerText = toArabicNum((st.cb || 0) + (st.cg || 0));
+            
+            document.getElementById("mc-mon").innerText = toArabicNum(st.mon); 
+            document.getElementById("mc-baq").innerText = toArabicNum(st.baq); 
+            document.getElementById("mc-dmj").innerText = toArabicNum(st.dmj); 
+            document.getElementById("mc-trs").innerText = toArabicNum(st.trans);
+            
+            const r = document.getElementById("modern-radar-dom"); 
+            r.innerHTML = "";
+            
+            if (st.cls) {
+                Object.keys(st.cls).sort().forEach(c => {
+                    const tot = (st.cls[c].b || 0) + (st.cls[c].g || 0); 
+                    let d = tot > 50 ? "density-high" : (tot >= 45 ? "density-mid" : "density-low");
+                    r.innerHTML += `
+                        <div class="class-chip ${d}">
+                            <div style="font-weight:900;border-bottom:1px dashed #ccc">فصل <span dir="ltr">${toArabicNum(c)}</span></div>
+                            <div style="display:flex;justify-content:space-around;margin:5px 0"><span>بنين:${toArabicNum(st.cls[c].b)}</span><span>بنات:${toArabicNum(st.cls[c].g)}</span></div>
+                            <div style="background:#f1f5f9;font-weight:900;color:var(--primary)">إجمالي: ${toArabicNum(tot)}</div>
+                        </div>`;
+                });
+            }
+        }
+
+        function exportExcel() { 
+            XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("dom-table")), "ميزانية_المدرسة.xlsx"); 
         }
     </script>
 </body>
