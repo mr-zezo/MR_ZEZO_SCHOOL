@@ -406,7 +406,7 @@
         }
 
         // --- 6. الترحيل الذكي للصف (مع تقسيم العمليات لتجنب الحدود) ---
-        async function promoteStudents() {
+         async function promoteStudents() {
             const currentGrade = document.getElementById("grade-filter").value;
             if (!currentGrade) { alert("اختر الصف أولاً من القائمة!"); return; }
 
@@ -449,6 +449,9 @@
                 if(!s.result || !s.code) return; 
 
                 let shouldDelete = false;
+                
+                // معالجة حالة القيد لتجنب أخطاء الإملاء (باقي / باقى) والمسافات
+                let currentStatus = String(s.status || "").trim().replace(/ى/g, 'ي');
 
                 if(s.result === "ناجح") {
                     if (currentGrade === "السادس") {
@@ -460,7 +463,8 @@
                     }
                 } 
                 else if (s.result === "راسب") {
-                    if(s.status === "باقي") { 
+                    // هنا التعديل: التأكد من أن الحالة تحتوي على كلمة "باقي" بأي شكل
+                    if(currentStatus === "باقي") { 
                         if (currentGrade === "السادس") {
                             shouldDelete = true; 
                         } else {
@@ -469,6 +473,7 @@
                             s.class = getNextClassName(s.class, currentGrade, s.grade);
                         }
                     } else {
+                        // إذا كان منقول ورسب، يبقى في صفه وتتغير حالته إلى باقي
                         s.status = "باقي";
                     }
                 }
@@ -513,11 +518,15 @@
         // --- 7. حفظ السحابة العادي (مع تقسيم العمليات) ---
         async function saveAllToCloud() {
             const g = document.getElementById("grade-filter").value;
-            if (!g) { alert("اختر الصف أولاً!"); return; }
+            if (!g) { alert("اختر الصف أولاً من القائمة المنسدلة بالأعلى لتحديد أين سيتم حفظ هذه البيانات!"); return; }
+            
             const rows = document.querySelectorAll("#table-body tr");
-            if(rows.length === 0 || rows[0].cells.length < 2) return;
+            if(rows.length === 0 || rows[0].cells.length < 2) {
+                alert("لا توجد بيانات في الجدول لحفظها!"); return;
+            }
 
             let studentsToSave = [];
+            let currentCodesInTable = [];
             
             rows.forEach(row => {
                 const ins = row.querySelectorAll("input, select");
@@ -527,25 +536,61 @@
                         if(i.getAttribute("data-field")) s[i.getAttribute("data-field")] = i.value;
                     });
                     
+                    // توليد كود مؤقت إذا لم يكن التلميذ يمتلك كوداً
                     if (!s.code) s.code = "TEMP_STD_" + Math.random().toString(36).substr(2, 9);
                     
                     if (s.name && s.name.trim() !== "") {
                         studentsToSave.push(s);
+                        currentCodesInTable.push(s.code);
                     }
                 }
             });
 
             if (studentsToSave.length > 0) {
+                // سؤال المستخدم عن نوع الحفظ (استبدال كلي أم دمج)
+                const isReplace = confirm(`هل تريد استبدال بيانات الصف (${g}) بالكامل بما هو معروض في الجدول الآن؟\n\n- اختر "موافق / OK" لحذف أي تلاميذ قدامى في هذا الصف غير موجودين في الجدول الحالي (استبدال كلي).\n- اختر "إلغاء / Cancel" لتحديث وإضافة المعروض فقط دون حذف القديم.`);
+
+                const btn = document.querySelector('.btn-save');
+                const oldText = btn.innerHTML;
+                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...`;
+
                 try {
+                    // إذا اختار المستخدم استبدال كلي
+                    if (isReplace) {
+                        // 1. جلب كل أكواد تلاميذ هذا الصف من قاعدة البيانات
+                        const { data: existingData, error: fetchErr } = await supabaseClient
+                            .from("students")
+                            .select("code")
+                            .eq("grade", g);
+
+                        if (fetchErr) throw fetchErr;
+
+                        // 2. تحديد الأكواد التي يجب حذفها (موجودة في القاعدة ولكن غير موجودة في الجدول المعروض)
+                        const existingCodes = existingData.map(d => d.code);
+                        const codesToDelete = existingCodes.filter(c => !currentCodesInTable.includes(c));
+
+                        // 3. حذف التلاميذ القدامى الزائدين
+                        if (codesToDelete.length > 0) {
+                            const chunkSize = 500;
+                            for (let i = 0; i < codesToDelete.length; i += chunkSize) {
+                                await supabaseClient.from("students").delete().in('code', codesToDelete.slice(i, i + chunkSize));
+                            }
+                        }
+                    }
+
+                    // 4. حفظ البيانات الجديدة المعروضة في الجدول
                     const chunkSize = 500;
                     for (let i = 0; i < studentsToSave.length; i += chunkSize) {
                         const { error } = await supabaseClient.from("students").upsert(studentsToSave.slice(i, i + chunkSize), { onConflict: 'code' });
                         if (error) throw error;
                     }
+
                     alert(`✅ تم حفظ وتحديث بيانات ${studentsToSave.length} تلميذ في السحابة بنجاح!`);
-                    loadFromSupabase();
+                    loadFromSupabase(); // إعادة تحميل البيانات لتأكيد الشكل النهائي
                 } catch (err) {
                     alert("حدث خطأ أثناء الحفظ: " + err.message);
+                } finally {
+                    btn.innerHTML = oldText;
                 }
             }
         }
