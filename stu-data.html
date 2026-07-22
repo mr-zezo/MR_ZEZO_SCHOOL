@@ -222,7 +222,35 @@
             });
         }
 
-        // --- 1. جلب البيانات (تعديل ليعمل مع Supabase) ---
+        // --- دالة مساعدة لجلب كل البيانات متجاوزة حد الـ 1000 سجل ---
+        async function fetchAllStudents(gradeFilter = null) {
+            let allData = [];
+            let start = 0;
+            const step = 1000;
+            let hasMore = true;
+
+            while (hasMore) {
+                let query = supabaseClient.from("students").select("*").range(start, start + step - 1);
+                if (gradeFilter) {
+                    query = query.eq("grade", gradeFilter);
+                }
+                
+                const { data, error } = await query;
+                if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    allData = allData.concat(data);
+                    start += step;
+                }
+                
+                if (!data || data.length < step) {
+                    hasMore = false;
+                }
+            }
+            return allData;
+        }
+
+        // --- 1. جلب البيانات (باستخدام الدالة الجديدة) ---
         async function loadFromSupabase() {
             const g = document.getElementById("grade-filter").value;
             if(!g) return;
@@ -231,8 +259,7 @@
             document.getElementById("search-student").value = ""; 
             
             try {
-                const { data, error } = await supabaseClient.from("students").select("*").eq("grade", g);
-                if (error) throw error;
+                const data = await fetchAllStudents(g);
 
                 if (!data || data.length === 0) {
                     tbody.innerHTML = `<tr><td colspan='15' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة في السحابة لهذا الصف (${g}). يمكنك استيراد ملف إكسيل.</td></tr>`;
@@ -290,7 +317,7 @@
                         if (tType === "محول من") { cls = ""; reg = ""; }
                         
                         let codeVal = row.code || row["الكود"] || "";
-                        if (!codeVal) codeVal = "TEMP_STD_" + Math.random().toString(36).substr(2, 9); // كود وهمي لو غير موجود
+                        if (!codeVal) codeVal = "TEMP_STD_" + Math.random().toString(36).substr(2, 9); 
 
                         arr.push({
                             name: row.name || row["اسم التلميذ"] || "",
@@ -362,7 +389,6 @@
             else alert("جميع التلاميذ الظاهرين محددة نتيجتهم بالفعل!");
         }
 
-       // --- دالة مساعدة: تعديل رقم الفصل بذكاء ---
         function getNextClassName(oldClass, currentGradeText, nextGradeText) {
             if(!oldClass) return "";
             const gradeNums = {"KG1":"1", "KG2":"2", "الأول":"1", "الثاني":"2", "الثالث":"3", "الرابع":"4", "الخامس":"5", "السادس":"6"};
@@ -379,7 +405,7 @@
             return oldClass; 
         }
 
-        // --- 6. الترحيل الذكي للصف (تعديل لـ Supabase) ---
+        // --- 6. الترحيل الذكي للصف (مع تقسيم العمليات لتجنب الحدود) ---
         async function promoteStudents() {
             const currentGrade = document.getElementById("grade-filter").value;
             if (!currentGrade) { alert("اختر الصف أولاً من القائمة!"); return; }
@@ -452,19 +478,23 @@
                     deleteCount++;
                 } else {
                     s.last_result = s.result;
-                    delete s.result; // إزالة الحقل حتى لا يتعارض
+                    delete s.result; 
                     upsertList.push(s);
                     processCount++;
                 }
             });
 
             try {
-                if (deleteList.length > 0) {
-                    await supabaseClient.from("students").delete().in('code', deleteList);
+                const chunkSize = 500;
+                
+                // تقسيم عمليات الحذف
+                for (let i = 0; i < deleteList.length; i += chunkSize) {
+                    await supabaseClient.from("students").delete().in('code', deleteList.slice(i, i + chunkSize));
                 }
                 
-                if (upsertList.length > 0) {
-                    await supabaseClient.from("students").upsert(upsertList, { onConflict: 'code' });
+                // تقسيم عمليات التحديث
+                for (let i = 0; i < upsertList.length; i += chunkSize) {
+                    await supabaseClient.from("students").upsert(upsertList.slice(i, i + chunkSize), { onConflict: 'code' });
                 }
 
                 if (processCount > 0 || deleteCount > 0) {
@@ -480,7 +510,7 @@
             }
         }
 
-        // --- 7. حفظ السحابة العادي (تعديل لـ Supabase) ---
+        // --- 7. حفظ السحابة العادي (مع تقسيم العمليات) ---
         async function saveAllToCloud() {
             const g = document.getElementById("grade-filter").value;
             if (!g) { alert("اختر الصف أولاً!"); return; }
@@ -507,8 +537,11 @@
 
             if (studentsToSave.length > 0) {
                 try {
-                    const { error } = await supabaseClient.from("students").upsert(studentsToSave, { onConflict: 'code' });
-                    if (error) throw error;
+                    const chunkSize = 500;
+                    for (let i = 0; i < studentsToSave.length; i += chunkSize) {
+                        const { error } = await supabaseClient.from("students").upsert(studentsToSave.slice(i, i + chunkSize), { onConflict: 'code' });
+                        if (error) throw error;
+                    }
                     alert(`✅ تم حفظ وتحديث بيانات ${studentsToSave.length} تلميذ في السحابة بنجاح!`);
                     loadFromSupabase();
                 } catch (err) {
@@ -626,15 +659,15 @@
             });
         }
 
-        // --- 10. كبسولة الإحصاء (تعديل لـ Supabase وحل updatedat) ---
+        // --- 10. كبسولة الإحصاء (باستخدام نظام الحلقات التكرارية لكسر حاجز الـ 1000) ---
         async function generateMasterCapsule() {
             const btn = document.querySelector('.btn-golden');
             const oldText = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري فحص السحابة...`;
             
             try {
-                const { data: snap, error } = await supabaseClient.from("students").select("*");
-                if (error) throw error;
+                // استخدام الدالة المساعدة التي تجلب كل البيانات مهما كان حجمها
+                const snap = await fetchAllStudents();
                 
                 if (!snap || snap.length === 0) {
                     alert("⚠️ تنبيه حرج: قاعدة بيانات التلاميذ فارغة!");
@@ -688,11 +721,10 @@
                 grand.cCount = grand.cSet.size; delete grand.cSet;
                 capsule.general["إجمالي"] = grand;
 
-                // تحديث جدول settings بدلاً من collections بفضل استخدام Supabase
                 await supabaseClient.from("system_capsules").upsert({
                     id: "stats_2026",
                     data: capsule,
-                    updatedat: new Date().toLocaleString('ar-EG') // تم كتابتها بالحروف الصغيرة كما اتفقنا
+                    updatedat: new Date().toLocaleString('ar-EG')
                 });
                 
                 btn.innerHTML = oldText;
