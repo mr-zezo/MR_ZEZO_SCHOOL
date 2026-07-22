@@ -119,7 +119,12 @@
         .special-table { width: 100%; border-collapse: collapse; border: 2.5px solid #000; table-layout: fixed; }
         .special-table th, .special-table td { border: 1px solid #000; padding: 2px 5px; color: #000; font-size: 13px; font-weight: 800; height: var(--special-row-height); overflow: hidden; white-space: nowrap; text-align: center; }
         .special-table thead th { background-color: #f2f2f2; font-weight: 900; height: 32px; }
-        .sp-m { width: 40px; } .sp-grade { width: 80px; } .sp-name { width: auto; text-align: right !important; padding-right: 10px !important; white-space: normal; line-height: 1.2; } .sp-class { width: 60px; } .sp-code { width: 100px; font-family: Arial, sans-serif; font-size: 12px; letter-spacing: 0.5px; } .sp-notes { width: 150px; }
+        .sp-m { width: 40px; } 
+        .sp-grade { width: 80px; } 
+        .sp-name { width: auto; text-align: right !important; padding-right: 10px !important; white-space: normal; line-height: 1.2; } 
+        .sp-class { width: 60px; } 
+        .sp-code { width: 100px; font-family: Arial, sans-serif; font-size: 12px; letter-spacing: 0.5px; } 
+        .sp-notes { width: 150px; white-space: normal !important; line-height: 1.2; font-size: 11px; }
 
         .behavior-header-unified {
             display: flex; justify-content: space-between; align-items: center;
@@ -144,7 +149,7 @@
         .col-b-name { width: var(--beh-col-name); text-align: right !important; padding-right: 5px !important; font-size: 13px; white-space: normal; line-height: 1.1; }
         .col-b-day { width: var(--beh-col-day); }
         .col-b-summary { width: var(--beh-col-sum); font-size: 10px; writing-mode: vertical-rl; transform: rotate(180deg); }
-        .col-b-code { width: var(--beh-col-code); font-size: 11px; font-family: Arial; }
+        .col-b-code { width: var(--beh-col-code); font-size: 11px; font-family: Arial, sans-serif; font-weight: 900;}
 
         .footer-note { text-align: center; font-weight: 900; font-size: 13px; margin-top: 10px; }
         .signatures { display: flex; justify-content: space-between; margin-top: 15px; padding: 0 40px; font-weight: 900; font-size: 15px; }
@@ -222,13 +227,22 @@
     <div id="print-area"></div>
 
     <script>
-        // تغيير اسم المتغير إلى dbClient لمنع التعارض مع الكائن العالمي supabase
         const supabaseUrl = "https://xgsyktjoerrymqoutqcb.supabase.co";
         const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
         
         const dbClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        const gradeOrder = {"KG1":1, "KG2":2, "الأول":3, "الثاني":4, "الثالث":5, "الرابع":6, "الخامس":7, "السادس":8};
+        // تم إضافة اختصارات إضافية لضمان عمل الترتيب حتى لو تم كتابة (الصف الأول) بدلاً من (الأول)
+        const gradeOrder = {
+            "KG1":1, "KG 1":1, 
+            "KG2":2, "KG 2":2, 
+            "الأول":3, "الصف الأول":3, 
+            "الثاني":4, "الصف الثاني":4, 
+            "الثالث":5, "الصف الثالث":5, 
+            "الرابع":6, "الصف الرابع":6, 
+            "الخامس":7, "الصف الخامس":7, 
+            "السادس":8, "الصف السادس":8
+        };
 
         function toArabicNum(num) {
             if(!num && num !== 0) return "";
@@ -240,7 +254,6 @@
             const grade = document.getElementById("grade-select").value;
             const clsSelect = document.getElementById("class-select");
             
-            // إظهار حالة التحميل للمستخدم
             clsSelect.innerHTML = '<option value="" disabled selected>⏳ جاري جلب الفصول...</option>';
 
             try {
@@ -248,7 +261,7 @@
                     .from("students")
                     .select("class")
                     .eq("grade", grade)
-                    .limit(2000); // زيادة الحد لضمان جلب كل طلاب الصف
+                    .limit(2000);
 
                 if (error) throw error;
 
@@ -271,7 +284,6 @@
             } catch (err) {
                 console.error("خطأ في الاتصال:", err);
                 clsSelect.innerHTML = '<option value="" disabled selected>❌ فشل الاتصال بالقاعدة</option>';
-                alert("حدث خطأ أثناء جلب الفصول. يرجى التحقق من الاتصال.");
             }
         }
 
@@ -335,7 +347,6 @@
             area.innerHTML = "<h3 class='no-print' style='text-align:center; margin-top:40px; color:#1e3a8a;'><i class='fa-solid fa-circle-notch fa-spin'></i> جاري مسح قاعدة بيانات المدرسة بالكامل...</h3>";
 
             try {
-                // استخدام limit عالي جداً لجلب كافة طلاب المدرسة
                 const { data: list, error } = await dbClient
                     .from("students")
                     .select("*")
@@ -346,24 +357,48 @@
                 let studentsList = list || [];
                 let filteredList = []; let reportTitle = "";
                 
-                if (type === 'damj') { filteredList = studentsList.filter(s => s.dmj === "دمج" || s.dmj === "نعم"); reportTitle = "كشف بأسماء تلاميذ ( الدمج ) بالمدرسة"; }
-                else if (type === 'trans_from') { filteredList = studentsList.filter(s => s.transfer_type === "محول من"); reportTitle = "كشف بأسماء التلاميذ ( المحولين من ) المدرسة"; }
-                else if (type === 'trans_to') { filteredList = studentsList.filter(s => s.transfer_type === "محول إلى"); reportTitle = "كشف بأسماء التلاميذ ( المحولين إلى ) المدرسة"; }
+                // تم تعديل وتوسيع فلتر الدمج ليكون منضبطاً ولا يتجاهل أية قيم مدخلة (مثل نوع الإعاقة)
+                if (type === 'damj') { 
+                    filteredList = studentsList.filter(s => {
+                        if (!s.dmj) return false;
+                        let val = String(s.dmj).trim().toLowerCase();
+                        return val !== "" && val !== "لا" && val !== "false" && val !== "no";
+                    }); 
+                    reportTitle = "كشف بأسماء تلاميذ ( الدمج ) بالمدرسة"; 
+                }
+                else if (type === 'trans_from') { 
+                    filteredList = studentsList.filter(s => s.transfer_type === "محول من"); 
+                    reportTitle = "كشف بأسماء التلاميذ ( المحولين من ) المدرسة"; 
+                }
+                else if (type === 'trans_to') { 
+                    filteredList = studentsList.filter(s => s.transfer_type === "محول إلى"); 
+                    reportTitle = "كشف بأسماء التلاميذ ( المحولين إلى ) المدرسة"; 
+                }
 
-                if(filteredList.length === 0) { area.innerHTML = `<h3 class='no-print' style='text-align:center; color:red; margin-top:40px;'>لا يوجد تلاميذ مسجلين في هذا التصنيف.</h3>`; return; }
+                if(filteredList.length === 0) { 
+                    area.innerHTML = `<h3 class='no-print' style='text-align:center; color:red; margin-top:40px;'>لا يوجد تلاميذ مسجلين في هذا التصنيف.</h3>`; 
+                    return; 
+                }
 
+                // هندسة الترتيب الآمنة (معالجة القيم الفارغة)
                 filteredList.sort((a, b) => {
-                    let gA = gradeOrder[a.grade] || 99; let gB = gradeOrder[b.grade] || 99;
+                    let gA = gradeOrder[a.grade] || 99; 
+                    let gB = gradeOrder[b.grade] || 99;
                     if(gA !== gB) return gA - gB;
-                    if(a.class !== b.class) return (String(a.class) || "").localeCompare((String(b.class) || ""), 'ar', {numeric:true});
+                    
+                    let cA = a.class ? String(a.class).trim() : "";
+                    let cB = b.class ? String(b.class).trim() : "";
+                    if(cA !== cB) return cA.localeCompare(cB, 'ar', {numeric:true});
+                    
                     if (a.gender === "ذكر" && b.gender !== "ذكر") return -1;
                     if (a.gender !== "ذكر" && b.gender === "ذكر") return 1;
+                    
                     return (a.name || "").localeCompare((b.name || ""), 'ar');
                 });
 
                 area.innerHTML = "";
                 for (let i = 0; i < filteredList.length; i += 30) {
-                    area.appendChild(buildSpecialPage(reportTitle, filteredList.slice(i, i + 30), i, filteredList.length));
+                    area.appendChild(buildSpecialPage(reportTitle, filteredList.slice(i, i + 30), i, filteredList.length, type));
                 }
             } catch(err) {
                 console.error("خطأ التقرير الخاص:", err);
@@ -372,20 +407,34 @@
         }
 
         // ================== دوال بناء وتشكيل الـ HTML ================== //
-        function buildSpecialPage(title, studentsChunk, startIndex, totalCount) {
+        function buildSpecialPage(title, studentsChunk, startIndex, totalCount, type) {
             const sheet = document.createElement("div"); sheet.className = "a4-sheet show-preview";
             sheet.innerHTML = `
                 <div class="sheet-header"><div class="header-logo-area"><img src="logo.png" onerror="this.style.display='none'"><div>الإدارة المركزية لتكنولوجيا التعليم<br>الإدارة العامة لقواعد البيانات المركزية</div></div><div class="header-title-box" style="width: 400px;"><h2 style="font-size:15px; margin-bottom:8px;">${title}</h2><div class="sub-info"><span>إجمالي العدد: ( ${toArabicNum(totalCount)} ) تلميذ</span><span>للعام: ٢٠٢٦ - ٢٠٢٧</span></div></div></div>
                 <table class="info-grid-table"><tr><td>المديرية : المنوفية</td><td>الإدارة : الشهداء</td></tr><tr><td>التبعيـــة : رسمي</td><td>المدرسة : الشهيد أشرف حبيب الابتدائية</td></tr></table>
-                <table class="special-table"><thead><tr><th class="sp-m">م</th><th class="sp-grade">الصف</th><th class="sp-name">اسم الطالب</th><th class="sp-class">الفصل</th><th class="sp-code">كود الطالب</th><th class="sp-notes">ملاحظات</th></tr></thead><tbody>${buildSpecialRows(studentsChunk, startIndex)}</tbody></table>
+                <table class="special-table"><thead><tr><th class="sp-m">م</th><th class="sp-grade">الصف</th><th class="sp-name">اسم الطالب</th><th class="sp-class">الفصل</th><th class="sp-code">كود الطالب</th><th class="sp-notes">ملاحظات</th></tr></thead><tbody>${buildSpecialRows(studentsChunk, startIndex, type)}</tbody></table>
                 <div class="signatures" style="margin-top: 30px;"><div>شئون الطلبة : <span class="sig-dots">......................................</span></div><div>مدير المدرسة : <span class="sig-dots">......................................</span></div></div>
             `; return sheet;
         }
-        function buildSpecialRows(studentsChunk, startIndex) {
+        
+        function buildSpecialRows(studentsChunk, startIndex, type) {
             let html = "";
             for (let i = 0; i < 30; i++) {
                 const s = studentsChunk[i];
-                html += `<tr><td class="sp-m">${s?toArabicNum(startIndex+i+1):""}</td><td class="sp-grade">${s?s.grade:""}</td><td class="sp-name">${s?s.name:""}</td><td class="sp-class">${s?toArabicNum(s.class):""}</td><td class="sp-code">${s?(s.code||""):""}</td><td class="sp-notes"></td></tr>`;
+                let note = "";
+                // إذا كان تقرير دمج وقام المستخدم بكتابة نوع الإعاقة (وليس فقط نعم)، ستطبع في الملاحظات
+                if (s && type === 'damj' && s.dmj) {
+                    let val = String(s.dmj).trim();
+                    if (val !== "نعم" && val !== "دمج") note = val;
+                }
+                html += `<tr>
+                    <td class="sp-m">${s ? toArabicNum(startIndex + i + 1) : ""}</td>
+                    <td class="sp-grade">${s ? (s.grade || "") : ""}</td>
+                    <td class="sp-name">${s ? (s.name || "") : ""}</td>
+                    <td class="sp-class">${s ? toArabicNum(s.class || "") : ""}</td>
+                    <td class="sp-code">${s ? (s.code || "") : ""}</td>
+                    <td class="sp-notes">${s ? note : ""}</td>
+                </tr>`;
             } return html;
         }
 
@@ -430,6 +479,7 @@
             } return html;
         }
 
+        // ================= 4. دفتر 5 سلوك (A3) المطور =================
         function buildBehaviorPage(grade, clsName, students, monthIdx, year, pageNum) {
             const sheet = document.createElement("div");
             sheet.className = "a3-sheet show-preview";
@@ -466,7 +516,9 @@
                             ${dayHeaders}
                             <th colspan="2" style="font-size:10px">الغياب</th>
                             <th colspan="2" style="font-size:10px">التأخر</th>
-                            <th rowspan="2" class="col-b-code">الكود</th>
+                            
+                            <!-- تم تغيير العنوان إلى رقم السجل -->
+                            <th rowspan="2" class="col-b-code">رقم السجل</th>
                         </tr>
                         <tr>
                             ${dayNumbers}
@@ -502,12 +554,13 @@
                     dayCells += `<td class="${isWeekend?'weekend-cell':''}"></td>`;
                 }
 
+                // تم تغيير حقل البيانات إلى s.register_num لسحب رقم السجل
                 html += `<tr>
                     <td>${s ? toArabicNum(start + i + 1) : ""}</td>
-                    <td class="col-b-name">${s ? s.name : ""}</td>
+                    <td class="col-b-name">${s ? (s.name || "") : ""}</td>
                     ${dayCells}
                     <td></td><td></td><td></td><td></td>
-                    <td class="col-b-code">${s ? (s.code || "") : ""}</td>
+                    <td class="col-b-code">${s ? (s.register_num || "") : ""}</td>
                 </tr>`;
             }
             return html;
