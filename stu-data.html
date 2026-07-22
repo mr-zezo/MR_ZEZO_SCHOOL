@@ -343,7 +343,7 @@
         }
 
         // --- 4. رسم الصفوف ---
-        function renderRow(d, i) {
+          function renderRow(d, i) {
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${i}</td>
@@ -358,9 +358,9 @@
                 <td><input class="editable-input" value="${d.status || 'منقول'}" data-field="status"></td>
                 <td>
                     <select class="result-select" data-field="result">
-                        <option value="">-- اختر --</option>
-                        <option value="ناجح">ناجح</option>
-                        <option value="راسب">راسب</option>
+                        <option value="" ${!d.result ? 'selected' : ''}>-- اختر --</option>
+                        <option value="ناجح" ${d.result === 'ناجح' ? 'selected' : ''}>ناجح</option>
+                        <option value="راسب" ${d.result === 'راسب' ? 'selected' : ''}>راسب</option>
                     </select>
                 </td>
                 <td><input class="editable-input" value="${d.religion || 'مسلم'}" data-field="religion"></td>
