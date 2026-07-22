@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- تم استبدال Firebase بـ Supabase -->
+    <!-- مكتبات Supabase و Excel -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -164,7 +164,6 @@
         </table>
     </div>
 
-    <!-- النافذة المنبثقة للإحصائيات -->
     <div class="modal-overlay" id="statsModal" onclick="if(event.target.id==='statsModal')toggleModal(false)">
         <div class="modal-content">
             <div class="modal-header">
@@ -250,7 +249,56 @@
             return allData;
         }
 
-        // --- 1. جلب البيانات (باستخدام الدالة الجديدة) ---
+        // --- دوال مساعدة لترقية اسم الفصل بذكاء ---
+        function toEnglishNum(str) {
+            if (!str) return "";
+            const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            let result = String(str);
+            for (let i = 0; i < 10; i++) {
+                let regex = new RegExp(arabicNumbers[i], 'g');
+                result = result.replace(regex, i);
+            }
+            return result;
+        }
+
+        function getNextClassName(oldClass, currentGradeText, nextGradeText) {
+            if(!oldClass) return "";
+            
+            const gradeNums = {
+                "KG1":"1", "KG2":"2", 
+                "الأول":"1", "الثاني":"2", "الثالث":"3", 
+                "الرابع":"4", "الخامس":"5", "السادس":"6"
+            };
+            
+            let currNum = gradeNums[currentGradeText];
+            let nextNum = gradeNums[nextGradeText];
+            
+            if(currNum && nextNum) {
+                let cleanClass = toEnglishNum(oldClass).trim();
+                cleanClass = cleanClass.replace(/\\/g, '/').replace(/-/g, '/');
+                
+                if (cleanClass.includes('/')) {
+                    let parts = cleanClass.split('/');
+                    let p0 = parts[0].trim(); 
+                    let p1 = parts[1].trim(); 
+                    
+                    if (p1 === currNum) {
+                        return p0 + '/' + nextNum; 
+                    } else if (p0 === currNum) {
+                        return nextNum + '/' + p1; 
+                    } else if (p0 === p1 && p0 === currNum) {
+                        return nextNum + '/' + nextNum; 
+                    } else {
+                        return p0 + '/' + nextNum;
+                    }
+                } else {
+                    return cleanClass;
+                }
+            }
+            return oldClass; 
+        }
+
+        // --- 1. جلب البيانات ---
         async function loadFromSupabase() {
             const g = document.getElementById("grade-filter").value;
             if(!g) return;
@@ -336,14 +384,14 @@
                     arr = sortStudents(arr);
                     document.getElementById("table-body").innerHTML = "";
                     arr.forEach((s, i) => renderRow(s, i + 1));
-                    alert("تم استيراد الملف! يرجى الضغط على (حفظ السحابة) لتسجيلهم.");
+                    alert("تم استيراد الملف! يرجى الضغط على (حفظ) لتسجيلهم في السحابة.");
                 } catch(err) { alert("فشل قراءة الملف: " + err.message); }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        // --- 4. رسم الصفوف ---
-          function renderRow(d, i) {
+        // --- 4. رسم الصفوف (مع إصلاح عرض النتيجة) ---
+        function renderRow(d, i) {
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${i}</td>
@@ -389,24 +437,8 @@
             else alert("جميع التلاميذ الظاهرين محددة نتيجتهم بالفعل!");
         }
 
-        function getNextClassName(oldClass, currentGradeText, nextGradeText) {
-            if(!oldClass) return "";
-            const gradeNums = {"KG1":"1", "KG2":"2", "الأول":"1", "الثاني":"2", "الثالث":"3", "الرابع":"4", "الخامس":"5", "السادس":"6"};
-            let currNum = gradeNums[currentGradeText];
-            let nextNum = gradeNums[nextGradeText];
-            
-            if(currNum && nextNum) {
-                let parts = oldClass.split('/');
-                if(parts.length === 2) {
-                    if(parts[0] === currNum) return nextNum + '/' + parts[1];
-                    if(parts[1] === currNum) return parts[0] + '/' + nextNum;
-                }
-            }
-            return oldClass; 
-        }
-
-        // --- 6. الترحيل الذكي للصف (مع تقسيم العمليات لتجنب الحدود) ---
-         async function promoteStudents() {
+        // --- 6. الترحيل الذكي للصف ---
+        async function promoteStudents() {
             const currentGrade = document.getElementById("grade-filter").value;
             if (!currentGrade) { alert("اختر الصف أولاً من القائمة!"); return; }
 
@@ -449,8 +481,6 @@
                 if(!s.result || !s.code) return; 
 
                 let shouldDelete = false;
-                
-                // معالجة حالة القيد لتجنب أخطاء الإملاء (باقي / باقى) والمسافات
                 let currentStatus = String(s.status || "").trim().replace(/ى/g, 'ي');
 
                 if(s.result === "ناجح") {
@@ -463,7 +493,6 @@
                     }
                 } 
                 else if (s.result === "راسب") {
-                    // هنا التعديل: التأكد من أن الحالة تحتوي على كلمة "باقي" بأي شكل
                     if(currentStatus === "باقي") { 
                         if (currentGrade === "السادس") {
                             shouldDelete = true; 
@@ -473,7 +502,6 @@
                             s.class = getNextClassName(s.class, currentGrade, s.grade);
                         }
                     } else {
-                        // إذا كان منقول ورسب، يبقى في صفه وتتغير حالته إلى باقي
                         s.status = "باقي";
                     }
                 }
@@ -492,12 +520,10 @@
             try {
                 const chunkSize = 500;
                 
-                // تقسيم عمليات الحذف
                 for (let i = 0; i < deleteList.length; i += chunkSize) {
                     await supabaseClient.from("students").delete().in('code', deleteList.slice(i, i + chunkSize));
                 }
                 
-                // تقسيم عمليات التحديث
                 for (let i = 0; i < upsertList.length; i += chunkSize) {
                     await supabaseClient.from("students").upsert(upsertList.slice(i, i + chunkSize), { onConflict: 'code' });
                 }
@@ -515,7 +541,7 @@
             }
         }
 
-        // --- 7. حفظ السحابة العادي (مع تقسيم العمليات) ---
+        // --- 7. حفظ السحابة (مع ميزة الاستبدال الكلي) ---
         async function saveAllToCloud() {
             const g = document.getElementById("grade-filter").value;
             if (!g) { alert("اختر الصف أولاً من القائمة المنسدلة بالأعلى لتحديد أين سيتم حفظ هذه البيانات!"); return; }
@@ -536,7 +562,6 @@
                         if(i.getAttribute("data-field")) s[i.getAttribute("data-field")] = i.value;
                     });
                     
-                    // توليد كود مؤقت إذا لم يكن التلميذ يمتلك كوداً
                     if (!s.code) s.code = "TEMP_STD_" + Math.random().toString(36).substr(2, 9);
                     
                     if (s.name && s.name.trim() !== "") {
@@ -547,7 +572,6 @@
             });
 
             if (studentsToSave.length > 0) {
-                // سؤال المستخدم عن نوع الحفظ (استبدال كلي أم دمج)
                 const isReplace = confirm(`هل تريد استبدال بيانات الصف (${g}) بالكامل بما هو معروض في الجدول الآن؟\n\n- اختر "موافق / OK" لحذف أي تلاميذ قدامى في هذا الصف غير موجودين في الجدول الحالي (استبدال كلي).\n- اختر "إلغاء / Cancel" لتحديث وإضافة المعروض فقط دون حذف القديم.`);
 
                 const btn = document.querySelector('.btn-save');
@@ -555,9 +579,7 @@
                 btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...`;
 
                 try {
-                    // إذا اختار المستخدم استبدال كلي
                     if (isReplace) {
-                        // 1. جلب كل أكواد تلاميذ هذا الصف من قاعدة البيانات
                         const { data: existingData, error: fetchErr } = await supabaseClient
                             .from("students")
                             .select("code")
@@ -565,11 +587,9 @@
 
                         if (fetchErr) throw fetchErr;
 
-                        // 2. تحديد الأكواد التي يجب حذفها (موجودة في القاعدة ولكن غير موجودة في الجدول المعروض)
                         const existingCodes = existingData.map(d => d.code);
                         const codesToDelete = existingCodes.filter(c => !currentCodesInTable.includes(c));
 
-                        // 3. حذف التلاميذ القدامى الزائدين
                         if (codesToDelete.length > 0) {
                             const chunkSize = 500;
                             for (let i = 0; i < codesToDelete.length; i += chunkSize) {
@@ -578,7 +598,6 @@
                         }
                     }
 
-                    // 4. حفظ البيانات الجديدة المعروضة في الجدول
                     const chunkSize = 500;
                     for (let i = 0; i < studentsToSave.length; i += chunkSize) {
                         const { error } = await supabaseClient.from("students").upsert(studentsToSave.slice(i, i + chunkSize), { onConflict: 'code' });
@@ -586,7 +605,7 @@
                     }
 
                     alert(`✅ تم حفظ وتحديث بيانات ${studentsToSave.length} تلميذ في السحابة بنجاح!`);
-                    loadFromSupabase(); // إعادة تحميل البيانات لتأكيد الشكل النهائي
+                    loadFromSupabase(); 
                 } catch (err) {
                     alert("حدث خطأ أثناء الحفظ: " + err.message);
                 } finally {
@@ -704,14 +723,13 @@
             });
         }
 
-        // --- 10. كبسولة الإحصاء (باستخدام نظام الحلقات التكرارية لكسر حاجز الـ 1000) ---
+        // --- 10. كبسولة الإحصاء (للمدرسة بالكامل) ---
         async function generateMasterCapsule() {
             const btn = document.querySelector('.btn-golden');
             const oldText = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري فحص السحابة...`;
             
             try {
-                // استخدام الدالة المساعدة التي تجلب كل البيانات مهما كان حجمها
                 const snap = await fetchAllStudents();
                 
                 if (!snap || snap.length === 0) {
