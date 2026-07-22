@@ -5,20 +5,21 @@
     <title>مركز الطباعة والمخرجات - ٢٠٢٦ / ٢٠٢٧</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- مكتبة Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         /* 
         ====================================================================
-        🛠️ لوحة التحكم الشاملة في المقاسات (دليل استرشادي) 🛠️
+        🛠️ لوحة التحكم الشاملة في المقاسات
         ====================================================================
         */
         :root { 
             --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; 
             --logo-width: 65px; 
 
-            /* 1️⃣ إعدادات القوائم المزدوجة العادية (A4) */
+            /* 1️⃣ إعدادات القوائم المزدوجة (A4) */
             --list-row-height: 30px;      
             --list-font-size: 13px;       
             --list-col-m: 32px;           
@@ -34,11 +35,11 @@
             --health-col-mob: 95px;       
             --health-col-empty: 45px;     
 
-            /* 3️⃣ إعدادات الكشوف الخاصة (دمج / محولين) (A4) */
+            /* 3️⃣ إعدادات الكشوف الخاصة (A4) */
             --special-row-height: 30px;   
 
             /* 4️⃣ إعدادات دفتر 5 سلوك (A3 أفقي) */
-            --beh-row-height: 28px;       /* <--- تم زيادة الارتفاع هنا ليكون أوسع */
+            --beh-row-height: 28px;       
             --beh-font-size: 12px;        
             --beh-col-m: 30px;            
             --beh-col-name: 230px;        
@@ -46,7 +47,6 @@
             --beh-col-sum: 18px;          
             --beh-col-code: 55px;         
         }
-        /* ================= نهاية لوحة التحكم ================= */
 
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
         body { background-color: var(--bg); padding: 20px; display: flex; flex-direction: column; align-items: center; }
@@ -78,7 +78,7 @@
         .a4-sheet { background: white; width: 210mm; height: 296mm; padding: 10mm 12mm; position: relative; border: 1px solid #ccc; margin-bottom: 25px; display: none; overflow: hidden; }
         .a3-sheet { background: white; width: 420mm; height: 296mm; padding: 10mm 15mm; position: relative; border: 1px solid #ccc; margin-bottom: 25px; display: none; overflow: hidden; }
 
-        /* ================= 1. القوائم المزدوجة ================= */
+        /* ================= التنسيقات الداخلية للجداول ================= */
         .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 5px; }
         .header-logo-area { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 11px; line-height: 1.4; color: #000; }
         .header-logo-area img { width: var(--logo-width); }
@@ -96,7 +96,6 @@
         .th-code { width: var(--list-col-code); text-align: center; font-family: Arial, sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; }
         .th-name { width: auto; text-align: right !important; padding-right: 8px !important; font-weight: 800; }
 
-        /* ================= 2. قوائم الصحة ================= */
         .health-pro-header { display: flex; justify-content: space-between; align-items: stretch; border: 2.5px solid #000; border-radius: 8px; margin-bottom: 15px; overflow: hidden; }
         .hp-right { padding: 8px 15px; font-weight: 900; font-size: 13px; line-height: 1.6; background: #fff; border-left: 2.5px solid #000; display: flex; flex-direction: column; justify-content: center; }
         .hp-center { flex-grow: 1; text-align: center; padding: 10px; background: #f8fafc; display: flex; flex-direction: column; justify-content: center; align-items: center; }
@@ -117,19 +116,16 @@
         .h-nid, .h-mob { width: var(--health-col-nid); font-family: Arial, sans-serif !important; font-size: var(--health-num-font) !important; letter-spacing: 0.5px; }
         .h-metric { width: var(--health-col-empty); } 
 
-        /* ================= 3. الكشوف الخاصة ================= */
         .special-table { width: 100%; border-collapse: collapse; border: 2.5px solid #000; table-layout: fixed; }
         .special-table th, .special-table td { border: 1px solid #000; padding: 2px 5px; color: #000; font-size: 13px; font-weight: 800; height: var(--special-row-height); overflow: hidden; white-space: nowrap; text-align: center; }
         .special-table thead th { background-color: #f2f2f2; font-weight: 900; height: 32px; }
         .sp-m { width: 40px; } .sp-grade { width: 80px; } .sp-name { width: auto; text-align: right !important; padding-right: 10px !important; white-space: normal; line-height: 1.2; } .sp-class { width: 60px; } .sp-code { width: 100px; font-family: Arial, sans-serif; font-size: 12px; letter-spacing: 0.5px; } .sp-notes { width: 150px; }
 
-        /* ================= 4. دفتر 5 سلوك (A3) ================= */
         .behavior-header-unified {
             display: flex; justify-content: space-between; align-items: center;
             background-color: #f8fafc; border: 2.5px solid #000; border-radius: 8px;
             padding: 10px 20px; margin-bottom: 15px; font-weight: 900; font-size: 18px; color: #000;
-            -webkit-print-color-adjust: exact; /* إجبار الطباعة على إظهار الألوان */
-            print-color-adjust: exact;
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
         }
         .bh-highlight {
             background-color: #e2e8f0; padding: 4px 20px; border: 1.5px solid #000; border-radius: 6px;
@@ -142,13 +138,7 @@
         
         .vertical-text { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11px; padding: 2px 0; height: 85px; }
         .day-num { font-size: 12px; height: 25px; }
-        
-        /* تظليل العطلات مع إجبار الطباعة */
-        .weekend-cell { 
-            background-color: #d1d5db !important; 
-            -webkit-print-color-adjust: exact !important; 
-            print-color-adjust: exact !important; 
-        }
+        .weekend-cell { background-color: #d1d5db !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
         .col-b-m { width: var(--beh-col-m); }
         .col-b-name { width: var(--beh-col-name); text-align: right !important; padding-right: 5px !important; font-size: 13px; white-space: normal; line-height: 1.1; }
@@ -156,7 +146,6 @@
         .col-b-summary { width: var(--beh-col-sum); font-size: 10px; writing-mode: vertical-rl; transform: rotate(180deg); }
         .col-b-code { width: var(--beh-col-code); font-size: 11px; font-family: Arial; }
 
-        /* ================= التذييل ================= */
         .footer-note { text-align: center; font-weight: 900; font-size: 13px; margin-top: 10px; }
         .signatures { display: flex; justify-content: space-between; margin-top: 15px; padding: 0 40px; font-weight: 900; font-size: 15px; }
         .sig-dots { font-weight: 400; color: #9ca3af; letter-spacing: 2px; font-size: 12px; }
@@ -166,7 +155,6 @@
             .no-print { display: none !important; }
             .a4-sheet { display: block !important; border: none; margin: 0; page-break-after: always; box-shadow: none; width: 100%; height: 100%; }
             .a3-sheet { display: block !important; border: none; margin: 0; page-break-after: always; box-shadow: none; width: 100%; height: 100%; }
-            
             @page { margin: 0; }
             .a4-sheet { page: a4-portrait; }
             .a3-sheet { page: a3-landscape; }
@@ -197,7 +185,6 @@
                     </select>
                     <select id="class-select">
                         <option value="" disabled selected>اختر الفصل...</option>
-                        <option value="all">كل فصول الصف</option>
                     </select>
                 </div>
                 
@@ -235,9 +222,11 @@
     <div id="print-area"></div>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
-        firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
-        db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+        // تغيير اسم المتغير إلى dbClient لمنع التعارض مع الكائن العالمي supabase
+        const supabaseUrl = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        
+        const dbClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         const gradeOrder = {"KG1":1, "KG2":2, "الأول":3, "الثاني":4, "الثالث":5, "الرابع":6, "الخامس":7, "السادس":8};
 
@@ -250,10 +239,40 @@
         async function updateClasses() {
             const grade = document.getElementById("grade-select").value;
             const clsSelect = document.getElementById("class-select");
-            clsSelect.innerHTML = '<option value="" disabled selected>اختر الفصل...</option><option value="all">كل فصول الصف</option>';
-            const snap = await db.collection("students").where("grade", "==", grade).get();
-            let cSet = new Set(); snap.forEach(doc => { if(doc.data().class) cSet.add(doc.data().class); });
-            Array.from(cSet).sort().forEach(c => { clsSelect.innerHTML += `<option value="${c}">فصل ${c}</option>`; });
+            
+            // إظهار حالة التحميل للمستخدم
+            clsSelect.innerHTML = '<option value="" disabled selected>⏳ جاري جلب الفصول...</option>';
+
+            try {
+                const { data: students, error } = await dbClient
+                    .from("students")
+                    .select("class")
+                    .eq("grade", grade)
+                    .limit(2000); // زيادة الحد لضمان جلب كل طلاب الصف
+
+                if (error) throw error;
+
+                clsSelect.innerHTML = '<option value="" disabled selected>اختر الفصل...</option><option value="all">كل فصول الصف</option>';
+                
+                let cSet = new Set(); 
+                (students || []).forEach(doc => { 
+                    if(doc.class) cSet.add(String(doc.class).trim()); 
+                });
+                
+                let classesArray = Array.from(cSet).sort((a, b) => a.localeCompare(b, 'ar', {numeric: true}));
+                
+                if (classesArray.length === 0) {
+                    clsSelect.innerHTML = '<option value="" disabled selected>لا توجد بيانات (فارغ)</option>';
+                } else {
+                    classesArray.forEach(c => { 
+                        clsSelect.innerHTML += `<option value="${c}">فصل ${c}</option>`; 
+                    });
+                }
+            } catch (err) {
+                console.error("خطأ في الاتصال:", err);
+                clsSelect.innerHTML = '<option value="" disabled selected>❌ فشل الاتصال بالقاعدة</option>';
+                alert("حدث خطأ أثناء جلب الفصول. يرجى التحقق من الاتصال.");
+            }
         }
 
         async function generateReport(type) {
@@ -262,65 +281,97 @@
             const area = document.getElementById("print-area");
             
             if(!grade || !targetCls) { alert("اختر الصف والفصل أولاً!"); return; }
-            area.innerHTML = "<h3 class='no-print' style='text-align:center; margin-top:40px; color:#64748b;'>⏳ جاري تجهيز الأوراق...</h3>";
+            area.innerHTML = "<h3 class='no-print' style='text-align:center; margin-top:40px; color:#1e3a8a;'><i class='fa-solid fa-circle-notch fa-spin'></i> جاري تجهيز الأوراق وجلب البيانات...</h3>";
 
-            const snap = await db.collection("students").where("grade", "==", grade).get();
-            let list = []; snap.forEach(d => list.push(d.data()));
+            try {
+                const { data: list, error } = await dbClient
+                    .from("students")
+                    .select("*")
+                    .eq("grade", grade)
+                    .limit(2000);
 
-            list.sort((a, b) => {
-                if (a.gender === "ذكر" && b.gender !== "ذكر") return -1;
-                if (a.gender !== "ذكر" && b.gender === "ذكر") return 1;
-                return (a.name || "").localeCompare((b.name || ""), 'ar');
-            });
+                if (error) throw error;
 
-            area.innerHTML = "";
-            let uniqueClasses = targetCls === "all" ? [...new Set(list.map(s => s.class))].sort() : [targetCls];
+                let studentsList = list || [];
 
-            uniqueClasses.forEach(cName => {
-                const classList = list.filter(s => s.class === cName);
-                if(type === 'list') area.appendChild(buildStandardList(grade, cName, classList));
-                else if(type === 'health') {
-                    area.appendChild(buildHealthPage1(grade, cName, classList));
-                    area.appendChild(buildHealthPage2(grade, cName, classList));
+                studentsList.sort((a, b) => {
+                    if (a.gender === "ذكر" && b.gender !== "ذكر") return -1;
+                    if (a.gender !== "ذكر" && b.gender === "ذكر") return 1;
+                    return (a.name || "").localeCompare((b.name || ""), 'ar');
+                });
+
+                area.innerHTML = "";
+                let uniqueClasses = targetCls === "all" ? [...new Set(studentsList.map(s => String(s.class).trim()))].sort((a,b)=>a.localeCompare(b,'ar',{numeric:true})) : [targetCls];
+
+                if(studentsList.length === 0) {
+                    area.innerHTML = "<h3 class='no-print' style='text-align:center; color:red; margin-top:40px;'>لا يوجد تلاميذ مسجلين في هذا الصف.</h3>";
+                    return;
                 }
-                else if(type === 'behavior') {
-                    const monthIdx = parseInt(document.getElementById("month-select").value);
-                    const year = parseInt(document.getElementById("year-select").value);
-                    area.appendChild(buildBehaviorPage(grade, cName, classList, monthIdx, year, 1));
-                    area.appendChild(buildBehaviorPage(grade, cName, classList, monthIdx, year, 2));
-                }
-            });
+
+                uniqueClasses.forEach(cName => {
+                    const classList = studentsList.filter(s => String(s.class).trim() === cName);
+                    if(classList.length === 0) return;
+
+                    if(type === 'list') area.appendChild(buildStandardList(grade, cName, classList));
+                    else if(type === 'health') {
+                        area.appendChild(buildHealthPage1(grade, cName, classList));
+                        area.appendChild(buildHealthPage2(grade, cName, classList));
+                    }
+                    else if(type === 'behavior') {
+                        const monthIdx = parseInt(document.getElementById("month-select").value);
+                        const year = parseInt(document.getElementById("year-select").value);
+                        area.appendChild(buildBehaviorPage(grade, cName, classList, monthIdx, year, 1));
+                        area.appendChild(buildBehaviorPage(grade, cName, classList, monthIdx, year, 2));
+                    }
+                });
+            } catch(err) {
+                console.error("خطأ التقرير:", err);
+                area.innerHTML = "<h3 class='no-print' style='text-align:center; color:red; margin-top:40px;'>❌ حدث خطأ أثناء تحميل البيانات. تأكد من اتصال الإنترنت.</h3>";
+            }
         }
 
         async function generateSpecialReport(type) {
             const area = document.getElementById("print-area");
-            area.innerHTML = "<h3 class='no-print' style='text-align:center; margin-top:40px; color:#64748b;'>⏳ جاري مسح قاعدة بيانات المدرسة بالكامل...</h3>";
+            area.innerHTML = "<h3 class='no-print' style='text-align:center; margin-top:40px; color:#1e3a8a;'><i class='fa-solid fa-circle-notch fa-spin'></i> جاري مسح قاعدة بيانات المدرسة بالكامل...</h3>";
 
-            const snap = await db.collection("students").get();
-            let list = []; snap.forEach(d => list.push(d.data()));
+            try {
+                // استخدام limit عالي جداً لجلب كافة طلاب المدرسة
+                const { data: list, error } = await dbClient
+                    .from("students")
+                    .select("*")
+                    .limit(5000); 
+                
+                if (error) throw error;
 
-            let filteredList = []; let reportTitle = "";
-            if (type === 'damj') { filteredList = list.filter(s => s.dmj === "دمج" || s.dmj === "نعم"); reportTitle = "كشف بأسماء تلاميذ ( الدمج ) بالمدرسة"; }
-            else if (type === 'trans_from') { filteredList = list.filter(s => s.transfer_type === "محول من"); reportTitle = "كشف بأسماء التلاميذ ( المحولين من ) المدرسة"; }
-            else if (type === 'trans_to') { filteredList = list.filter(s => s.transfer_type === "محول إلى"); reportTitle = "كشف بأسماء التلاميذ ( المحولين إلى ) المدرسة"; }
+                let studentsList = list || [];
+                let filteredList = []; let reportTitle = "";
+                
+                if (type === 'damj') { filteredList = studentsList.filter(s => s.dmj === "دمج" || s.dmj === "نعم"); reportTitle = "كشف بأسماء تلاميذ ( الدمج ) بالمدرسة"; }
+                else if (type === 'trans_from') { filteredList = studentsList.filter(s => s.transfer_type === "محول من"); reportTitle = "كشف بأسماء التلاميذ ( المحولين من ) المدرسة"; }
+                else if (type === 'trans_to') { filteredList = studentsList.filter(s => s.transfer_type === "محول إلى"); reportTitle = "كشف بأسماء التلاميذ ( المحولين إلى ) المدرسة"; }
 
-            if(filteredList.length === 0) { area.innerHTML = `<h3 class='no-print' style='text-align:center; color:red; margin-top:40px;'>لا يوجد تلاميذ مسجلين في هذا التصنيف.</h3>`; return; }
+                if(filteredList.length === 0) { area.innerHTML = `<h3 class='no-print' style='text-align:center; color:red; margin-top:40px;'>لا يوجد تلاميذ مسجلين في هذا التصنيف.</h3>`; return; }
 
-            filteredList.sort((a, b) => {
-                let gA = gradeOrder[a.grade] || 99; let gB = gradeOrder[b.grade] || 99;
-                if(gA !== gB) return gA - gB;
-                if(a.class !== b.class) return (a.class || "").localeCompare((b.class || ""));
-                if (a.gender === "ذكر" && b.gender !== "ذكر") return -1;
-                if (a.gender !== "ذكر" && b.gender === "ذكر") return 1;
-                return (a.name || "").localeCompare((b.name || ""), 'ar');
-            });
+                filteredList.sort((a, b) => {
+                    let gA = gradeOrder[a.grade] || 99; let gB = gradeOrder[b.grade] || 99;
+                    if(gA !== gB) return gA - gB;
+                    if(a.class !== b.class) return (String(a.class) || "").localeCompare((String(b.class) || ""), 'ar', {numeric:true});
+                    if (a.gender === "ذكر" && b.gender !== "ذكر") return -1;
+                    if (a.gender !== "ذكر" && b.gender === "ذكر") return 1;
+                    return (a.name || "").localeCompare((b.name || ""), 'ar');
+                });
 
-            area.innerHTML = "";
-            for (let i = 0; i < filteredList.length; i += 30) {
-                area.appendChild(buildSpecialPage(reportTitle, filteredList.slice(i, i + 30), i, filteredList.length));
+                area.innerHTML = "";
+                for (let i = 0; i < filteredList.length; i += 30) {
+                    area.appendChild(buildSpecialPage(reportTitle, filteredList.slice(i, i + 30), i, filteredList.length));
+                }
+            } catch(err) {
+                console.error("خطأ التقرير الخاص:", err);
+                area.innerHTML = "<h3 class='no-print' style='text-align:center; color:red; margin-top:40px;'>❌ حدث خطأ أثناء مسح البيانات.</h3>";
             }
         }
 
+        // ================== دوال بناء وتشكيل الـ HTML ================== //
         function buildSpecialPage(title, studentsChunk, startIndex, totalCount) {
             const sheet = document.createElement("div"); sheet.className = "a4-sheet show-preview";
             sheet.innerHTML = `
@@ -334,7 +385,7 @@
             let html = "";
             for (let i = 0; i < 30; i++) {
                 const s = studentsChunk[i];
-                html += `<tr><td class="sp-m">${s?toArabicNum(startIndex+i+1):""}</td><td class="sp-grade">${s?s.grade:""}</td><td class="sp-name">${s?s.name:""}</td><td class="sp-class">${s?toArabicNum(s.class):""}</td><td class="sp-code">${s?s.code:""}</td><td class="sp-notes"></td></tr>`;
+                html += `<tr><td class="sp-m">${s?toArabicNum(startIndex+i+1):""}</td><td class="sp-grade">${s?s.grade:""}</td><td class="sp-name">${s?s.name:""}</td><td class="sp-class">${s?toArabicNum(s.class):""}</td><td class="sp-code">${s?(s.code||""):""}</td><td class="sp-notes"></td></tr>`;
             } return html;
         }
 
@@ -379,7 +430,6 @@
             } return html;
         }
 
-        // ================= 4. دفتر 5 سلوك (A3) المطور =================
         function buildBehaviorPage(grade, clsName, students, monthIdx, year, pageNum) {
             const sheet = document.createElement("div");
             sheet.className = "a3-sheet show-preview";
@@ -457,7 +507,7 @@
                     <td class="col-b-name">${s ? s.name : ""}</td>
                     ${dayCells}
                     <td></td><td></td><td></td><td></td>
-                    <td class="col-b-code">${s ? (s.register_num || "") : ""}</td>
+                    <td class="col-b-code">${s ? (s.code || "") : ""}</td>
                 </tr>`;
             }
             return html;
