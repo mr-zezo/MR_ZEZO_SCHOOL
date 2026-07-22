@@ -342,27 +342,51 @@
             }
         }
 
-        async function generateSpecialReport(type) {
+       async function generateSpecialReport(type) {
             const area = document.getElementById("print-area");
             area.innerHTML = "<h3 class='no-print' style='text-align:center; margin-top:40px; color:#1e3a8a;'><i class='fa-solid fa-circle-notch fa-spin'></i> جاري مسح قاعدة بيانات المدرسة بالكامل...</h3>";
 
             try {
-                const { data: list, error } = await dbClient
-                    .from("students")
-                    .select("*")
-                    .limit(5000); 
-                
-                if (error) throw error;
+                // 1. جلب جميع الطلاب على دفعات لتخطي حد الـ 1000 سجل الافتراضي في Supabase
+                let studentsList = [];
+                let fetchMore = true;
+                let from = 0;
+                const step = 999; // جلب 1000 سجل في كل دفعة
 
-                let studentsList = list || [];
-                let filteredList = []; let reportTitle = "";
+                while (fetchMore) {
+                    const { data, error } = await dbClient
+                        .from("students")
+                        .select("*")
+                        .range(from, from + step);
+                    
+                    if (error) throw error;
+
+                    if (data && data.length > 0) {
+                        studentsList = studentsList.concat(data);
+                        from += step + 1;
+                        // إذا كانت الدفعة أقل من الحد الأقصى، فهذا يعني أنه لا يوجد المزيد
+                        if (data.length < step + 1) fetchMore = false;
+                    } else {
+                        fetchMore = false;
+                    }
+                }
+
+                let filteredList = []; 
+                let reportTitle = "";
                 
-                // تم تعديل وتوسيع فلتر الدمج ليكون منضبطاً ولا يتجاهل أية قيم مدخلة (مثل نوع الإعاقة)
+                // 2. فلتر الدمج المحسن والشامل
                 if (type === 'damj') { 
                     filteredList = studentsList.filter(s => {
-                        if (!s.dmj) return false;
+                        // إذا كان الحقل فارغاً تماماً
+                        if (s.dmj === null || s.dmj === undefined) return false;
+                        
                         let val = String(s.dmj).trim().toLowerCase();
-                        return val !== "" && val !== "لا" && val !== "false" && val !== "no";
+                        
+                        // قائمة بكل القيم التي تعني أن الطالب (ليس دمج)
+                        const notDamjValues = ["", "لا", "لا يوجد", "لايوجد", "عادي", "غير مدمج", "false", "no", "0"];
+                        
+                        // إذا لم تكن القيمة ضمن الكلمات النافية، إذن هو طالب دمج
+                        return !notDamjValues.includes(val);
                     }); 
                     reportTitle = "كشف بأسماء تلاميذ ( الدمج ) بالمدرسة"; 
                 }
@@ -380,7 +404,7 @@
                     return; 
                 }
 
-                // هندسة الترتيب الآمنة (معالجة القيم الفارغة)
+                // 3. هندسة الترتيب الآمنة (معالجة القيم الفارغة)
                 filteredList.sort((a, b) => {
                     let gA = gradeOrder[a.grade] || 99; 
                     let gB = gradeOrder[b.grade] || 99;
