@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- تم استبدال Firebase بـ Supabase -->
+    <!-- مكتبات Supabase و Excel -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -30,46 +30,47 @@
         select { padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700; cursor: pointer; font-size: 13px; outline: none; background: #f8fafc; }
 
         .btn { border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; color: white; display: flex; align-items: center; gap: 6px; font-size: 12px; transition: 0.2s; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-stats { background: var(--info); }
         .btn-import { background: #7c3aed; }
         .btn-excel { background: var(--success); } 
         .btn-save { background: var(--save-btn); box-shadow: 0 0 12px rgba(79, 70, 229, 0.3); }
         .btn-add { background: var(--warning); color: #000; }
         .btn-golden { background: linear-gradient(135deg, #d97706, #b45309); color: white; font-weight: 900; box-shadow: 0 0 10px rgba(217,119,6,0.4); }
-        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
 
         .table-wrapper { flex-grow: 1; overflow: auto; background: white; border-radius: 10px; border: 1px solid #cbd5e1; }
         table { width: 100%; border-collapse: collapse; text-align: right; min-width: 3160px; table-layout: fixed; }
         
-        th:nth-child(1) { width: 40px; text-align: center; }   
-        th:nth-child(2) { width: 120px; }  
-        th:nth-child(3) { width: 45px; }   
-        th:nth-child(4) { width: 220px; }  
-        th:nth-child(5) { width: 80px; }   
-        th:nth-child(6) { width: 130px; }  
-        th:nth-child(7) { width: 60px; }   
-        th:nth-child(8) { width: 90px; }   
-        th:nth-child(9) { width: 150px; }  
-        th:nth-child(10) { width: 100px; } 
-        th:nth-child(11) { width: 120px; } 
-        th:nth-child(12) { width: 90px; }  
-        th:nth-child(13) { width: 80px; }  
-        th:nth-child(14) { width: 120px; } 
+        th:nth-child(1) { width: 60px; text-align: center; }   
+        th:nth-child(2) { width: 40px; text-align: center; }   
+        th:nth-child(3) { width: 120px; }  
+        th:nth-child(4) { width: 45px; }   
+        th:nth-child(5) { width: 220px; }  
+        th:nth-child(6) { width: 80px; }   
+        th:nth-child(7) { width: 130px; }  
+        th:nth-child(8) { width: 60px; }   
+        th:nth-child(9) { width: 90px; }   
+        th:nth-child(10) { width: 150px; } 
+        th:nth-child(11) { width: 100px; } 
+        th:nth-child(12) { width: 120px; } 
+        th:nth-child(13) { width: 90px; }  
+        th:nth-child(14) { width: 80px; }  
         th:nth-child(15) { width: 120px; } 
-        th:nth-child(16) { width: 90px; }  
-        th:nth-child(17) { width: 120px; } 
-        th:nth-child(18) { width: 110px; } 
-        th:nth-child(19) { width: 120px; } 
-        th:nth-child(20) { width: 110px; } 
+        th:nth-child(16) { width: 120px; } 
+        th:nth-child(17) { width: 90px; }  
+        th:nth-child(18) { width: 120px; } 
+        th:nth-child(19) { width: 110px; } 
+        th:nth-child(20) { width: 120px; } 
         th:nth-child(21) { width: 110px; } 
-        th:nth-child(22) { width: 100px; } 
+        th:nth-child(22) { width: 110px; } 
         th:nth-child(23) { width: 100px; } 
-        th:nth-child(24) { width: 90px; }  
+        th:nth-child(24) { width: 100px; } 
         th:nth-child(25) { width: 90px; }  
-        th:nth-child(26) { width: 60px; }  
-        th:nth-child(27) { width: 100px; } 
+        th:nth-child(26) { width: 90px; }  
+        th:nth-child(27) { width: 60px; }  
         th:nth-child(28) { width: 100px; } 
-        th:nth-child(29) { width: 60px; text-align: center; } 
+        th:nth-child(29) { width: 100px; } 
 
         thead th { position: sticky; top: 0; background: var(--dark); color: #fcd34d; padding: 8px 4px; font-size: 12px; z-index: 5; border: 1px solid #334155; }
         .th-content { display: flex; align-items: center; gap: 5px; }
@@ -83,7 +84,7 @@
         .auth-cell { background-color: #fffbeb; color: var(--danger); font-family: Arial, sans-serif; font-weight: bold; }
         .status-select { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px; font-weight: bold; font-family: 'Cairo'; width: 100%; outline: none; }
 
-        .btn-delete-row { background: var(--danger); color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 13px; }
+        .btn-delete-row { background: var(--danger); color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 13px; display: inline-flex; justify-content: center; align-items: center; min-width: 32px; min-height: 30px;}
         .btn-delete-row:hover { background: #9f1239; transform: scale(1.1); }
 
         #file-input { display: none; }
@@ -138,6 +139,7 @@
         <table id="main-table">
             <thead>
                 <tr>
+                    <th>حذف</th>
                     <th><input type="checkbox" id="selectAllRows" checked onchange="toggleAllRows(this)" title="تحديد/إلغاء تحديد الكل"></th>
                     <th>حالة المعلم</th>
                     <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="index" checked> <span>م</span></div></th>
@@ -166,7 +168,6 @@
                     <th class="readonly-cell"><div class="th-content"><input type="checkbox" class="export-cb" data-key="quota" checked> <span>النصاب</span></div></th>
                     <th class="auth-cell"><div class="th-content"><input type="checkbox" class="export-cb" data-key="username" checked> <span>USER</span></div></th>
                     <th class="auth-cell"><div class="th-content"><input type="checkbox" class="export-cb" data-key="password" checked> <span>PASS</span></div></th>
-                    <th>حذف</th>
                 </tr>
             </thead>
             <tbody id="table-body">
@@ -175,7 +176,6 @@
         </table>
     </div>
 
-    <!-- النافذة المنبثقة للإحصائيات -->
     <div class="modal-overlay" id="statsModal" onclick="if(event.target.id==='statsModal')toggleModal(false)">
         <div class="modal-content">
             <div class="modal-header">
@@ -300,13 +300,10 @@
                             else if (degree.includes("كبير")) quota = "16";
                         }
 
-                        let codeVal = row.code || row["الكود"] || "";
-                        if (!codeVal) codeVal = "TEMP_" + Math.random().toString(36).substr(2, 9); // إنشاء كود مؤقت لعملية الاستيراد
-
                         arr.push({
                             emp_status: row.emp_status || row["حالة المعلم"] || "على رأس العمل",
                             name: row.name || row["الاسم"] || "",
-                            code: String(codeVal),
+                            code: row.code || row["الكود"] || "", 
                             nid: nid, gender: gen, dob: dob,
                             address: row.address || row["الموطن"] || row["العنوان"] || "",
                             mobile: row.mobile || row["الموبايل"] || "",
@@ -334,7 +331,7 @@
                     arr = sortTeachers(arr); 
                     document.getElementById("table-body").innerHTML = "";
                     arr.forEach((s, i) => renderRow(s, i + 1));
-                    alert("✅ تم استيراد الملف! يرجى الضغط على (حفظ السحابة).");
+                    alert("✅ تم استيراد الملف! يرجى الضغط على (حفظ السحابة) لرفع البيانات.");
                 } catch(err) { alert("فشل قراءة الملف: " + err.message); }
             };
             reader.readAsArrayBuffer(file);
@@ -348,12 +345,18 @@
 
         function renderRow(d, i) {
             const tr = document.createElement("tr");
-            tr.setAttribute("data-docid", d.code || ""); 
+            
+            tr.setAttribute("data-orig-nid", d.nid || ""); 
+            tr.setAttribute("data-orig-name", d.name || ""); 
+            
             const empStatus = d.emp_status || "على رأس العمل";
             const isChecked = empStatus === "على رأس العمل" ? "checked" : "";
             tr.style.opacity = empStatus === "على رأس العمل" ? "1" : "0.6";
 
             tr.innerHTML = `
+                <td style="text-align:center;">
+                    <button class="btn-delete-row" onclick="deleteTeacherRow(this)" title="حذف الصف"><i class="fa-solid fa-trash"></i></button>
+                </td>
                 <td style="text-align:center;"><input type="checkbox" class="row-cb" ${isChecked}></td>
                 <td>
                     <select class="status-select" data-field="emp_status" onchange="handleStatusChange(this)">
@@ -366,7 +369,7 @@
                 </td>
                 <td>${i}</td>
                 <td><input class="editable-input" value="${d.name || ''}" data-field="name"></td>
-                <td><input class="editable-input" value="${(d.code && !d.code.startsWith('TEMP_')) ? d.code : ''}" data-field="code"></td>
+                <td><input class="editable-input" value="${d.code || ''}" data-field="code"></td>
                 <td><input class="editable-input" value="${d.nid || ''}" data-field="nid" oninput="extractNID(this)"></td>
                 <td class="readonly-cell"><input class="editable-input" value="${d.gender || ''}" data-field="gender" readonly></td>
                 <td class="readonly-cell"><input class="editable-input" value="${d.dob || ''}" data-field="dob" readonly></td>
@@ -390,9 +393,6 @@
                 <td class="readonly-cell"><input class="editable-input" value="${d.quota || ''}" data-field="quota" readonly></td>
                 <td class="auth-cell"><input class="editable-input" value="${d.username || ''}" data-field="username"></td>
                 <td class="auth-cell"><input class="editable-input" value="${d.password || ''}" data-field="password"></td>
-                <td style="text-align:center;">
-                    <button class="btn-delete-row" onclick="deleteTeacherRow(this)" title="حذف الصف"><i class="fa-solid fa-trash"></i></button>
-                </td>
             `;
             document.getElementById("table-body").appendChild(tr);
         }
@@ -400,21 +400,39 @@
         async function deleteTeacherRow(btn) {
             const row = btn.closest('tr');
             
-            const codeInput = row.querySelector('[data-field="code"]');
-            const docId = codeInput ? codeInput.value.trim() : null;
+            const origNid = row.getAttribute("data-orig-nid");
+            const origName = row.getAttribute("data-orig-name");
+            
+            const nidInput = row.querySelector('[data-field="nid"]').value.trim();
+            const nameInput = row.querySelector('[data-field="name"]').value.trim();
+            
+            const targetNid = origNid || nidInput;
+            const targetName = origName || nameInput;
 
             if (confirm("هل أنت متأكد من حذف هذا الموظف نهائياً؟")) {
-                if (docId && !docId.startsWith("TEMP_")) {
+                if (targetNid || targetName) {
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                    btn.disabled = true;
                     try {
-                        const { error } = await supabaseClient.from('teachers').delete().eq('code', docId);
+                        let query = supabaseClient.from('teachers').delete();
+                        if (targetNid) {
+                            query = query.eq('nid', targetNid);
+                        } else {
+                            query = query.eq('name', targetName);
+                        }
+                        
+                        const { error } = await query;
                         if(error) throw error;
                     } catch (error) {
                         console.error("Error deleting from Supabase:", error);
                         alert("حدث خطأ أثناء الحذف من قاعدة البيانات.");
+                        btn.innerHTML = '<i class="fa-solid fa-trash"></i>';
+                        btn.disabled = false;
                         return; 
                     }
                 }
-                row.remove();
+                
+                row.remove(); 
                 
                 const tbody = document.getElementById("table-body");
                 if (tbody.children.length === 0) {
@@ -424,10 +442,18 @@
         }
 
         async function saveAllToCloud() {
+            const btn = document.querySelector('.btn-save');
+            const oldText = btn.innerHTML;
+            
             const rows = document.querySelectorAll("#table-body tr");
             if(rows.length === 0 || rows[0].cells.length < 2) return;
 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+            btn.disabled = true;
+
             let teachersToSave = [];
+            let deletePromises = []; 
+
             rows.forEach(row => {
                 const ins = row.querySelectorAll("input, select");
                 if (ins.length > 0) {
@@ -438,26 +464,47 @@
                         }
                     });
                     
-                    if (!t.code) t.code = "TEMP_" + Math.random().toString(36).substr(2, 9);
+                    const origNid = row.getAttribute("data-orig-nid");
+                    const origName = row.getAttribute("data-orig-name");
                     
                     if (t.name && t.name.trim() !== "") { 
                         teachersToSave.push(t);
+                        
+                        // مسح السجل القديم بناءً على الرقم القومي أو الاسم لتجنب التكرار
+                        if (origNid) {
+                            deletePromises.push(supabaseClient.from('teachers').delete().eq('nid', origNid));
+                        } else if (origName) {
+                            deletePromises.push(supabaseClient.from('teachers').delete().eq('name', origName));
+                        }
+                        
+                        row.setAttribute("data-orig-nid", t.nid || "");
+                        row.setAttribute("data-orig-name", t.name || "");
                     }
                 }
             });
 
             if (teachersToSave.length > 0) {
                 try {
-                    const { error } = await supabaseClient.from('teachers').upsert(teachersToSave, { onConflict: 'code' });
+                    // 1. حذف السجلات القديمة أولاً لضمان عدم التكرار
+                    if (deletePromises.length > 0) {
+                        await Promise.all(deletePromises);
+                    }
+
+                    // 2. إدراج السجلات الجديدة (استخدمنا insert بدلاً من upsert لتجنب مشاكل الـ Unique)
+                    const { error } = await supabaseClient.from('teachers').insert(teachersToSave);
                     if (error) throw error;
-                    alert(`✅ تم حفظ وتحديث بيانات ${teachersToSave.length} موظف في السحابة بنجاح!`);
-                    loadFromSupabase(); 
+                    
+                    alert(`✅ تم حفظ وتحديث بيانات ${teachersToSave.length} موظف بنجاح!`);
+                    await loadFromSupabase(); 
                 } catch(err) {
                     alert("حدث خطأ أثناء الحفظ: " + err.message);
                 }
             } else {
                 alert("لا توجد بيانات صالحة للحفظ (تأكد من كتابة الأسماء).");
             }
+            
+            btn.innerHTML = oldText;
+            btn.disabled = false;
         }
 
         function customExportToExcel() {
@@ -479,12 +526,10 @@
                 let obj = {};
                 selectedCols.forEach(col => {
                     if (col.key === 'index') {
-                        obj[col.label] = row.cells[2].innerText; 
+                        obj[col.label] = row.cells[3].innerText; 
                     } else {
                         const input = row.querySelector(`[data-field="${col.key}"]`);
-                        let val = input ? input.value : "";
-                        if(col.key === 'code' && val.startsWith('TEMP_')) val = "";
-                        obj[col.label] = val;
+                        obj[col.label] = input ? input.value : "";
                     }
                 });
                 data.push(obj);
@@ -553,6 +598,7 @@
             const btn = document.querySelector('.btn-golden');
             const oldText = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحساب...`;
+            btn.disabled = true;
             
             try {
                 const { data: planDoc, error: planError } = await supabaseClient.from("system_capsules").select("data").eq("id", "school_plan").maybeSingle();
@@ -562,7 +608,7 @@
 
                 if(!planDoc || !planDoc.data) { 
                     alert("⚠️ تنبيه: لم يتم إعداد الخطة الدراسية بعد!\nاذهب لصفحة (إحصاء وميزانية المواد) واضغط على زر (إعداد خطة المدرسة) أولاً."); 
-                    btn.innerHTML = oldText; return; 
+                    btn.innerHTML = oldText; btn.disabled = false; return; 
                 }
                 
                 const plan = planDoc.data;
@@ -646,9 +692,11 @@
                 await supabaseClient.from("system_capsules").upsert({ id: "teacher_budget", data: finalBudget, updatedAt: new Date().toLocaleString('ar-EG') });
                 
                 btn.innerHTML = oldText;
+                btn.disabled = false;
                 alert(`🚀 نجاح! تم حصر أنصبة (${matchedTeachersCount}) معلم وتحديث الميزانية.`);
             } catch(err) {
                 btn.innerHTML = oldText;
+                btn.disabled = false;
                 alert("فشل الاعتماد: " + err.message);
             }
         }
