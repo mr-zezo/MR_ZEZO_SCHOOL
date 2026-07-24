@@ -5,34 +5,36 @@
     <title>منظومة الغياب الذكية - مستر زيزو</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- مكتبة Chart.js لرسم المنحنى الزمني الإبداعي -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         :root { 
             --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; 
             --accent: #ca8a04; --info: #0284c7; --success: #16a34a; --danger: #be123c;
+            --warn1: #eab308; --warn2: #f97316;
         }
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
         body { background-color: var(--bg); color: #1e293b; padding: 10px 20px; display: flex; flex-direction: column; align-items: center; }
 
-        /* شريط التنقل مع حفظ الحقوق */
-        .top-navigation { width: 100%; max-width: 1100px; background: var(--dark); padding: 12px 20px; border-radius: 12px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .top-navigation { width: 100%; max-width: 1150px; background: var(--dark); padding: 12px 20px; border-radius: 12px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .nav-title { font-size: 16px; font-weight: 900; color: #fcd34d; display: flex; align-items: center; gap: 10px; }
         .zizo-badge { background: #ca8a04; color: #fff; padding: 4px 15px; border-radius: 20px; font-size: 13px; font-weight: 900; border: 1px solid #fef08a; }
-        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 6px 15px; border-radius: 6px; font-size: 13px; font-weight: 700; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 6px 15px; border-radius: 6px; font-size: 13px; font-weight: 700; transition: 0.2s; cursor: pointer; display: flex; align-items: center; gap: 6px; border: none; }
         .btn-nav:hover { opacity: 0.9; }
 
-        /* أزرار التبويبات */
-        .tabs-container { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; max-width: 1100px; }
+        .tabs-container { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; max-width: 1150px; }
         .tab-btn { flex: 1; background: white; border: 2px solid #cbd5e1; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 15px; color: #475569; cursor: pointer; transition: 0.3s; }
         .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 15px rgba(30,58,138,0.2); }
 
-        /* حاوية المحتوى */
-        .content-box { background: white; width: 100%; max-width: 1100px; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 5px solid var(--primary); display: none; }
+        .content-box { background: white; width: 100%; max-width: 1150px; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 5px solid var(--primary); display: none; }
         .content-box.active { display: block; animation: fadeIn 0.3s ease; }
 
-        /* ================= 1. شاشة الرصد السريع ================= */
+        /* شاشة الرصد السريع */
         .entry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .stats-panel { background: #eff6ff; border: 2px solid #bfdbfe; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         .stat-item { display: flex; justify-content: space-between; align-items: center; font-weight: 900; font-size: 15px; border-bottom: 1px dashed #93c5fd; padding-bottom: 10px; }
@@ -47,18 +49,36 @@
         .btn-submit { background: var(--success); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: 900; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         .btn-submit:hover { background: #15803d; transform: translateY(-2px); }
 
-        /* ================= 2. شاشة التقارير والبحث ================= */
-        .report-controls { display: flex; gap: 10px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; flex-wrap: wrap; }
-        .report-controls select, .report-controls input { padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 13px; outline: none; }
-        .btn-report { background: var(--info); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 800; cursor: pointer; transition: 0.2s; }
-        .btn-report:hover { opacity: 0.9; }
+        /* شاشة التقارير والإبداع الجديد */
+        .report-controls { display: flex; gap: 10px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; flex-wrap: wrap; align-items: center; }
+        .report-controls select { padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 13px; outline: none; }
+        .btn-report { background: var(--info); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 800; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+        .btn-report:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* Dashboard الإحصائيات */
+        .dashboard-kpi { display: none; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .kpi-card { background: white; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 5px; cursor: pointer; transition: 0.3s; }
+        .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); }
+        .kpi-title { font-size: 12px; font-weight: 800; color: #64748b; }
+        .kpi-value { font-size: 20px; font-weight: 900; }
         
+        .card-safe { border-bottom: 4px solid var(--success); } .card-safe .kpi-value { color: var(--success); }
+        .card-warn1 { border-bottom: 4px solid var(--warn1); } .card-warn1 .kpi-value { color: var(--warn1); }
+        .card-warn2 { border-bottom: 4px solid var(--warn2); } .card-warn2 .kpi-value { color: var(--warn2); }
+        .card-danger { border-bottom: 4px solid var(--danger); background: #fef2f2; } .card-danger .kpi-value { color: var(--danger); }
+        .card-info { border-bottom: 4px solid var(--primary); } .card-info .kpi-value { color: var(--primary); }
+
+        .chart-container { display: none; width: 100%; height: 350px; margin-bottom: 25px; background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+
         .report-table { width: 100%; border-collapse: collapse; text-align: center; }
         .report-table th, .report-table td { border: 1px solid #e2e8f0; padding: 10px 5px; font-size: 14px; font-weight: 700; }
         .report-table thead th { background: var(--primary); color: white; font-size: 13px; }
-        .danger-text { color: var(--danger); font-weight: 900; }
+        
+        .badge { padding: 3px 8px; border-radius: 4px; font-size: 12px; color: white; }
+        .bg-safe { background: var(--success); } .bg-warn1 { background: var(--warn1); color: black; } 
+        .bg-warn2 { background: var(--warn2); } .bg-danger { background: var(--danger); }
 
-        /* ================= 3. شاشة الإعدادات ================= */
+        /* شاشة الإعدادات */
         .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .btn-save-settings { background: var(--dark); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 900; cursor: pointer; margin-top: 20px; width: 100%; }
 
@@ -66,7 +86,7 @@
         
         @media print {
             body { background: white; padding: 0; }
-            .top-navigation, .tabs-container, .report-controls, .entry-grid, #settings { display: none !important; }
+            .top-navigation, .tabs-container, .report-controls, .entry-grid, #settings, .dashboard-kpi, .chart-container { display: none !important; }
             .content-box { box-shadow: none; border: none; padding: 0; }
         }
     </style>
@@ -74,30 +94,25 @@
 <body>
 
     <nav class="top-navigation">
-        <div class="nav-title"><i class="fa-solid fa-calendar-xmark"></i> منظومة الغياب الذكية</div>
+        <div class="nav-title"><i class="fa-solid fa-calendar-xmark"></i> منظومة الغياب الذكية والإنذارات</div>
         <div style="display:flex; align-items:center; gap:10px;">
             <div class="zizo-badge"><i class="fa-solid fa-laptop-code"></i> إعداد مستر زيزو</div>
-            <!-- زر Admin Mr Zezo -->
-            <button type="button" class="btn-nav" style="background:var(--info); border:none; cursor:pointer;" onclick="loginAdmin()">
+            <button type="button" class="btn-nav" style="background:var(--info);" onclick="loginAdmin()">
                 <i class="fa-solid fa-user-shield"></i> Admin Mr Zezo
             </button>
-            <!-- زر الرئيسية (مخفي افتراضياً) -->
             <a href="index.html" class="btn-nav" id="btn-home" style="background:var(--primary); display:none;">الرئيسية</a>
         </div>
     </nav>
 
     <div class="tabs-container">
         <button class="tab-btn active" onclick="switchTab('entry')"><i class="fa-solid fa-keyboard"></i> الرصد السريع</button>
-        <button class="tab-btn" onclick="switchTab('reports')"><i class="fa-solid fa-file-lines"></i> التقارير والإنذارات</button>
-        <!-- تبويب إعدادات التواريخ (مخفي افتراضياً) -->
+        <button class="tab-btn" onclick="switchTab('reports')"><i class="fa-solid fa-chart-line"></i> التحليل والإنذارات</button>
         <button class="tab-btn" id="tab-settings-btn" style="display:none;" onclick="switchTab('settings')"><i class="fa-solid fa-gear"></i> إعدادات التواريخ</button>
     </div>
 
     <!-- ================= 1. شاشة الرصد السريع ================= -->
     <div id="entry" class="content-box active">
         <div class="entry-grid">
-            
-            <!-- لوحة الإدخال -->
             <div class="input-panel">
                 <div style="display:flex; gap:10px;">
                     <div class="form-group" style="flex:1;">
@@ -115,7 +130,6 @@
                     </div>
                 </div>
                 
-                <!-- التاريخ بالصيغة العربية الفخمة -->
                 <div style="font-size:16px; color:var(--danger); font-weight:900; text-align:center; background:#fef2f2; padding:8px; border-radius:8px; border:1px dashed var(--danger);" id="week-date-display">يرجى ضبط تواريخ التيرم من الإعدادات</div>
 
                 <div style="display:flex; gap:10px; margin-top:10px;">
@@ -133,26 +147,15 @@
                 <div id="save-msg" style="text-align:center; font-weight:bold; margin-top:10px; color:var(--success); display:none;">تم التسجيل بنجاح!</div>
             </div>
 
-            <!-- لوحة الإحصاء اللحظي -->
             <div class="stats-panel">
-                <div class="stat-item">
-                    <span>إجمالي طلاب الصف:</span>
-                    <span class="stat-val" id="stat-total-stu">٠</span>
-                </div>
-                <div class="stat-item">
-                    <span>إجمالي أيام الغياب (هذا الأسبوع):</span>
-                    <span class="stat-val" style="color:var(--danger)" id="stat-total-abs">٠</span>
-                </div>
-                <div class="stat-item" style="border:none;">
-                    <span>نسبة الحضور العامة:</span>
-                    <span class="stat-val" style="color:var(--success)" id="stat-percent">%٠</span>
-                </div>
+                <div class="stat-item"><span>إجمالي طلاب الصف:</span><span class="stat-val" id="stat-total-stu">٠</span></div>
+                <div class="stat-item"><span>أيام الغياب (هذا الأسبوع):</span><span class="stat-val" style="color:var(--danger)" id="stat-total-abs">٠</span></div>
+                <div class="stat-item" style="border:none;"><span>نسبة الحضور العامة:</span><span class="stat-val" style="color:var(--success)" id="stat-percent">%٠</span></div>
             </div>
-
         </div>
     </div>
 
-    <!-- ================= 2. شاشة التقارير ================= -->
+    <!-- ================= 2. شاشة التحليل والإنذارات ================= -->
     <div id="reports" class="content-box">
         <div class="report-controls">
             <select id="rep-grade">
@@ -160,30 +163,62 @@
                 <option value="الثالث">الثالث</option><option value="الرابع">الرابع</option>
                 <option value="الخامس">الخامس</option><option value="السادس">السادس</option>
             </select>
-            
-            <!-- القائمة تحتوي على كل الأسابيع فقط -->
             <select id="rep-week"></select>
             
-            <!-- زر التقرير الأسبوعي -->
-            <button class="btn-report" onclick="generateReport('week')"><i class="fa-solid fa-magnifying-glass"></i> عرض تقرير الأسبوع</button>
+            <button class="btn-report" onclick="generateReport('week')"><i class="fa-solid fa-list-check"></i> غياب الأسبوع</button>
+            <button class="btn-report" style="background:var(--primary);" onclick="generateReport('term1')"><i class="fa-solid fa-chart-pie"></i> تحليل الترم الأول</button>
+            <button class="btn-report" style="background:var(--accent);" onclick="generateReport('term2')"><i class="fa-solid fa-chart-pie"></i> تحليل الترم الثاني</button>
             
-            <!-- زر تقرير الترم الأول -->
-            <button class="btn-report" style="background:var(--primary);" onclick="generateReport('term1')"><i class="fa-solid fa-chart-pie"></i> تقرير الترم الأول</button>
+            <div style="width: 2px; height: 30px; background: #cbd5e1; margin: 0 5px;"></div>
             
-            <!-- زر تقرير الترم الثاني -->
-            <button class="btn-report" style="background:var(--accent);" onclick="generateReport('term2')"><i class="fa-solid fa-chart-pie"></i> تقرير الترم الثاني</button>
+            <button class="btn-report" style="background:var(--dark);" onclick="generateSchoolChart('term1')"><i class="fa-solid fa-chart-area"></i> منحنى المدرسة (ت 1)</button>
+            <button class="btn-report" style="background:var(--dark);" onclick="generateSchoolChart('term2')"><i class="fa-solid fa-chart-area"></i> منحنى المدرسة (ت 2)</button>
             
+            <div style="flex-grow: 1;"></div>
             <button class="btn-report" style="background:var(--success);" onclick="window.print()"><i class="fa-solid fa-print"></i> طباعة</button>
+        </div>
+
+        <!-- مساحة رسم المنحنى الزمني (Chart.js) -->
+        <div class="chart-container" id="chart-wrapper">
+            <canvas id="schoolChart"></canvas>
+        </div>
+
+        <!-- لوحة الـ KPIs والإشارات (تظهر مع تقارير الترم) -->
+          <div class="dashboard-kpi" id="kpi-dashboard">
+            <div class="kpi-card" style="border-bottom: 4px solid #64748b;" onclick="filterTable('all')">
+                <div class="kpi-title">عرض الكل</div>
+                <div class="kpi-value" id="kpi-all">0</div>
+            </div>
+            <div class="kpi-card card-info" onclick="filterTable('perfect')">
+                <div class="kpi-title">مثالي (0 غياب)</div>
+                <div class="kpi-value" id="kpi-perfect">0</div>
+            </div>
+            <div class="kpi-card card-safe" onclick="filterTable('safe')">
+                <div class="kpi-title">آمن (1-5 أيام)</div>
+                <div class="kpi-value" id="kpi-safe">0</div>
+            </div>
+            <div class="kpi-card card-warn1" onclick="filterTable('warn1')">
+                <div class="kpi-title">إنذار أول (6-10)</div>
+                <div class="kpi-value" id="kpi-warn1">0</div>
+            </div>
+            <div class="kpi-card card-warn2" onclick="filterTable('warn2')">
+                <div class="kpi-title">إنذار ثاني (11-14)</div>
+                <div class="kpi-value" id="kpi-warn2">0</div>
+            </div>
+            <div class="kpi-card card-danger" onclick="filterTable('danger')">
+                <div class="kpi-title">خطر (15+)</div>
+                <div class="kpi-value" id="kpi-danger">0</div>
+            </div>
         </div>
 
         <h3 id="report-title" style="text-align:center; margin-bottom:15px; color:var(--dark);"></h3>
         
-        <table class="report-table">
+        <table class="report-table" id="data-table">
             <thead id="report-thead">
-                <tr><th>م</th><th>كود الوزارة</th><th>الكود الداخلي</th><th>اسم التلميذ</th><th>الفصل</th><th>أيام الغياب</th><th>متوسط غياب الترم</th></tr>
+                <tr><th>م</th><th>الكود الداخلي</th><th>اسم التلميذ</th><th>الفصل</th><th>أيام الغياب</th><th>حالة الإنذار</th><th>نسبة الحضور</th></tr>
             </thead>
             <tbody id="report-tbody">
-                <tr><td colspan="7" style="padding:40px; color:#94a3b8;">اختر الصف والأسبوع واضغط عرض...</td></tr>
+                <tr><td colspan="7" style="padding:40px; color:#94a3b8;">اختر نوع التقرير واضغط عرض...</td></tr>
             </tbody>
         </table>
     </div>
@@ -205,15 +240,16 @@
     </div>
 
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
-        firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
-        db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         const arabicWeeks = ["الأول","الثاني","الثالث","الرابع","الخامس","السادس","السابع","الثامن","التاسع","العاشر","الحادي عشر","الثاني عشر","الثالث عشر","الرابع عشر","الخامس عشر","السادس عشر","السابع عشر","الثامن عشر","التاسع عشر","العشرون","الحادي والعشرون","الثاني والعشرون","الثالث والعشرون","الرابع والعشرون","الخامس والعشرون","السادس والعشرون","السابع والعشرون","الثامن والعشرون","التاسع والعشرون","الثلاثون"];
         const arabicMonths = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
         
         let weekDatesMap = {};
         let currentGradeStudents = [];
+        let myChart = null; // متغير لحفظ الرسم البياني
 
         function toArabicNum(num) {
             if(num === 0) return "٠";
@@ -226,72 +262,61 @@
             await loadSettings();
         });
 
-        // --- الدخول كأدمن مستر زيزو ---
         function loginAdmin() {
             const pwd = prompt("اهلا مستر زيزو\nيرجى إدخال كلمة المرور:");
             if (pwd === "2026") {
                 document.getElementById("btn-home").style.display = "flex";
                 document.getElementById("tab-settings-btn").style.display = "block";
-                alert("مرحباً مستر زيزو! تم إظهار زر الرئيسية وإعدادات التواريخ بنجاح.");
-            } else if (pwd !== null) {
-                alert("كلمة المرور غير صحيحة!");
-            }
+            } else if (pwd !== null) { alert("كلمة المرور غير صحيحة!"); }
         }
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.content-box').forEach(c => c.classList.remove('active'));
-            if(event && event.target) {
-                event.target.classList.add('active');
-            }
+            if(event && event.target) event.target.classList.add('active');
             document.getElementById(tabId).classList.add('active');
         }
 
         function populateWeekSelects() {
             const w1 = document.getElementById("entry-week");
             const w2 = document.getElementById("rep-week");
-            w1.innerHTML = "";
-            w2.innerHTML = "";
             for(let i=0; i<30; i++) {
                 w1.innerHTML += `<option value="W${i+1}">الأسبوع ${arabicWeeks[i]}</option>`;
                 w2.innerHTML += `<option value="W${i+1}">الأسبوع ${arabicWeeks[i]}</option>`;
             }
         }
 
-        // --- حساب التواريخ (الصيغة العربية الفخمة) ---
         async function loadSettings() {
-            const doc = await db.collection("settings").doc("absence_dates").get();
-            if(doc.exists) {
-                const data = doc.data();
-                document.getElementById("set-term1").value = data.term1 || "";
-                document.getElementById("set-term2").value = data.term2 || "";
-                
-                if(data.term1) {
-                    let d1 = new Date(data.term1);
-                    for(let i=1; i<=17; i++) weekDatesMap['W'+i] = formatArabicDateRange(d1, i-1);
+            try {
+                const { data } = await supabaseClient.from("system_capsules").select("data").eq("id", "absence_dates").maybeSingle();
+                if (data && data.data) {
+                    const settingsData = data.data;
+                    document.getElementById("set-term1").value = settingsData.term1 || "";
+                    document.getElementById("set-term2").value = settingsData.term2 || "";
+                    if(settingsData.term1) {
+                        let d1 = new Date(settingsData.term1);
+                        for(let i=1; i<=17; i++) weekDatesMap['W'+i] = formatArabicDateRange(d1, i-1);
+                    }
+                    if(settingsData.term2) {
+                        let d2 = new Date(settingsData.term2);
+                        for(let i=18; i<=30; i++) weekDatesMap['W'+i] = formatArabicDateRange(d2, i-18);
+                    }
+                    updateWeekDate();
                 }
-                if(data.term2) {
-                    let d2 = new Date(data.term2);
-                    for(let i=18; i<=30; i++) weekDatesMap['W'+i] = formatArabicDateRange(d2, i-18);
-                }
-                updateWeekDate();
-            }
+            } catch (err) {}
         }
 
         async function saveSettings() {
             const t1 = document.getElementById("set-term1").value;
             const t2 = document.getElementById("set-term2").value;
-            await db.collection("settings").doc("absence_dates").set({ term1: t1, term2: t2 });
-            alert("تم حفظ التواريخ بنجاح!");
-            loadSettings();
+            await supabaseClient.from("system_capsules").upsert({ id: "absence_dates", data: { term1: t1, term2: t2 }, updatedat: new Date().toLocaleString('ar-EG') });
+            alert("تم حفظ التواريخ بنجاح!"); loadSettings();
         }
 
         function formatArabicDateRange(startDate, weeksToAdd) {
             let start = new Date(startDate); start.setDate(start.getDate() + (weeksToAdd * 7));
             let end = new Date(start); end.setDate(end.getDate() + 4);
-            
-            const format = (d) => `${toArabicNum(d.getDate())} ${arabicMonths[d.getMonth()]}`;
-            return `من ${format(start)} إلى ${format(end)}`;
+            return `من ${toArabicNum(start.getDate())} ${arabicMonths[start.getMonth()]} إلى ${toArabicNum(end.getDate())} ${arabicMonths[end.getMonth()]}`;
         }
 
         function updateWeekDate() {
@@ -300,28 +325,23 @@
             loadClassStats(); 
         }
 
-        // --- الرصد السريع ---
+        // --- الرصد ---
         async function loadClassStats() {
             const grade = document.getElementById("entry-grade").value;
             const week = document.getElementById("entry-week").value;
             if(!grade) return;
-
-            const snap = await db.collection("students").where("grade", "==", grade).get();
-            currentGradeStudents = [];
-            let totalAbs = 0;
-
-            snap.forEach(doc => {
-                const d = doc.data();
+            const { data } = await supabaseClient.from("students").select("*").eq("grade", grade);
+            currentGradeStudents = []; let totalAbs = 0;
+            (data || []).forEach(d => {
                 if(d.transfer_type !== "محول من") {
-                    currentGradeStudents.push({ id: doc.id, ...d });
-                    if(d.absences && d.absences[week]) totalAbs += parseInt(d.absences[week]);
+                    currentGradeStudents.push(d);
+                    let absences = typeof d.absences === 'string' ? JSON.parse(d.absences||'{}') : (d.absences||{});
+                    if(absences[week]) totalAbs += parseInt(absences[week]);
                 }
             });
-
             const totalStu = currentGradeStudents.length;
             const totalPossibleDays = totalStu * 5;
             const percent = totalPossibleDays === 0 ? 0 : (((totalPossibleDays - totalAbs) / totalPossibleDays) * 100).toFixed(1);
-
             document.getElementById("stat-total-stu").innerText = toArabicNum(totalStu);
             document.getElementById("stat-total-abs").innerText = toArabicNum(totalAbs);
             document.getElementById("stat-percent").innerText = `%${toArabicNum(percent)}`;
@@ -333,131 +353,234 @@
             const mNum = document.getElementById("entry-m").value.trim();
             const days = parseInt(document.getElementById("entry-days").value);
 
-            if(!grade) { alert("اختر الصف أولاً!"); return; }
-            if(!mNum) { alert("أدخل رقم السجل (الكود الداخلي)!"); return; }
-            if(isNaN(days) || days < 0 || days > 5) { alert("أيام الغياب يجب أن تكون من 0 إلى 5"); return; }
-
+            if(!grade || !mNum || isNaN(days) || days < 0 || days > 5) { alert("تأكد من إدخال بيانات صحيحة"); return; }
             const student = currentGradeStudents.find(s => s.register_num === mNum);
+            if(!student) { alert("لم يتم العثور على الطالب!"); return; }
+
+            const btn = document.getElementById("btn-save-abs"); btn.innerText = "جاري الحفظ...";
+            let absData = typeof student.absences === 'string' ? JSON.parse(student.absences||'{}') : (student.absences||{});
+            absData[week] = days;
+
+            await supabaseClient.from("students").update({ absences: absData }).eq("code", student.code);
+            const msg = document.getElementById("save-msg");
+            msg.innerText = `تم تسجيل ${toArabicNum(days)} أيام للطالب: ${student.name}`;
+            msg.style.display = "block"; setTimeout(() => msg.style.display = "none", 2000);
             
-            if(!student) {
-                alert(`لم يتم العثور على طالب برقم السجل (${mNum}) في ${grade}!`);
-                document.getElementById("entry-m").value = "";
-                document.getElementById("entry-m").focus();
-                return;
-            }
-
-            const btn = document.getElementById("btn-save-abs");
-            btn.innerText = "جاري الحفظ...";
-
-            try {
-                const absData = student.absences || {};
-                absData[week] = days;
-
-                await db.collection("students").doc(student.id).set({ absences: absData }, { merge: true });
-                
-                const msg = document.getElementById("save-msg");
-                msg.innerText = `تم تسجيل ${toArabicNum(days)} أيام غياب للطالب: ${student.name}`;
-                msg.style.display = "block";
-                setTimeout(() => msg.style.display = "none", 2000);
-
-                document.getElementById("entry-m").value = "";
-                document.getElementById("entry-days").value = "";
-                document.getElementById("entry-m").focus();
-                
-                loadClassStats(); 
-            } catch(e) {
-                alert("خطأ في الحفظ: " + e.message);
-            } finally {
-                btn.innerText = "تسجيل الغياب (Enter)";
-            }
+            document.getElementById("entry-m").value = ""; document.getElementById("entry-days").value = ""; document.getElementById("entry-m").focus();
+            loadClassStats(); btn.innerText = "تسجيل الغياب (Enter)";
         }
 
-        // --- التقارير المحدثة ---
-        async function generateReport(type = 'week') {
+        // --- التقارير والإنذارات ---
+       // --- التقارير والإنذارات ---
+       async function generateReport(type = 'week') {
+            document.getElementById("chart-wrapper").style.display = "none"; 
             const grade = document.getElementById("rep-grade").value;
             const week = document.getElementById("rep-week").value;
             const tbody = document.getElementById("report-tbody");
             const thead = document.getElementById("report-thead");
+            const kpiDash = document.getElementById("kpi-dashboard");
             
-            tbody.innerHTML = "<tr><td colspan='7'>⏳ جاري سحب التقرير...</td></tr>";
-
-            const snap = await db.collection("students").where("grade", "==", grade).get();
+            tbody.innerHTML = "<tr><td colspan='8'>⏳ جاري سحب وتحليل البيانات...</td></tr>";
+            
+            const { data } = await supabaseClient.from("students").select("*").eq("grade", grade);
             let list = [];
-            snap.forEach(doc => {
-                const d = doc.data();
-                if(d.transfer_type !== "محول من") list.push(d);
-            });
-
+            (data || []).forEach(d => { if(d.transfer_type !== "محول من") list.push(d); });
             list.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
 
             tbody.innerHTML = "";
+            let counts = { all:0, perfect:0, safe:0, warn1:0, warn2:0, danger:0 };
 
             if(type === "week") {
+                kpiDash.style.display = "none"; 
                 const weekIndex = parseInt(week.replace('W','')) - 1;
-                const weekNameArabic = arabicWeeks[weekIndex] || week.replace('W','');
-                document.getElementById("report-title").innerText = `تقرير غياب ${grade} - الأسبوع ${weekNameArabic} (${weekDatesMap[week]||''})`;
-                thead.innerHTML = "<tr><th>م</th><th>كود الوزارة</th><th>الكود الداخلي</th><th>اسم التلميذ</th><th>الفصل</th><th>أيام الغياب</th><th>متوسط غياب الترم</th></tr>";
+                document.getElementById("report-title").innerText = `تقرير غياب ${grade} - الأسبوع ${arabicWeeks[weekIndex]} (${weekDatesMap[week]||''})`;
+                
+                thead.innerHTML = "<tr><th>م</th><th>الكود الإلزامي</th><th>الكود الداخلي</th><th>اسم التلميذ</th><th>الفصل</th><th>الغياب</th><th>الإنذار</th><th>ملاحظات</th></tr>";
                 
                 let i = 1;
-                const weekNum = parseInt(week.replace('W',''));
-                const isTerm1 = weekNum <= 17;
-                const startW = isTerm1 ? 1 : 18;
-                const endW = isTerm1 ? 17 : 30;
-
                 list.forEach(s => {
-                    const abs = (s.absences && s.absences[week]) ? parseInt(s.absences[week]) : 0;
+                    let absData = typeof s.absences === 'string' ? JSON.parse(s.absences||'{}') : (s.absences||{});
+                    const abs = absData[week] ? parseInt(absData[week]) : 0;
                     if(abs > 0) {
-                        // حساب متوسط الترم
-                        let termAbs = 0;
-                        for(let w=startW; w<=endW; w++) {
-                            if(s.absences && s.absences['W'+w]) termAbs += parseInt(s.absences['W'+w]);
-                        }
-                        const totalDays = (endW - startW + 1) * 5;
-                        const percent = (((totalDays - termAbs) / totalDays) * 100).toFixed(1);
-                        const isDanger = percent < 85;
-
                         tbody.innerHTML += `<tr>
                             <td>${toArabicNum(i++)}</td>
-                            <td style="font-family:Arial; font-size:13px;">${s.code||'-'}</td>
+                            <td style="font-family:Arial; font-size:13px; font-weight:bold;">${(s.code && !s.code.startsWith('TEMP_')) ? s.code : '-'}</td>
                             <td style="font-weight:900; color:var(--primary)">${toArabicNum(s.register_num)}</td>
                             <td style="text-align:right; font-weight:900;">${s.name}</td>
                             <td>${toArabicNum(s.class)}</td>
-                            <td class="danger-text">${toArabicNum(abs)} أيام</td>
-                            <td style="direction:ltr; color:${isDanger?'red':'green'}; font-weight:bold;">%${toArabicNum(percent)}</td>
+                            <td class="danger-text">${toArabicNum(abs)}</td>
+                            <td><span class="badge bg-warn1">غياب حالي</span></td>
+                            <td>-</td>
                         </tr>`;
                     }
                 });
-                if(i === 1) tbody.innerHTML = "<tr><td colspan='7' style='color:green; font-weight:bold; padding:30px;'>لا يوجد غياب مسجل هذا الأسبوع!</td></tr>";
+                if(i === 1) tbody.innerHTML = "<tr><td colspan='8' style='color:green; font-weight:bold; padding:30px;'>مثالي! لا يوجد غياب مسجل هذا الأسبوع.</td></tr>";
             } 
             else {
+                kpiDash.style.display = "grid";
+                document.getElementById("data-table").style.display = "table";
+
                 const isTerm1 = type === "term1";
                 const startW = isTerm1 ? 1 : 18;
                 const endW = isTerm1 ? 17 : 30;
-                document.getElementById("report-title").innerText = `تقرير نسبة الحضور - ${grade} - الترم ${isTerm1?'الأول':'الثاني'}`;
-                thead.innerHTML = "<tr><th>م</th><th>كود الوزارة</th><th>الكود الداخلي</th><th>اسم التلميذ</th><th>الفصل</th><th>إجمالي الغياب</th><th>نسبة الحضور</th></tr>";
+                document.getElementById("report-title").innerText = `التحليل الشامل للإنذارات - ${grade} - الترم ${isTerm1?'الأول':'الثاني'}`;
+
+                thead.innerHTML = "<tr><th>م</th><th>الكود الإلزامي</th><th>الكود الداخلي</th><th>اسم التلميذ</th><th>الفصل</th><th>الغياب</th><th>حالة الإنذار</th><th id='dynamic-col'>نسبة الحضور</th></tr>";
 
                 let i = 1;
                 list.forEach(s => {
+                    counts.all++; // زيادة إجمالي التلاميذ
+                    let absData = typeof s.absences === 'string' ? JSON.parse(s.absences||'{}') : (s.absences||{});
                     let totalAbs = 0;
-                    for(let w=startW; w<=endW; w++) {
-                        if(s.absences && s.absences['W'+w]) totalAbs += parseInt(s.absences['W'+w]);
-                    }
+                    for(let w=startW; w<=endW; w++) { if(absData['W'+w]) totalAbs += parseInt(absData['W'+w]); }
                     
                     const totalDays = (endW - startW + 1) * 5;
                     const percent = (((totalDays - totalAbs) / totalDays) * 100).toFixed(1);
-                    const isDanger = percent < 85;
+                    
+                    // الفصل الصارم بين الفئات
+                    let badge = "", statusClass = "";
+                    if(totalAbs === 0) { counts.perfect++; badge = "<span class='badge' style='background:var(--primary); color:white;'>مثالي</span>"; statusClass = "row-perfect"; }
+                    else if(totalAbs >= 1 && totalAbs <= 5) { counts.safe++; badge = "<span class='badge bg-safe'>آمن</span>"; statusClass = "row-safe"; }
+                    else if(totalAbs >= 6 && totalAbs <= 10) { counts.warn1++; badge = "<span class='badge bg-warn1'>إنذار أول</span>"; statusClass = "row-warn1"; }
+                    else if(totalAbs >= 11 && totalAbs <= 14) { counts.warn2++; badge = "<span class='badge bg-warn2'>إنذار ثاني</span>"; statusClass = "row-warn2"; }
+                    else { counts.danger++; badge = "<span class='badge bg-danger'>خطر الفصل</span>"; statusClass = "row-danger"; }
 
-                    tbody.innerHTML += `<tr>
+                    tbody.innerHTML += `<tr class="data-row ${statusClass}">
                         <td>${toArabicNum(i++)}</td>
-                        <td style="font-family:Arial; font-size:13px;">${s.code||'-'}</td>
+                        <td style="font-family:Arial; font-size:13px; font-weight:bold;">${(s.code && !s.code.startsWith('TEMP_')) ? s.code : '-'}</td>
                         <td style="font-weight:900; color:var(--primary)">${toArabicNum(s.register_num)}</td>
                         <td style="text-align:right; font-weight:900;">${s.name}</td>
                         <td>${toArabicNum(s.class)}</td>
-                        <td class="danger-text">${toArabicNum(totalAbs)} أيام</td>
-                        <td style="direction:ltr; color:${isDanger?'red':'green'}; font-weight:bold;">%${toArabicNum(percent)}</td>
+                        <td style="font-weight:900;">${toArabicNum(totalAbs)}</td>
+                        <td>${badge}</td>
+                        <td class="dynamic-val" data-percent="%${toArabicNum(percent)}" data-mobile="${s.father_mobile||'-'}" style="direction:ltr; font-weight:bold;">%${toArabicNum(percent)}</td>
                     </tr>`;
                 });
+
+                document.getElementById("kpi-all").innerText = counts.all;
+                document.getElementById("kpi-perfect").innerText = counts.perfect;
+                document.getElementById("kpi-safe").innerText = counts.safe;
+                document.getElementById("kpi-warn1").innerText = counts.warn1;
+                document.getElementById("kpi-warn2").innerText = counts.warn2;
+                document.getElementById("kpi-danger").innerText = counts.danger;
             }
+        }
+
+        // --- فلترة الجدول بناء على الضغط على البطاقات ---
+        function filterTable(filterClass) {
+            const rows = document.querySelectorAll(".data-row");
+            const dynamicColHead = document.getElementById("dynamic-col");
+            
+            // إذا تم الضغط على إنذارات، نغير العنوان إلى "رقم الموبايل"، وإلا نرجعه "نسبة الحضور"
+            const showMobile = (filterClass === 'warn1' || filterClass === 'warn2' || filterClass === 'danger');
+            if(dynamicColHead) dynamicColHead.innerText = showMobile ? "رقم الموبايل" : "نسبة الحضور";
+
+            let i = 1; // لإعادة ترقيم التسلسل للمجموعة المفلترة
+            rows.forEach(r => {
+                let showRow = false;
+                if(filterClass === 'all') showRow = true;
+                else if(r.classList.contains('row-' + filterClass)) showRow = true;
+                
+                if(showRow) {
+                    r.style.display = "";
+                    r.cells[0].innerText = toArabicNum(i++); // إعادة الترقيم
+                    
+                    // تبديل محتوى الخلية الأخيرة بناءً على نوع الفلتر
+                    let lastCell = r.querySelector('.dynamic-val');
+                    if(lastCell) {
+                        if(showMobile) {
+                            lastCell.innerText = lastCell.getAttribute('data-mobile');
+                            lastCell.style.direction = "ltr";
+                            lastCell.style.color = "var(--primary)";
+                        } else {
+                            lastCell.innerText = lastCell.getAttribute('data-percent');
+                            lastCell.style.direction = "ltr";
+                            lastCell.style.color = "black";
+                        }
+                    }
+                } else {
+                    r.style.display = "none";
+                }
+            });
+        }
+
+        // --- الإبداع: المنحنى الزمني للمدرسة بالكامل (Chart.js) ---
+        async function generateSchoolChart(term) {
+            document.getElementById("kpi-dashboard").style.display = "none";
+            document.getElementById("data-table").style.display = "none";
+            document.getElementById("report-title").innerText = "⏳ جاري سحب بيانات المدرسة بالكامل... يرجى الانتظار";
+            
+            const isTerm1 = term === "term1";
+            const startW = isTerm1 ? 1 : 18;
+            const endW = isTerm1 ? 17 : 30;
+            
+            const { data } = await supabaseClient.from("students").select("absences, transfer_type");
+            
+            let weeklyData = [];
+            let labels = [];
+
+            for(let w=startW; w<=endW; w++) {
+                labels.push('أسبوع ' + toArabicNum(isTerm1 ? w : w-17));
+                let weekAbs = 0;
+                let activeStudents = 0;
+                
+                (data || []).forEach(s => {
+                    if(s.transfer_type !== "محول من") {
+                        activeStudents++;
+                        let absData = typeof s.absences === 'string' ? JSON.parse(s.absences||'{}') : (s.absences||{});
+                        if(absData['W'+w]) weekAbs += parseInt(absData['W'+w]);
+                    }
+                });
+
+                const totalPossible = activeStudents * 5;
+                const percent = totalPossible === 0 ? 0 : (((totalPossible - weekAbs) / totalPossible) * 100);
+                weeklyData.push(percent.toFixed(1));
+            }
+
+            document.getElementById("report-title").innerText = `المنحنى الزمني لحضور المدرسة - الترم ${isTerm1?'الأول':'الثاني'}`;
+            document.getElementById("chart-wrapper").style.display = "block";
+
+            const ctx = document.getElementById('schoolChart').getContext('2d');
+            
+            if(myChart) myChart.destroy(); // تدمير الرسم القديم إن وجد
+
+            // تدرج لوني فخم تحت المنحنى
+            let gradient = ctx.createLinearGradient(0, 0, 0, 350);
+            gradient.addColorStop(0, 'rgba(30, 58, 138, 0.4)'); // لون var(--primary) شفاف
+            gradient.addColorStop(1, 'rgba(30, 58, 138, 0.0)');
+
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'نسبة الحضور العامة (%)',
+                        data: weeklyData,
+                        borderColor: '#1e3a8a',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#ca8a04',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        fill: true,
+                        tension: 0.4 // لجعل المنحنى انسيابياً
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { font: { family: 'Cairo', size: 14, weight: 'bold' } } },
+                        tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' } }
+                    },
+                    scales: {
+                        y: { min: 50, max: 100, ticks: { font: { family: 'Cairo', weight: 'bold' }, callback: function(val) { return val + '%'; } } },
+                        x: { ticks: { font: { family: 'Cairo', weight: 'bold' } } }
+                    }
+                }
+            });
         }
     </script>
 </body>
