@@ -5,13 +5,22 @@
     <title>منظومة الجدول المدرسي - مستر زيزو</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <!-- مكتبة Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* ================= المتغيرات الديناميكية ================= */
+        /* ================= المتغيرات الديناميكية ونظام الألوان الموحد ================= */
         :root { 
-            --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; --success: #16a34a; --info: #0284c7; --warning: #d97706; --danger: #be123c; 
+            --primary-color: #1e3a8a;    
+            --secondary-color: #d97706;  
+            --bg-color: #f8fafc;         
+            --surface-color: #ffffff;    
+            --text-main: #0f172a;        
+            --danger: #be123c;           
+            --success: #16a34a;          
+            --info: #0284c7;             
+            --border-color: #cbd5e1;     
             
             /* إعدادات جدول المعلم (A5) */
             --row-title-h: 50px; --row-period-h: 30px; --row-session-h: 30px; --row-data-h: 55px;
@@ -26,36 +35,43 @@
         }
 
         * { box-sizing: border-box; font-family: 'Cairo', 'Arial', sans-serif; margin: 0; padding: 0; }
-        body { background-color: var(--bg); color: #000; padding: 15px; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
+        body { background-color: var(--bg-color); color: #000; padding: 10px 15px; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
 
-        /* ================= شريط التنقل ================= */
-        .top-nav { width: 100%; max-width: 1100px; background: var(--dark); padding: 10px 20px; border-radius: 10px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .nav-title { font-size: 16px; font-weight: 900; color: #fcd34d; display: flex; align-items: center; gap: 10px; }
-        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 6px 15px; border-radius: 6px; font-size: 13px; font-weight: 700; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
-        .btn-nav:hover { background: var(--primary); }
+        /* ================= الشريط العلوي والتنقل ================= */
+        .top-navigation { width: 100%; max-width: 1100px; background: var(--primary-color); padding: 10px 20px; border-radius: 10px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 10px; }
+        .nav-title { font-size: 17px; font-weight: 900; color: #e2e8f0; display: flex; align-items: center; gap: 10px; }
+        
+        .dev-badge { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); color: #fff; padding: 6px 25px; border-radius: 50px; font-size: 13px; font-weight: 900; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; }
+        .dev-badge span { color: #fcd34d; font-size: 14px; }
+        
+        .nav-actions { display: flex; align-items: center; gap: 10px; }
+        .quick-nav-select { padding: 6px 12px; border-radius: 6px; border: 1px solid #fcd34d; background: #1e3a8a; color: white; font-weight: bold; font-family: 'Cairo'; outline: none; cursor: pointer; }
+        .quick-nav-select option { background: white; color: black; }
+        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 6px 20px; border-radius: 6px; font-size: 14px; font-weight: 900; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn-nav:hover { background: #1e293b; transform: translateY(-2px); }
 
         /* ================= لوحة التحكم ================= */
-        .controls-wrapper { width: 100%; max-width: 1100px; display: flex; flex-wrap: wrap; gap: 15px; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--primary); margin-bottom: 20px; align-items: flex-end; }
+        .controls-wrapper { width: 100%; max-width: 1100px; display: flex; flex-wrap: wrap; gap: 15px; background: var(--surface-color); padding: 15px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-top: 4px solid var(--primary-color); margin-bottom: 20px; align-items: flex-end; }
         
         .input-group { display: flex; flex-direction: column; gap: 5px; flex-grow: 1; min-width: 200px; }
-        .input-group label { font-size: 12px; font-weight: 900; color: var(--dark); }
-        .input-group select, .input-group input { padding: 8px 12px; border-radius: 6px; border: 2px solid #cbd5e1; font-weight: 800; font-size: 14px; outline: none; background: #f8fafc; color: var(--dark); }
-        .input-group select:focus, .input-group input:focus { border-color: var(--info); background: white; }
+        .input-group label { font-size: 13px; font-weight: 900; color: var(--text-main); }
+        .input-group select, .input-group input { padding: 8px 12px; border-radius: 6px; border: 2px solid var(--border-color); font-weight: 800; font-size: 14px; outline: none; background: var(--bg-color); color: var(--text-main); transition: 0.2s;}
+        .input-group select:focus, .input-group input:focus { border-color: var(--primary-color); background: white; box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);}
         
         .btn-action { border: none; padding: 10px 20px; border-radius: 6px; font-weight: 900; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; height: 40px; transition: 0.2s; }
-        .btn-save { background: var(--success); flex-grow: 1; }
-        .btn-print { background: var(--primary); }
-        .btn-settings { background: var(--dark); }
-        .btn-add-tea { background: var(--warning); color: #000; text-decoration: none; }
+        .btn-save { background: var(--success); flex-grow: 1; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2);}
+        .btn-print { background: var(--primary-color); }
+        .btn-settings { background: #334155; }
+        .btn-add-tea { background: var(--secondary-color); color: white; text-decoration: none; }
         .btn-action:hover { opacity: 0.9; transform: translateY(-2px); }
 
         .btn-missing { background: #8b5cf6; }
-        .btn-master { background: #0ea5e9; }
+        .btn-master { background: var(--info); }
 
         /* ================= شريط المراقبة الحية ================= */
-        .live-tracker { width: 100%; max-width: 1000px; background: #eff6ff; border: 2px solid #bfdbfe; padding: 10px 20px; border-radius: 10px; display: none; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: 900; font-size: 14px; color: var(--dark); }
+        .live-tracker { width: 100%; max-width: 1000px; background: #f0fdf4; border: 2px solid #bbf7d0; padding: 10px 20px; border-radius: 10px; display: none; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: 900; font-size: 14px; color: var(--text-main); }
         .tracker-item { display: flex; align-items: center; gap: 8px; }
-        .tracker-val { font-size: 18px; color: var(--primary); background: white; padding: 2px 10px; border-radius: 6px; border: 1px solid #93c5fd; }
+        .tracker-val { font-size: 18px; color: var(--primary-color); background: white; padding: 2px 10px; border-radius: 6px; border: 1px solid #bbf7d0; }
         .tracker-status { padding: 4px 12px; border-radius: 20px; font-size: 13px; color: white; }
 
         /* ================= منطقة الطباعة والجدول (A5) ================= */
@@ -78,7 +94,7 @@
         .main-table th:nth-child(2n+1):not(:first-child), .main-table td:nth-child(2n+1):not(:first-child) { border-left: var(--border-thick) solid #000 !important; }
 
         .cell-input { width: 100%; height: 100%; text-align: center; border: none; background: transparent; font-weight: 900; font-size: var(--font-cell); font-family: 'Arial', sans-serif; outline: none; color: #000; }
-        .cell-input:focus { background: #fef3c7; box-shadow: inset 0 0 0 2px var(--warning); }
+        .cell-input:focus { background: #fef3c7; box-shadow: inset 0 0 0 2px var(--secondary-color); }
         .cell-clash { color: red !important; background: #fee2e2 !important; }
 
         .print-footer { display: flex; justify-content: space-between; margin-top: var(--space-bottom); padding: 10px 20px; font-weight: 900; font-size: var(--font-footer); border-top: 2px solid #000; color: #000; }
@@ -86,22 +102,22 @@
         /* ================= النوافذ المنبثقة ================= */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: #f8fafc; width: 100%; max-width: 900px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
-        .modal-header { background: var(--dark); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-content { background: var(--bg-color); width: 100%; max-width: 900px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-header { background: var(--primary-color); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 25px; overflow-y: auto; }
         
-        .settings-section { background: white; padding: 15px; border-radius: 10px; border: 1px solid #cbd5e1; margin-bottom: 15px; }
-        .settings-section h3 { font-size: 14px; color: var(--primary); margin-bottom: 10px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; }
+        .settings-section { background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 15px; }
+        .settings-section h3 { font-size: 14px; color: var(--primary-color); margin-bottom: 10px; border-bottom: 1px dashed var(--border-color); padding-bottom: 5px; }
         .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
         .set-group { display: flex; flex-direction: column; gap: 5px; }
         .set-group label { font-size: 12px; font-weight: 800; color: #475569; }
-        .set-group input, .set-group select { padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: bold; text-align: center; outline: none; }
+        .set-group input, .set-group select { padding: 8px; border-radius: 6px; border: 1px solid var(--border-color); font-weight: bold; text-align: center; outline: none; }
         .set-group input:focus, .set-group select:focus { border-color: var(--info); }
 
         /* جدول الحصص الفارغة الجديد */
-        .missing-table { width: 100%; border-collapse: collapse; text-align: center; background: white; border: 2px solid var(--dark); }
-        .missing-table th, .missing-table td { border: 1px solid #cbd5e1; padding: 10px; font-weight: 900; font-size: 14px; }
-        .missing-table thead th { background: var(--dark); color: white; }
+        .missing-table { width: 100%; border-collapse: collapse; text-align: center; background: white; border: 2px solid var(--primary-color); }
+        .missing-table th, .missing-table td { border: 1px solid var(--border-color); padding: 10px; font-weight: 900; font-size: 14px; }
+        .missing-table thead th { background: var(--primary-color); color: white; }
         .missing-table td:nth-child(3) { text-align: right; color: var(--danger); line-height: 1.6; }
 
         /* ================= جدول اللفاف (A4) ================= */
@@ -116,12 +132,10 @@
 
         .btn-close-master { position: absolute; top: 20px; left: 20px; background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
-        .zizo-signature { position: fixed; bottom: 10px; left: 10px; background: white; padding: 5px 15px; border-radius: 20px; font-weight: 900; font-size: 11px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); z-index: 100; }
-
         /* ================= إعدادات الطباعة ================= */
         @media print {
             body { background: white; padding: 0; direction: rtl !important; }
-            .top-nav, .controls-wrapper, .live-tracker, .zizo-signature, .modal-overlay, .btn-close-master { display: none !important; }
+            .top-navigation, .controls-wrapper, .live-tracker, .modal-overlay, .btn-close-master { display: none !important; }
             
             /* طباعة جدول المعلم (الافتراضي) */
             body:not(.print-master-mode) #print-area { display: block !important; border: none; box-shadow: none; padding: 0; width: 100%; max-width: 100%; margin: 0; }
@@ -138,9 +152,25 @@
 </head>
 <body>
 
-    <nav class="top-nav">
-        <div class="nav-title"><i class="fa-solid fa-table-cells"></i> منظومة الجدول المدرسي <span style="font-size:12px; color:white; background:#ca8a04; padding:2px 8px; border-radius:10px; margin-right:10px;">إعداد مستر زيزو</span></div>
-        <a href="index.html" class="btn-nav"><i class="fa-solid fa-house"></i> الرئيسية</a>
+    <nav class="top-navigation">
+        <div class="nav-title"><i class="fa-solid fa-table-cells"></i> منظومة الجدول المدرسي</div>
+        
+        <div class="dev-badge">
+            <i class="fa-solid fa-medal" style="color:#fcd34d; font-size:18px;"></i> 
+            إعداد وتطوير &nbsp;|&nbsp; <span>أ/ عبدالعزيز لولح</span> &nbsp;|&nbsp; ( مستر زيزو )
+        </div>
+
+        <div class="nav-actions">
+            <select class="quick-nav-select" onchange="if(this.value) window.location.href=this.value;">
+                <option value="" disabled selected>🚀 انتقال سريع...</option>
+                <option value="stu-data.html">بيانات التلاميذ</option>
+                <option value="stu-absence.html">منظومة الغياب</option>
+                <option value="tea-data.html">بيانات المعلمين</option>
+                <option value="tea-contract.html">معلمي الأجر</option>
+                <option value="stu-print.html">مركز الطباعة</option>
+            </select>
+            <a href="index.html" class="btn-nav"><i class="fa-solid fa-house"></i> الرئيسية</a>
+        </div>
     </nav>
 
     <div class="controls-wrapper">
@@ -152,7 +182,7 @@
                     <select id="teacher-select" onchange="loadTeacherSchedule()" style="flex-grow:1;">
                         <option value="" disabled selected>جاري التحميل...</option>
                     </select>
-                    <a href="tea.html" target="_blank" class="btn-action btn-add-tea" title="إضافة معلم جديد"><i class="fa-solid fa-user-plus"></i></a>
+                    <a href="tea-data.html" target="_blank" class="btn-action btn-add-tea" title="إضافة معلم جديد"><i class="fa-solid fa-user-plus"></i></a>
                 </div>
             </div>
             
@@ -161,7 +191,7 @@
                 <input type="text" id="short-name" placeholder="يظهر تلقائياً...">
             </div>
 
-            <div style="border-right: 2px dashed #cbd5e1; margin: 0 10px;"></div>
+            <div style="border-right: 2px dashed var(--border-color); margin: 0 10px;"></div>
 
             <div class="input-group">
                 <label>2. عرض جدول فصل:</label>
@@ -170,11 +200,11 @@
                 </select>
             </div>
 
-            <div style="border-right: 2px dashed #cbd5e1; margin: 0 10px;"></div>
+            <div style="border-right: 2px dashed var(--border-color); margin: 0 10px;"></div>
 
             <div class="input-group" style="min-width: 130px;">
                 <label>بدء العمل به من:</label>
-                <input type="date" id="start-date" onchange="saveStartDate(this.value)">
+                <input type="date" id="start-date" onchange="saveStartDate(this.value)" style="font-family: Arial;">
             </div>
         </div>
 
@@ -186,7 +216,7 @@
             <div style="flex-grow:1"></div>
 
             <button class="btn-action btn-settings" onclick="openSettingsModal()"><i class="fa-solid fa-sliders"></i> التنسيق</button>
-            <button class="btn-action btn-save" onclick="saveTeacherSchedule()"><i class="fa-solid fa-floppy-disk"></i> حفظ</button>
+            <button class="btn-action btn-save" onclick="saveTeacherSchedule()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ السحابة</button>
             <button class="btn-action btn-print" onclick="printNormalSchedule()"><i class="fa-solid fa-print"></i> طباعة (A5)</button>
         </div>
     </div>
@@ -250,19 +280,16 @@
             </div>
         </div>
         <div id="master-table-container"></div>
-        <!-- تم إزالة التذييل من هنا كما طلبت -->
     </div>
 
-    <!-- نافذة الحصص غير المسندة (الجديدة) -->
+    <!-- نافذة الحصص غير المسندة -->
     <div class="modal-overlay" id="missingModal">
         <div class="modal-content" style="max-width: 700px;">
             <div class="modal-header">
                 <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-triangle-exclamation"></i> تقرير الحصص الفارغة (غير المسندة)</h2>
                 <button onclick="document.getElementById('missingModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
             </div>
-            <div class="modal-body" id="missing-body">
-                <!-- سيتم التعبئة برمجياً -->
-            </div>
+            <div class="modal-body" id="missing-body"></div>
         </div>
     </div>
 
@@ -367,12 +394,11 @@
         </div>
     </div>
 
-    <div class="zizo-signature">إعداد مستر زيزو</div>
-
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyAlF5wLRWnhWqRYR2uwBgSpZ_z7qkwyRac", authDomain: "zizo-school.firebaseapp.com", projectId: "zizo-school", storageBucket: "zizo-school.firebasestorage.app", messagingSenderId: "46708980196", appId: "1:46708980196:web:9349e311d3a1bf5309eff1" };
-        firebase.initializeApp(firebaseConfig); const db = firebase.firestore();
-        db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+        // ================= إعدادات Supabase =================
+        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         let TEACHERS = [];
         let CURRENT_TEACHER = null;
@@ -397,10 +423,8 @@
             setupEnterKeyNavigation();
         });
 
-        // ================= دالة تنظيف النصوص =================
         const clean = t => t ? t.trim().replace(/[أإآا]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, "") : "";
 
-        // ================= دالة تنسيق الأرقام =================
         function formatNum(str) {
             const format = JSON.parse(localStorage.getItem("schedule_settings"))?.numFormat || 'ar';
             if (!str && str !== 0) return "";
@@ -409,7 +433,6 @@
             else return str.replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
         }
 
-        // ================= إعدادات التنسيق والطباعة =================
         const defaultSettings = {
             rowTitle: 50, rowPeriod: 30, rowSession: 30, rowData: 55,
             colDay: 100, colSession: 0, spaceTop: 15, spaceBottom: 20,
@@ -513,7 +536,6 @@
             if(dateVal) document.getElementById('p-date').innerText = formatNum(dateVal.split('-').reverse().join(' / '));
         }
 
-        // ================= باقي العمليات الأساسية =================
         function loadSavedDate() {
             const savedDate = localStorage.getItem("schedule_start_date");
             if(savedDate) {
@@ -565,20 +587,19 @@
             updateLiveStats();
         }
 
+        // ================= الجلب والحفظ بـ Supabase =================
         async function loadTeachers() {
             const select = document.getElementById("teacher-select");
             try {
-                const snap = await db.collection("teachers").where("emp_status", "==", "على رأس العمل").get();
-                snap.forEach(doc => {
-                    const t = doc.data();
+                const { data, error } = await supabaseClient.from("teachers").select("*").eq("emp_status", "على رأس العمل");
+                if(error) throw error;
+
+                (data || []).forEach(t => {
                     const job = clean(t.cadre_job);
-                    // استبعاد الإداريين والعمال
                     const isNonTeacher = job.includes("عامل") || job.includes("اداري") || job.includes("اخصائي") || job.includes("مشرف") || job.includes("سكرتير") || job.includes("امين") || job.includes("حارس") || job.includes("فني") || job.includes("فنى");
-                    
-                    if(!isNonTeacher) {
-                        TEACHERS.push(t);
-                    }
+                    if(!isNonTeacher) { TEACHERS.push(t); }
                 });
+                
                 TEACHERS.sort((a,b) => (a.name || "").localeCompare(b.name, 'ar'));
                 
                 select.innerHTML = '<option value="" disabled selected>اختر المعلم...</option>';
@@ -608,7 +629,7 @@
             }
             
             document.getElementById("short-name").value = sName;
-            document.getElementById("table-main-title").innerHTML = `جدول حصص أ / <span style="color:var(--primary)">${sName}</span>`;
+            document.getElementById("table-main-title").innerHTML = `جدول حصص أ / <span style="color:var(--primary-color)">${sName}</span>`;
 
             document.getElementById("live-tracker").style.display = "flex";
             document.getElementById("tk-degree").innerText = CURRENT_TEACHER.fin_degree || "غير مسجل";
@@ -683,10 +704,16 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
 
             try {
-                await db.collection("teachers").doc(code).set({ short_name: shortName, schedule: scheduleData }, { merge: true });
+                const { error } = await supabaseClient.from("teachers").update({ 
+                    short_name: shortName, 
+                    schedule: scheduleData 
+                }).eq("code", code);
+                
+                if (error) throw error;
+
                 const tIndex = TEACHERS.findIndex(t => t.code === code);
                 if(tIndex > -1) { TEACHERS[tIndex].short_name = shortName; TEACHERS[tIndex].schedule = scheduleData; }
-                document.getElementById("table-main-title").innerHTML = `جدول حصص أ / <span style="color:var(--primary)">${shortName}</span>`;
+                document.getElementById("table-main-title").innerHTML = `جدول حصص أ / <span style="color:var(--primary-color)">${shortName}</span>`;
                 alert("✅ تم الحفظ بنجاح!");
             } catch(e) { alert("❌ خطأ: " + e.message); }
             finally { btn.innerHTML = oldHtml; }
@@ -707,7 +734,7 @@
                 inp.value = "";
                 inp.readOnly = true; 
                 inp.classList.remove("cell-clash");
-                inp.style.color = "var(--primary)";
+                inp.style.color = "var(--primary-color)";
 
                 const key = `${inp.getAttribute("data-day")}_${inp.getAttribute("data-session")}`;
                 let teachersInThisSlot = [];
@@ -728,8 +755,6 @@
         }
 
         // ================= الميزات الجديدة (الحصص الفارغة + جدول اللفاف) =================
-
-        // 1. الحصص غير المسندة (الجدول الجديد)
         function openMissingPeriodsModal() {
             const body = document.getElementById("missing-body");
             body.innerHTML = "<div style='text-align:center;'><i class='fa-solid fa-spinner fa-spin'></i> جاري فحص الجداول...</div>";
@@ -756,7 +781,7 @@
                         
                         if(missingClasses.length > 0) {
                             dayHtml += `<tr>
-                                ${!dayHasMissing ? `<td rowspan="ROWSPAN_PLACEHOLDER" style="background:#f8fafc; color:var(--primary);">${dayNamesAr[day]}</td>` : ''}
+                                ${!dayHasMissing ? `<td rowspan="ROWSPAN_PLACEHOLDER" style="background:#f8fafc; color:var(--primary-color);">${dayNamesAr[day]}</td>` : ''}
                                 <td>${formatNum(i)}</td>
                                 <td>${missingClasses.join(' ، ')}</td>
                             </tr>`;
@@ -766,7 +791,6 @@
                     }
                     
                     if(dayHasMissing) {
-                        // حساب عدد الصفوف لليوم لضبط الـ rowspan
                         const rowCount = (dayHtml.match(/<tr>/g) || []).length;
                         dayHtml = dayHtml.replace("ROWSPAN_PLACEHOLDER", rowCount);
                         html += dayHtml;
@@ -783,7 +807,6 @@
             }, 500);
         }
 
-        // 2. جدول اللفاف اليومي
         function openMasterScheduleModal() {
             document.getElementById("masterModal").classList.add("active");
         }
@@ -854,7 +877,6 @@
             document.getElementById("master-print-area").style.display = "none";
         }
 
-        // 3. الطباعة الذكية
         function printNormalSchedule() {
             document.body.classList.remove("print-master-mode");
             window.print();
