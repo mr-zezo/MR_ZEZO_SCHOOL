@@ -65,10 +65,12 @@
         .btn-csv { background-color: var(--secondary-color); } .btn-csv:hover { background-color: #b45309; }
         .btn-excel { background-color: var(--primary-color); } .btn-excel:hover { background-color: #1e40af; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; text-align: center; }
+        /* الجدول والحاوية القابلة للتمرير */
+        .table-wrapper { width: 100%; max-height: 400px; overflow-y: auto; margin-top: 15px; border: 1px solid var(--border-color); border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: center; }
         table, th, td { border: 1px solid var(--border-color); }
         th, td { padding: 10px; font-weight: 800; }
-        th { background-color: var(--primary-color); color: white; }
+        th { background-color: var(--primary-color); color: white; position: sticky; top: 0; z-index: 1; }
         tr:nth-child(even) { background-color: #f8fafc; }
         .btn-edit { background: var(--info); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Cairo'; font-weight: 900; transition: 0.2s;}
         .btn-edit:hover { background: #0369a1; }
@@ -126,11 +128,15 @@
             <button class="btn-excel" onclick="exportFilteredData('رياض أطفال', 'excel')"><i class="fa-solid fa-file-excel"></i> تصدير رياض (Excel)</button>
         </div>
 
-        <h3 style="margin-top: 30px; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;"><i class="fa-solid fa-users-viewfinder"></i> البيانات المسجلة مؤخراً</h3>
-        <table>
-            <thead><tr><th>اسم الطالب</th><th>المرحلة</th><th>الحالة</th><th>القومي للطالب</th><th>إجراء</th></tr></thead>
-            <tbody id="dataTableBody"></tbody>
-        </table>
+        <h3 style="margin-top: 30px; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;"><i class="fa-solid fa-users-viewfinder"></i> جميع البيانات المسجلة</h3>
+        
+        <!-- الحاوية القابلة للتمرير للجدول -->
+        <div class="table-wrapper">
+            <table>
+                <thead><tr><th>اسم الطالب</th><th>المرحلة</th><th>الحالة</th><th>القومي للطالب</th><th>إجراء</th></tr></thead>
+                <tbody id="dataTableBody"></tbody>
+            </table>
+        </div>
         
         <!-- زر مسح البيانات المحمي بكلمة مرور -->
         <button onclick="clearServerData()" class="btn-clear-db">
@@ -248,19 +254,14 @@
 
         function updateTable() {
             const tbody = document.getElementById('dataTableBody'); tbody.innerHTML = '';
-            // عرض آخر 10 مسجلين فقط لتخفيف الشاشة
-            const displayData = studentsData.slice(0, 10);
             
-            displayData.forEach(r => {
+            // عرض جميع البيانات
+            studentsData.forEach(r => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `<td>${r.c1}</td><td>${r.c17}</td><td style="color:${r.status==='مسجل'?'var(--success)':'var(--danger)'}; font-weight:900;">${r.status}</td><td style="font-family:Arial;">${r.c13}</td>
                 <td><button class="btn-edit" onclick="editRecord('${r.id}')"><i class="fa-solid fa-pen"></i> تعديل</button></td>`;
                 tbody.appendChild(tr);
             });
-            
-            if(studentsData.length > 10) {
-                tbody.innerHTML += `<tr><td colspan="5" style="color:var(--info); font-size:12px;">يتم عرض أحدث 10 تسجيلات فقط. (إجمالي المسجلين: ${studentsData.length})</td></tr>`;
-            }
         }
 
         function clearForm() {
@@ -276,7 +277,6 @@
             if (pass === '2026') {
                 if(confirm('تحذير نهائي: هل أنت متأكد من مسح جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء.')) {
                     try {
-                        // مسح كل السجلات التي لا يكون فيها c1 فارغاً (طريقة لمسح كل الجدول في Supabase)
                         const { error } = await supabaseClient.from(TABLE_NAME).delete().not('c1', 'is', null);
                         if (error) throw error;
                         
