@@ -363,6 +363,13 @@
             XLSX.writeFile(wb, `سجل_العاملين_بالمدرسة.xlsx`);
         }
 
+        function formatExcelDate(excelDate) {
+            if (!excelDate || isNaN(excelDate)) return String(excelDate || "");
+            let date = new Date((excelDate - (25567 + 2)) * 86400 * 1000); 
+            return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+        }
+
+        // دالة الاستيراد الشاملة
         function handleFile(e) {
             const file = e.target.files[0]; if(!file) return;
             const reader = new FileReader();
@@ -378,7 +385,52 @@
                         if(!name || name.trim() === "") { emptyCount++; return; } 
 
                         const nid = String(row.nid || row["الرقم القومى"] || row["الرقم القومي"] || "");
-                        arr.push({ name: name, nid: nid });
+                        let dob = "", gen = "";
+                        if (nid.length === 14) {
+                            const y = (nid[0] === '3' ? '20' : '19') + nid.substring(1, 3);
+                            dob = `${y}-${nid.substring(3, 5)}-${nid.substring(5, 7)}`;
+                            gen = (parseInt(nid[12]) % 2 === 0) ? "أنثى" : "ذكر";
+                        }
+
+                        // حساب النصاب التلقائي بناء على الدرجة
+                        let degree = row.fin_degree || row["الدرجة"] || "";
+                        let quota = row.quota || row["النصاب"] || "";
+                        if(!quota && degree) {
+                            if (degree === "معلم" || degree.includes("مساعد")) quota = "24";
+                            else if (degree === "معلم اول" || degree === "معلم أول") quota = "22";
+                            else if (degree.includes("أول أ") || degree.includes("اول أ")) quota = "20";
+                            else if (degree.includes("خبير")) quota = "18";
+                            else if (degree.includes("كبير")) quota = "16";
+                        }
+
+                        arr.push({
+                            emp_status: row.emp_status || row["حالة المعلم"] || "على رأس العمل",
+                            name: name,
+                            code: row.code || row["الكود"] || "", 
+                            nid: nid, 
+                            gender: gen, 
+                            dob: dob,
+                            address: row.address || row["الموطن"] || row["العنوان"] || "",
+                            mobile: row.mobile || row["الموبايل"] || "",
+                            qualification: row.qualification || row["المؤهل"] || "",
+                            qual_date: formatExcelDate(row.qual_date || row["تاريخه"]),
+                            qual_grade: row.qual_grade || row["التقدير"] || "",
+                            qual_source: row.qual_source || row["جهة الحصول"] || "",
+                            specialization: row.specialization || row["تخصص المؤهل"] || "",
+                            sci_lit: row.sci_lit || row["علمي/أدبي"] || row["علمي / أدبي"] || row["علمى / ادبى"] || "",
+                            cadre_job: row.cadre_job || row["كادر"] || row["الوظيفة على الكادر"] || "",
+                            hire_date: formatExcelDate(row.hire_date || row["تعيين"] || row["تاريخ التعيين"]),
+                            start_date: formatExcelDate(row.start_date || row["استلام"] || row["تاريخ استلام العمل"]),
+                            fin_degree: degree,
+                            degree_date: formatExcelDate(row.degree_date || row["ت.الدرجة"] || row["تاريخ الدرجة"]),
+                            teaching_category: row.teaching_category || row["فئة"] || row["فئة التدريس"] || "",
+                            subject: row.subject || row["مادة"] || row["مادة التدريس"] || "",
+                            status: row.status || row["اصلى/منتدب"] || row["اصلى / منتدب"] || row["أصلي / منتدب"] || "أصلي",
+                            secondment_days: row.secondment_days || row["انتداب"] || row["أيام الانتداب"] || "",
+                            quota: quota,
+                            username: row.username || row["USER"] || "",
+                            password: row.password || row["PASS"] || ""
+                        });
                         validCount++;
                     });
 
