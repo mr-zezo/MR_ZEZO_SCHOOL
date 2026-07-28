@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>بوابة المعلم - منظومة مستر زيزو</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* ================= نظام الألوان الموحد ================= */
+        :root { 
+            --primary-color: #1e3a8a;    
+            --secondary-color: #d97706;  
+            --bg-color: #f8fafc;         
+            --surface-color: #ffffff;    
+            --text-main: #0f172a;        
+            --danger: #be123c;           
+            --success: #16a34a;          
+            --info: #0284c7;             
+            --border-color: #cbd5e1;     
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg-color); padding: 15px 10px; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
+
+        /* ================= الشريط العلوي ================= */
+        .top-navigation { width: 100%; max-width: 900px; background: var(--primary-color); padding: 15px; border-radius: 12px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 15px; }
+        .nav-title { font-size: 16px; font-weight: 900; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
+        
+        .dev-badge { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); color: #fff; padding: 6px 20px; border-radius: 50px; font-size: 13px; font-weight: 900; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 10px; }
+        .dev-badge span { color: #fcd34d; font-size: 14px; }
+
+        /* ================= شاشة تسجيل الدخول ================= */
+        #login-section { width: 100%; max-width: 450px; background: white; padding: 30px 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; border-top: 5px solid var(--secondary-color); margin-top: 30px; }
+        #login-section h2 { color: var(--primary-color); margin-bottom: 10px; font-weight: 900; font-size: 22px;}
+        #login-section p { color: #64748b; font-size: 13px; font-weight: 700; margin-bottom: 25px; }
+        .login-input { width: 100%; padding: 15px; border-radius: 10px; border: 2px solid var(--border-color); font-size: 18px; font-weight: 900; text-align: center; font-family: Arial, sans-serif; outline: none; margin-bottom: 20px; transition: 0.3s; }
+        .login-input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
+        .btn-login { background: var(--primary-color); color: white; border: none; padding: 15px; width: 100%; border-radius: 10px; font-size: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-login:hover { background: #1e40af; }
+
+        /* ================= شاشة عرض البيانات ================= */
+        #profile-section { display: none; width: 100%; max-width: 900px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 6px solid var(--primary-color); }
+        
+        .profile-header { display: flex; gap: 20px; align-items: center; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; }
+        .avatar-container { width: 90px; height: 90px; flex-shrink: 0; }
+        .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-color); background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .profile-info { flex-grow: 1; }
+        .profile-info h2 { color: var(--primary-color); font-weight: 900; margin-bottom: 5px; font-size: 20px;}
+        .profile-info p { color: var(--danger); font-weight: 900; font-family: Arial; font-size: 15px; }
+
+        .data-section { margin-bottom: 25px; }
+        .section-title { font-size: 16px; font-weight: 900; color: var(--primary-color); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
+        .grid-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .field-group { display: flex; flex-direction: column; gap: 5px; }
+        .field-group label { font-size: 13px; font-weight: 800; color: #475569; }
+        
+        /* تصميم الحقول المغلقة (Read-Only) */
+        .field-group input { padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px; font-weight: 900; background: #f1f5f9; color: var(--text-main); cursor: not-allowed; outline: none; width: 100%; }
+        /* تمييز بعض الحقول */
+        .highlight-input { border-color: var(--secondary-color) !important; color: var(--danger) !important; background: #fffbeb !important; }
+
+        /* أزرار المرفقات والجدول */
+        .files-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .btn-view-file { background: var(--info); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-align: center;}
+        .btn-view-file.empty { background: #94a3b8; cursor: not-allowed; }
+        
+        .btn-schedule-view { background: var(--success); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; width: 100%; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2);}
+
+        /* صندوق المراسلة */
+        .message-box { background: #fffbeb; border: 2px solid #fcd34d; padding: 20px; border-radius: 12px; margin-top: 30px; }
+        .message-box h3 { color: var(--secondary-color); font-weight: 900; margin-bottom: 10px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .message-box textarea { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #fcd34d; font-size: 14px; font-weight: 700; outline: none; resize: vertical; min-height: 100px; margin-bottom: 15px; font-family: 'Cairo'; }
+        .btn-send { background: var(--secondary-color); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: 900; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; font-size: 15px;}
+
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+
+        #status-msg { display: none; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: center; font-weight: 900; font-size: 14px; }
+
+        /* ================= نافذة الجدول المدرسي ================= */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: #f8fafc; width: 100%; max-width: 800px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-header { background: var(--primary-color); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 15px; overflow-y: auto; }
+        
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 2px solid var(--primary-color); margin-top: 15px;}
+        
+        .schedule-table { width: 100%; min-width: 600px; border-collapse: collapse; text-align: center; background: white; }
+        .schedule-table th, .schedule-table td { border: 1px solid var(--border-color); padding: 12px 5px; font-weight: 900; font-size: 14px; color: var(--text-main); }
+        .schedule-table thead th { background: var(--primary-color); color: white; padding: 12px 5px; }
+        .schedule-table td.has-class { background-color: #f0fdf4; color: var(--success); font-family: Arial, sans-serif; font-size: 15px;}
+        
+        .schedule-summary { background: #eff6ff; border: 1px solid #bfdbfe; padding: 15px; border-radius: 10px; text-align: center; font-weight: 900; color: var(--primary-color); font-size: 15px; }
+        .schedule-summary span { color: var(--danger); font-size: 18px; margin: 0 5px; }
+
+        @media (max-width: 768px) {
+            .top-navigation { flex-direction: column; text-align: center; }
+            .nav-title { justify-content: center; width: 100%; margin-bottom: 10px; font-size: 15px;}
+            .dev-badge { width: 100%; justify-content: center; }
+
+            .profile-header { flex-direction: column; text-align: center; padding: 15px; }
+            .btn-logout { width: 100%; margin-top: 10px;}
+            
+            .grid-fields { grid-template-columns: 1fr; gap: 10px; } 
+            .files-grid { grid-template-columns: 1fr; } 
+            
+            #profile-section { padding: 15px; }
+            .section-title { font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-navigation">
+        <div class="nav-title"><i class="fa-solid fa-user-tie"></i> بوابة المعلم - الاستعلام عن البيانات</div>
+        
+        <div class="dev-badge">
+            <i class="fa-solid fa-medal" style="color:#fcd34d; font-size:18px;"></i> 
+            إعداد وتطوير &nbsp;|&nbsp; <span>أ/ عبدالعزيز لولح</span> &nbsp;|&nbsp; « مستر زيزو »
+        </div>
+    </nav>
+
+    <!-- شاشة تسجيل الدخول -->
+    <div id="login-section">
+        <h2>أهلاً بك في بوابة المعلم</h2>
+        <p>يرجى إدخال الرقم القومي الخاص بك لعرض بياناتك المسجلة في المنظومة.</p>
+        <input type="number" id="login-nid" class="login-input" placeholder="الرقم القومي (14 رقم)" onkeypress="if(event.key==='Enter') loginTeacher()">
+        <button class="btn-login" onclick="loginTeacher()" id="btn-login"><i class="fa-solid fa-magnifying-glass"></i> بحث وعرض البيانات</button>
+        <div id="login-error" style="color: var(--danger); font-weight: bold; margin-top: 15px; display: none;">الرقم القومي غير مسجل لدينا!</div>
+    </div>
+
+    <!-- شاشة عرض البيانات -->
+    <div id="profile-section">
+        
+        <div class="profile-header">
+            <div class="avatar-container">
+                <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" id="p_photo" class="avatar-img" alt="صورة المعلم">
+            </div>
+            <div class="profile-info">
+                <h2 id="p_name">اسم المعلم</h2>
+                <p id="p_nid">الرقم القومي</p>
+            </div>
+            <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> تسجيل خروج</button>
+        </div>
+
+        <!-- زر عرض الجدول المدرسي -->
+        <button type="button" class="btn-schedule-view" onclick="showTeacherSchedule()">
+            <i class="fa-solid fa-table-cells"></i> عرض الجدول المدرسي الخاص بي
+        </button>
+
+        <!-- 1. بيانات شخصية -->
+        <div class="data-section">
+            <div class="section-title"><i class="fa-solid fa-address-card"></i> بيانات شخصية</div>
+            <div class="grid-fields">
+                <div class="field-group"><label>تاريخ الميلاد</label><input type="text" id="p_dob" readonly></div>
+                <div class="field-group"><label>النوع</label><input type="text" id="p_gender" readonly></div>
+                <div class="field-group"><label>الموطن / العنوان</label><input type="text" id="p_address" readonly></div>
+                <div class="field-group"><label>رقم الموبايل</label><input type="text" id="p_mobile" readonly></div>
+            </div>
+        </div>
+
+        <!-- 2. بيانات المؤهل -->
+        <div class="data-section">
+            <div class="section-title"><i class="fa-solid fa-graduation-cap"></i> بيانات المؤهل الدراسي</div>
+            <div class="grid-fields">
+                <div class="field-group"><label>المؤهل</label><input type="text" id="p_qualification" readonly></div>
+                <div class="field-group"><label>تاريخ الحصول عليه</label><input type="text" id="p_qual_date" readonly></div>
+                <div class="field-group"><label>التقدير</label><input type="text" id="p_qual_grade" readonly></div>
+                <div class="field-group"><label>جهة الحصول عليه</label><input type="text" id="p_qual_source" readonly></div>
+                <div class="field-group"><label>تخصص المؤهل</label><input type="text" id="p_specialization" readonly></div>
+                <div class="field-group"><label>علمي / أدبي</label><input type="text" id="p_sci_lit" readonly></div>
+            </div>
+        </div>
+
+        <!-- 3. بيانات الكادر والدرجة -->
+        <div class="data-section">
+            <div class="section-title"><i class="fa-solid fa-briefcase"></i> البيانات الوظيفية والكادر</div>
+            <div class="grid-fields">
+                <div class="field-group"><label>حالة المعلم</label><input type="text" id="p_emp_status" readonly class="highlight-input"></div>
+                <div class="field-group"><label>الوظيفة على الكادر</label><input type="text" id="p_cadre_job" readonly></div>
+                <div class="field-group"><label>تاريخ التعيين</label><input type="text" id="p_hire_date" readonly></div>
+                <div class="field-group"><label>تاريخ استلام العمل</label><input type="text" id="p_start_date" readonly></div>
+                <div class="field-group"><label>الدرجة المالية</label><input type="text" id="p_fin_degree" readonly></div>
+                <div class="field-group"><label>تاريخ الدرجة</label><input type="text" id="p_degree_date" readonly></div>
+                <div class="field-group"><label>الكود (رقم السجل)</label><input type="text" id="p_code" readonly></div>
+            </div>
+        </div>
+
+        <!-- 4. بيانات التدريس والانتداب -->
+        <div class="data-section">
+            <div class="section-title"><i class="fa-solid fa-chalkboard-user"></i> بيانات التدريس والانتداب</div>
+            <div class="grid-fields">
+                <div class="field-group"><label>فئة التدريس</label><input type="text" id="p_teaching_category" readonly></div>
+                <div class="field-group"><label>مادة التدريس</label><input type="text" id="p_subject" readonly></div>
+                <div class="field-group"><label>النصاب القانوني</label><input type="text" id="p_quota" readonly class="highlight-input"></div>
+                <div class="field-group"><label>أصلي / منتدب</label><input type="text" id="p_status" readonly></div>
+                <div class="field-group"><label>أيام الانتداب</label><input type="text" id="p_secondment_days" readonly></div>
+            </div>
+        </div>
+
+        <!-- 5. بيانات الدخول للمنظومة -->
+        <div class="data-section">
+            <div class="section-title"><i class="fa-solid fa-lock"></i> بيانات الدخول للمنظومة</div>
+            <div class="grid-fields">
+                <div class="field-group"><label>اسم المستخدم (USER)</label><input type="text" id="p_username" readonly style="font-family: Arial;"></div>
+                <div class="field-group"><label>كلمة المرور (PASS)</label><input type="text" id="p_password" readonly style="font-family: Arial;"></div>
+            </div>
+        </div>
+
+        <!-- المرفقات -->
+        <div class="data-section">
+            <div class="section-title"><i class="fa-solid fa-folder-open"></i> المرفقات والمستندات</div>
+            <div class="files-grid">
+                <button type="button" id="btn-view-nid" class="btn-view-file" onclick="openFile('nid_pdf')"><i class="fa-solid fa-id-card"></i> عرض بطاقة الرقم القومي</button>
+                <button type="button" id="btn-view-status" class="btn-view-file" onclick="openFile('status_pdf')"><i class="fa-solid fa-file-contract"></i> عرض بيان الحالة</button>
+            </div>
+        </div>
+
+        <!-- صندوق المراسلة -->
+        <div class="message-box">
+            <h3><i class="fa-solid fa-envelope-open-text"></i> طلب تعديل بيانات</h3>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 10px; font-weight: bold;">إذا وجدت خطأ في بياناتك أعلاه، اكتب التعديل المطلوب هنا وسيقوم مسؤول الإحصاء بمراجعته وتعديله.</p>
+            <textarea id="req_message" placeholder="اكتب رسالتك هنا... (مثال: الرجاء تعديل رقم الموبايل إلى 010...)"></textarea>
+            <button class="btn-send" onclick="sendRequest()" id="btn-send"><i class="fa-solid fa-paper-plane"></i> إرسال الطلب للإدارة</button>
+            <div id="status-msg"></div>
+        </div>
+
+    </div>
+
+    <!-- ================= نافذة عرض الجدول المدرسي ================= -->
+    <div class="modal-overlay" id="scheduleModal" onclick="if(event.target.id==='scheduleModal') closeScheduleModal()">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-table-cells"></i> الجدول المدرسي الأسبوعي</h2>
+                <button onclick="closeScheduleModal()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="schedule-summary">
+                    إجمالي الحصص المسندة فعلياً في الجدول: <span id="total-classes-count">0</span> حصة
+                </div>
+                
+                <!-- حاوية الجدول للموبايل -->
+                <div class="table-responsive">
+                    <table class="schedule-table">
+                        <thead>
+                            <tr>
+                                <th>اليوم</th><th>١</th><th>٢</th><th>٣</th><th>٤</th><th>٥</th><th>٦</th><th>٧</th><th>٨</th>
+                            </tr>
+                        </thead>
+                        <tbody id="schedule-body-view">
+                            <!-- سيتم التعبئة برمجياً -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================= إعدادات Supabase =================
+        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        let currentTeacher = null;
+
+        // ================= تسجيل الدخول =================
+        async function loginTeacher() {
+            const nidInput = document.getElementById("login-nid").value.trim();
+            const errBox = document.getElementById("login-error");
+            const btn = document.getElementById("btn-login");
+
+            if(nidInput.length !== 14) {
+                errBox.innerText = "يرجى كتابة الرقم القومي المكون من 14 رقم بشكل صحيح.";
+                errBox.style.display = "block";
+                return;
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري البحث...';
+            errBox.style.display = "none";
+
+            try {
+                const { data, error } = await supabaseClient.from('teachers').select('*').eq('nid', nidInput).maybeSingle();
+                
+                if (error) throw error;
+
+                if (data) {
+                    currentTeacher = data;
+                    populateProfile(data);
+                    document.getElementById("login-section").style.display = "none";
+                    document.getElementById("profile-section").style.display = "block";
+                } else {
+                    errBox.innerText = "الرقم القومي غير مسجل لدينا في قاعدة البيانات!";
+                    errBox.style.display = "block";
+                }
+            } catch (err) {
+                errBox.innerText = "حدث خطأ في الاتصال بقاعدة البيانات.";
+                errBox.style.display = "block";
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass"></i> بحث وعرض البيانات';
+            }
+        }
+
+        // ================= تعبئة البيانات (29 حقل) =================
+        function populateProfile(data) {
+            // الرأس
+            document.getElementById("p_name").innerText = data.name || "بدون اسم";
+            document.getElementById("p_nid").innerText = data.nid || "";
+            document.getElementById("p_photo").src = data.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+
+            // 1. شخصية
+            document.getElementById("p_dob").value = data.dob || "-";
+            document.getElementById("p_gender").value = data.gender || "-";
+            document.getElementById("p_address").value = data.address || "-";
+            document.getElementById("p_mobile").value = data.mobile || "-";
+
+            // 2. مؤهل
+            document.getElementById("p_qualification").value = data.qualification || "-";
+            document.getElementById("p_qual_date").value = data.qual_date || "-";
+            document.getElementById("p_qual_grade").value = data.qual_grade || "-";
+            document.getElementById("p_qual_source").value = data.qual_source || "-";
+            document.getElementById("p_specialization").value = data.specialization || "-";
+            document.getElementById("p_sci_lit").value = data.sci_lit || "-";
+
+            // 3. كادر ودرجة
+            document.getElementById("p_emp_status").value = data.emp_status || "-";
+            document.getElementById("p_cadre_job").value = data.cadre_job || "-";
+            document.getElementById("p_hire_date").value = data.hire_date || "-";
+            document.getElementById("p_start_date").value = data.start_date || "-";
+            document.getElementById("p_fin_degree").value = data.fin_degree || "-";
+            document.getElementById("p_degree_date").value = data.degree_date || "-";
+            document.getElementById("p_code").value = data.code || "-";
+
+            // 4. تدريس وانتداب
+            document.getElementById("p_teaching_category").value = data.teaching_category || "-";
+            document.getElementById("p_subject").value = data.subject || "-";
+            document.getElementById("p_quota").value = data.quota ? data.quota + " حصة" : "-";
+            document.getElementById("p_status").value = data.status || "-";
+            document.getElementById("p_secondment_days").value = data.secondment_days || "-";
+
+            // 5. بيانات الدخول
+            document.getElementById("p_username").value = data.username || "-";
+            document.getElementById("p_password").value = data.password || "-";
+
+            // المرفقات
+            const btnNid = document.getElementById("btn-view-nid");
+            if(data.nid_pdf) { btnNid.classList.remove("empty"); btnNid.innerHTML = '<i class="fa-solid fa-id-card"></i> عرض بطاقة الرقم القومي'; }
+            else { btnNid.classList.add("empty"); btnNid.innerHTML = '<i class="fa-solid fa-xmark"></i> لا توجد صورة للبطاقة'; }
+
+            const btnStatus = document.getElementById("btn-view-status");
+            if(data.status_pdf) { btnStatus.classList.remove("empty"); btnStatus.innerHTML = '<i class="fa-solid fa-file-contract"></i> عرض بيان الحالة'; }
+            else { btnStatus.classList.add("empty"); btnStatus.innerHTML = '<i class="fa-solid fa-xmark"></i> لا يوجد بيان حالة'; }
+        }
+
+        // ================= فتح المرفقات =================
+        function openFile(fieldName) {
+            if(!currentTeacher || !currentTeacher[fieldName]) return;
+            window.open(currentTeacher[fieldName], '_blank');
+        }
+
+        // ================= عرض الجدول المدرسي =================
+        function showTeacherSchedule() {
+            if (!currentTeacher) return;
+
+            const tbody = document.getElementById("schedule-body-view");
+            tbody.innerHTML = "";
+
+            const days = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس"];
+            const dayNamesAr = {"الاحد":"الأحد", "الاثنين":"الإثنين", "الثلاثاء":"الثلاثاء", "الاربعاء":"الأربعاء", "الخميس":"الخميس"};
+            const schedule = currentTeacher.schedule || {};
+
+            let totalClasses = 0;
+
+            days.forEach(day => {
+                let tr = `<tr><td style="background:#f1f5f9; color:var(--primary-color);">${dayNamesAr[day]}</td>`;
+                for(let i=1; i<=8; i++) {
+                    const key = `${day}_${i}`;
+                    const className = schedule[key] || "";
+                    if (className) totalClasses++;
+                    const cellClass = className ? "has-class" : "";
+                    tr += `<td class="${cellClass}">${className}</td>`;
+                }
+                tr += `</tr>`;
+                tbody.innerHTML += tr;
+            });
+
+            document.getElementById("total-classes-count").innerText = totalClasses;
+            document.getElementById("scheduleModal").classList.add("active");
+        }
+
+        function closeScheduleModal() {
+            document.getElementById("scheduleModal").classList.remove("active");
+        }
+
+        // ================= إرسال طلب التعديل =================
+        async function sendRequest() {
+            const msgInput = document.getElementById("req_message");
+            const msg = msgInput.value.trim();
+            const btn = document.getElementById("btn-send");
+            const statusBox = document.getElementById("status-msg");
+
+            if(!msg) {
+                statusBox.innerText = "يرجى كتابة التعديل المطلوب أولاً!";
+                statusBox.style.background = "#fee2e2"; statusBox.style.color = "#991b1b";
+                statusBox.style.display = "block";
+                return;
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الإرسال...';
+            btn.disabled = true;
+
+            try {
+                const { error } = await supabaseClient.from('teacher_requests').insert([{
+                    teacher_nid: currentTeacher.nid,
+                    teacher_name: currentTeacher.name,
+                    message: msg
+                }]);
+
+                if (error) throw error;
+
+                msgInput.value = "";
+                statusBox.innerText = "✅ تم إرسال طلبك بنجاح للإدارة.";
+                statusBox.style.background = "#dcfce7"; statusBox.style.color = "#166534";
+                statusBox.style.display = "block";
+                
+                setTimeout(() => { statusBox.style.display = "none"; }, 4000);
+
+            } catch (err) {
+                statusBox.innerText = "❌ حدث خطأ أثناء الإرسال.";
+                statusBox.style.background = "#fee2e2"; statusBox.style.color = "#991b1b";
+                statusBox.style.display = "block";
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> إرسال الطلب للإدارة';
+                btn.disabled = false;
+            }
+        }
+
+        // ================= تسجيل الخروج =================
+        function logout() {
+            currentTeacher = null;
+            document.getElementById("login-nid").value = "";
+            document.getElementById("req_message").value = "";
+            document.getElementById("profile-section").style.display = "none";
+            document.getElementById("login-section").style.display = "block";
+        }
+    </script>
+</body>
+</html>
