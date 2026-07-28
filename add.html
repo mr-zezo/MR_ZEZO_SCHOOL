@@ -202,7 +202,46 @@
         // حفظ وتحديث البيانات (Supabase)
         async function saveData() {
             const studentName = document.getElementById('studentFullName').value.trim();
+            const studentNidVal = document.getElementById('studentNid').value.trim();
+            const fatherNidVal = document.getElementById('fatherNid').value.trim();
+            const motherNidVal = document.getElementById('motherNid').value.trim();
+
             if(!studentName) { alert("أدخل اسم الطالب!"); return; }
+
+            // 1. التحقق من أن الأرقام القومية تتكون من 14 رقماً بالضبط
+            const nidRegex = /^\d{14}$/; // تعبير نمطي يتأكد من وجود 14 رقم فقط
+            if (!nidRegex.test(studentNidVal)) {
+                alert("عفواً.. الرقم القومي للتلميذ يجب أن يتكون من 14 رقماً!");
+                document.getElementById('studentNid').focus();
+                return;
+            }
+            if (!nidRegex.test(fatherNidVal)) {
+                alert("عفواً.. الرقم القومي للأب يجب أن يتكون من 14 رقماً!");
+                document.getElementById('fatherNid').focus();
+                return;
+            }
+            if (!nidRegex.test(motherNidVal)) {
+                alert("عفواً.. الرقم القومي للأم يجب أن يتكون من 14 رقماً!");
+                document.getElementById('motherNid').focus();
+                return;
+            }
+
+            // 2. التحقق من عدم تكرار الرقم القومي للطالب في قاعدة البيانات
+            const isDuplicate = studentsData.some(student => {
+                if (currentEditId) {
+                    // في حالة التعديل: نتجاهل السجل الحالي الذي نقوم بتعديله
+                    return student.c13 === studentNidVal && student.id !== currentEditId;
+                } else {
+                    // في حالة التسجيل الجديد: نبحث في كل البيانات
+                    return student.c13 === studentNidVal;
+                }
+            });
+
+            if (isDuplicate) {
+                alert("تنبيه: هذا الرقم القومي للتلميذ مسجل مسبقاً في النظام ولا يمكن تكراره!");
+                document.getElementById('studentNid').focus();
+                return;
+            }
 
             const btn = document.getElementById('submitBtn');
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...'; 
@@ -211,7 +250,7 @@
             const record = {
                 c1: studentName, c2: document.getElementById('st1').value, c3: document.getElementById('st2').value, c4: document.getElementById('st3').value, c5: document.getElementById('st4').value, c6: document.getElementById('st5').value,
                 c7: document.getElementById('motherFullName').value, c8: document.getElementById('mo1').value, c9: document.getElementById('mo2').value, c10: document.getElementById('mo3').value, c11: document.getElementById('mo4').value,
-                c12: document.getElementById('mobile').value, c13: document.getElementById('studentNid').value, c14: document.getElementById('fatherNid').value, c15: document.getElementById('motherNid').value,
+                c12: document.getElementById('mobile').value, c13: studentNidVal, c14: fatherNidVal, c15: motherNidVal,
                 c16: document.getElementById('religion').value, c17: document.getElementById('stage').value, status: document.getElementById('status').value
             };
 
