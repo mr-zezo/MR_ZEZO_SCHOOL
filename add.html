@@ -337,27 +337,65 @@
             const filteredData = studentsData.filter(s => s.c17 === stageTarget);
             if (filteredData.length === 0) { alert(`لا توجد بيانات مرحلة (${stageTarget}) لتصديرها`); return; }
 
-            const headers = ["اسم التلميذ الخماسي", "الاسم الأول", "الاسم الثاني", "الاسم الثالث", "الاسم الرابع", "الاسم الخامس", "اسم الأم الرباعي", "اسم الأم الأول", "اسم الأم الثاني", "اسم الأم الثالث", "اسم الأم الرابع", "رقم الموبايل", "الرقم القومي للطالب", "الرقم القومي للأب", "الرقم القومي للأم", "الديانة", "المرحلة", "حالة التسجيل"];
-
-            const rowsArray = [headers];
-            filteredData.forEach(r => {
-                rowsArray.push([
-                    r.c1, r.c2, r.c3, r.c4, r.c5, r.c6, 
-                    r.c7, r.c8, r.c9, r.c10, r.c11, 
-                    r.c12, r.c13, r.c14, r.c15, r.c16, r.c17, r.status
-                ]);
-            });
-
             if (format === 'csv') {
-                let csvContent = rowsArray.map(row => row.map(item => `"${item || ''}"`).join(";")).join("\n");
+                // 1. عناوين الأعمدة كما يطلبها Katalon Recorder
+                const csvHeaders = [
+                    "Column1", "Column2", "Column3", "Column4", "Column5", 
+                    "Column6", "Column7", "Column8", "Column9", "Column10", 
+                    "Column11", "Column12", "Column13", "Column14", "Column15"
+                ];
+
+                const csvRows = [csvHeaders];
+
+                // 2. ترتيب البيانات بناءً على طلبك
+                filteredData.forEach(r => {
+                    csvRows.push([
+                        r.c2,  // Column1: الاسم الاول
+                        r.c3,  // Column2: الاسم الثانى
+                        r.c4,  // Column3: الاسم الثالث
+                        r.c5,  // Column4: الاسم الرابع
+                        r.c6,  // Column5: الاسم الخامس
+                        r.c8,  // Column6: اسم الام الاول
+                        r.c9,  // Column7: اسم الام الثانى
+                        r.c10, // Column8: اسم الام الثالث
+                        r.c11, // Column9: اسم الام الرابع
+                        r.c13, // Column10: الرقم القومى للطالب
+                        r.c14, // Column11: الرقم القومى للاب
+                        r.c15, // Column12: الرقم القومى للام
+                        r.c12, // Column13: رقم الموبايل
+                        "",    // Column14: فارغ
+                        ""     // Column15: فارغ
+                    ]);
+                });
+
+                // 3. دمج البيانات بفاصلة (,) بدلاً من (;) ليتعرف عليها Katalon كعمود واحد قياسي
+                let csvContent = csvRows.map(row => row.map(item => `"${item || ''}"`).join(",")).join("\n");
+                
+                // 4. إنشاء وتحميل الملف
                 const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
-                link.download = `Data_${stageTarget}.csv`;
+                link.download = `Katalon_Data_${stageTarget}.csv`;
                 link.click();
             } 
             else if (format === 'excel') {
-                const worksheet = XLSX.utils.aoa_to_sheet(rowsArray);
+                // بقاء ملف الإكسل كما هو بالشكل الطبيعي للقراءة البشرية
+                const excelHeaders = [
+                    "اسم التلميذ الخماسي", "الاسم الأول", "الاسم الثاني", "الاسم الثالث", "الاسم الرابع", "الاسم الخامس", 
+                    "اسم الأم الرباعي", "اسم الأم الأول", "اسم الأم الثاني", "اسم الأم الثالث", "اسم الأم الرابع", 
+                    "رقم الموبايل", "الرقم القومي للطالب", "الرقم القومي للأب", "الرقم القومي للأم", "الديانة", "المرحلة", "حالة التسجيل"
+                ];
+
+                const excelRows = [excelHeaders];
+                filteredData.forEach(r => {
+                    excelRows.push([
+                        r.c1, r.c2, r.c3, r.c4, r.c5, r.c6, 
+                        r.c7, r.c8, r.c9, r.c10, r.c11, 
+                        r.c12, r.c13, r.c14, r.c15, r.c16, r.c17, r.status
+                    ]);
+                });
+
+                const worksheet = XLSX.utils.aoa_to_sheet(excelRows);
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, stageTarget);
                 XLSX.writeFile(workbook, `Data_${stageTarget}.xlsx`);
