@@ -200,6 +200,7 @@
         }
 
         // حفظ وتحديث البيانات (Supabase)
+      // حفظ وتحديث البيانات (Supabase)
         async function saveData() {
             const studentName = document.getElementById('studentFullName').value.trim();
             const studentNidVal = document.getElementById('studentNid').value.trim();
@@ -209,7 +210,7 @@
             if(!studentName) { alert("أدخل اسم الطالب!"); return; }
 
             // 1. التحقق من أن الأرقام القومية تتكون من 14 رقماً بالضبط
-            const nidRegex = /^\d{14}$/; // تعبير نمطي يتأكد من وجود 14 رقم فقط
+            const nidRegex = /^\d{14}$/; 
             if (!nidRegex.test(studentNidVal)) {
                 alert("عفواً.. الرقم القومي للتلميذ يجب أن يتكون من 14 رقماً!");
                 document.getElementById('studentNid').focus();
@@ -229,18 +230,25 @@
             // 2. التحقق من عدم تكرار الرقم القومي للطالب في قاعدة البيانات
             const isDuplicate = studentsData.some(student => {
                 if (currentEditId) {
-                    // في حالة التعديل: نتجاهل السجل الحالي الذي نقوم بتعديله
-                    return student.c13 === studentNidVal && student.id !== currentEditId;
+                    // تم حل المشكلة هنا: توحيد نوع البيانات كنص (String) لضمان المقارنة الصحيحة
+                    return student.c13 === studentNidVal && String(student.id) !== String(currentEditId);
                 } else {
-                    // في حالة التسجيل الجديد: نبحث في كل البيانات
                     return student.c13 === studentNidVal;
                 }
             });
 
             if (isDuplicate) {
-                alert("تنبيه: هذا الرقم القومي للتلميذ مسجل مسبقاً في النظام ولا يمكن تكراره!");
+                alert("تنبيه: هذا الرقم القومي للتلميذ مسجل مسبقاً في النظام لطالب آخر!");
                 document.getElementById('studentNid').focus();
                 return;
+            }
+
+            // 3. رسالة تحذيرية لتأكيد التعديل أو الإلغاء (بناءً على طلبك)
+            if (currentEditId) {
+                const confirmEdit = confirm("أنت تقوم الآن بتعديل بيانات تلميذ مضاف مسبقاً.. هل تريد حفظ التعديلات؟\n\n- اضغط (موافق / OK) لحفظ التعديل.\n- اضغط (إلغاء / Cancel) للتراجع.");
+                if (!confirmEdit) {
+                    return; // إيقاف العملية إذا اختار المستخدم إلغاء
+                }
             }
 
             const btn = document.getElementById('submitBtn');
