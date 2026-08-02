@@ -346,6 +346,16 @@
             if (filteredData.length === 0) { alert(`لا توجد بيانات مرحلة (${stageTarget}) لتصديرها`); return; }
 
             if (format === 'csv') {
+                // ================= التعديل هنا =================
+                // تصفية البيانات لتشمل فقط من حالتهم "غير مسجل"
+                const unregisteredData = filteredData.filter(s => s.status === 'غير مسجل');
+                
+                if (unregisteredData.length === 0) {
+                    alert(`جميع الطلاب في مرحلة (${stageTarget}) مسجلين بالفعل.. لا يوجد بيانات (غير مسجل) لتصديرها.`);
+                    return;
+                }
+                // ===============================================
+
                 // 1. عناوين الأعمدة كما يطلبها Katalon Recorder
                 const csvHeaders = [
                     "Column1", "Column2", "Column3", "Column4", "Column5", 
@@ -355,8 +365,8 @@
 
                 const csvRows = [csvHeaders];
 
-                // 2. ترتيب البيانات بناءً على طلبك
-                filteredData.forEach(r => {
+                // 2. ترتيب البيانات لغير المسجلين فقط
+                unregisteredData.forEach(r => {
                     csvRows.push([
                         r.c2,  // Column1: الاسم الاول
                         r.c3,  // Column2: الاسم الثانى
@@ -383,11 +393,11 @@
                 const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
-                link.download = `Katalon_Data_${stageTarget}.csv`;
+                link.download = `Katalon_Data_${stageTarget}_Unregistered.csv`; // تم تعديل اسم الملف للتوضيح
                 link.click();
             } 
             else if (format === 'excel') {
-                // بقاء ملف الإكسل كما هو بالشكل الطبيعي للقراءة البشرية
+                // بقاء ملف الإكسل كما هو بالشكل الطبيعي (يطبع الكل مسجل وغير مسجل)
                 const excelHeaders = [
                     "اسم التلميذ الخماسي", "الاسم الأول", "الاسم الثاني", "الاسم الثالث", "الاسم الرابع", "الاسم الخامس", 
                     "اسم الأم الرباعي", "اسم الأم الأول", "اسم الأم الثاني", "اسم الأم الثالث", "اسم الأم الرابع", 
@@ -406,7 +416,7 @@
                 const worksheet = XLSX.utils.aoa_to_sheet(excelRows);
                 const workbook = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(workbook, worksheet, stageTarget);
-                XLSX.writeFile(workbook, `Data_${stageTarget}.xlsx`);
+                XLSX.writeFile(workbook, `Data_${stageTarget}_All.xlsx`);
             }
         }
 
