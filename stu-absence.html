@@ -12,6 +12,10 @@
     <!-- مكتبة Chart.js لرسم المنحنى الزمني الإبداعي -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- مكتبات الإكسيل للتعامل مع الإنذارات -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
     <style>
         :root { 
             --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; 
@@ -88,6 +92,7 @@
             body { background: white; padding: 0; }
             .top-navigation, .tabs-container, .report-controls, .entry-grid, #settings, .dashboard-kpi, .chart-container { display: none !important; }
             .content-box { box-shadow: none; border: none; padding: 0; }
+            .hide-on-print { display: none !important; }
         }
     </style>
 </head>
@@ -110,7 +115,6 @@
         <button class="tab-btn" id="tab-settings-btn" style="display:none;" onclick="switchTab('settings')"><i class="fa-solid fa-gear"></i> إعدادات التواريخ</button>
     </div>
 
-    <!-- ================= 1. شاشة الرصد السريع ================= -->
     <div id="entry" class="content-box active">
         <div class="entry-grid">
             <div class="input-panel">
@@ -155,7 +159,6 @@
         </div>
     </div>
 
-    <!-- ================= 2. شاشة التحليل والإنذارات ================= -->
     <div id="reports" class="content-box">
         <div class="report-controls">
             <select id="rep-grade">
@@ -175,15 +178,14 @@
             <button class="btn-report" style="background:var(--dark);" onclick="generateSchoolChart('term2')"><i class="fa-solid fa-chart-area"></i> منحنى المدرسة (ت 2)</button>
             
             <div style="flex-grow: 1;"></div>
+            <button class="btn-report" id="btn-bulk-download" style="background:#8b5cf6; display:none;" onclick="downloadBulkWarnings()"><i class="fa-solid fa-file-excel"></i> تحميل إنذارات الأسبوع</button>
             <button class="btn-report" style="background:var(--success);" onclick="window.print()"><i class="fa-solid fa-print"></i> طباعة</button>
         </div>
 
-        <!-- مساحة رسم المنحنى الزمني (Chart.js) -->
         <div class="chart-container" id="chart-wrapper">
             <canvas id="schoolChart"></canvas>
         </div>
 
-        <!-- لوحة الـ KPIs والإشارات (تظهر مع تقارير الترم) -->
           <div class="dashboard-kpi" id="kpi-dashboard">
             <div class="kpi-card" style="border-bottom: 4px solid #64748b;" onclick="filterTable('all')">
                 <div class="kpi-title">عرض الكل</div>
@@ -223,7 +225,6 @@
         </table>
     </div>
 
-    <!-- ================= 3. شاشة الإعدادات ================= -->
     <div id="settings" class="content-box">
         <h3 style="color:var(--primary); margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:10px;">إعدادات الخريطة الزمنية للعام الدراسي</h3>
         <div class="settings-grid">
@@ -249,7 +250,7 @@
         
         let weekDatesMap = {};
         let currentGradeStudents = [];
-        let myChart = null; // متغير لحفظ الرسم البياني
+        let myChart = null; 
 
         function toArabicNum(num) {
             if(num === 0) return "٠";
@@ -325,7 +326,6 @@
             loadClassStats(); 
         }
 
-        // --- الرصد ---
         async function loadClassStats() {
             const grade = document.getElementById("entry-grade").value;
             const week = document.getElementById("entry-week").value;
@@ -370,17 +370,18 @@
             loadClassStats(); btn.innerText = "تسجيل الغياب (Enter)";
         }
 
-        // --- التقارير والإنذارات ---
-       // --- التقارير والإنذارات ---
-       async function generateReport(type = 'week') {
+        // --- التقارير والإنذارات الذكية ---
+        async function generateReport(type = 'week') {
             document.getElementById("chart-wrapper").style.display = "none"; 
+            document.getElementById("btn-bulk-download").style.display = "none"; 
+            
             const grade = document.getElementById("rep-grade").value;
             const week = document.getElementById("rep-week").value;
             const tbody = document.getElementById("report-tbody");
             const thead = document.getElementById("report-thead");
             const kpiDash = document.getElementById("kpi-dashboard");
             
-            tbody.innerHTML = "<tr><td colspan='8'>⏳ جاري سحب وتحليل البيانات...</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='9'>⏳ جاري سحب وتحليل البيانات...</td></tr>";
             
             const { data } = await supabaseClient.from("students").select("*").eq("grade", grade);
             let list = [];
@@ -395,26 +396,67 @@
                 const weekIndex = parseInt(week.replace('W','')) - 1;
                 document.getElementById("report-title").innerText = `تقرير غياب ${grade} - الأسبوع ${arabicWeeks[weekIndex]} (${weekDatesMap[week]||''})`;
                 
-                thead.innerHTML = "<tr><th>م</th><th>الكود الإلزامي</th><th>الكود الداخلي</th><th>اسم التلميذ</th><th>الفصل</th><th>الغياب</th><th>الإنذار</th><th>ملاحظات</th></tr>";
+                thead.innerHTML = "<tr><th>م</th><th>الكود الإلزامي</th><th>الكود الداخلي</th><th>اسم التلميذ</th><th>الفصل</th><th>غياب الأسبوع</th><th>الإنذار</th><th>ملاحظات</th><th class='hide-on-print'>إجراءات (إنذارات الأسبوع)</th></tr>";
                 
                 let i = 1;
+                let hasWarnings = false; 
+
+                const wNum = parseInt(week.replace('W',''));
+                const startW = wNum <= 17 ? 1 : 18; // تحديد بداية الترم
+
                 list.forEach(s => {
                     let absData = typeof s.absences === 'string' ? JSON.parse(s.absences||'{}') : (s.absences||{});
-                    const abs = absData[week] ? parseInt(absData[week]) : 0;
-                    if(abs > 0) {
-                        tbody.innerHTML += `<tr>
+                    const absThisWeek = absData[week] ? parseInt(absData[week]) : 0;
+                    
+                    if(absThisWeek > 0) {
+                        
+                        // هنا يكمن الذكاء: نحسب إجمالي الغياب حتى الأسبوع الماضي، ثم إجمالي الغياب شاملاً هذا الأسبوع
+                        let previousTotal = 0;
+                        let currentTotal = 0;
+
+                        for(let w = startW; w <= wNum; w++) {
+                            let wAbs = absData['W'+w] ? parseInt(absData['W'+w]) : 0;
+                            if (w < wNum) previousTotal += wAbs; // الإجمالي حتى الأسبوع الماضي
+                            currentTotal += wAbs; // الإجمالي حتى الأسبوع الحالي
+                        }
+
+                        let badge = "<span class='badge bg-safe' style='color:black;'>غياب عادي</span>";
+                        let actionBtn = "-";
+
+                        // نتحقق: هل تم كسر حد الإنذار "في هذا الأسبوع تحديداً"؟
+                        if(previousTotal < 6 && currentTotal >= 6) { 
+                            badge = "<span class='badge bg-warn1'>استحق إنذار أول هذا الأسبوع</span>"; 
+                            actionBtn = `<button class="btn-report" style="padding:4px 8px; font-size:12px; background:var(--warn1); color:black;" data-name="${s.name}" data-grade="${grade}" data-abs="${currentTotal}" data-level="1" onclick="downloadWarningExcel('${s.name}', '${grade}', ${currentTotal}, 1)"><i class="fa-solid fa-file-excel"></i> إنذار 1</button>`;
+                            hasWarnings = true;
+                        }
+                        else if(previousTotal < 11 && currentTotal >= 11) { 
+                            badge = "<span class='badge bg-warn2'>استحق إنذار ثاني هذا الأسبوع</span>"; 
+                            actionBtn = `<button class="btn-report" style="padding:4px 8px; font-size:12px; background:var(--warn2); color:white;" data-name="${s.name}" data-grade="${grade}" data-abs="${currentTotal}" data-level="2" onclick="downloadWarningExcel('${s.name}', '${grade}', ${currentTotal}, 2)"><i class="fa-solid fa-file-excel"></i> إنذار 2</button>`;
+                            hasWarnings = true;
+                        }
+                        else if(previousTotal < 15 && currentTotal >= 15) { 
+                            badge = "<span class='badge bg-danger'>استحق إنذار خطر هذا الأسبوع</span>"; 
+                            actionBtn = `<button class="btn-report" style="padding:4px 8px; font-size:12px; background:var(--danger); color:white;" data-name="${s.name}" data-grade="${grade}" data-abs="${currentTotal}" data-level="3" onclick="downloadWarningExcel('${s.name}', '${grade}', ${currentTotal}, 3)"><i class="fa-solid fa-file-excel"></i> خطر</button>`;
+                            hasWarnings = true;
+                        }
+
+                        tbody.innerHTML += `<tr class="data-row">
                             <td>${toArabicNum(i++)}</td>
                             <td style="font-family:Arial; font-size:13px; font-weight:bold;">${(s.code && !s.code.startsWith('TEMP_')) ? s.code : '-'}</td>
                             <td style="font-weight:900; color:var(--primary)">${toArabicNum(s.register_num)}</td>
                             <td style="text-align:right; font-weight:900;">${s.name}</td>
                             <td>${toArabicNum(s.class)}</td>
-                            <td class="danger-text">${toArabicNum(abs)}</td>
-                            <td><span class="badge bg-warn1">غياب حالي</span></td>
-                            <td>-</td>
+                            <td class="danger-text" style="font-weight:bold;">${toArabicNum(absThisWeek)}</td>
+                            <td>${badge}</td>
+                            <td style="font-size:12px; color:gray;">(إجمالي الترم: ${toArabicNum(currentTotal)})</td>
+                            <td class="hide-on-print">${actionBtn}</td>
                         </tr>`;
                     }
                 });
-                if(i === 1) tbody.innerHTML = "<tr><td colspan='8' style='color:green; font-weight:bold; padding:30px;'>مثالي! لا يوجد غياب مسجل هذا الأسبوع.</td></tr>";
+
+                if(hasWarnings) document.getElementById("btn-bulk-download").style.display = "flex";
+                
+                if(i === 1) tbody.innerHTML = "<tr><td colspan='9' style='color:green; font-weight:bold; padding:30px;'>مثالي! لا يوجد غياب مسجل هذا الأسبوع.</td></tr>";
             } 
             else {
                 kpiDash.style.display = "grid";
@@ -425,11 +467,11 @@
                 const endW = isTerm1 ? 17 : 30;
                 document.getElementById("report-title").innerText = `التحليل الشامل للإنذارات - ${grade} - الترم ${isTerm1?'الأول':'الثاني'}`;
 
-                thead.innerHTML = "<tr><th>م</th><th>الكود الإلزامي</th><th>الكود الداخلي</th><th>اسم التلميذ</th><th>الفصل</th><th>الغياب</th><th>حالة الإنذار</th><th id='dynamic-col'>نسبة الحضور</th></tr>";
+                thead.innerHTML = "<tr><th>م</th><th>الكود الإلزامي</th><th>الكود الداخلي</th><th>اسم التلميذ</th><th>الفصل</th><th>إجمالي الغياب</th><th>حالة الإنذار</th><th id='dynamic-col'>نسبة الحضور</th></tr>";
 
                 let i = 1;
                 list.forEach(s => {
-                    counts.all++; // زيادة إجمالي التلاميذ
+                    counts.all++;
                     let absData = typeof s.absences === 'string' ? JSON.parse(s.absences||'{}') : (s.absences||{});
                     let totalAbs = 0;
                     for(let w=startW; w<=endW; w++) { if(absData['W'+w]) totalAbs += parseInt(absData['W'+w]); }
@@ -437,13 +479,23 @@
                     const totalDays = (endW - startW + 1) * 5;
                     const percent = (((totalDays - totalAbs) / totalDays) * 100).toFixed(1);
                     
-                    // الفصل الصارم بين الفئات
                     let badge = "", statusClass = "";
-                    if(totalAbs === 0) { counts.perfect++; badge = "<span class='badge' style='background:var(--primary); color:white;'>مثالي</span>"; statusClass = "row-perfect"; }
-                    else if(totalAbs >= 1 && totalAbs <= 5) { counts.safe++; badge = "<span class='badge bg-safe'>آمن</span>"; statusClass = "row-safe"; }
-                    else if(totalAbs >= 6 && totalAbs <= 10) { counts.warn1++; badge = "<span class='badge bg-warn1'>إنذار أول</span>"; statusClass = "row-warn1"; }
-                    else if(totalAbs >= 11 && totalAbs <= 14) { counts.warn2++; badge = "<span class='badge bg-warn2'>إنذار ثاني</span>"; statusClass = "row-warn2"; }
-                    else { counts.danger++; badge = "<span class='badge bg-danger'>خطر الفصل</span>"; statusClass = "row-danger"; }
+                    
+                    if(totalAbs === 0) { 
+                        counts.perfect++; badge = "<span class='badge' style='background:var(--primary); color:white;'>مثالي</span>"; statusClass = "row-perfect"; 
+                    }
+                    else if(totalAbs >= 1 && totalAbs <= 5) { 
+                        counts.safe++; badge = "<span class='badge bg-safe'>آمن</span>"; statusClass = "row-safe"; 
+                    }
+                    else if(totalAbs >= 6 && totalAbs <= 10) { 
+                        counts.warn1++; badge = "<span class='badge bg-warn1'>إنذار أول</span>"; statusClass = "row-warn1"; 
+                    }
+                    else if(totalAbs >= 11 && totalAbs <= 14) { 
+                        counts.warn2++; badge = "<span class='badge bg-warn2'>إنذار ثاني</span>"; statusClass = "row-warn2"; 
+                    }
+                    else { 
+                        counts.danger++; badge = "<span class='badge bg-danger'>خطر الفصل</span>"; statusClass = "row-danger"; 
+                    }
 
                     tbody.innerHTML += `<tr class="data-row ${statusClass}">
                         <td>${toArabicNum(i++)}</td>
@@ -466,16 +518,14 @@
             }
         }
 
-        // --- فلترة الجدول بناء على الضغط على البطاقات ---
         function filterTable(filterClass) {
             const rows = document.querySelectorAll(".data-row");
             const dynamicColHead = document.getElementById("dynamic-col");
             
-            // إذا تم الضغط على إنذارات، نغير العنوان إلى "رقم الموبايل"، وإلا نرجعه "نسبة الحضور"
             const showMobile = (filterClass === 'warn1' || filterClass === 'warn2' || filterClass === 'danger');
             if(dynamicColHead) dynamicColHead.innerText = showMobile ? "رقم الموبايل" : "نسبة الحضور";
 
-            let i = 1; // لإعادة ترقيم التسلسل للمجموعة المفلترة
+            let i = 1; 
             rows.forEach(r => {
                 let showRow = false;
                 if(filterClass === 'all') showRow = true;
@@ -483,9 +533,8 @@
                 
                 if(showRow) {
                     r.style.display = "";
-                    r.cells[0].innerText = toArabicNum(i++); // إعادة الترقيم
+                    r.cells[0].innerText = toArabicNum(i++); 
                     
-                    // تبديل محتوى الخلية الأخيرة بناءً على نوع الفلتر
                     let lastCell = r.querySelector('.dynamic-val');
                     if(lastCell) {
                         if(showMobile) {
@@ -504,10 +553,89 @@
             });
         }
 
-        // --- الإبداع: المنحنى الزمني للمدرسة بالكامل (Chart.js) ---
+        async function downloadWarningExcel(studentName, grade, absenceDays, warningLevel) {
+            try {
+                document.body.style.cursor = 'wait';
+                
+                let url = "";
+                if(warningLevel === 1) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHONE.xlsx";
+                else if(warningLevel === 2) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHTWO.xlsx";
+                else if(warningLevel === 3) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHTHREE.xlsx";
+
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+
+                const workbook = new ExcelJS.Workbook();
+                await workbook.xlsx.load(arrayBuffer);
+                const worksheet = workbook.worksheets[0]; 
+
+                worksheet.getCell('P7').value = grade.replace("الصف ", "").trim();
+
+                if (warningLevel === 1) {
+                    worksheet.getCell('H7').value = studentName;
+                    worksheet.getCell('I9').value = studentName;
+                    worksheet.getCell('H22').value = studentName;
+                    worksheet.getCell('E10').value = absenceDays;
+                } else if (warningLevel === 2) {
+                    worksheet.getCell('H7').value = studentName;
+                    worksheet.getCell('J7').value = studentName;
+                    worksheet.getCell('H22').value = studentName;
+                    worksheet.getCell('M10').value = absenceDays;
+                } else if (warningLevel === 3) {
+                    worksheet.getCell('H7').value = studentName;
+                    worksheet.getCell('M9').value = studentName;
+                    worksheet.getCell('H22').value = studentName;
+                    worksheet.getCell('G10').value = absenceDays;
+                }
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                saveAs(blob, `إنذار_${warningLevel}_${studentName}.xlsx`);
+
+                document.body.style.cursor = 'default';
+            } catch (error) {
+                console.error("Error generating Excel:", error);
+                alert("حدث خطأ أثناء تحميل ملف الإنذار. يرجى المحاولة مرة أخرى.");
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        async function downloadBulkWarnings() {
+            const rows = document.querySelectorAll(".data-row");
+            let count = 0;
+            
+            const confirmMsg = confirm("سيتم الآن تحميل ملفات الإكسيل لجميع التلاميذ المستحقين لإنذارات هذا الأسبوع. هل ترغب في المتابعة؟");
+            if(!confirmMsg) return;
+
+            for (let r of rows) {
+                if (r.style.display !== "none") {
+                    const btn = r.querySelector("button[onclick^='downloadWarningExcel']");
+                    if (btn) {
+                        const sName = btn.getAttribute('data-name');
+                        const sGrade = btn.getAttribute('data-grade');
+                        const sAbs = parseInt(btn.getAttribute('data-abs'));
+                        const sLevel = parseInt(btn.getAttribute('data-level'));
+                        
+                        const originalHtml = btn.innerHTML;
+                        btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> جاري...";
+                        
+                        await downloadWarningExcel(sName, sGrade, sAbs, sLevel);
+                        count++;
+                        
+                        btn.innerHTML = "<i class='fa-solid fa-check'></i> تم";
+                        
+                        await new Promise(resolve => setTimeout(resolve, 800)); 
+                    }
+                }
+            }
+            if(count === 0) alert("لا يوجد تلاميذ مستحقين لإنذارات في تقرير هذا الأسبوع.");
+            else alert(`تم استخراج وتحميل عدد (${count}) إنذار بنجاح!`);
+        }
+
         async function generateSchoolChart(term) {
             document.getElementById("kpi-dashboard").style.display = "none";
             document.getElementById("data-table").style.display = "none";
+            document.getElementById("btn-bulk-download").style.display = "none";
             document.getElementById("report-title").innerText = "⏳ جاري سحب بيانات المدرسة بالكامل... يرجى الانتظار";
             
             const isTerm1 = term === "term1";
@@ -542,11 +670,10 @@
 
             const ctx = document.getElementById('schoolChart').getContext('2d');
             
-            if(myChart) myChart.destroy(); // تدمير الرسم القديم إن وجد
+            if(myChart) myChart.destroy();
 
-            // تدرج لوني فخم تحت المنحنى
             let gradient = ctx.createLinearGradient(0, 0, 0, 350);
-            gradient.addColorStop(0, 'rgba(30, 58, 138, 0.4)'); // لون var(--primary) شفاف
+            gradient.addColorStop(0, 'rgba(30, 58, 138, 0.4)'); 
             gradient.addColorStop(1, 'rgba(30, 58, 138, 0.0)');
 
             myChart = new Chart(ctx, {
@@ -565,7 +692,7 @@
                         pointRadius: 5,
                         pointHoverRadius: 7,
                         fill: true,
-                        tension: 0.4 // لجعل المنحنى انسيابياً
+                        tension: 0.4 
                     }]
                 },
                 options: {
