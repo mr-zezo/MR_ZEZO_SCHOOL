@@ -13,7 +13,7 @@
         :root { 
             --primary-color: #1e3a8a; --secondary-color: #d97706; --bg-color: #f8fafc; 
             --text-main: #0f172a; --danger: #be123c; --success: #16a34a; 
-            --warning: #f59e0b; --border-color: #cbd5e1; 
+            --warning: #f59e0b; --border-color: #cbd5e1; --contract-color: #4338ca;
         }
 
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -39,11 +39,15 @@
         .interactive-table { border-collapse: separate; border-spacing: 0; width: max-content; }
         .interactive-table th, .interactive-table td { border-bottom: 1px solid var(--border-color); border-left: 1px solid var(--border-color); padding: 0; text-align: center; }
         .interactive-table thead th { position: sticky; top: 0; background: var(--primary-color); color: white; z-index: 10; padding: 10px; font-size: 14px; min-width: 65px; border-bottom: 2px solid #0f172a;}
-        .interactive-table tbody th { position: sticky; right: 0; background: #f8fafc; color: var(--primary-color); z-index: 5; font-size: 13px; font-weight: 900; padding: 0 10px; text-align: right; min-width: 130px; max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 2px solid var(--border-color); box-shadow: -2px 0 5px rgba(0,0,0,0.05);}
+        
+        .interactive-table tbody th { position: sticky; right: 0; background: #f8fafc; color: var(--primary-color); z-index: 5; font-size: 13px; font-weight: 900; padding: 0 10px; text-align: right; min-width: 140px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 2px solid var(--border-color); box-shadow: -2px 0 5px rgba(0,0,0,0.05);}
         .interactive-table thead th:first-child { position: sticky; right: 0; z-index: 20; background: #0f172a; border-left: 2px solid var(--border-color);}
 
+        .badge-contract { font-size: 10px; background: var(--contract-color); color: white; padding: 2px 5px; border-radius: 4px; margin-right: 5px; font-weight: normal; }
+        .subj-label { font-size: 10px; color: #64748b; display: block; margin-top: -3px; }
+
         /* الخلايا */
-        .cell-btn { width: 100%; height: 50px; background: transparent; border: none; font-size: 16px; font-weight: 900; outline: none; display: flex; justify-content: center; align-items: center; transition: 0.1s; }
+        .cell-btn { width: 100%; height: 55px; background: transparent; border: none; font-size: 16px; font-weight: 900; outline: none; display: flex; justify-content: center; align-items: center; transition: 0.1s; }
         .cell-btn.has-class { color: var(--primary-color); }
         .cell-btn:active { background: #e2e8f0; }
         .cell-btn.selected-swap { background: var(--warning) !important; color: white !important; box-shadow: inset 0 0 0 3px #b45309; animation: pulse 1s infinite; }
@@ -73,7 +77,6 @@
         .qe-title { font-size: 16px; font-weight: 900; color: var(--primary-color); margin-bottom: 10px; }
         .qe-hint { font-size: 12px; color: #64748b; margin-bottom: 15px; font-weight: bold; }
         
-        /* مربع الإدخال الذكي */
         .qe-input { width: 100%; padding: 15px; border-radius: 10px; border: 2px solid var(--primary-color); font-weight: 900; margin-bottom: 20px; font-size: 22px; text-align: center; outline: none; background: #f8fafc; direction: ltr; color: var(--primary-color);}
         .qe-input:focus { background: white; box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); }
         
@@ -91,7 +94,6 @@
         <h1><i class="fa-solid fa-mobile-screen"></i> مدير الجدول</h1>
         <div class="nav-actions">
             <button class="icon-btn" onclick="window.location.reload()"><i class="fa-solid fa-rotate-right"></i></button>
-            <!-- الزر الجديد للعودة للجدول الأساسي -->
             <a href="schedule.html" class="icon-btn" style="text-decoration:none; background: var(--secondary-color);" title="العودة للجدول العادي"><i class="fa-solid fa-table-cells"></i></a>
             <a href="index.html" class="icon-btn" style="text-decoration:none;"><i class="fa-solid fa-house"></i></a>
         </div>
@@ -116,7 +118,7 @@
         <table class="interactive-table">
             <thead>
                 <tr>
-                    <th>المعلم</th>
+                    <th>المعلم والمادة</th>
                     <th>ح 1</th><th>ح 2</th><th>ح 3</th><th>ح 4</th>
                     <th>ح 5</th><th>ح 6</th><th>ح 7</th><th>ح 8</th>
                 </tr>
@@ -137,13 +139,11 @@
         <div class="radar-details" id="radar-details"></div>
     </div>
 
-    <!-- نافذة الإدخال اليدوي الذكي -->
     <div class="bottom-modal-overlay" id="qeModal" onclick="if(event.target===this) closeQuickEdit()">
         <div class="bottom-modal-content">
             <div class="qe-title" id="qe-title">تعديل الحصة</div>
             <div class="qe-hint">اكتب الأرقام فقط (مثال: اكتب 41 لتصبح ٤/١)</div>
             
-            <!-- حقل إدخال يفتح لوحة الأرقام في الموبايل -->
             <input type="tel" class="qe-input" id="qe-class-input" placeholder="اكتب رقم الفصل..." oninput="smartFormatInput(this)" onkeypress="if(event.key==='Enter') applyQuickEdit();">
             
             <div class="qe-actions">
@@ -163,58 +163,137 @@
         
         let TEACHERS = [];
         let MODIFIED_TEACHERS = new Set();
-        
-        // كائن يحفظ بيانات الحصة المحددة للتبديل (حتى لو غيرنا اليوم)
         let swapState = null; 
-        
-        // كائن يحفظ بيانات الحصة الجاري تعديلها يدوياً
         let currentEditData = null;
 
         window.addEventListener('DOMContentLoaded', async () => {
             await loadData();
         });
 
-        // تحويل الأرقام لعربية
         function formatNum(str) {
             if (!str) return "";
             return String(str).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
         }
 
-        // دالة التنسيق الذكي أثناء الكتابة (تحول 41 إلى 4/1)
+        function extractShortName(fullName) {
+            if (!fullName) return "غير محدد";
+            const parts = fullName.trim().split(/\s+/);
+            if(parts.length === 1) return parts[0];
+            if (parts[0] === "عبد" || parts[0] === "ابو" || parts[0] === "أبو") return parts[0] + " " + parts[1] + " " + parts[parts.length - 1];
+            return parts[0] + " " + parts[parts.length - 1];
+        }
+
         function smartFormatInput(inputElement) {
             let val = inputElement.value;
-            // تحويل عربي لإنجليزي مؤقتاً للمعالجة
             let enVal = val.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
-            // إزالة أي شيء غير الأرقام وعلامة /
             enVal = enVal.replace(/[^0-9/]/g, '');
-            
-            // إذا كتب رقمين متتاليين بدون سلاش (مثل 41)
-            if (/^[0-9]{2}$/.test(enVal)) {
-                enVal = enVal[0] + '/' + enVal[1];
-            }
-            
-            // إعادة عرضها بالعربي
+            if (/^[0-9]{2}$/.test(enVal)) enVal = enVal[0] + '/' + enVal[1];
             inputElement.value = formatNum(enVal);
         }
 
+        // ================= المترجم الذكي لترتيب المواد =================
+        const orderedSubjectsKeywords = [
+            ["عربي", "لغهاعربيه"],           // 1. عربي
+            ["رياضيات", "حساب"],             // 2. رياضيات
+            ["انجل", "لغهانجليزيه"],         // 3. إنجليزي
+            ["علوم"],                        // 4. علوم
+            ["دراس", "اجتماعي"],             // 5. دراسات
+            ["حاسب", "كمبيوتر", "تكنولوجيا"],// 6. حاسب آلي
+            ["دين"],                         // 7. تربية دينية
+            ["فني", "رسم"],                  // 8. تربية فنية
+            ["رياضي", "بدني", "العاب"],      // 9. تربية رياضية
+            ["موسيقي"],                      // 10. موسيقى
+            ["فصل"],                         // 11. معلم فصل
+            ["اطفال", "رياض"]                // 12. رياض أطفال
+        ];
+
+        function getSubjectRank(subjectString) {
+            if (!subjectString) return 999;
+            
+            // تجريد الكلمة من المسافات والهمزات لتسهيل البحث
+            let cleanSubj = subjectString.replace(/[أإآا]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, "");
+            
+            for (let i = 0; i < orderedSubjectsKeywords.length; i++) {
+                const keywords = orderedSubjectsKeywords[i];
+                for (let keyword of keywords) {
+                    if (cleanSubj.includes(keyword)) {
+                        return i; // إرجاع الترتيب إذا وجد تطابق
+                    }
+                }
+            }
+            return 999; // إذا كانت المادة غير معروفة تذهب للنهاية
+        }
+
         async function loadData() {
-            Swal.fire({ title: 'تحميل البيانات...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'تحميل بيانات المدرسة...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const { data, error } = await supabaseClient.from("teachers").select("*").eq("emp_status", "على رأس العمل");
-                if(error) throw error;
+                const [resTeachers, resContract] = await Promise.all([
+                    supabaseClient.from("teachers").select("*").eq("emp_status", "على رأس العمل"),
+                    supabaseClient.from("contract_teachers").select("*").eq("status", "يعمل")
+                ]);
 
-                TEACHERS = data.filter(t => {
-                    const job = (t.cadre_job || "").replace(/\s+/g, "");
-                    return !(job.includes("عامل") || job.includes("اداري") || job.includes("اخصائي") || job.includes("مشرف") || job.includes("سكرتير"));
+                if(resTeachers.error) throw resTeachers.error;
+                if(resContract.error) throw resContract.error;
+
+                let combinedTeachers = [];
+
+                // 1. فلترة صارمة جداً للمعلمين الأساسيين
+                (resTeachers.data || []).forEach(t => {
+                    let job = (t.cadre_job || "").replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/\s+/g, "");
+                    let subj = (t.subject || "").replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/\s+/g, "");
+                    
+                    const isNonTeacher = 
+                        job.includes("عامل") || 
+                        job.includes("اداري") || 
+                        job.includes("اخصائي") || 
+                        job.includes("مشرف") || 
+                        job.includes("سكرتير") || 
+                        job.includes("امين") || 
+                        job.includes("حارس") || 
+                        job.includes("فني") || 
+                        job.includes("غيرمخاطب") || 
+                        job.includes("خدمات") ||
+                        subj.includes("لايوجد") || 
+                        subj === ""; 
+
+                    if(!isNonTeacher) {
+                        combinedTeachers.push({
+                            id: t.code,
+                            type: 'regular',
+                            name: t.name,
+                            short_name: t.short_name || extractShortName(t.name),
+                            subject: (t.subject || "غير محدد").trim(),
+                            schedule: t.schedule || {}
+                        });
+                    }
                 });
-                
-                TEACHERS.sort((a,b) => (a.name || "").localeCompare(b.name, 'ar'));
-                TEACHERS.forEach(t => { if(!t.schedule) t.schedule = {}; });
 
+                // 2. إضافة معلمي الأجر
+                (resContract.data || []).forEach(t => {
+                    combinedTeachers.push({
+                        id: t.nid,
+                        type: 'contract',
+                        name: t.name,
+                        short_name: extractShortName(t.name),
+                        subject: (t.subject || "غير محدد").trim(),
+                        schedule: t.schedule || {}
+                    });
+                });
+
+                // 3. الترتيب الصارم باستخدام المترجم الذكي
+                combinedTeachers.sort((a, b) => {
+                    let rankA = getSubjectRank(a.subject);
+                    let rankB = getSubjectRank(b.subject);
+
+                    if (rankA !== rankB) return rankA - rankB; // ترتيب حسب المادة
+                    return (a.name || "").localeCompare(b.name || "", 'ar'); // ترتيب أبجدي لنفس المادة
+                });
+
+                TEACHERS = combinedTeachers;
                 renderGrid();
                 Swal.close();
             } catch(e) {
-                Swal.fire('خطأ', 'فشل تحميل البيانات', 'error');
+                Swal.fire('خطأ', 'فشل تحميل البيانات: ' + e.message, 'error');
             }
         }
 
@@ -238,7 +317,9 @@
                 let tr = document.createElement("tr");
                 
                 let th = document.createElement("th");
-                th.innerText = t.short_name || t.name.split(" ")[0] + " " + t.name.split(" ")[t.name.split(" ").length-1];
+                let nameHtml = t.short_name;
+                if(t.type === 'contract') nameHtml += ` <span class="badge-contract">أجر</span>`;
+                th.innerHTML = `<div>${nameHtml}</div><span class="subj-label">${t.subject}</span>`;
                 tr.appendChild(th);
 
                 for(let i=1; i<=8; i++) {
@@ -256,14 +337,12 @@
                         btn.innerHTML = "<span style='color:#cbd5e1; font-weight:normal;'>-</span>";
                     }
 
-                    // تخزين البيانات في الزر
-                    btn.dataset.tCode = t.code;
+                    btn.dataset.id = t.id;
                     btn.dataset.day = currentDay;
                     btn.dataset.period = i;
                     btn.dataset.val = classVal;
                     
-                    // التحقق مما إذا كانت هذه الخلية هي المحددة حالياً للتبديل
-                    if(swapState && swapState.tCode === t.code && swapState.day === currentDay && swapState.period == i) {
+                    if(swapState && swapState.id === t.id && swapState.day === currentDay && swapState.period == i) {
                         btn.classList.add("selected-swap");
                     }
 
@@ -278,28 +357,24 @@
             analyzeDay(); 
         }
 
-        // ================= التبديل الذكي عبر الأيام =================
         function handleMobileClick(clickedBtn) {
             const currentData = {
-                tCode: clickedBtn.dataset.tCode,
+                id: clickedBtn.dataset.id,
                 day: clickedBtn.dataset.day,
                 period: clickedBtn.dataset.period,
                 val: clickedBtn.dataset.val
             };
 
             if (!swapState) {
-                // الضغطة الأولى: حفظ بيانات الخلية للتبديل
                 swapState = currentData;
-                renderGrid(); // إعادة الرسم لإظهار التظليل
+                renderGrid(); 
             } 
-            else if (swapState.tCode === currentData.tCode && swapState.day === currentData.day && swapState.period === currentData.period) {
-                // الضغطة الثانية على نفس الخلية: نلغي التبديل ونفتح نافذة التعديل اليدوي
+            else if (swapState.id === currentData.id && swapState.day === currentData.day && swapState.period === currentData.period) {
                 swapState = null;
-                renderGrid(); // إزالة التظليل
+                renderGrid(); 
                 openQuickEdit(currentData);
             } 
             else {
-                // ضغطة على خلية أخرى (حتى لو في يوم مختلف): تنفيذ التبديل
                 executeCrossSwap(swapState, currentData);
                 swapState = null;
                 renderGrid();
@@ -307,31 +382,29 @@
         }
 
         function executeCrossSwap(cell1, cell2) {
-            const t1 = TEACHERS.find(t => t.code === cell1.tCode);
-            const t2 = TEACHERS.find(t => t.code === cell2.tCode);
+            const t1 = TEACHERS.find(t => t.id === cell1.id);
+            const t2 = TEACHERS.find(t => t.id === cell2.id);
 
-            // التبديل الفعلي في الذاكرة
             t1.schedule[`${cell1.day}_${cell1.period}`] = cell2.val;
             t2.schedule[`${cell2.day}_${cell2.period}`] = cell1.val;
 
-            MODIFIED_TEACHERS.add(cell1.tCode);
-            MODIFIED_TEACHERS.add(cell2.tCode);
+            MODIFIED_TEACHERS.add(cell1.id);
+            MODIFIED_TEACHERS.add(cell2.id);
 
             Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم التبديل بنجاح!', showConfirmButton: false, timer: 1500 });
         }
 
-        // ================= التعديل اليدوي السريع =================
         function openQuickEdit(cellData) {
             currentEditData = cellData;
-            const teacher = TEACHERS.find(t => t.code === cellData.tCode);
+            const teacher = TEACHERS.find(t => t.id === cellData.id);
             
-            document.getElementById("qe-title").innerText = `يوم ${dayNamesAr[cellData.day]} - حصة ${formatNum(cellData.period)}\n(أ. ${teacher.short_name || teacher.name.split(' ')[0]})`;
+            document.getElementById("qe-title").innerText = `يوم ${dayNamesAr[cellData.day]} - حصة ${formatNum(cellData.period)}\n(أ. ${teacher.short_name})`;
             
             const inputField = document.getElementById("qe-class-input");
             inputField.value = formatNum(cellData.val);
             
             document.getElementById("qeModal").style.display = "flex";
-            setTimeout(() => inputField.focus(), 100); // التركيز التلقائي لفتح لوحة المفاتيح
+            setTimeout(() => inputField.focus(), 100);
         }
 
         function closeQuickEdit() { 
@@ -342,7 +415,6 @@
         function applyQuickEdit() {
             if(!currentEditData) return;
             const inputVal = document.getElementById("qe-class-input").value.trim();
-            // تحويل عربي لانجليزي للحفظ في قاعدة البيانات
             const enVal = inputVal.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
             updateCellData(enVal);
         }
@@ -353,15 +425,14 @@
         }
 
         function updateCellData(newVal) {
-            const teacher = TEACHERS.find(t => t.code === currentEditData.tCode);
+            const teacher = TEACHERS.find(t => t.id === currentEditData.id);
             teacher.schedule[`${currentEditData.day}_${currentEditData.period}`] = newVal;
             
-            MODIFIED_TEACHERS.add(currentEditData.tCode);
+            MODIFIED_TEACHERS.add(currentEditData.id);
             closeQuickEdit();
             renderGrid();
         }
 
-        // ================= رادار الأخطاء (Bottom Bar) =================
         function toggleRadar() {
             const bar = document.getElementById("radar-bar");
             bar.classList.toggle("expanded");
@@ -393,7 +464,7 @@
                     const cls = t.schedule[`${day}_${p}`];
                     if(cls) {
                         if(!periodMap[cls]) periodMap[cls] = [];
-                        periodMap[cls].push({ code: t.code, name: t.short_name || t.name.split(' ')[0] });
+                        periodMap[cls].push({ id: t.id, name: t.short_name });
                     }
                 });
 
@@ -402,7 +473,7 @@
                         let names = periodMap[cls].map(x => x.name).join(" و ");
                         conflicts.push(`حصة ${formatNum(p)}: فصل ${formatNum(cls)} مع (${names})`);
                         periodMap[cls].forEach(tea => {
-                            let btn = document.querySelector(`.cell-btn[data-t-code="${tea.code}"][data-day="${day}"][data-period="${p}"]`);
+                            let btn = document.querySelector(`.cell-btn[data-id="${tea.id}"][data-day="${day}"][data-period="${p}"]`);
                             if(btn) btn.classList.add('conflict');
                         });
                     }
@@ -420,19 +491,23 @@
             }
         }
 
-        // ================= الحفظ للسحابة =================
         async function saveAllToCloud() {
             if(MODIFIED_TEACHERS.size === 0) {
                 Swal.fire({ toast: true, position: 'top', icon: 'info', title: 'لا يوجد تعديلات للحفظ', showConfirmButton: false, timer: 2000 });
                 return;
             }
 
-            Swal.fire({ title: 'جاري الحفظ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'جاري الحفظ بالسحابة...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
-                for (let tCode of MODIFIED_TEACHERS) {
-                    const teacher = TEACHERS.find(t => t.code === tCode);
-                    await supabaseClient.from("teachers").update({ schedule: teacher.schedule }).eq("code", tCode);
+                for (let tId of MODIFIED_TEACHERS) {
+                    const teacher = TEACHERS.find(t => t.id === tId);
+                    
+                    if (teacher.type === 'regular') {
+                        await supabaseClient.from("teachers").update({ schedule: teacher.schedule }).eq("code", tId);
+                    } else {
+                        await supabaseClient.from("contract_teachers").update({ schedule: teacher.schedule }).eq("nid", tId);
+                    }
                 }
                 
                 MODIFIED_TEACHERS.clear(); 
