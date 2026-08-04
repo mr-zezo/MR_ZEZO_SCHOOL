@@ -47,7 +47,10 @@
         #profile-section { display: none; width: 100%; max-width: 900px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 6px solid var(--primary-color); }
         
         .profile-header { display: flex; gap: 20px; align-items: center; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; }
-        .avatar-container { width: 90px; height: 90px; flex-shrink: 0; }
+        
+        /* تم تكبير مقاس الصورة هنا من 90 إلى 130 */
+        .avatar-container { width: 130px; height: 130px; flex-shrink: 0; }
+        
         .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-color); background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .profile-info { flex-grow: 1; }
         .profile-info h2 { color: var(--primary-color); font-weight: 900; margin-bottom: 5px; font-size: 20px;}
@@ -262,6 +265,14 @@
     </div>
 
     <script>
+        // ================= استرجاع الرقم القومي المحفوظ =================
+        window.onload = function() {
+            const savedNid = localStorage.getItem('saved_teacher_nid');
+            if (savedNid) {
+                document.getElementById("login-nid").value = savedNid;
+            }
+        };
+
         // ================= إعدادات Supabase =================
         const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
@@ -290,6 +301,9 @@
                 if (error) throw error;
 
                 if (data) {
+                    // حفظ الرقم القومي في المتصفح ليجده المعلم في المرة القادمة
+                    localStorage.setItem('saved_teacher_nid', nidInput);
+
                     currentTeacher = data;
                     populateProfile(data);
                     document.getElementById("login-section").style.display = "none";
@@ -306,20 +320,17 @@
             }
         }
 
-        // ================= تعبئة البيانات (29 حقل) =================
+        // ================= تعبئة البيانات =================
         function populateProfile(data) {
-            // الرأس
             document.getElementById("p_name").innerText = data.name || "بدون اسم";
             document.getElementById("p_nid").innerText = data.nid || "";
             document.getElementById("p_photo").src = data.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
 
-            // 1. شخصية
             document.getElementById("p_dob").value = data.dob || "-";
             document.getElementById("p_gender").value = data.gender || "-";
             document.getElementById("p_address").value = data.address || "-";
             document.getElementById("p_mobile").value = data.mobile || "-";
 
-            // 2. مؤهل
             document.getElementById("p_qualification").value = data.qualification || "-";
             document.getElementById("p_qual_date").value = data.qual_date || "-";
             document.getElementById("p_qual_grade").value = data.qual_grade || "-";
@@ -327,7 +338,6 @@
             document.getElementById("p_specialization").value = data.specialization || "-";
             document.getElementById("p_sci_lit").value = data.sci_lit || "-";
 
-            // 3. كادر ودرجة
             document.getElementById("p_emp_status").value = data.emp_status || "-";
             document.getElementById("p_cadre_job").value = data.cadre_job || "-";
             document.getElementById("p_hire_date").value = data.hire_date || "-";
@@ -336,18 +346,15 @@
             document.getElementById("p_degree_date").value = data.degree_date || "-";
             document.getElementById("p_code").value = data.code || "-";
 
-            // 4. تدريس وانتداب
             document.getElementById("p_teaching_category").value = data.teaching_category || "-";
             document.getElementById("p_subject").value = data.subject || "-";
             document.getElementById("p_quota").value = data.quota ? data.quota + " حصة" : "-";
             document.getElementById("p_status").value = data.status || "-";
             document.getElementById("p_secondment_days").value = data.secondment_days || "-";
 
-            // 5. بيانات الدخول
             document.getElementById("p_username").value = data.username || "-";
             document.getElementById("p_password").value = data.password || "-";
 
-            // المرفقات
             const btnNid = document.getElementById("btn-view-nid");
             if(data.nid_pdf) { btnNid.classList.remove("empty"); btnNid.innerHTML = '<i class="fa-solid fa-id-card"></i> عرض بطاقة الرقم القومي'; }
             else { btnNid.classList.add("empty"); btnNid.innerHTML = '<i class="fa-solid fa-xmark"></i> لا توجد صورة للبطاقة'; }
@@ -443,7 +450,7 @@
         // ================= تسجيل الخروج =================
         function logout() {
             currentTeacher = null;
-            document.getElementById("login-nid").value = "";
+            // تم إزالة السطر الذي يمسح الرقم القومي من المربع ليظل محتفظاً به
             document.getElementById("req_message").value = "";
             document.getElementById("profile-section").style.display = "none";
             document.getElementById("login-section").style.display = "block";
