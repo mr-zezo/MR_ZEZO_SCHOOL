@@ -22,36 +22,35 @@
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
         body { background-color: var(--bg); padding: 20px; display: flex; flex-direction: column; align-items: center; }
         
-        .top-navigation { width: 100%; max-width: 950px; background: var(--dark); padding: 10px 20px; border-radius: 10px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .nav-title { font-size: 15px; font-weight: 900; color: #93c5fd; flex: 1; text-align: right; }
-        .nav-center-sig { flex: 1; text-align: center; font-size: 16px; font-weight: 900; color: #fcd34d; }
-        .nav-buttons { display: flex; gap: 15px; flex: 1; justify-content: flex-end; align-items: center; }
+        /* ================= الشريط العلوي ================= */
+        .top-navigation { width: 100%; max-width: 950px; background: var(--dark); padding: 12px 20px; border-radius: 10px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 10px;}
         
+        .nav-right-col { display: flex; flex-direction: column; gap: 8px; flex: 1; align-items: flex-start; min-width: max-content;}
+        .nav-title { font-size: 16px; font-weight: 900; color: #93c5fd; margin: 0; }
+        .quick-nav-select { padding: 4px 10px; border-radius: 6px; border: 1px solid #fcd34d; background: #1e3a8a; color: white; font-weight: bold; font-family: 'Cairo'; outline: none; cursor: pointer; font-size: 12px; width: 100%; max-width: 180px; transition: 0.2s;}
+        .quick-nav-select:hover { border-color: white; }
+        .quick-nav-select option { background: white; color: black; font-size: 14px;}
+
+        .nav-center-sig { flex: 1; text-align: center; font-size: 16px; font-weight: 900; color: #fcd34d; min-width: max-content;}
+        
+        .nav-buttons { display: flex; gap: 10px; flex: 1; justify-content: flex-end; align-items: center; flex-wrap: wrap;}
         .btn-nav { text-decoration: none; border: none; cursor: pointer; color: white; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
         .btn-nav:hover { transform: translateY(-2px); }
-        
-        .btn-home { background: #1e3a8a !important; font-size: 16px !important; padding: 10px 20px !important; }
+        .btn-home { background: #1e3a8a !important; font-size: 14px !important; padding: 8px 15px !important; }
         .btn-home:hover { background: #172554 !important; }
-        .btn-screenshot { background: silver !important; color: #111827 !important; font-size: 15px !important; padding: 10px 15px !important; }
+        .btn-screenshot { background: silver !important; color: #111827 !important; font-size: 14px !important; padding: 8px 15px !important; }
         .btn-screenshot:hover { background: #a3a3a3 !important; }
 
+        /* ================= باقي التصميم ================= */
         .form-container { background: white; padding: 25px 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 950px; border-top: 5px solid var(--primary); position: relative; }
         h2 { color: var(--dark); font-weight: 900; font-size: 20px; margin-bottom: 15px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 10px; display: flex; justify-content: center; gap: 10px; align-items: center; }
         
         label { display: block; margin-bottom: 5px; font-size: 14px; font-weight: 700; color: #111827; }
         
         input, select { 
-            width: 100%; 
-            border: 1px solid #cbd5e1; 
-            border-radius: 6px; 
-            outline: none; 
-            background-color: #fff; 
-            padding: 10px; 
-            font-size: 16px; 
-            font-weight: 800; 
-            text-align: center; 
+            width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; 
+            background-color: #fff; padding: 10px; font-size: 16px; font-weight: 800; text-align: center; 
         }
-
         input:focus, select:focus { border-color: var(--info); box-shadow: 0 0 0 2px rgba(2,132,199,0.2); }
 
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;}
@@ -100,10 +99,12 @@
         .watermark-form { display: none; text-align: center; font-size: 13px; font-weight: 900; color: #64748b; margin-top: 15px; border-top: 2px dashed #cbd5e1; padding-top: 10px; }
 
         @media (max-width: 768px) {
+            .nav-right-col { align-items: center; width: 100%; }
+            .quick-nav-select { max-width: 100%; }
+            .nav-center-sig, .nav-buttons { text-align: center; width: 100%; justify-content: center; }
             .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } 
             .actions-bar { grid-template-columns: 1fr 1fr; } 
             .top-navigation { flex-direction: column; gap: 15px; padding: 15px; }
-            .nav-title, .nav-center-sig, .nav-buttons { text-align: center; width: 100%; justify-content: center; }
             .abs-stats { flex-direction: column; }
         }
     </style>
@@ -111,8 +112,21 @@
 <body>
 
     <nav class="top-navigation hide-in-shot">
-        <div class="nav-title"><i class="fa-solid fa-school"></i> مدرسة الشهيد أشرف حبيب</div>
+        <!-- التعديل الجديد: قائمة الانتقال أسفل اسم المدرسة -->
+        <div class="nav-right-col">
+            <div class="nav-title"><i class="fa-solid fa-school"></i> مدرسة الشهيد أشرف حبيب</div>
+            <select class="quick-nav-select" onchange="if(this.value) window.location.href=this.value;">
+                <option value="" disabled selected>🚀 انتقال سريع...</option>
+                <option value="stu-data.html">بيانات التلاميذ</option>
+                <option value="stu-absence.html">منظومة الغياب</option>
+                <option value="schedule.html">الجدول المدرسي</option>
+                <option value="tea-data.html">المعلمين الأساسيين</option>
+                <option value="stu-print.html">مركز الطباعة</option>
+            </select>
+        </div>
+        
         <div class="nav-center-sig">إعداد وتصميم / مستر زيزو</div>
+        
         <div class="nav-buttons">
             <button onclick="takeScreenshot('capture-card')" class="btn-nav btn-screenshot"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
             <a href="index.html" class="btn-nav btn-home"><i class="fa-solid fa-house"></i> الرئيسية</a>
@@ -169,7 +183,18 @@
             </div>
         </div>
         
-        <div><label>موبايل ولي الأمر (واتساب)</label><input type="text" id="father_mobile"></div>
+        <div class="grid-2">
+            <div><label>موبايل ولي الأمر (واتساب)</label><input type="text" id="father_mobile"></div>
+            <div>
+                <label>الحالة الاجتماعية (للكشوف الرسمية)</label>
+                <select id="social_status" style="background:#f0fdf4; border-color:#16a34a;">
+                    <option value="">عادي (لا يوجد)</option>
+                    <option value="أيتام">أيتام</option>
+                    <option value="بحث اجتماعي">بحث اجتماعي</option>
+                    <option value="أبناء عاملين">أبناء عاملين</option>
+                </select>
+            </div>
+        </div>
 
         <div class="actions-bar hide-in-shot">
             <button class="btn btn-add" onclick="saveNew()"><i class="fa-solid fa-floppy-disk"></i> حفظ جديد</button>
@@ -288,7 +313,7 @@
                     .from('students')
                     .select('code, name, grade, class')
                     .ilike('name', `${cleanVal}%`)
-                    .order('name', { ascending: true }) // السطر السحري: ترتيب النتائج أبجدياً
+                    .order('name', { ascending: true }) 
                     .limit(20); 
 
                 resBox.innerHTML = "";
@@ -330,6 +355,7 @@
             document.getElementById("father_mobile").value = data.father_mobile || "";
             document.getElementById("dmj").value = data.dmj || "";
             document.getElementById("transfer_type").value = data.transfer_type || "أساسي";
+            document.getElementById("social_status").value = data.social_status || "";
             
             document.getElementById("search-results").style.display = "none";
             extractDataFromNID();
@@ -405,7 +431,8 @@
                 religion: document.getElementById("religion").value,
                 father_mobile: document.getElementById("father_mobile").value, 
                 dmj: document.getElementById("dmj").value, 
-                transfer_type: document.getElementById("transfer_type").value
+                transfer_type: document.getElementById("transfer_type").value,
+                social_status: document.getElementById("social_status").value
             };
 
             try {
