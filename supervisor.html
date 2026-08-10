@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>مكتب المشرف العام - تطبيق الموبايل</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase & SweetAlert & Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root { 
+            --primary: #1e3a8a; --secondary: #3b82f6; --accent: #f59e0b;
+            --dark: #0f172a; --bg: #f1f5f9; --surface: #ffffff;
+            --danger: #e11d48; --success: #10b981; --border: #cbd5e1;
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; height: 100dvh; background-color: var(--bg); color: var(--dark); display: flex; flex-direction: column; overflow: hidden; }
+
+        /* ================= الشريط العلوي ================= */
+        .top-app-bar { background: var(--dark); padding: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); z-index: 100; flex-shrink: 0; }
+        .app-title { display: flex; flex-direction: column; color: white; margin: 0; }
+        .app-title h1 { font-size: 16px; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 8px;}
+        .app-title span { font-size: 14px; color: white; font-weight: 900; margin-top: 2px; display: flex; align-items: center; gap: 5px;}
+        
+        .app-actions { display: flex; gap: 12px; align-items: center;}
+        .icon-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; width: 40px; height: 40px; border-radius: 10px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; position: relative;}
+        .icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
+
+        /* ================= أزرار الرجوع العائمة ================= */
+        .floating-back-container { position: fixed; bottom: 20px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 20px; z-index: 1000; pointer-events: none; display: none;}
+        .floating-back-container.active { display: flex; }
+        .fab-back { pointer-events: auto; background: var(--danger); color: white; width: 55px; height: 55px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 15px rgba(225, 29, 72, 0.4); border: 3px solid white; cursor: pointer; transition: 0.2s;}
+        .fab-back:active { transform: scale(0.9); }
+
+        /* ================= إدارة الشاشات ================= */
+        .screen-container { flex-grow: 1; position: relative; overflow: hidden; }
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); overflow-y: auto; padding: 15px; padding-bottom: 90px; transition: transform 0.3s ease, opacity 0.3s ease; transform: translateX(100%); opacity: 0; z-index: 1;}
+        .screen.active { transform: translateX(0); opacity: 1; z-index: 10;}
+
+        /* ================= الشاشة الرئيسية ================= */
+        .stage-btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; border-radius: 20px; padding: 30px 20px; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(30, 58, 138, 0.2); transition: 0.2s; cursor: pointer; }
+        .stage-btn.upper { background: linear-gradient(135deg, var(--success), #047857); box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); }
+        .stage-btn:active { transform: scale(0.96); }
+        .stage-btn i { font-size: 50px; }
+        .stage-btn h2 { font-size: 22px; font-weight: 900; margin: 0; }
+
+        /* ================= القائمة الفرعية ================= */
+        .sub-header { display: flex; align-items: center; justify-content: center; margin-bottom: 15px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid var(--border);}
+        .stage-title { font-size: 18px; font-weight: 900; color: var(--primary); margin: 0; }
+
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .menu-card { background: white; border: 1px solid var(--border); border-radius: 15px; padding: 20px 10px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); cursor: pointer; transition: 0.2s; }
+        .menu-card:active { transform: scale(0.95); background: #f8fafc; }
+        .menu-card i { font-size: 30px; color: var(--primary); }
+        .menu-card h3 { font-size: 14px; font-weight: 900; color: var(--dark); margin: 0; }
+        
+        /* ================= أزرار الحصص الأفقية ================= */
+        .period-tabs-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
+        .period-tabs-container::-webkit-scrollbar { display: none; }
+        .period-btn { background: white; border: 2px solid var(--border); padding: 10px 20px; border-radius: 12px; font-size: 14px; font-weight: 900; white-space: nowrap; cursor: pointer; color: var(--dark); transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
+        .period-btn.active { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(30, 58, 138, 0.2);}
+
+        /* ================= المراقبة الحية ================= */
+        .live-clock-card { background: linear-gradient(135deg, var(--primary), #3b82f6); color: white; padding: 20px; border-radius: 15px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3); }
+        .time-box h2 { font-size: 28px; font-weight: 900; font-family: Arial; letter-spacing: 2px; margin: 0;}
+        .time-box p { font-size: 13px; font-weight: bold; color: #bfdbfe; margin: 0; }
+        .status-box { text-align: left; }
+        .status-badge { background: #fcd34d; color: var(--dark); padding: 5px 12px; border-radius: 8px; font-weight: 900; font-size: 16px; margin-bottom: 5px; display: inline-block; }
+        .status-left { font-size: 12px; font-weight: bold; }
+
+        .grade-section-title { font-size: 18px; font-weight: 900; color: var(--primary); margin: 20px 0 10px 0; border-bottom: 2px dashed var(--border); padding-bottom: 5px;}
+        .classes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+        .class-card { background: white; border: 2px solid var(--success); border-radius: 12px; padding: 15px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .class-card.empty { border-color: var(--danger); background: #fff1f2; }
+        .cc-name { font-size: 20px; font-weight: 900; color: var(--dark); margin-bottom: 5px; }
+        .cc-teacher { font-size: 13px; font-weight: 800; color: var(--success); }
+        .empty .cc-teacher { color: var(--danger); font-weight: 900;}
+
+        /* ================= الاحتياطي والفريق ================= */
+        .sub-list, .sup-list { display: flex; flex-direction: column; gap: 10px; }
+        
+        .teacher-row { background: white; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border: 2px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.02); cursor: pointer; transition: 0.2s; }
+        .teacher-row:active { transform: scale(0.98); }
+        .teacher-row.assigned { background: var(--danger); border-color: var(--danger); color: white; }
+        
+        .t-name { font-size: 16px; font-weight: 900; display: block; margin-bottom: 5px; color: var(--dark);}
+        .teacher-row.assigned .t-name { color: white; }
+        
+        .t-tags { display: flex; gap: 5px; flex-wrap: wrap;}
+        .t-tag { font-size: 12px; padding: 4px 10px; border-radius: 6px; font-weight: bold; }
+        .tag-quota { background: #f1f5f9; color: var(--primary); }
+        .teacher-row.assigned .tag-quota { background: rgba(255,255,255,0.2); color: white; }
+
+        .assign-box { display: flex; gap: 5px; margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 10px;}
+        .assign-select { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; font-weight: bold; outline: none; background: #f8fafc;}
+        .btn-assign { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px;}
+
+        /* بطاقة المشرف */
+        .sup-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-right: 5px solid var(--warning); box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
+        .sup-loc { font-size: 12px; color: #64748b; font-weight: 900; margin-bottom: 3px; }
+        .sup-name { font-size: 15px; font-weight: 900; color: var(--dark); }
+        .sup-eval { background: #f8fafc; border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-size: 13px; font-weight: 900; outline: none; color: var(--primary); }
+        .btn-call-only { width: 35px; height: 35px; border-radius: 50%; background: #10b981; color: white; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 16px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); transition: 0.2s;}
+
+        /* ================= دفتر الأحوال ================= */
+        .report-form { display: flex; flex-direction: column; gap: 15px; }
+        .rep-section { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
+        .rep-title { font-size: 14px; font-weight: 900; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .rep-input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 14px; font-weight: 700; outline: none; background: #f8fafc; resize: vertical; min-height: 60px; font-family: 'Cairo'; }
+        
+        .record-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .record-row.full { grid-template-columns: 1fr; }
+        .r-input { padding: 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: bold; outline: none; width: 100%; }
+
+        .btn-submit-report { background: var(--success); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 900; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3); transition: 0.2s;}
+
+        /* ================= النوافذ السفلية ================= */
+        .bottom-sheet { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; flex-direction: column; justify-content: flex-end; }
+        .bottom-sheet.active { display: flex; }
+        .sheet-content { background: white; border-radius: 20px 20px 0 0; padding: 20px; animation: slideUp 0.3s ease; max-height: 85vh; display: flex; flex-direction: column;}
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; flex-shrink: 0;}
+        .sheet-header h2 { font-size: 16px; font-weight: 900; margin: 0; color: var(--dark);}
+        .sheet-body { overflow-y: auto; flex-grow: 1; padding-bottom: 20px;}
+
+        .time-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid var(--border); }
+        .time-row label { font-weight: 900; font-size: 13px; width: 45px; }
+        .time-row input[type="time"] { padding: 5px; border-radius: 6px; border: 1px solid var(--border); font-family: Arial; font-weight: bold; outline: none; background: white;}
+        .btn-save-times { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 10px; flex-shrink: 0;}
+
+        /* ================= نافذة الأدمن (زيزو) ================= */
+        .admin-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .admin-input { flex: 2; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; font-size: 13px; outline: none;}
+        .admin-select { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; font-size: 13px; outline: none;}
+        
+        .msg-card { background: #f8fafc; border: 1px solid var(--border); border-right: 4px solid var(--danger); padding: 12px; border-radius: 10px; margin-bottom: 10px; }
+        .msg-time { font-size: 11px; color: #64748b; font-weight: bold; margin-bottom: 5px; display: block;}
+        .msg-text { font-size: 14px; font-weight: 900; color: var(--dark); margin-bottom: 10px;}
+        .btn-read { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
+        .chart-container { width: 100%; height: 250px; margin-bottom: 20px; }
+
+        datalist { font-family: 'Cairo'; }
+    </style>
+</head>
+<body>
+
+    <datalist id="teachers-list"></datalist>
+
+    <!-- الشريط العلوي -->
+    <div class="top-app-bar">
+        <div class="app-title">
+            <h1><i class="fa-solid fa-bolt"></i> إشراف المدرسة</h1>
+            <span>إعداد وبرمجة مستر زيزو <i class="fa-solid fa-lock" style="cursor:pointer; margin-right:5px;" onclick="openAdminPanel()"></i></span>
+        </div>
+        <div class="app-actions">
+            <button class="icon-btn" onclick="openTimeSettings()"><i class="fa-solid fa-clock"></i></button>
+            <button class="icon-btn" onclick="window.location.reload()"><i class="fa-solid fa-rotate-right"></i></button>
+            <button class="icon-btn" onclick="goHome()"><i class="fa-solid fa-house"></i></button>
+        </div>
+    </div>
+
+    <!-- أزرار الرجوع العائمة -->
+    <div class="floating-back-container" id="fab-container">
+        <button class="fab-back" onclick="goBack()"><i class="fa-solid fa-arrow-right"></i></button>
+        <button class="fab-back" onclick="goBack()"><i class="fa-solid fa-arrow-left"></i></button>
+    </div>
+
+    <main class="screen-container">
+        
+        <!-- ================= الشاشة 1: الرئيسية ================= -->
+        <div id="screen-home" class="screen active">
+            <div style="text-align:center; color:var(--dark); font-weight:900; font-size:14px; margin-bottom:20px; background:white; padding:10px; border-radius:12px; border:1px solid var(--border);">
+                اليوم: <select id="global-day" style="background:transparent; border:none; color:var(--primary); font-weight:900; outline:none; font-size:15px;" onchange="changeGlobalDay()">
+                    <option value="الاحد">الأحد</option><option value="الاثنين">الإثنين</option><option value="الثلاثاء">الثلاثاء</option><option value="الاربعاء">الأربعاء</option><option value="الخميس">الخميس</option>
+                </select>
+            </div>
+
+            <button class="stage-btn" onclick="openStage('lower')">
+                <i class="fa-solid fa-child-reaching"></i>
+                <h2>إشراف الصفوف الأولى</h2>
+                <span style="font-size:12px; opacity:0.8; color:white;">(الأول - الثاني - الثالث)</span>
+            </button>
+            <button class="stage-btn upper" onclick="openStage('upper')">
+                <i class="fa-solid fa-book-open-reader"></i>
+                <h2>إشراف الصفوف العليا</h2>
+                <span style="font-size:12px; opacity:0.8; color:white;">(الرابع - الخامس - السادس)</span>
+            </button>
+        </div>
+
+        <!-- ================= الشاشة 2: القائمة الفرعية ================= -->
+        <div id="screen-menu" class="screen">
+            <div class="sub-header">
+                <h2 class="stage-title" id="menu-stage-title">...</h2>
+            </div>
+
+            <div class="menu-grid">
+                <div class="menu-card" onclick="navTo('screen-supervisors')">
+                    <i class="fa-solid fa-users-viewfinder"></i>
+                    <h3>فريق الإشراف</h3>
+                </div>
+                <div class="menu-card" onclick="navTo('screen-tracking')">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                    <h3>عندنا مين؟</h3>
+                </div>
+                <div class="menu-card" onclick="navTo('screen-substitutes')">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <h3>الاحتياطي</h3>
+                </div>
+                <div class="menu-card" onclick="navTo('screen-report')">
+                    <i class="fa-solid fa-file-signature"></i>
+                    <h3>تقرير اليوم</h3>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= الشاشة 3: فريق الإشراف ================= -->
+        <div id="screen-supervisors" class="screen">
+            <div class="sub-header"><h2 class="stage-title">فريق الإشراف وتقييمهم</h2></div>
+            <div class="list-container" id="list-supervisors"></div>
+            
+            <div style="background:white; padding:15px; border-radius:12px; border:1px solid var(--border); margin-top:20px;">
+                <h3 style="font-size:14px; color:var(--danger); margin-bottom:10px;"><i class="fa-solid fa-comment-dots"></i> طلب تعديل للإدارة</h3>
+                <textarea id="sup-msg-input" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); outline:none; font-family:'Cairo'; font-weight:bold; font-size:13px; margin-bottom:10px;" rows="2" placeholder="اكتب طلبك هنا..."></textarea>
+                <button onclick="sendSupMessage()" style="width:100%; background:var(--danger); color:white; border:none; padding:10px; border-radius:8px; font-weight:900; cursor:pointer;">إرسال الطلب</button>
+            </div>
+        </div>
+
+        <!-- ================= الشاشة 4: عندنا مين؟ ================= -->
+        <div id="screen-tracking" class="screen">
+            <div class="sub-header"><h2 class="stage-title">المراقبة الحية للفصول</h2></div>
+
+            <div class="live-clock-card">
+                <div class="time-box">
+                    <h2 id="real-time">00:00</h2>
+                    <p id="real-date">التاريخ</p>
+                </div>
+                <div class="status-box">
+                    <div class="status-badge" id="active-period">جاري الحساب...</div>
+                    <div class="status-left" id="time-left">...</div>
+                </div>
+            </div>
+
+            <!-- أزرار الحصص الأفقية -->
+            <div class="period-tabs-container" id="trk-period-tabs">
+                <!-- تولد برمجياً -->
+            </div>
+
+            <div id="classes-list-container"></div>
+        </div>
+
+        <!-- ================= الشاشة 5: الاحتياطي ================= -->
+        <div id="screen-substitutes" class="screen">
+            <div class="sub-header"><h2 class="stage-title">توزيع الاحتياطي (اضغط للتسكين)</h2></div>
+            
+            <!-- أزرار الحصص الأفقية -->
+            <div class="period-tabs-container" id="sub-period-tabs">
+                <!-- تولد برمجياً -->
+            </div>
+
+            <div class="sub-list" id="sub-list-container"></div>
+        </div>
+
+        <!-- ================= الشاشة 6: تقرير اليوم ================= -->
+        <div id="screen-report" class="screen">
+            <div class="sub-header"><h2 class="stage-title">تقرير ختام اليوم</h2></div>
+
+            <div class="report-form">
+                <div class="rep-section">
+                    <div class="rep-title"><i class="fa-solid fa-briefcase-medical" style="color:var(--danger)"></i> 1. الإصابات والحوادث</div>
+                    <div id="injuries-container"></div>
+                </div>
+                <div class="rep-section" style="border-left: 4px solid var(--warning);">
+                    <div class="rep-title" style="color:var(--warning)"><i class="fa-solid fa-user-tie"></i> 2. الزيارات والمتابعة</div>
+                    <div id="visits-container"></div>
+                </div>
+                <div class="rep-section">
+                    <div class="rep-title"><i class="fa-solid fa-clipboard-list" style="color:var(--primary)"></i> 3. ملاحظات وسلبيات</div>
+                    <textarea id="rep-notes" class="rep-input" placeholder="سجل تقريرك الشامل عن سير العمل والملاحظات..."></textarea>
+                </div>
+                <button class="btn-submit-report" onclick="submitDailyReport()"><i class="fa-solid fa-lock"></i> اعتماد تقرير المرحلة</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ================= النوافذ السفلية ================= -->
+    
+    <!-- 1. ضبط المواعيد -->
+    <div class="bottom-sheet" id="sheet-times" onclick="if(event.target===this) this.classList.remove('active')">
+        <div class="sheet-content">
+            <div class="sheet-header">
+                <h2><i class="fa-regular fa-clock"></i> مواعيد الحصص (الجرس)</h2>
+                <button onclick="document.getElementById('sheet-times').classList.remove('active')" style="background:none; border:none; font-size:24px; color:var(--dark); cursor:pointer;">&times;</button>
+            </div>
+            <div class="sheet-body" id="times-body-lower" style="display:block;"></div>
+            <div class="sheet-body" id="times-body-upper" style="display:none;"></div>
+            <button class="btn-save-times" onclick="saveTimetable()"><i class="fa-solid fa-check"></i> حفظ المواعيد</button>
+        </div>
+    </div>
+
+    <!-- 2. نافذة الأدمن (زيزو) -->
+    <div class="bottom-sheet" id="sheet-admin" onclick="if(event.target===this) this.classList.remove('active')">
+        <div class="sheet-content">
+            <div class="sheet-header">
+                <h2 style="color:var(--danger)"><i class="fa-solid fa-user-shield"></i> لوحة تحكم مستر زيزو</h2>
+                <button onclick="document.getElementById('sheet-admin').classList.remove('active')" style="background:none; border:none; font-size:24px; color:var(--dark); cursor:pointer;">&times;</button>
+            </div>
+            <div class="sheet-body">
+                
+                <!-- مؤشر الاستخدام -->
+                <h3 style="font-size:14px; color:var(--primary); margin-bottom:10px; border-bottom:2px solid #eee; padding-bottom:5px;"><i class="fa-solid fa-chart-simple"></i> مؤشر نشاط فرق الإشراف</h3>
+                <div class="chart-container">
+                    <canvas id="usageChart"></canvas>
+                </div>
+
+                <!-- طلبات التعديل -->
+                <h3 style="font-size:14px; color:var(--danger); margin-top:20px; margin-bottom:10px; border-bottom:2px solid #eee; padding-bottom:5px;"><i class="fa-solid fa-envelope-open-text"></i> طلبات التعديل الواردة</h3>
+                <div id="admin-messages-container" style="margin-bottom:20px;"></div>
+
+                <!-- الاستثناءات -->
+                <h3 style="font-size:14px; color:var(--primary); margin-bottom:10px; border-bottom:2px solid #eee; padding-bottom:5px;"><i class="fa-solid fa-user-slash"></i> استثناءات الاحتياطي (إخفاء معلمين)</h3>
+                <div id="admin-exclusions-container"></div>
+                <button class="btn-save-times" style="margin-bottom:20px;" onclick="saveAdminExclusions()"><i class="fa-solid fa-floppy-disk"></i> حفظ الاستثناءات</button>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // إعدادات Supabase
+        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        const dayNamesAr = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس", "الجمعة", "السبت"];
+        const periodNames = ["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة", "السابعة", "الثامنة"];
+        
+        let CURRENT_STAGE = sessionStorage.getItem('sup_stage') || ''; 
+        let SELECTED_DAY = sessionStorage.getItem('sup_day') || ''; 
+        let SELECTED_PERIOD = 1; 
+        
+        let TIMETABLE_LOWER = {};
+        let TIMETABLE_UPPER = {};
+        
+        let DATA = { teachers: [], students: [], supervision: [] };
+        
+        let WEEKLY_SUBS = {}; 
+        let TODAY_ASSIGNMENTS = {}; 
+        let EXCLUDED_TEACHERS = []; 
+        let ADMIN_MESSAGES = [];
+        let USAGE_STATS = {};
+
+        let usageChartInstance = null;
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            initClock();
+            if(!SELECTED_DAY) {
+                const today = new Date().getDay();
+                SELECTED_DAY = dayNamesAr[today];
+                if(today === 5 || today === 6) SELECTED_DAY = "الاحد"; 
+                sessionStorage.setItem('sup_day', SELECTED_DAY);
+            }
+            document.getElementById("global-day").value = SELECTED_DAY;
+
+            buildReportForms();
+            buildTimeForms();
+            buildAdminExclusions();
+            buildPeriodTabs();
+            
+            await fetchAllData();
+
+            // استعادة الشاشة إذا كان هناك مرحلة محفوظة
+            if(CURRENT_STAGE) {
+                document.getElementById('menu-stage-title').innerText = CURRENT_STAGE === 'lower' ? 'الصفوف الأولى (1 - 3)' : 'الصفوف العليا (4 - 6)';
+                navTo('screen-menu');
+            }
+        });
+
+        // ================= الإدارة الهيكلية =================
+        function goHome() {
+            CURRENT_STAGE = '';
+            sessionStorage.removeItem('sup_stage');
+            document.getElementById('fab-container').classList.remove('active');
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            document.getElementById('screen-home').classList.add('active');
+        }
+
+        function goBack() {
+            const activeScreen = document.querySelector('.screen.active').id;
+            if(activeScreen === 'screen-menu') goHome();
+            else navTo('screen-menu');
+        }
+
+        function openStage(stage) {
+            CURRENT_STAGE = stage;
+            sessionStorage.setItem('sup_stage', stage);
+            document.getElementById('menu-stage-title').innerText = stage === 'lower' ? 'الصفوف الأولى (1 - 3)' : 'الصفوف العليا (4 - 6)';
+            
+            // إظهار المواعيد الخاصة بالمرحلة فقط في نافذة الإعدادات
+            document.getElementById('times-body-lower').style.display = stage === 'lower' ? 'block' : 'none';
+            document.getElementById('times-body-upper').style.display = stage === 'upper' ? 'block' : 'none';
+
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            document.getElementById('screen-menu').classList.add('active');
+            document.getElementById('fab-container').classList.add('active');
+        }
+
+        function navTo(screenId) {
+            document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            document.getElementById('fab-container').classList.add('active');
+            refreshCurrentScreen(screenId);
+        }
+
+        function refreshCurrentScreen(sId) {
+            const activeScreen = sId || document.querySelector('.screen.active').id;
+            if(activeScreen === 'screen-supervisors') renderSupervisors();
+            if(activeScreen === 'screen-tracking') renderTrackingAllGrades();
+            if(activeScreen === 'screen-substitutes') calculateSubstitutes();
+        }
+
+        function changeGlobalDay() {
+            SELECTED_DAY = document.getElementById("global-day").value;
+            sessionStorage.setItem('sup_day', SELECTED_DAY);
+            refreshCurrentScreen();
+        }
+
+        // ================= أزرار الحصص =================
+        function buildPeriodTabs() {
+            let html = "";
+            for(let i=1; i<=8; i++) {
+                html += `<div class="period-btn" id="pbtn-trk-${i}" onclick="selectPeriod(${i}, 'trk')">الحصة ${periodNames[i-1]}</div>`;
+            }
+            document.getElementById("trk-period-tabs").innerHTML = html;
+
+            html = "";
+            for(let i=1; i<=8; i++) {
+                html += `<div class="period-btn" id="pbtn-sub-${i}" onclick="selectPeriod(${i}, 'sub')">الحصة ${periodNames[i-1]}</div>`;
+            }
+            document.getElementById("sub-period-tabs").innerHTML = html;
+        }
+
+        function selectPeriod(p, type) {
+            SELECTED_PERIOD = p;
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            
+            let btnTrk = document.getElementById(`pbtn-trk-${p}`);
+            let btnSub = document.getElementById(`pbtn-sub-${p}`);
+            if(btnTrk) btnTrk.classList.add('active');
+            if(btnSub) btnSub.classList.add('active');
+
+            if(type === 'trk') renderTrackingAllGrades();
+            if(type === 'sub') calculateSubstitutes();
+        }
+
+        // ================= الساعة والمواعيد =================
+        function getTodayLogId(prefix) {
+            const today = new Date();
+            return `${prefix}_${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+        }
+
+        function getWeekId() {
+            const d = new Date();
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            const weekNo = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+            return `week_${d.getUTCFullYear()}_W${weekNo}`;
+        }
+
+        function initClock() {
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById("real-time").innerText = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute:'2-digit' });
+                const options = { weekday: 'long', month: 'short', day: 'numeric' };
+                document.getElementById("real-date").innerText = now.toLocaleDateString('ar-EG', options);
+                updateActivePeriod(now);
+            }, 1000);
+        }
+
+        function updateActivePeriod(now) {
+            if(!CURRENT_STAGE) return;
+            const activeTimetable = CURRENT_STAGE === 'lower' ? TIMETABLE_LOWER : TIMETABLE_UPPER;
+            
+            if(Object.keys(activeTimetable).length === 0) return;
+            const currentMin = now.getHours() * 60 + now.getMinutes();
+            
+            let activeFound = false;
+            for(let i=1; i<=8; i++) {
+                if(!activeTimetable[`p${i}`]) continue;
+                let [sH, sM] = activeTimetable[`p${i}`].start.split(':').map(Number);
+                let [eH, eM] = activeTimetable[`p${i}`].end.split(':').map(Number);
+                
+                let startMin = sH * 60 + sM;
+                let endMin = eH * 60 + eM;
+
+                if(currentMin >= startMin && currentMin < endMin) {
+                    document.getElementById("active-period").innerText = `الحصة ${periodNames[i-1]} شغالة`;
+                    document.getElementById("time-left").innerText = `متبقي ${endMin - currentMin} دقيقة`;
+                    
+                    // تحديد الزر أوتوماتيكياً إذا لم يقم المستخدم بتغييره يدوياً
+                    if(SELECTED_PERIOD !== i && document.querySelector('.screen.active').id === 'screen-menu') {
+                        selectPeriod(i, 'trk');
+                    }
+                    activeFound = true;
+                    break;
+                }
+            }
+            if(!activeFound) {
+                document.getElementById("active-period").innerText = "راحة / فسحة";
+                document.getElementById("time-left").innerText = "خارج الحصص الأساسية";
+            }
+        }
+
+        function buildTimeForms() {
+            let htmlL = "", htmlU = "";
+            for(let i=1; i<=8; i++) {
+                htmlL += `<div class="time-row"><label>ح ${i}</label><input type="time" id="tl-s-${i}" value="08:00"><div style="color:#cbd5e1">-</div><input type="time" id="tl-e-${i}" value="08:45"></div>`;
+                htmlU += `<div class="time-row"><label>ح ${i}</label><input type="time" id="tu-s-${i}" value="08:00"><div style="color:#cbd5e1">-</div><input type="time" id="tu-e-${i}" value="08:45"></div>`;
+            }
+            document.getElementById("times-body-lower").innerHTML = htmlL;
+            document.getElementById("times-body-upper").innerHTML = htmlU;
+        }
+
+        function openTimeSettings() {
+            for(let i=1; i<=8; i++) {
+                if(TIMETABLE_LOWER[`p${i}`]) {
+                    document.getElementById(`tl-s-${i}`).value = TIMETABLE_LOWER[`p${i}`].start;
+                    document.getElementById(`tl-e-${i}`).value = TIMETABLE_LOWER[`p${i}`].end;
+                }
+                if(TIMETABLE_UPPER[`p${i}`]) {
+                    document.getElementById(`tu-s-${i}`).value = TIMETABLE_UPPER[`p${i}`].start;
+                    document.getElementById(`tu-e-${i}`).value = TIMETABLE_UPPER[`p${i}`].end;
+                }
+            }
+            document.getElementById("sheet-times").classList.add("active");
+        }
+
+        async function saveTimetable() {
+            let newL = {}, newU = {};
+            for(let i=1; i<=8; i++) {
+                newL[`p${i}`] = { start: document.getElementById(`tl-s-${i}`).value, end: document.getElementById(`tl-e-${i}`).value };
+                newU[`p${i}`] = { start: document.getElementById(`tu-s-${i}`).value, end: document.getElementById(`tu-e-${i}`).value };
+            }
+            try {
+                await supabaseClient.from("daily_logs").upsert([
+                    { id: "timetable_lower", log_type: "settings", data: newL },
+                    { id: "timetable_upper", log_type: "settings", data: newU }
+                ]);
+                TIMETABLE_LOWER = newL; TIMETABLE_UPPER = newU;
+                document.getElementById("sheet-times").classList.remove("active");
+                Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم حفظ المواعيد', showConfirmButton: false, timer: 1500 });
+            } catch(e) {}
+        }
+
+        // ================= جلب البيانات =================
+        async function fetchAllData() {
+            try {
+                const [resTea, resCon, resStu, resSup, resLogs] = await Promise.all([
+                    supabaseClient.from("teachers").select("code, name, mobile, cadre_job, subject, schedule").eq("emp_status", "على رأس العمل"),
+                    supabaseClient.from("contract_teachers").select("nid, name, mobile, subject, schedule").eq("status", "يعمل"),
+                    supabaseClient.from("students").select("grade, class").not("grade", "in", '("KG1", "KG2", "KG 1", "KG 2")'),
+                    supabaseClient.from("supervision").select("*"),
+                    supabaseClient.from("daily_logs").select("*").in("id", ["timetable_lower", "timetable_upper", getWeekId(), getTodayLogId("assign"), "admin_exclusions", "admin_messages", "usage_stats"])
+                ]);
+
+                DATA.teachers = [];
+                const isTeacher = (job) => !(job||"").replace(/\s+/g,"").match(/عامل|اداري|اخصائي|مشرف|سكرتير|فني|خدمات/);
+                
+                let datalistHtml = "";
+
+                (resTea.data || []).forEach(t => {
+                    if(isTeacher(t.cadre_job)) {
+                        DATA.teachers.push({ id: t.code, name: t.name, mobile: t.mobile||"", subject: (t.subject||"").trim(), schedule: t.schedule||{} });
+                        datalistHtml += `<option value="${t.name}">`;
+                    }
+                });
+                (resCon.data || []).forEach(t => {
+                    DATA.teachers.push({ id: t.nid, name: t.name, mobile: t.mobile||"", subject: (t.subject||"").trim(), schedule: t.schedule||{} });
+                    datalistHtml += `<option value="${t.name}">`;
+                });
+
+                document.getElementById("teachers-list").innerHTML = datalistHtml;
+
+                DATA.students = resStu.data || [];
+                DATA.supervision = resSup.data || [];
+
+                WEEKLY_SUBS = {};
+                TODAY_ASSIGNMENTS = {};
+                EXCLUDED_TEACHERS = [];
+                ADMIN_MESSAGES = [];
+                USAGE_STATS = {};
+                
+                (resLogs.data || []).forEach(log => {
+                    if(log.id === "timetable_lower") TIMETABLE_LOWER = log.data || {};
+                    if(log.id === "timetable_upper") TIMETABLE_UPPER = log.data || {};
+                    if(log.id === getWeekId()) WEEKLY_SUBS = log.data || {};
+                    if(log.id === getTodayLogId("assign")) TODAY_ASSIGNMENTS = log.data || {};
+                    if(log.id === "admin_exclusions") EXCLUDED_TEACHERS = log.data.list || [];
+                    if(log.id === "admin_messages") ADMIN_MESSAGES = log.data.list || [];
+                    if(log.id === "usage_stats") USAGE_STATS = log.data || {};
+                });
+
+                selectPeriod(1, 'trk'); // تفعيل الحصة الأولى كبداية
+
+            } catch(e) {}
+        }
+
+        // ================= تتبع الاستخدام (Analytics) =================
+        async function logUsage() {
+            if(!CURRENT_STAGE || !SELECTED_DAY) return;
+            const key = `${SELECTED_DAY}_${CURRENT_STAGE}`;
+            USAGE_STATS[key] = (USAGE_STATS[key] || 0) + 1;
+            
+            try {
+                await supabaseClient.from("daily_logs").upsert({ id: "usage_stats", log_type: "system", data: USAGE_STATS });
+            } catch(e) {}
+        }
+
+        // ================= الشاشة 4: عندنا مين =================
+        function renderTrackingAllGrades() {
+            const day = SELECTED_DAY;
+            const period = SELECTED_PERIOD;
+            const container = document.getElementById("classes-list-container");
+            container.innerHTML = "";
+
+            const targetGrades = CURRENT_STAGE === 'lower' ? ["الأول", "الثاني", "الثالث"] : ["الرابع", "الخامس", "السادس"];
+            
+            let classesMap = {}; 
+            DATA.students.forEach(s => {
+                let g = String(s.grade).trim();
+                let c = String(s.class).trim();
+                if(targetGrades.some(tg => g.includes(tg)) && c) {
+                    if(!classesMap[g]) classesMap[g] = new Set();
+                    classesMap[g].add(c);
+                }
+            });
+
+            targetGrades.forEach(g => {
+                let classesArray = classesMap[g] ? Array.from(classesMap[g]).sort((a, b) => a.localeCompare(b, 'ar', {numeric: true})) : [];
+                if(classesArray.length === 0) return;
+
+                let html = `<div class="grade-section-title">فصول الصف ${g}</div><div class="classes-grid">`;
+                
+                classesArray.forEach(clsNum => {
+                    let assignedTeacher = null;
+                    for(let t of DATA.teachers) {
+                        if(t.schedule[`${day}_${period}`] === clsNum) { assignedTeacher = t.name.split(' ')[0] + " " + t.name.split(' ')[t.name.split(' ').length-1]; break; }
+                    }
+
+                    if(assignedTeacher) {
+                        html += `<div class="class-card"><div class="cc-name">${clsNum}</div><div class="cc-teacher"><i class="fa-solid fa-user-check"></i> ${assignedTeacher}</div></div>`;
+                    } else {
+                        html += `<div class="class-card empty"><div class="cc-name">${clsNum}</div><div class="cc-teacher"><i class="fa-solid fa-triangle-exclamation"></i> بدون معلم!</div></div>`;
+                    }
+                });
+                
+                html += `</div>`;
+                container.innerHTML += html;
+            });
+
+            if(container.innerHTML === "") {
+                container.innerHTML = "<div style='text-align:center; padding:20px; color:#94a3b8; font-weight:bold;'>لا توجد فصول مسجلة.</div>";
+            }
+        }
+
+        // ================= الشاشة 5: الاحتياطي =================
+        function calculateSubstitutes() {
+            const day = SELECTED_DAY;
+            const period = SELECTED_PERIOD;
+            const container = document.getElementById("sub-list-container");
+            container.innerHTML = "";
+
+            let availableTeachers = [];
+
+            DATA.teachers.forEach(t => {
+                let isExcluded = EXCLUDED_TEACHERS.some(ex => ex.name === t.name && (ex.day === day || ex.day === ""));
+                if(isExcluded) return;
+
+                let hasClassesToday = false;
+                for(let p=1; p<=8; p++) { if(t.schedule[`${day}_${p}`]) hasClassesToday = true; }
+                
+                const isFreeNow = !t.schedule[`${day}_${period}`];
+
+                if(hasClassesToday && isFreeNow) {
+                    let cleanSubj = t.subject.replace(/\s+/g, "");
+                    let cleanJob = (t.cadre_job||"").replace(/\s+/g, "");
+                    const isLowerSubj = cleanSubj.includes("فصل") || cleanSubj.includes("اطفال") || cleanSubj.includes("رياض") || cleanJob.includes("فصل");
+                    
+                    if((CURRENT_STAGE === 'lower' && isLowerSubj) || (CURRENT_STAGE === 'upper' && !isLowerSubj)) {
+                        let weekCount = WEEKLY_SUBS[t.id] || 0;
+                        availableTeachers.push({ id: t.id, name: t.name, subject: t.subject, count: weekCount });
+                    }
+                }
+            });
+
+            availableTeachers.sort((a,b) => a.count - b.count);
+
+            if(availableTeachers.length === 0) {
+                container.innerHTML = "<div style='text-align:center; padding:20px; color:var(--danger); font-weight:bold;'>لا يوجد أي معلم متاح في هذه الحصة!</div>";
+                return;
+            }
+
+            let currentAssigned = TODAY_ASSIGNMENTS[period] || [];
+
+            availableTeachers.forEach(t => {
+                let isAssignedNow = currentAssigned.includes(t.id);
+                let rowClass = isAssignedNow ? "teacher-row assigned" : "teacher-row";
+                
+                container.innerHTML += `
+                    <div class="${rowClass}" onclick="toggleSubstitute('${t.id}', '${period}')">
+                        <div>
+                            <span class="t-name">${t.name}</span>
+                            <div class="t-tags">
+                                <span class="t-tag tag-quota">أخذ هذا الأسبوع: ${t.count}</span>
+                                <span class="t-tag tag-subj">${t.subject}</span>
+                            </div>
+                        </div>
+                        <div style="font-size:20px; opacity:0.5;">
+                            <i class="fa-solid ${isAssignedNow ? 'fa-check-circle' : 'fa-hand-pointer'}"></i>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function toggleSubstitute(tId, period) {
+            if(!TODAY_ASSIGNMENTS[period]) TODAY_ASSIGNMENTS[period] = [];
+            
+            let isAssigned = TODAY_ASSIGNMENTS[period].includes(tId);
+            
+            if(isAssigned) {
+                TODAY_ASSIGNMENTS[period] = TODAY_ASSIGNMENTS[period].filter(id => id !== tId);
+                WEEKLY_SUBS[tId] = Math.max(0, (WEEKLY_SUBS[tId] || 0) - 1);
+            } else {
+                TODAY_ASSIGNMENTS[period].push(tId);
+                WEEKLY_SUBS[tId] = (WEEKLY_SUBS[tId] || 0) + 1;
+            }
+
+            calculateSubstitutes();
+            logUsage(); // تسجيل نشاط
+
+            try {
+                await supabaseClient.from("daily_logs").upsert([
+                    { id: getTodayLogId("assign"), log_type: "system", data: TODAY_ASSIGNMENTS },
+                    { id: getWeekId(), log_type: "system", data: WEEKLY_SUBS }
+                ]);
+            } catch(e) {}
+        }
+
+        // ================= الشاشة 3: فريق الإشراف =================
+        function renderSupervisors() {
+            const day = SELECTED_DAY;
+            const container = document.getElementById("list-supervisors");
+            container.innerHTML = "";
+
+            const supRecord = DATA.supervision.find(s => s.day === day && s.stage === CURRENT_STAGE);
+            
+            let orderArray = [];
+            if(CURRENT_STAGE === 'lower') {
+                orderArray = ["general", "yard_1", "yard_2", "old_ground", "old_f2", "old_f3", "east_ground", "east_f2", "east_f3", "east_f4", "new_ground", "new_f2"];
+            } else {
+                orderArray = ["general", "yard_1", "yard_2", "new_ground", "new_f2", "new_f3", "new_f4", "new_f5"];
+            }
+
+            const locNames = {
+                "general": "المشرف العام", "yard_1": "الفناء 1", "yard_2": "الفناء 2",
+                "old_ground": "مبنى قديم (أرضي)", "old_f2": "مبنى قديم (ثاني)", "old_f3": "مبنى قديم (ثالث)",
+                "east_ground": "مبنى شرقي (أرضي)", "east_f2": "مبنى شرقي (ثاني)", "east_f3": "مبنى شرقي (ثالث)", "east_f4": "مبنى شرقي (رابع)",
+                "new_ground": "مبنى جديد (أرضي)", "new_f2": "مبنى جديد (ثاني)", "new_f3": "مبنى جديد (ثالث)", "new_f4": "مبنى جديد (رابع)", "new_f5": "مبنى جديد (خامس)"
+            };
+
+            let hasSups = false;
+
+            orderArray.forEach(loc => {
+                let tName = supRecord && supRecord.data ? supRecord.data[loc] : null;
+                if(tName && tName.trim() !== "") {
+                    hasSups = true;
+                    let mob = "";
+                    let foundT = DATA.teachers.find(t => t.name.includes(tName) || tName.includes(t.name.split(' ')[0]));
+                    if(foundT && foundT.mobile) mob = foundT.mobile;
+
+                    let callBtn = mob ? `<a href="tel:${mob}" class="btn-call-only" title="اتصال"><i class="fa-solid fa-phone"></i></a>` : ``;
+
+                    container.innerHTML += `
+                        <div class="sup-card">
+                            <div>
+                                <div class="sup-loc">${locNames[loc] || loc}</div>
+                                <div class="sup-name">${tName}</div>
+                            </div>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                ${callBtn}
+                                <select class="sup-eval" id="eval_${CURRENT_STAGE}_${loc}" onchange="logUsage()">
+                                    <option value="ممتاز">أدى عمله</option><option value="مقصر">مقصر</option><option value="غائب">غائب</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            if(!hasSups) {
+                container.innerHTML = "<div style='text-align:center; padding:20px; color:var(--danger); font-weight:bold;'>لا يوجد إشراف مسجل لهذه المرحلة اليوم.</div>";
+            }
+        }
+
+        async function sendSupMessage() {
+            const msg = document.getElementById("sup-msg-input").value.trim();
+            if(!msg) return;
+            
+            const stageName = CURRENT_STAGE === 'lower' ? "صفوف أولى" : "صفوف عليا";
+            
+            const newMsg = { 
+                id: Date.now(), 
+                time: new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'}), 
+                context: `📌 إشراف ${stageName} - يوم ${SELECTED_DAY}`, 
+                text: msg 
+            };
+            
+            ADMIN_MESSAGES.push(newMsg);
+            
+            try {
+                await supabaseClient.from("daily_logs").upsert({ id: "admin_messages", log_type: "system", data: { list: ADMIN_MESSAGES } });
+                document.getElementById("sup-msg-input").value = "";
+                Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم الإرسال للإدارة', showConfirmButton: false, timer: 2000 });
+                logUsage();
+            } catch(e) {}
+        }
+
+        // ================= الشاشة 6: التقرير =================
+        function buildReportForms() {
+            let injHtml = "";
+            for(let i=1; i<=5; i++) {
+                injHtml += `
+                    <div class="record-row">
+                        <input type="text" class="r-input inj-name" placeholder="اسم التلميذ">
+                        <select class="r-input inj-type"><option value="">الإصابة...</option><option value="جرح سطحي">جرح سطحي</option><option value="جرح عميق">جرح عميق</option><option value="كدمة">كدمة</option><option value="كسر">كسر</option><option value="إغماء/مرض">إغماء/مرض</option></select>
+                        <select class="r-input inj-time"><option value="">الوقت...</option><option value="طابور">طابور</option><option value="حصة 1">حصة 1</option><option value="حصة 2">حصة 2</option><option value="فسحة">فسحة</option><option value="حصة 3">حصة 3</option><option value="حصة 4">حصة 4</option><option value="حصة 5">حصة 5</option><option value="حصة 6">حصة 6</option><option value="انصراف">انصراف</option></select>
+                        <input type="text" class="r-input inj-loc" placeholder="المكان (فناء، سلم..)">
+                    </div>`;
+            }
+            document.getElementById("injuries-container").innerHTML = injHtml;
+
+            let visHtml = "";
+            for(let i=1; i<=3; i++) {
+                visHtml += `<div class="record-row full"><div style="display:flex; gap:8px;"><select class="r-input vis-type" style="width:110px;"><option value="">الزائر...</option><option value="لجنة متابعة">لجنة متابعة</option><option value="موجه">موجه</option><option value="زائر آخر">زائر آخر</option></select><input type="text" class="r-input vis-name" placeholder="الاسم / الجهة"></div></div>`;
+            }
+            document.getElementById("visits-container").innerHTML = visHtml;
+        }
+
+        async function submitDailyReport() {
+            if(!confirm("سيتم حفظ التقرير في الأرشيف باسم اليوم والمرحلة. تأكيد؟")) return;
+
+            const btn = document.querySelector('.btn-submit-report');
+            const oldText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الاعتماد...';
+
+            let injuries = [];
+            const injNames = document.querySelectorAll('.inj-name'); const injTypes = document.querySelectorAll('.inj-type'); const injTimes = document.querySelectorAll('.inj-time'); const injLocs = document.querySelectorAll('.inj-loc');
+            for(let i=0; i<5; i++) { if(injNames[i].value.trim()) injuries.push({ name: injNames[i].value, type: injTypes[i].value, time: injTimes[i].value, loc: injLocs[i].value }); }
+
+            let visits = [];
+            const visTypes = document.querySelectorAll('.vis-type'); const visNames = document.querySelectorAll('.vis-name');
+            for(let i=0; i<3; i++) { if(visNames[i].value.trim()) visits.push({ type: visTypes[i].value, name: visNames[i].value }); }
+
+            let evals = {};
+            document.querySelectorAll('.sup-eval').forEach(sel => { evals[sel.id] = sel.value; });
+
+            const reportData = { injuries: injuries, visits: visits, evaluations: evals, notes: document.getElementById("rep-notes").value };
+            const logId = getTodayLogId(`report_${CURRENT_STAGE}`);
+
+            try {
+                await supabaseClient.from("daily_logs").upsert({ id: logId, log_type: "report", data: reportData, updated_at: new Date().toLocaleString('ar-EG') });
+                logUsage();
+                Swal.fire({ icon: 'success', title: 'تم اعتماد التقرير بنجاح', confirmButtonColor: '#16a34a' });
+            } catch(e) { Swal.fire('خطأ', 'فشل الحفظ', 'error'); } 
+            finally { btn.innerHTML = oldText; }
+        }
+
+        // ================= لوحة تحكم الأدمن (زيزو) =================
+        function openAdminPanel() {
+            const pwd = prompt("أدخل كلمة المرور الخاصة بمستر زيزو:");
+            if(pwd === "2026") {
+                document.getElementById("sheet-admin").classList.add("active");
+                renderAdminMessages();
+                renderAdminChart();
+            } else if(pwd !== null) {
+                alert("كلمة المرور غير صحيحة!");
+            }
+        }
+
+        function buildAdminExclusions() {
+            let html = "";
+            for(let i=0; i<20; i++) {
+                html += `
+                    <div class="admin-row">
+                        <input type="text" class="admin-input ex-name" list="teachers-list" placeholder="اسم المعلم للاستثناء...">
+                        <select class="admin-select ex-day">
+                            <option value="">كل الأيام</option>
+                            <option value="الاحد">الأحد</option><option value="الاثنين">الإثنين</option>
+                            <option value="الثلاثاء">الثلاثاء</option><option value="الاربعاء">الأربعاء</option>
+                            <option value="الخميس">الخميس</option>
+                        </select>
+                    </div>
+                `;
+            }
+            document.getElementById("admin-exclusions-container").innerHTML = html;
+            
+            setTimeout(() => {
+                const names = document.querySelectorAll('.ex-name');
+                const days = document.querySelectorAll('.ex-day');
+                EXCLUDED_TEACHERS.forEach((ex, i) => {
+                    if(i < 20) { names[i].value = ex.name; days[i].value = ex.day; }
+                });
+            }, 500);
+        }
+
+        async function saveAdminExclusions() {
+            let list = [];
+            const names = document.querySelectorAll('.ex-name');
+            const days = document.querySelectorAll('.ex-day');
+            
+            for(let i=0; i<20; i++) {
+                if(names[i].value.trim()) {
+                    list.push({ name: names[i].value.trim(), day: days[i].value });
+                }
+            }
+
+            try {
+                await supabaseClient.from("daily_logs").upsert({ id: "admin_exclusions", log_type: "system", data: { list: list } });
+                EXCLUDED_TEACHERS = list;
+                Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم حفظ الاستثناءات سراً', showConfirmButton: false, timer: 2000 });
+                if(CURRENT_STAGE) calculateSubstitutes(); 
+            } catch(e) { alert("فشل الحفظ"); }
+        }
+
+        function renderAdminMessages() {
+            const container = document.getElementById("admin-messages-container");
+            if(ADMIN_MESSAGES.length === 0) {
+                container.innerHTML = "<div style='text-align:center; color:#64748b; font-weight:bold;'>لا توجد طلبات جديدة.</div>";
+                return;
+            }
+
+            container.innerHTML = "";
+            [...ADMIN_MESSAGES].reverse().forEach(m => {
+                container.innerHTML += `
+                    <div class="msg-card" id="msg-${m.id}">
+                        <span class="msg-time">${m.context} | ${m.time}</span>
+                        <div class="msg-text">${m.text}</div>
+                        <button class="btn-read" onclick="markMsgRead(${m.id})"><i class="fa-solid fa-check-double"></i> مقروءة</button>
+                    </div>
+                `;
+            });
+        }
+
+        async function markMsgRead(msgId) {
+            ADMIN_MESSAGES = ADMIN_MESSAGES.filter(m => m.id !== msgId);
+            document.getElementById(`msg-${msgId}`).remove();
+            try {
+                await supabaseClient.from("daily_logs").upsert({ id: "admin_messages", log_type: "system", data: { list: ADMIN_MESSAGES } });
+            } catch(e) {}
+        }
+
+        function renderAdminChart() {
+            const ctx = document.getElementById('usageChart').getContext('2d');
+            if(usageChartInstance) usageChartInstance.destroy();
+
+            const labels = [];
+            const dataVals = [];
+            
+            dayNamesAr.slice(0,5).forEach(d => {
+                labels.push(`${d} (أولى)`); dataVals.push(USAGE_STATS[`${d}_lower`] || 0);
+                labels.push(`${d} (عليا)`); dataVals.push(USAGE_STATS[`${d}_upper`] || 0);
+            });
+
+            usageChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'عدد النقرات والعمليات',
+                        data: dataVals,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { ticks: { font: { family: 'Cairo', size: 10 } } } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
