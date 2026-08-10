@@ -79,6 +79,12 @@
         .admin-special-btn:hover { background: var(--admin) !important; color: white !important; border-color: var(--admin) !important; }
         .admin-special-btn:hover i.icon-main { color: white !important; }
 
+        /* زر بوابة المشرف العام المميز */
+        .supervisor-portal-btn { background: #fffbeb !important; border-color: #fde68a !important; color: #b45309 !important; font-weight: 900 !important; }
+        .supervisor-portal-btn i.icon-main { color: #d97706 !important; }
+        .supervisor-portal-btn:hover { background: #d97706 !important; color: white !important; border-color: #d97706 !important; }
+        .supervisor-portal-btn:hover i.icon-main { color: white !important; }
+
         /* ================= العدادات الحية ================= */
         .stats-section-title { font-size: 16px; font-weight: 900; color: #64748b; margin-bottom: 15px; border-bottom: 2px dashed #cbd5e1; padding-bottom: 5px; display: inline-block;}
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
@@ -161,7 +167,7 @@
                 </div>
             </div>
 
-            <!-- 2. شئون العاملين -->
+            <!-- 2. شئون العاملين (تحتوي على الجدول المدرسي + الإشراف اليومي) -->
             <div class="module-card mod-tea">
                 <div class="module-header">
                     <i class="fa-solid fa-chalkboard-user"></i>
@@ -172,6 +178,10 @@
                     <a href="tea.html" class="link-btn"><div style="display:flex; align-items:center;"><i class="fa-solid fa-id-card icon-main"></i> بطاقة المعلم</div><i class="fa-solid fa-chevron-left"></i></a>
                     <a href="tea-stats.html" class="link-btn"><div style="display:flex; align-items:center;"><i class="fa-solid fa-chart-line icon-main"></i> إحصاء وميزانية المعلمين</div><i class="fa-solid fa-chevron-left"></i></a>
                     <a href="teacher-portal.html" target="_blank" class="link-btn" style="background:#f0fdf4; border-color:#bbf7d0;"><div style="display:flex; align-items:center;"><i class="fa-solid fa-user-tie icon-main" style="color:var(--success)"></i> بوابة المعلم (الاستعلام)</div><i class="fa-solid fa-chevron-left"></i></a>
+                    <!-- الجدول المدرسي -->
+                    <a href="schedule.html" class="link-btn"><div style="display:flex; align-items:center;"><i class="fa-solid fa-table-cells icon-main"></i> الجدول المدرسي</div><i class="fa-solid fa-chevron-left"></i></a>
+                    <!-- الإشراف اليومي (تمت إعادته هنا بنجاح) -->
+                    <a href="supervision.html" class="link-btn"><div style="display:flex; align-items:center;"><i class="fa-solid fa-clipboard-user icon-main"></i> الإشراف اليومي</div><i class="fa-solid fa-chevron-left"></i></a>
                 </div>
             </div>
 
@@ -188,7 +198,7 @@
                 </div>
             </div>
 
-            <!-- 4. الإدارة المدرسية -->
+            <!-- 4. الإدارة المدرسية (تحتوي على بوابة المشرف العام) -->
             <div class="module-card mod-admin">
                 <div class="module-header">
                     <i class="fa-solid fa-school"></i>
@@ -206,8 +216,11 @@
                     
                     <a href="complaint-admin.html" class="link-btn"><div style="display:flex; align-items:center;"><i class="fa-solid fa-headset icon-main" style="color:var(--danger)"></i> بوابة الشكاوى والمقترحات</div><i class="fa-solid fa-chevron-left"></i></a>
                     
-                    <a href="schedule.html" class="link-btn"><div style="display:flex; align-items:center;"><i class="fa-solid fa-table-cells icon-main"></i> الجدول المدرسي</div><i class="fa-solid fa-chevron-left"></i></a>
-                    <a href="supervision.html" class="link-btn"><div style="display:flex; align-items:center;"><i class="fa-solid fa-clipboard-user icon-main"></i> الإشراف اليومي</div><i class="fa-solid fa-chevron-left"></i></a>
+                    <!-- بوابة المشرف العام -->
+                    <a href="supervisor.html" class="link-btn supervisor-portal-btn">
+                        <div style="display:flex; align-items:center;"><i class="fa-solid fa-user-tie icon-main"></i> بوابة المشرف العام</div>
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
                     
                     <a href="add.html" class="link-btn"><div style="display:flex; align-items:center;"><i class="fa-solid fa-user-plus icon-main"></i> الزام الصف الاول</div><i class="fa-solid fa-chevron-left"></i></a>
                 </div>
@@ -234,7 +247,6 @@
                     <div class="stat-info"><h3>إجمالي الفصول</h3><h2 id="count-classes">٠</h2></div>
                     <i class="fa-solid fa-layer-group stat-icon" style="color: var(--danger);"></i>
                 </div>
-                <!-- العداد الجديد لطلبات المعلمين -->
                 <div class="stat-card" style="border-right-color: var(--contract); background: #f5f3ff;" onclick="openRequestsModal()">
                     <div class="stat-info"><h3>طلبات المعلمين</h3><h2 id="count-requests" style="color: var(--contract);">٠</h2></div>
                     <i class="fa-solid fa-envelope-open-text stat-icon" style="color: var(--contract); opacity: 0.3;"></i>
@@ -244,7 +256,7 @@
 
     </div>
 
-    <!-- ================= نافذة طلبات المعلمين ================= -->
+    <!-- نافذة طلبات المعلمين -->
     <div class="modal-overlay" id="requestsModal" onclick="if(event.target.id==='requestsModal') document.getElementById('requestsModal').classList.remove('active')">
         <div class="modal-content" style="max-width: 900px;">
             <div class="modal-header" style="background: var(--contract);">
@@ -252,13 +264,12 @@
                 <button onclick="document.getElementById('requestsModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:28px; cursor:pointer;">&times;</button>
             </div>
             <div class="modal-body" id="requests-body">
-                <!-- سيتم تعبئة الطلبات هنا برمجياً -->
                 <div style="text-align:center; padding:30px; color:#64748b; font-weight:bold;"><i class="fa-solid fa-spinner fa-spin"></i> جاري تحميل الطلبات...</div>
             </div>
         </div>
     </div>
 
-    <!-- ================= نافذة بيانات المدرسة ================= -->
+    <!-- نافذة بيانات المدرسة -->
     <div class="modal-overlay" id="settingsModal" onclick="if(event.target.id==='settingsModal') document.getElementById('settingsModal').classList.remove('active')">
         <div class="modal-content">
             <div class="modal-header">
@@ -308,7 +319,6 @@
     </div>
 
     <script>
-        // إعدادات Supabase
         const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -320,7 +330,6 @@
             fetchTeacherRequestsCount();
         });
 
-        // ================= جلب طلبات المعلمين =================
         async function fetchTeacherRequestsCount() {
             try {
                 const { count, error } = await supabaseClient
@@ -384,10 +393,7 @@
                 
                 if (error) throw error;
 
-                // إخفاء الكارت من الشاشة
                 document.getElementById(`req-${id}`).style.display = "none";
-                
-                // تحديث العداد
                 fetchTeacherRequestsCount();
                 
             } catch(e) {
@@ -395,7 +401,6 @@
             }
         }
 
-        // ================= باقي الدوال (العدادات والإعدادات) =================
         async function fetchFastStats() {
             try {
                 const { data: planDoc } = await supabaseClient.from("system_capsules").select("data").eq("id", "school_plan").maybeSingle();
