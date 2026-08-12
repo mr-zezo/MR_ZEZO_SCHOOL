@@ -46,15 +46,23 @@
         /* ================= شاشة عرض البيانات ================= */
         #profile-section { display: none; width: 100%; max-width: 900px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 6px solid var(--primary-color); }
         
-        .profile-header { display: flex; gap: 20px; align-items: center; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; }
+        .profile-header { display: flex; gap: 20px; align-items: center; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; position: relative;}
         
-        /* تم تكبير مقاس الصورة هنا من 90 إلى 130 */
         .avatar-container { width: 130px; height: 130px; flex-shrink: 0; }
-        
         .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-color); background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
         .profile-info { flex-grow: 1; }
         .profile-info h2 { color: var(--primary-color); font-weight: 900; margin-bottom: 5px; font-size: 20px;}
-        .profile-info p { color: var(--danger); font-weight: 900; font-family: Arial; font-size: 15px; }
+        .profile-info p { color: var(--danger); font-weight: 900; font-family: Arial; font-size: 15px; margin-bottom: 10px;}
+
+        /* تصميم النجوم والتقييم */
+        .rating-box { display: flex; gap: 15px; align-items: center; background: white; padding: 8px 15px; border-radius: 10px; border: 1px dashed var(--secondary-color); width: max-content;}
+        .rating-item { display: flex; flex-direction: column; align-items: center; justify-content: center;}
+        .rating-item span { font-size: 11px; color: #64748b; font-weight: 900; }
+        .rating-val { font-size: 15px; font-weight: 900; color: var(--secondary-color); display: flex; align-items: center; gap: 4px;}
+        .rating-val i { color: #f59e0b; font-size: 14px;}
+
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; align-self: flex-start;}
 
         .data-section { margin-bottom: 25px; }
         .section-title { font-size: 16px; font-weight: 900; color: var(--primary-color); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
@@ -62,36 +70,30 @@
         .field-group { display: flex; flex-direction: column; gap: 5px; }
         .field-group label { font-size: 13px; font-weight: 800; color: #475569; }
         
-        /* تصميم الحقول المغلقة (Read-Only) */
         .field-group input { padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px; font-weight: 900; background: #f1f5f9; color: var(--text-main); cursor: not-allowed; outline: none; width: 100%; }
-        /* تمييز بعض الحقول */
         .highlight-input { border-color: var(--secondary-color) !important; color: var(--danger) !important; background: #fffbeb !important; }
 
-        /* أزرار المرفقات والجدول */
         .files-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .btn-view-file { background: var(--info); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; text-align: center;}
         .btn-view-file.empty { background: #94a3b8; cursor: not-allowed; }
         
         .btn-schedule-view { background: var(--success); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; width: 100%; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2);}
 
-        /* صندوق المراسلة */
         .message-box { background: #fffbeb; border: 2px solid #fcd34d; padding: 20px; border-radius: 12px; margin-top: 30px; }
         .message-box h3 { color: var(--secondary-color); font-weight: 900; margin-bottom: 10px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
         .message-box textarea { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #fcd34d; font-size: 14px; font-weight: 700; outline: none; resize: vertical; min-height: 100px; margin-bottom: 15px; font-family: 'Cairo'; }
         .btn-send { background: var(--secondary-color); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: 900; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; font-size: 15px;}
 
-        .btn-logout { background: var(--danger); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
-
         #status-msg { display: none; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: center; font-weight: 900; font-size: 14px; }
 
-        /* ================= نافذة الجدول المدرسي ================= */
+        /* ================= نافذة الجدول المدرسي والإشراف ================= */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px; }
         .modal-overlay.active { display: flex; }
         .modal-content { background: #f8fafc; width: 100%; max-width: 800px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
         .modal-header { background: var(--primary-color); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 15px; overflow-y: auto; }
         
-        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 2px solid var(--primary-color); margin-top: 15px;}
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 2px solid var(--primary-color); margin-top: 15px; margin-bottom: 25px;}
         
         .schedule-table { width: 100%; min-width: 600px; border-collapse: collapse; text-align: center; background: white; }
         .schedule-table th, .schedule-table td { border: 1px solid var(--border-color); padding: 12px 5px; font-weight: 900; font-size: 14px; color: var(--text-main); }
@@ -101,6 +103,12 @@
         .schedule-summary { background: #eff6ff; border: 1px solid #bfdbfe; padding: 15px; border-radius: 10px; text-align: center; font-weight: 900; color: var(--primary-color); font-size: 15px; }
         .schedule-summary span { color: var(--danger); font-size: 18px; margin: 0 5px; }
 
+        .supervision-list { display: flex; flex-direction: column; gap: 10px; }
+        .sup-item { background: white; padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border-right: 4px solid var(--secondary-color);}
+        .sup-item-day { font-size: 15px; font-weight: 900; color: var(--primary-color); }
+        .sup-item-role { font-size: 13px; font-weight: bold; color: var(--text-main); }
+        .sup-item-leader { font-size: 12px; font-weight: 800; color: var(--danger); background: #fef2f2; padding: 4px 10px; border-radius: 6px;}
+
         @media (max-width: 768px) {
             .top-navigation { flex-direction: column; text-align: center; }
             .nav-title { justify-content: center; width: 100%; margin-bottom: 10px; font-size: 15px;}
@@ -108,12 +116,14 @@
 
             .profile-header { flex-direction: column; text-align: center; padding: 15px; }
             .btn-logout { width: 100%; margin-top: 10px;}
+            .rating-box { margin: 0 auto;}
             
             .grid-fields { grid-template-columns: 1fr; gap: 10px; } 
             .files-grid { grid-template-columns: 1fr; } 
             
             #profile-section { padding: 15px; }
             .section-title { font-size: 15px; }
+            .sup-item { flex-direction: column; align-items: flex-start; gap: 8px; }
         }
     </style>
 </head>
@@ -121,7 +131,6 @@
 
     <nav class="top-navigation">
         <div class="nav-title"><i class="fa-solid fa-user-tie"></i> بوابة المعلم - الاستعلام عن البيانات</div>
-        
         <div class="dev-badge">
             <i class="fa-solid fa-medal" style="color:#fcd34d; font-size:18px;"></i> 
             إعداد وتطوير &nbsp;|&nbsp; <span>أ/ عبدالعزيز لولح</span> &nbsp;|&nbsp; « مستر زيزو »
@@ -147,13 +156,23 @@
             <div class="profile-info">
                 <h2 id="p_name">اسم المعلم</h2>
                 <p id="p_nid">الرقم القومي</p>
+                <div class="rating-box">
+                    <div class="rating-item">
+                        <span>تقييم الأسبوع</span>
+                        <div class="rating-val" id="p_eval_week"><i class="fa-solid fa-star"></i> 0</div>
+                    </div>
+                    <div style="width:1px; background:#cbd5e1; height:20px;"></div>
+                    <div class="rating-item">
+                        <span>التقييم التراكمي</span>
+                        <div class="rating-val" id="p_eval_year"><i class="fa-solid fa-star"></i> 0</div>
+                    </div>
+                </div>
             </div>
             <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> تسجيل خروج</button>
         </div>
 
-        <!-- زر عرض الجدول المدرسي -->
         <button type="button" class="btn-schedule-view" onclick="showTeacherSchedule()">
-            <i class="fa-solid fa-table-cells"></i> عرض الجدول المدرسي الخاص بي
+            <i class="fa-solid fa-table-cells"></i> عرض الجدول والإشراف الخاص بي
         </button>
 
         <!-- 1. بيانات شخصية -->
@@ -235,11 +254,11 @@
 
     </div>
 
-    <!-- ================= نافذة عرض الجدول المدرسي ================= -->
+    <!-- ================= نافذة عرض الجدول المدرسي والإشراف ================= -->
     <div class="modal-overlay" id="scheduleModal" onclick="if(event.target.id==='scheduleModal') closeScheduleModal()">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-table-cells"></i> الجدول المدرسي الأسبوعي</h2>
+                <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-table-cells"></i> الجدول والإشراف الأسبوعي</h2>
                 <button onclick="closeScheduleModal()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
             </div>
             <div class="modal-body">
@@ -247,18 +266,18 @@
                     إجمالي الحصص المسندة فعلياً في الجدول: <span id="total-classes-count">0</span> حصة
                 </div>
                 
-                <!-- حاوية الجدول للموبايل -->
                 <div class="table-responsive">
                     <table class="schedule-table">
                         <thead>
-                            <tr>
-                                <th>اليوم</th><th>١</th><th>٢</th><th>٣</th><th>٤</th><th>٥</th><th>٦</th><th>٧</th><th>٨</th>
-                            </tr>
+                            <tr><th>اليوم</th><th>١</th><th>٢</th><th>٣</th><th>٤</th><th>٥</th><th>٦</th><th>٧</th><th>٨</th></tr>
                         </thead>
-                        <tbody id="schedule-body-view">
-                            <!-- سيتم التعبئة برمجياً -->
-                        </tbody>
+                        <tbody id="schedule-body-view"></tbody>
                     </table>
+                </div>
+
+                <div class="section-title" style="margin-top:20px; font-size:15px; color:var(--danger); border-bottom-color:var(--danger);"><i class="fa-solid fa-users-viewfinder"></i> أيام الإشراف والأدوار</div>
+                <div class="supervision-list" id="supervision-list-view">
+                    <!-- تعبأ برمجياً -->
                 </div>
             </div>
         </div>
@@ -279,6 +298,16 @@
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         let currentTeacher = null;
+        let schoolSupervisionData = [];
+        let teacherEvaluations = { week: 0, year: 0 };
+
+        // دالة مساعدة لمعرفة رقم الأسبوع الحالي
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+        }
 
         // ================= تسجيل الدخول =================
         async function loginTeacher() {
@@ -292,26 +321,35 @@
                 return;
             }
 
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري البحث...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري البحث والتحميل...';
             errBox.style.display = "none";
 
             try {
-                const { data, error } = await supabaseClient.from('teachers').select('*').eq('nid', nidInput).maybeSingle();
+                // سحب بيانات المعلم، وسجل الإشراف، وسجلات التقييم في نفس الوقت
+                const [resTeacher, resContract, resSup, resLogs] = await Promise.all([
+                    supabaseClient.from('teachers').select('*').eq('nid', nidInput).maybeSingle(),
+                    supabaseClient.from('contract_teachers').select('*').eq('nid', nidInput).maybeSingle(),
+                    supabaseClient.from("supervision").select("*"),
+                    supabaseClient.from("daily_logs").select("*").eq("log_type", "report")
+                ]);
+
+                currentTeacher = resTeacher.data || resContract.data;
                 
-                if (error) throw error;
-
-                if (data) {
-                    // حفظ الرقم القومي في المتصفح ليجده المعلم في المرة القادمة
-                    localStorage.setItem('saved_teacher_nid', nidInput);
-
-                    currentTeacher = data;
-                    populateProfile(data);
-                    document.getElementById("login-section").style.display = "none";
-                    document.getElementById("profile-section").style.display = "block";
-                } else {
+                if (!currentTeacher) {
                     errBox.innerText = "الرقم القومي غير مسجل لدينا في قاعدة البيانات!";
                     errBox.style.display = "block";
+                    return;
                 }
+
+                schoolSupervisionData = resSup.data || [];
+                calculateEvaluations(resLogs.data || [], currentTeacher.name);
+
+                localStorage.setItem('saved_teacher_nid', nidInput);
+                populateProfile(currentTeacher);
+                
+                document.getElementById("login-section").style.display = "none";
+                document.getElementById("profile-section").style.display = "block";
+
             } catch (err) {
                 errBox.innerText = "حدث خطأ في الاتصال بقاعدة البيانات.";
                 errBox.style.display = "block";
@@ -320,11 +358,44 @@
             }
         }
 
+        // حساب تقييم النجوم من السجلات
+        function calculateEvaluations(logs, teacherName) {
+            let weeklyScore = 0;
+            let yearlyScore = 0;
+            const currentWeek = getWeekNumber(new Date());
+            const currentYear = new Date().getFullYear();
+
+            // للبحث بالاسم المختصر أيضاً إن وجد
+            const shortName = teacherName.split(' ')[0];
+
+            logs.forEach(log => {
+                if(!log.data || !log.data.evaluations) return;
+                
+                const logDate = new Date(log.updated_at);
+                const isThisWeek = (getWeekNumber(logDate) === currentWeek && logDate.getFullYear() === currentYear);
+
+                for(let tName in log.data.evaluations) {
+                    if(tName === teacherName || tName.includes(shortName)) {
+                        let score = parseInt(log.data.evaluations[tName]);
+                        yearlyScore += score;
+                        if(isThisWeek) weeklyScore += score;
+                    }
+                }
+            });
+
+            teacherEvaluations.week = weeklyScore;
+            teacherEvaluations.year = yearlyScore;
+        }
+
         // ================= تعبئة البيانات =================
         function populateProfile(data) {
             document.getElementById("p_name").innerText = data.name || "بدون اسم";
             document.getElementById("p_nid").innerText = data.nid || "";
             document.getElementById("p_photo").src = data.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+
+            // وضع التقييمات
+            document.getElementById("p_eval_week").innerHTML = `<i class="fa-solid fa-star"></i> ${teacherEvaluations.week}`;
+            document.getElementById("p_eval_year").innerHTML = `<i class="fa-solid fa-star"></i> ${teacherEvaluations.year}`;
 
             document.getElementById("p_dob").value = data.dob || "-";
             document.getElementById("p_gender").value = data.gender || "-";
@@ -338,7 +409,7 @@
             document.getElementById("p_specialization").value = data.specialization || "-";
             document.getElementById("p_sci_lit").value = data.sci_lit || "-";
 
-            document.getElementById("p_emp_status").value = data.emp_status || "-";
+            document.getElementById("p_emp_status").value = data.emp_status || data.status || "-"; // يغطي الأساسي والأجر
             document.getElementById("p_cadre_job").value = data.cadre_job || "-";
             document.getElementById("p_hire_date").value = data.hire_date || "-";
             document.getElementById("p_start_date").value = data.start_date || "-";
@@ -348,7 +419,7 @@
 
             document.getElementById("p_teaching_category").value = data.teaching_category || "-";
             document.getElementById("p_subject").value = data.subject || "-";
-            document.getElementById("p_quota").value = data.quota ? data.quota + " حصة" : "-";
+            document.getElementById("p_quota").value = data.quota ? data.quota + " حصة" : (data.weekly_quota ? data.weekly_quota + " حصة" : "-");
             document.getElementById("p_status").value = data.status || "-";
             document.getElementById("p_secondment_days").value = data.secondment_days || "-";
 
@@ -364,23 +435,22 @@
             else { btnStatus.classList.add("empty"); btnStatus.innerHTML = '<i class="fa-solid fa-xmark"></i> لا يوجد بيان حالة'; }
         }
 
-        // ================= فتح المرفقات =================
         function openFile(fieldName) {
             if(!currentTeacher || !currentTeacher[fieldName]) return;
             window.open(currentTeacher[fieldName], '_blank');
         }
 
-        // ================= عرض الجدول المدرسي =================
+        // ================= عرض الجدول المدرسي والإشراف =================
         function showTeacherSchedule() {
             if (!currentTeacher) return;
 
+            // 1. بناء جدول الحصص
             const tbody = document.getElementById("schedule-body-view");
             tbody.innerHTML = "";
 
             const days = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس"];
             const dayNamesAr = {"الاحد":"الأحد", "الاثنين":"الإثنين", "الثلاثاء":"الثلاثاء", "الاربعاء":"الأربعاء", "الخميس":"الخميس"};
             const schedule = currentTeacher.schedule || {};
-
             let totalClasses = 0;
 
             days.forEach(day => {
@@ -397,6 +467,46 @@
             });
 
             document.getElementById("total-classes-count").innerText = totalClasses;
+
+            // 2. بناء قائمة الإشراف
+            const supContainer = document.getElementById("supervision-list-view");
+            supContainer.innerHTML = "";
+
+            const locNames = {
+                "general": "المشرف العام", "yard_1": "فناء 1", "yard_2": "فناء 2",
+                "old_ground": "مبنى قديم (أرضي)", "old_f2": "مبنى قديم (ثاني)", "old_f3": "مبنى قديم (ثالث)",
+                "east_ground": "مبنى شرقي (أرضي)", "east_f2": "مبنى شرقي (ثاني)", "east_f3": "مبنى شرقي (ثالث)", "east_f4": "مبنى شرقي (رابع)",
+                "new_ground": "مبنى جديد (أرضي)", "new_f2": "مبنى جديد (ثاني)", "new_f3": "مبنى جديد (ثالث)", "new_f4": "مبنى جديد (رابع)", "new_f5": "مبنى جديد (خامس)"
+            };
+
+            const tShortName = currentTeacher.short_name || currentTeacher.name.split(' ')[0];
+            let hasSupervision = false;
+
+            schoolSupervisionData.forEach(record => {
+                if(!record.data) return;
+                
+                // البحث عن المعلم في كل المواقع في هذا اليوم
+                for(let loc in record.data) {
+                    let assignedName = record.data[loc];
+                    if(assignedName === currentTeacher.name || assignedName === tShortName) {
+                        hasSupervision = true;
+                        let generalLeader = record.data["general"] || "غير محدد";
+                        
+                        supContainer.innerHTML += `
+                            <div class="sup-item">
+                                <div class="sup-item-day"><i class="fa-regular fa-calendar-check"></i> يوم ${dayNamesAr[record.day]}</div>
+                                <div class="sup-item-role">${locNames[loc] || loc} <span style="color:#64748b; font-size:11px;">(${record.stage === 'lower' ? 'أولى' : 'عليا'})</span></div>
+                                <div class="sup-item-leader">مشرف عام اليوم: أ. ${generalLeader}</div>
+                            </div>
+                        `;
+                    }
+                }
+            });
+
+            if(!hasSupervision) {
+                supContainer.innerHTML = "<div style='text-align:center; padding:15px; color:#64748b; font-weight:bold;'>لا يوجد إشراف مسجل لك في المنظومة.</div>";
+            }
+
             document.getElementById("scheduleModal").classList.add("active");
         }
 
@@ -450,7 +560,6 @@
         // ================= تسجيل الخروج =================
         function logout() {
             currentTeacher = null;
-            // تم إزالة السطر الذي يمسح الرقم القومي من المربع ليظل محتفظاً به
             document.getElementById("req_message").value = "";
             document.getElementById("profile-section").style.display = "none";
             document.getElementById("login-section").style.display = "block";
