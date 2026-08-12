@@ -101,12 +101,20 @@
         .assign-select { flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); font-size: 13px; font-weight: bold; outline: none; background: #f8fafc;}
         .btn-assign { background: var(--success); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px;}
 
-        /* بطاقة المشرف */
+        /* بطاقة المشرف ونظام النجوم */
         .sup-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-right: 5px solid var(--warning); box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
         .sup-loc { font-size: 12px; color: #64748b; font-weight: 900; margin-bottom: 3px; }
         .sup-name { font-size: 15px; font-weight: 900; color: var(--dark); }
-        .sup-eval { background: #f8fafc; border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-size: 13px; font-weight: 900; outline: none; color: var(--primary); }
+        
+        .star-rating { display: flex; gap: 4px; direction: ltr; }
+        .star-rating i { font-size: 20px; color: #cbd5e1; cursor: pointer; transition: 0.2s; }
+        .star-rating i.active { color: #f59e0b; }
+
         .btn-call-only { width: 35px; height: 35px; border-radius: 50%; background: #10b981; color: white; display: flex; justify-content: center; align-items: center; text-decoration: none; font-size: 16px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); transition: 0.2s;}
+
+        /* إصلاح مشكلة زر حفظ التقييم - لون برتقالي واضح ونص أبيض إجباري */
+        .btn-save-eval { background-color: var(--accent) !important; color: #ffffff !important; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 900; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 15px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); transition: 0.2s; cursor: pointer;}
+        .btn-save-eval:active { transform: scale(0.98); }
 
         /* ================= دفتر الأحوال ================= */
         .report-form { display: flex; flex-direction: column; gap: 15px; }
@@ -118,7 +126,8 @@
         .record-row.full { grid-template-columns: 1fr; }
         .r-input { padding: 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: bold; outline: none; width: 100%; }
 
-        .btn-submit-report { background: var(--success); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 900; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3); transition: 0.2s;}
+        .btn-submit-report { background-color: var(--success) !important; color: #ffffff !important; border: none; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: 900; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px; box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3); transition: 0.2s; cursor: pointer;}
+        .btn-submit-report:active { transform: scale(0.98); }
 
         /* ================= النوافذ السفلية ================= */
         .bottom-sheet { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; flex-direction: column; justify-content: flex-end; }
@@ -132,9 +141,9 @@
         .time-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid var(--border); }
         .time-row label { font-weight: 900; font-size: 13px; width: 45px; }
         .time-row input[type="time"] { padding: 5px; border-radius: 6px; border: 1px solid var(--border); font-family: Arial; font-weight: bold; outline: none; background: white;}
-        .btn-save-times { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 10px; flex-shrink: 0;}
+        .btn-save-times { background-color: var(--primary) !important; color: #ffffff !important; border: none; padding: 15px; border-radius: 12px; width: 100%; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 10px; flex-shrink: 0;}
 
-        /* ================= نافذة الأدمن (زيزو) ================= */
+        /* ================= نافذة الأدمن ولوحة الشرف ================= */
         .admin-row { display: flex; gap: 10px; margin-bottom: 10px; }
         .admin-input { flex: 2; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; font-size: 13px; outline: none;}
         .admin-select { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: bold; font-size: 13px; outline: none;}
@@ -145,6 +154,15 @@
         .btn-read { background: var(--success); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
 
         .chart-container { width: 100%; height: 250px; margin-bottom: 20px; }
+
+        .honor-card { display: flex; align-items: center; gap: 15px; background: #f8fafc; padding: 12px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .honor-rank { font-size: 20px; font-weight: 900; width: 30px; text-align: center; }
+        .honor-name { font-size: 15px; font-weight: bold; flex-grow: 1; color: var(--dark); }
+        .honor-score { font-size: 13px; background: var(--accent); color: white; padding: 4px 10px; border-radius: 12px; font-weight: 900; display: flex; align-items: center; gap: 5px;}
+        
+        .rank-1 { color: #fbbf24; text-shadow: 0 2px 4px rgba(251, 191, 36, 0.4); font-size: 26px;} 
+        .rank-2 { color: #94a3b8; text-shadow: 0 2px 4px rgba(148, 163, 184, 0.4); font-size: 24px;} 
+        .rank-3 { color: #b45309; text-shadow: 0 2px 4px rgba(180, 83, 9, 0.4); font-size: 22px;} 
 
         datalist { font-family: 'Cairo'; }
     </style>
@@ -225,6 +243,8 @@
             <div class="sub-header"><h2 class="stage-title">فريق الإشراف وتقييمهم</h2></div>
             <div class="list-container" id="list-supervisors"></div>
             
+            <button class="btn-save-eval" onclick="saveEvaluationsOnly()"><i class="fa-solid fa-star"></i> حفظ تقييم المشرفين</button>
+
             <div style="background:white; padding:15px; border-radius:12px; border:1px solid var(--border); margin-top:20px;">
                 <h3 style="font-size:14px; color:var(--danger); margin-bottom:10px;"><i class="fa-solid fa-comment-dots"></i> طلب تعديل للإدارة</h3>
                 <textarea id="sup-msg-input" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); outline:none; font-family:'Cairo'; font-weight:bold; font-size:13px; margin-bottom:10px;" rows="2" placeholder="اكتب طلبك هنا..."></textarea>
@@ -248,9 +268,7 @@
             </div>
 
             <!-- أزرار الحصص الأفقية -->
-            <div class="period-tabs-container" id="trk-period-tabs">
-                <!-- تولد برمجياً -->
-            </div>
+            <div class="period-tabs-container" id="trk-period-tabs"></div>
 
             <div id="classes-list-container"></div>
         </div>
@@ -260,9 +278,7 @@
             <div class="sub-header"><h2 class="stage-title">توزيع الاحتياطي (اضغط للتسكين)</h2></div>
             
             <!-- أزرار الحصص الأفقية -->
-            <div class="period-tabs-container" id="sub-period-tabs">
-                <!-- تولد برمجياً -->
-            </div>
+            <div class="period-tabs-container" id="sub-period-tabs"></div>
 
             <div class="sub-list" id="sub-list-container"></div>
         </div>
@@ -299,6 +315,10 @@
                 <h2><i class="fa-regular fa-clock"></i> مواعيد الحصص (الجرس)</h2>
                 <button onclick="document.getElementById('sheet-times').classList.remove('active')" style="background:none; border:none; font-size:24px; color:var(--dark); cursor:pointer;">&times;</button>
             </div>
+            <div class="inner-tabs" style="margin-bottom: 10px;">
+                <div class="inner-tab active" onclick="switchTimeTab('lower')" id="t-tab-lower">صفوف أولى</div>
+                <div class="inner-tab" onclick="switchTimeTab('upper')" id="t-tab-upper">صفوف عليا</div>
+            </div>
             <div class="sheet-body" id="times-body-lower" style="display:block;"></div>
             <div class="sheet-body" id="times-body-upper" style="display:none;"></div>
             <button class="btn-save-times" onclick="saveTimetable()"><i class="fa-solid fa-check"></i> حفظ المواعيد</button>
@@ -314,17 +334,23 @@
             </div>
             <div class="sheet-body">
                 
-                <!-- مؤشر الاستخدام -->
+                <h3 style="font-size:14px; color:var(--accent); margin-bottom:10px; border-bottom:2px solid #eee; padding-bottom:5px;"><i class="fa-solid fa-medal"></i> لوحة شرف المشرفين</h3>
+                <div style="background:#fffbeb; padding:15px; border-radius:12px; border:1px solid #fde68a; margin-bottom:20px;">
+                    <h4 style="font-size:13px; color:var(--dark); margin-bottom:10px;">🏆 أفضل 3 هذا الأسبوع:</h4>
+                    <div id="honor-weekly"></div>
+                    
+                    <h4 style="font-size:13px; color:var(--dark); margin-top:15px; margin-bottom:10px; border-top:1px dashed #fde68a; padding-top:10px;">🌟 أفضل 5 هذا العام:</h4>
+                    <div id="honor-yearly"></div>
+                </div>
+
                 <h3 style="font-size:14px; color:var(--primary); margin-bottom:10px; border-bottom:2px solid #eee; padding-bottom:5px;"><i class="fa-solid fa-chart-simple"></i> مؤشر نشاط فرق الإشراف</h3>
                 <div class="chart-container">
                     <canvas id="usageChart"></canvas>
                 </div>
 
-                <!-- طلبات التعديل -->
                 <h3 style="font-size:14px; color:var(--danger); margin-top:20px; margin-bottom:10px; border-bottom:2px solid #eee; padding-bottom:5px;"><i class="fa-solid fa-envelope-open-text"></i> طلبات التعديل الواردة</h3>
                 <div id="admin-messages-container" style="margin-bottom:20px;"></div>
 
-                <!-- الاستثناءات -->
                 <h3 style="font-size:14px; color:var(--primary); margin-bottom:10px; border-bottom:2px solid #eee; padding-bottom:5px;"><i class="fa-solid fa-user-slash"></i> استثناءات الاحتياطي (إخفاء معلمين)</h3>
                 <div id="admin-exclusions-container"></div>
                 <button class="btn-save-times" style="margin-bottom:20px;" onclick="saveAdminExclusions()"><i class="fa-solid fa-floppy-disk"></i> حفظ الاستثناءات</button>
@@ -376,10 +402,9 @@
             
             await fetchAllData();
 
-            // استعادة الشاشة إذا كان هناك مرحلة محفوظة
+            // الاستعادة الذكية للشاشة
             if(CURRENT_STAGE) {
-                document.getElementById('menu-stage-title').innerText = CURRENT_STAGE === 'lower' ? 'الصفوف الأولى (1 - 3)' : 'الصفوف العليا (4 - 6)';
-                navTo('screen-menu');
+                openStage(CURRENT_STAGE);
             }
         });
 
@@ -403,7 +428,6 @@
             sessionStorage.setItem('sup_stage', stage);
             document.getElementById('menu-stage-title').innerText = stage === 'lower' ? 'الصفوف الأولى (1 - 3)' : 'الصفوف العليا (4 - 6)';
             
-            // إظهار المواعيد الخاصة بالمرحلة فقط في نافذة الإعدادات
             document.getElementById('times-body-lower').style.display = stage === 'lower' ? 'block' : 'none';
             document.getElementById('times-body-upper').style.display = stage === 'upper' ? 'block' : 'none';
 
@@ -416,6 +440,10 @@
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
             document.getElementById('fab-container').classList.add('active');
+            
+            // تحديد الحصة الأولى افتراضياً عند الدخول
+            selectPeriod(1, screenId === 'screen-tracking' ? 'trk' : 'sub');
+            
             refreshCurrentScreen(screenId);
         }
 
@@ -424,6 +452,7 @@
             if(activeScreen === 'screen-supervisors') renderSupervisors();
             if(activeScreen === 'screen-tracking') renderTrackingAllGrades();
             if(activeScreen === 'screen-substitutes') calculateSubstitutes();
+            if(activeScreen === 'screen-report') checkExistingReport();
         }
 
         function changeGlobalDay() {
@@ -432,7 +461,7 @@
             refreshCurrentScreen();
         }
 
-        // ================= أزرار الحصص =================
+        // ================= أزرار الحصص الأفقية =================
         function buildPeriodTabs() {
             let html = "";
             for(let i=1; i<=8; i++) {
@@ -503,11 +532,6 @@
                 if(currentMin >= startMin && currentMin < endMin) {
                     document.getElementById("active-period").innerText = `الحصة ${periodNames[i-1]} شغالة`;
                     document.getElementById("time-left").innerText = `متبقي ${endMin - currentMin} دقيقة`;
-                    
-                    // تحديد الزر أوتوماتيكياً إذا لم يقم المستخدم بتغييره يدوياً
-                    if(SELECTED_PERIOD !== i && document.querySelector('.screen.active').id === 'screen-menu') {
-                        selectPeriod(i, 'trk');
-                    }
                     activeFound = true;
                     break;
                 }
@@ -526,6 +550,15 @@
             }
             document.getElementById("times-body-lower").innerHTML = htmlL;
             document.getElementById("times-body-upper").innerHTML = htmlU;
+        }
+
+        function switchTimeTab(type) {
+            document.getElementById('t-tab-lower').classList.remove('active');
+            document.getElementById('t-tab-upper').classList.remove('active');
+            document.getElementById('times-body-lower').style.display = 'none';
+            document.getElementById('times-body-upper').style.display = 'none';
+            document.getElementById(`t-tab-${type}`).classList.add('active');
+            document.getElementById(`times-body-${type}`).style.display = 'block';
         }
 
         function openTimeSettings() {
@@ -606,8 +639,6 @@
                     if(log.id === "admin_messages") ADMIN_MESSAGES = log.data.list || [];
                     if(log.id === "usage_stats") USAGE_STATS = log.data || {};
                 });
-
-                selectPeriod(1, 'trk'); // تفعيل الحصة الأولى كبداية
 
             } catch(e) {}
         }
@@ -709,21 +740,37 @@
 
             let currentAssigned = TODAY_ASSIGNMENTS[period] || [];
 
+            // تجهيز الفصول المتاحة للتسكين
+            const targetGrades = CURRENT_STAGE === 'lower' ? ["الأول", "الثاني", "الثالث"] : ["الرابع", "الخامس", "السادس"];
+            let cSet = new Set();
+            DATA.students.forEach(s => { if(targetGrades.some(tg => String(s.grade).includes(tg)) && s.class) cSet.add(String(s.class).trim()); });
+            let classOptions = Array.from(cSet).sort((a, b) => a.localeCompare(b, 'ar', {numeric: true}))
+                                .map(c => `<option value="${c}">فصل ${c}</option>`).join("");
+
             availableTeachers.forEach(t => {
                 let isAssignedNow = currentAssigned.includes(t.id);
                 let rowClass = isAssignedNow ? "teacher-row assigned" : "teacher-row";
                 
                 container.innerHTML += `
-                    <div class="${rowClass}" onclick="toggleSubstitute('${t.id}', '${period}')">
-                        <div>
-                            <span class="t-name">${t.name}</span>
-                            <div class="t-tags">
-                                <span class="t-tag tag-quota">أخذ هذا الأسبوع: ${t.count}</span>
-                                <span class="t-tag tag-subj">${t.subject}</span>
+                    <div class="${rowClass}" style="flex-direction:column; align-items:stretch; gap:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;" onclick="toggleSubstitute('${t.id}', '${period}')">
+                            <div>
+                                <span class="t-name">${t.name}</span>
+                                <div class="t-tags">
+                                    <span class="t-tag tag-quota">أخذ هذا الأسبوع: ${t.count}</span>
+                                    <span class="t-tag tag-subj">${t.subject}</span>
+                                </div>
+                            </div>
+                            <div style="font-size:20px; opacity:0.5;">
+                                <i class="fa-solid ${isAssignedNow ? 'fa-check-circle' : 'fa-hand-pointer'}"></i>
                             </div>
                         </div>
-                        <div style="font-size:20px; opacity:0.5;">
-                            <i class="fa-solid ${isAssignedNow ? 'fa-check-circle' : 'fa-hand-pointer'}"></i>
+                        <div class="assign-box" style="display: ${isAssignedNow ? 'none' : 'flex'};">
+                            <select class="assign-select" id="assign_cls_${t.id}">
+                                <option value="" disabled selected>اختر الفصل للتسكين...</option>
+                                ${classOptions}
+                            </select>
+                            <button class="btn-assign" onclick="assignSubstitute('${t.id}', '${t.name.split(' ')[0]}')"><i class="fa-solid fa-thumbtack"></i> تسكين</button>
                         </div>
                     </div>
                 `;
@@ -738,19 +785,36 @@
             if(isAssigned) {
                 TODAY_ASSIGNMENTS[period] = TODAY_ASSIGNMENTS[period].filter(id => id !== tId);
                 WEEKLY_SUBS[tId] = Math.max(0, (WEEKLY_SUBS[tId] || 0) - 1);
-            } else {
-                TODAY_ASSIGNMENTS[period].push(tId);
-                WEEKLY_SUBS[tId] = (WEEKLY_SUBS[tId] || 0) + 1;
+                
+                calculateSubstitutes();
+                logUsage(); 
+
+                try {
+                    await supabaseClient.from("daily_logs").upsert([
+                        { id: getTodayLogId("assign"), log_type: "system", data: TODAY_ASSIGNMENTS },
+                        { id: getWeekId(), log_type: "system", data: WEEKLY_SUBS }
+                    ]);
+                } catch(e) {}
             }
+        }
+
+        async function assignSubstitute(tId, tName) {
+            const cls = document.getElementById(`assign_cls_${tId}`).value;
+            if(!cls) { alert("اختر الفصل أولاً!"); return; }
+
+            if(!TODAY_ASSIGNMENTS[SELECTED_PERIOD]) TODAY_ASSIGNMENTS[SELECTED_PERIOD] = [];
+            TODAY_ASSIGNMENTS[SELECTED_PERIOD].push(tId);
+            WEEKLY_SUBS[tId] = (WEEKLY_SUBS[tId] || 0) + 1;
 
             calculateSubstitutes();
-            logUsage(); // تسجيل نشاط
+            logUsage();
 
             try {
                 await supabaseClient.from("daily_logs").upsert([
                     { id: getTodayLogId("assign"), log_type: "system", data: TODAY_ASSIGNMENTS },
                     { id: getWeekId(), log_type: "system", data: WEEKLY_SUBS }
                 ]);
+                Swal.fire({ toast: true, position: 'top', icon: 'success', title: `تم التسكين لـ ${tName}`, showConfirmButton: false, timer: 1500 });
             } catch(e) {}
         }
 
@@ -788,17 +852,22 @@
 
                     let callBtn = mob ? `<a href="tel:${mob}" class="btn-call-only" title="اتصال"><i class="fa-solid fa-phone"></i></a>` : ``;
 
+                    let starsHtml = '';
+                    for(let i=5; i>=1; i--) {
+                        starsHtml += `<i class="fa-solid fa-star" onclick="rateStar('${tName}', ${i}, this)"></i>`;
+                    }
+
                     container.innerHTML += `
                         <div class="sup-card">
                             <div>
                                 <div class="sup-loc">${locNames[loc] || loc}</div>
                                 <div class="sup-name">${tName}</div>
                             </div>
-                            <div style="display:flex; gap:10px; align-items:center;">
+                            <div style="display:flex; gap:15px; align-items:center;">
                                 ${callBtn}
-                                <select class="sup-eval" id="eval_${CURRENT_STAGE}_${loc}" onchange="logUsage()">
-                                    <option value="ممتاز">أدى عمله</option><option value="مقصر">مقصر</option><option value="غائب">غائب</option>
-                                </select>
+                                <div class="star-rating" data-teacher="${tName}" data-rating="0">
+                                    ${starsHtml}
+                                </div>
                             </div>
                         </div>
                     `;
@@ -810,10 +879,50 @@
             }
         }
 
+        function rateStar(teacherName, rating, starElement) {
+            const container = starElement.parentElement;
+            container.setAttribute('data-rating', rating);
+            const stars = container.querySelectorAll('i');
+            
+            stars.forEach((s, index) => {
+                const starVal = 5 - index;
+                if(starVal <= rating) s.classList.add('active');
+                else s.classList.remove('active');
+            });
+            logUsage();
+        }
+
+        async function saveEvaluationsOnly() {
+            const btn = document.querySelector('.btn-save-eval');
+            const oldText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+
+            let evals = {};
+            document.querySelectorAll('.star-rating').forEach(container => { 
+                const tName = container.getAttribute('data-teacher');
+                const rating = parseInt(container.getAttribute('data-rating')) || 0;
+                if(rating > 0) evals[tName] = rating; 
+            });
+
+            try {
+                const logId = getTodayLogId(`report_${CURRENT_STAGE}`);
+                const { data } = await supabaseClient.from("daily_logs").select("data").eq("id", logId).maybeSingle();
+                
+                let reportData = data && data.data ? data.data : {};
+                reportData.evaluations = evals;
+
+                await supabaseClient.from("daily_logs").upsert({ id: logId, log_type: "report", data: reportData, updated_at: new Date().toISOString() });
+                Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم حفظ التقييمات بنجاح', showConfirmButton: false, timer: 2000 });
+            } catch(e) { Swal.fire('خطأ', 'فشل الحفظ', 'error'); } 
+            finally { btn.innerHTML = oldText; }
+        }
+
         async function sendSupMessage() {
             const msg = document.getElementById("sup-msg-input").value.trim();
             if(!msg) return;
             
+            const daySel = document.getElementById("global-day");
+            const dayName = daySel.options[daySel.selectedIndex].text;
             const stageName = CURRENT_STAGE === 'lower' ? "صفوف أولى" : "صفوف عليا";
             
             const newMsg = { 
@@ -854,8 +963,45 @@
             document.getElementById("visits-container").innerHTML = visHtml;
         }
 
+        async function checkExistingReport() {
+            document.querySelectorAll('.rep-input, .r-input').forEach(inp => inp.value = "");
+            
+            document.querySelectorAll('.star-rating').forEach(container => {
+                container.setAttribute('data-rating', "0");
+                container.querySelectorAll('i').forEach(s => s.classList.remove('active'));
+            });
+
+            try {
+                const { data } = await supabaseClient.from("daily_logs").select("data").eq("id", getTodayLogId(`report_${CURRENT_STAGE}`)).maybeSingle();
+                if(data && data.data) {
+                    if(data.data.injuries) {
+                        const injNames = document.querySelectorAll('.inj-name'); const injTypes = document.querySelectorAll('.inj-type'); const injTimes = document.querySelectorAll('.inj-time'); const injLocs = document.querySelectorAll('.inj-loc');
+                        data.data.injuries.forEach((inj, i) => { if(i<5) { injNames[i].value = inj.name||""; injTypes[i].value = inj.type||""; injTimes[i].value = inj.time||""; injLocs[i].value = inj.loc||""; } });
+                    }
+                    if(data.data.visits) {
+                        const visTypes = document.querySelectorAll('.vis-type'); const visNames = document.querySelectorAll('.vis-name');
+                        data.data.visits.forEach((vis, i) => { if(i<3) { visTypes[i].value = vis.type||""; visNames[i].value = vis.name||""; } });
+                    }
+                    if(data.data.notes) document.getElementById("rep-notes").value = data.data.notes;
+                    
+                    if(data.data.evaluations) {
+                        for(let tName in data.data.evaluations) {
+                            let rating = data.data.evaluations[tName];
+                            let container = document.querySelector(`.star-rating[data-teacher="${tName}"]`);
+                            if(container) {
+                                container.setAttribute('data-rating', rating);
+                                container.querySelectorAll('i').forEach((s, index) => {
+                                    if(5 - index <= rating) s.classList.add('active');
+                                });
+                            }
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
         async function submitDailyReport() {
-            if(!confirm("سيتم حفظ التقرير في الأرشيف باسم اليوم والمرحلة. تأكيد؟")) return;
+            if(!confirm("سيتم حفظ واعتماد التقرير لهذه المرحلة. تأكيد؟")) return;
 
             const btn = document.querySelector('.btn-submit-report');
             const oldText = btn.innerHTML;
@@ -870,13 +1016,17 @@
             for(let i=0; i<3; i++) { if(visNames[i].value.trim()) visits.push({ type: visTypes[i].value, name: visNames[i].value }); }
 
             let evals = {};
-            document.querySelectorAll('.sup-eval').forEach(sel => { evals[sel.id] = sel.value; });
+            document.querySelectorAll('.star-rating').forEach(container => { 
+                const tName = container.getAttribute('data-teacher');
+                const rating = parseInt(container.getAttribute('data-rating')) || 0;
+                if(rating > 0) evals[tName] = rating; 
+            });
 
             const reportData = { injuries: injuries, visits: visits, evaluations: evals, notes: document.getElementById("rep-notes").value };
             const logId = getTodayLogId(`report_${CURRENT_STAGE}`);
 
             try {
-                await supabaseClient.from("daily_logs").upsert({ id: logId, log_type: "report", data: reportData, updated_at: new Date().toLocaleString('ar-EG') });
+                await supabaseClient.from("daily_logs").upsert({ id: logId, log_type: "report", data: reportData, updated_at: new Date().toISOString() });
                 logUsage();
                 Swal.fire({ icon: 'success', title: 'تم اعتماد التقرير بنجاح', confirmButtonColor: '#16a34a' });
             } catch(e) { Swal.fire('خطأ', 'فشل الحفظ', 'error'); } 
@@ -890,6 +1040,7 @@
                 document.getElementById("sheet-admin").classList.add("active");
                 renderAdminMessages();
                 renderAdminChart();
+                renderHonorBoard();
             } else if(pwd !== null) {
                 alert("كلمة المرور غير صحيحة!");
             }
@@ -996,6 +1147,64 @@
                     scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } }, x: { ticks: { font: { family: 'Cairo', size: 10 } } } }
                 }
             });
+        }
+
+        // ================= لوحة الشرف =================
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+            return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+        }
+
+        async function renderHonorBoard() {
+            try {
+                const { data } = await supabaseClient.from("daily_logs").select("*").eq("log_type", "report");
+                
+                let weeklyScores = {};
+                let yearlyScores = {};
+                
+                const currentWeek = getWeekNumber(new Date());
+                const currentYear = new Date().getFullYear();
+
+                (data || []).forEach(log => {
+                    if(!log.data || !log.data.evaluations) return;
+                    
+                    const logDate = new Date(log.updated_at);
+                    const logWeek = getWeekNumber(logDate);
+                    const logYear = logDate.getFullYear();
+
+                    const isThisWeek = (logWeek === currentWeek && logYear === currentYear);
+
+                    for(let tName in log.data.evaluations) {
+                        let score = parseInt(log.data.evaluations[tName]);
+                        
+                        yearlyScores[tName] = (yearlyScores[tName] || 0) + score;
+                        if(isThisWeek) {
+                            weeklyScores[tName] = (weeklyScores[tName] || 0) + score;
+                        }
+                    }
+                });
+
+                let weeklyArr = Object.keys(weeklyScores).map(name => ({name: name, score: weeklyScores[name]})).sort((a,b) => b.score - a.score).slice(0, 3);
+                let htmlW = "";
+                weeklyArr.forEach((t, i) => {
+                    let rankClass = i===0 ? 'rank-1' : (i===1 ? 'rank-2' : 'rank-3');
+                    let medal = i===0 ? '🥇' : (i===1 ? '🥈' : '🥉');
+                    htmlW += `<div class="honor-card"><div class="honor-rank ${rankClass}">${medal}</div><div class="honor-name">${t.name}</div><div class="honor-score"><i class="fa-solid fa-star"></i> ${t.score}</div></div>`;
+                });
+                document.getElementById("honor-weekly").innerHTML = htmlW || "<div style='text-align:center; color:#64748b; font-size:12px;'>لا توجد تقييمات هذا الأسبوع.</div>";
+
+                let yearlyArr = Object.keys(yearlyScores).map(name => ({name: name, score: yearlyScores[name]})).sort((a,b) => b.score - a.score).slice(0, 5);
+                let htmlY = "";
+                yearlyArr.forEach((t, i) => {
+                    let rankClass = i===0 ? 'rank-1' : (i===1 ? 'rank-2' : (i===2 ? 'rank-3' : ''));
+                    let medal = i===0 ? '🥇' : (i===1 ? '🥈' : (i===2 ? '🥉' : `0${i+1}`));
+                    htmlY += `<div class="honor-card"><div class="honor-rank ${rankClass}">${medal}</div><div class="honor-name">${t.name}</div><div class="honor-score"><i class="fa-solid fa-star"></i> ${t.score}</div></div>`;
+                });
+                document.getElementById("honor-yearly").innerHTML = htmlY || "<div style='text-align:center; color:#64748b; font-size:12px;'>لا توجد تقييمات مسجلة.</div>";
+
+            } catch(e) {}
         }
     </script>
 </body>
