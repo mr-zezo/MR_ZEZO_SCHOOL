@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خريطة المبنى المدرسي - منظومة زيزو</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase & SweetAlert -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root { 
+            --primary: #1e3a8a; --secondary: #3b82f6; --accent: #f59e0b;
+            --dark: #0f172a; --bg: #f8fafc; --surface: #ffffff;
+            --danger: #e11d48; --success: #10b981; --border: #e2e8f0;
+            --lower-bg: #eff6ff; --lower-border: #93c5fd; --lower-text: #1e40af;
+            --upper-bg: #fff7ed; --upper-border: #fcd34d; --upper-text: #b45309;
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; outline: none; }
+        body { background-color: var(--bg); color: var(--dark); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+
+        /* ================= الشريط العلوي ================= */
+        .top-nav { width: 100%; max-width: 1400px; background: var(--dark); padding: 15px 25px; border-radius: 12px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .nav-title { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 900; color: #fcd34d; margin: 0; }
+        .nav-actions { display: flex; gap: 15px; }
+        .btn-nav { text-decoration: none; color: white; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 900; transition: 0.2s; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.2);}
+        .btn-nav:hover { background: rgba(255,255,255,0.2); }
+
+        /* ================= أدوات التحكم ================= */
+        .controls-bar { width: 100%; max-width: 1400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: white; padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .info-text { font-size: 14px; font-weight: 900; color: #64748b; display: flex; align-items: center; gap: 10px;}
+        
+        .btn-save { background: var(--success); color: white; border: none; padding: 12px 30px; border-radius: 8px; font-weight: 900; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition: 0.2s; }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+        .btn-save:active { transform: scale(0.95); }
+
+        .btn-reset { background: white; color: var(--danger); border: 2px solid var(--danger); padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+        .btn-reset:hover { background: #fff1f2; }
+
+        /* ================= خريطة المباني (الأعمدة) ================= */
+        .map-container { width: 100%; max-width: 1400px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-items: start;}
+        @media (max-width: 1024px) { .map-container { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 768px) { .map-container { grid-template-columns: 1fr; } }
+
+        /* تصميم المبنى (العمود) */
+        .building-col { background: white; border: 1px solid var(--border); border-radius: 15px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column;}
+        .b-header { background: var(--dark); color: white; padding: 15px; text-align: center; border-bottom: 4px solid var(--accent); }
+        .b-title { font-size: 18px; font-weight: 900; margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px;}
+        
+        .floors-wrapper { padding: 15px; display: flex; flex-direction: column; gap: 15px; }
+
+        /* تصميم الدور */
+        .floor-card { border: 2px solid; border-radius: 12px; padding: 15px; position: relative; transition: 0.2s; }
+        .floor-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        
+        /* تلوين الأدوار حسب المرحلة */
+        .stage-lower { background: var(--lower-bg); border-color: var(--lower-border); }
+        .stage-upper { background: var(--upper-bg); border-color: var(--upper-border); }
+
+        .f-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px dashed rgba(0,0,0,0.1); padding-bottom: 8px;}
+        .f-title { font-size: 16px; font-weight: 900; color: var(--dark); margin:0;}
+        .f-badge { font-size: 11px; font-weight: 900; padding: 3px 8px; border-radius: 6px; }
+        .stage-lower .f-badge { background: #dbeafe; color: var(--lower-text); }
+        .stage-upper .f-badge { background: #fef3c7; color: var(--upper-text); }
+
+        /* الفصول والمرافق */
+        .rooms-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px;}
+        .room-tag { font-size: 14px; font-weight: 900; padding: 6px 12px; border-radius: 8px; display: flex; align-items: center; gap: 8px; animation: scaleIn 0.2s ease; background: white; border: 1px solid var(--border); color: var(--dark); box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+        
+        /* تمييز لوني للفصل عن المرفق */
+        .room-tag.class-type { border-right: 4px solid var(--success); }
+        .room-tag.facility-type { border-right: 4px solid var(--info); }
+        
+        .room-tag i.del-room { cursor: pointer; color: var(--danger); opacity: 0.5; transition: 0.2s;}
+        .room-tag i.del-room:hover { opacity: 1; transform: scale(1.2); }
+
+        /* إضافة غرفة للدور */
+        .add-room-box { display: flex; gap: 5px; }
+        .room-input { flex: 1; padding: 10px; border: 1px solid rgba(0,0,0,0.1); border-radius: 8px; font-size: 13px; font-weight: bold; background: white; outline: none; transition: 0.2s;}
+        .room-input:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(30,58,138,0.1);}
+        .btn-add-room { background: var(--dark); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: 900; cursor: pointer; transition: 0.2s;}
+        .btn-add-room:hover { background: var(--primary); }
+
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+        @media (max-width: 768px) {
+            .top-nav { flex-direction: column; text-align: center; gap: 15px; }
+            .controls-bar { flex-direction: column; text-align: center; gap: 15px;}
+            .btn-save, .btn-reset { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <h1 class="nav-title"><i class="fa-solid fa-map-location-dot"></i> التوزيع الجغرافي للمباني والفصول</h1>
+        <div class="nav-actions">
+            <a href="index.html" class="btn-nav"><i class="fa-solid fa-house"></i> الرئيسية</a>
+        </div>
+    </nav>
+
+    <div class="controls-bar">
+        <div class="info-text">
+            <i class="fa-solid fa-circle-info" style="color:var(--accent); font-size:24px;"></i>
+            <div>
+                الهيكل الأساسي للمدرسة ثابت. قم فقط بكتابة اسم الفصل (مثال: 1/1) واضغط (إضافة) داخل الدور المناسب.<br>
+                <span style="font-size: 12px; color:var(--primary);">اللون الأزرق: صفوف أولى | اللون البرتقالي: صفوف عليا</span>
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn-reset" onclick="resetToDefaultStructure()"><i class="fa-solid fa-rotate-left"></i> إعادة ضبط الهيكل</button>
+            <button class="btn-save" onclick="saveMapToCloud()"><i class="fa-solid fa-floppy-disk"></i> حفظ التوزيع</button>
+        </div>
+    </div>
+
+    <div class="map-container" id="map-container">
+        <!-- الخريطة الثابتة ستتولد هنا -->
+    </div>
+
+    <script>
+        // إعدادات Supabase
+        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // الهيكل المعماري الثابت للمدرسة (المباني والأدوار والمراحل)
+        const DEFAULT_STRUCTURE = [
+            {
+                id: "b_old", name: "المبنى القديم", icon: "fa-building-columns",
+                floors: [
+                    { id: "old_f1", name: "الدور الأرضي", stage: "lower", stageName: "صفوف أولى", rooms: [] },
+                    { id: "old_f2", name: "الدور الثاني", stage: "lower", stageName: "صفوف أولى", rooms: [] },
+                    { id: "old_f3", name: "الدور الثالث", stage: "lower", stageName: "صفوف أولى", rooms: [] }
+                ]
+            },
+            {
+                id: "b_east", name: "المبنى الشرقي", icon: "fa-city",
+                floors: [
+                    { id: "east_f1", name: "الدور الأرضي", stage: "lower", stageName: "صفوف أولى", rooms: [] },
+                    { id: "east_f2", name: "الدور الثاني", stage: "lower", stageName: "صفوف أولى", rooms: [] },
+                    { id: "east_f3", name: "الدور الثالث", stage: "lower", stageName: "صفوف أولى", rooms: [] },
+                    { id: "east_f4", name: "الدور الرابع", stage: "lower", stageName: "صفوف أولى", rooms: [] }
+                ]
+            },
+            {
+                id: "b_new", name: "المبنى الجديد", icon: "fa-hotel",
+                floors: [
+                    { id: "new_f1", name: "الدور الأرضي", stage: "lower", stageName: "صفوف أولى", rooms: [] },
+                    { id: "new_f2", name: "الدور الثاني", stage: "upper", stageName: "صفوف عليا", rooms: [] },
+                    { id: "new_f3", name: "الدور الثالث", stage: "upper", stageName: "صفوف عليا", rooms: [] },
+                    { id: "new_f4", name: "الدور الرابع", stage: "upper", stageName: "صفوف عليا", rooms: [] },
+                    { id: "new_f5", name: "الدور الخامس", stage: "upper", stageName: "صفوف عليا", rooms: [] }
+                ]
+            }
+        ];
+
+        let schoolMap = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await fetchMapData();
+        });
+
+        // ================= 1. جلب البيانات من السحابة =================
+        async function fetchMapData() {
+            Swal.fire({ title: 'جاري استدعاء الخريطة...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                const { data } = await supabaseClient.from("school_map").select("map_data").eq("id", "main_layout").maybeSingle();
+                
+                if (data && data.map_data && data.map_data.length > 0) {
+                    schoolMap = data.map_data;
+                } else {
+                    // إذا كانت فارغة، استخدم الهيكل الافتراضي
+                    schoolMap = JSON.parse(JSON.stringify(DEFAULT_STRUCTURE));
+                }
+                renderMap();
+                Swal.close();
+            } catch(e) {
+                Swal.fire('خطأ', 'فشل تحميل الخريطة', 'error');
+            }
+        }
+
+        function resetToDefaultStructure() {
+            if(confirm("هل أنت متأكد؟ سيتم مسح جميع الفصول المضافة وعودة المباني فارغة كما كانت!")) {
+                schoolMap = JSON.parse(JSON.stringify(DEFAULT_STRUCTURE));
+                renderMap();
+            }
+        }
+
+        // ================= 2. دوال المساعدة =================
+        function isClassRoom(val) {
+            const classRegex = /^[0-9٠-٩]+\s*\/\s*[0-9٠-٩]+$/;
+            return classRegex.test(val);
+        }
+
+        function formatNum(str) {
+            return String(str).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
+        }
+
+        // ================= 3. رسم الخريطة =================
+        function renderMap() {
+            const container = document.getElementById("map-container");
+            container.innerHTML = "";
+
+            schoolMap.forEach((building, bIndex) => {
+                let floorsHtml = "";
+                
+                building.floors.forEach((floor, fIndex) => {
+                    let roomsHtml = "";
+                    floor.rooms.forEach((room, rIndex) => {
+                        let roomClass = isClassRoom(room) ? "class-type" : "facility-type";
+                        let icon = isClassRoom(room) ? "fa-door-open" : "fa-shapes";
+                        roomsHtml += `
+                            <div class="room-tag ${roomClass}">
+                                <i class="fa-solid ${icon}" style="color: #64748b;"></i> ${formatNum(room)}
+                                <i class="fa-solid fa-circle-xmark del-room" onclick="deleteRoom(${bIndex}, ${fIndex}, ${rIndex})" title="إزالة"></i>
+                            </div>
+                        `;
+                    });
+
+                    let stageClass = floor.stage === 'lower' ? 'stage-lower' : 'stage-upper';
+                    let iconStage = floor.stage === 'lower' ? 'fa-child-reaching' : 'fa-book-open-reader';
+
+                    floorsHtml += `
+                        <div class="floor-card ${stageClass}">
+                            <div class="f-header">
+                                <h3 class="f-title">${floor.name}</h3>
+                                <span class="f-badge"><i class="fa-solid ${iconStage}"></i> ${floor.stageName}</span>
+                            </div>
+                            <div class="rooms-container">${roomsHtml}</div>
+                            <div class="add-room-box">
+                                <input type="text" class="room-input" id="inp-room-${bIndex}-${fIndex}" placeholder="إضافة فصل أو مرفق..." onkeypress="if(event.key==='Enter') addRoom(${bIndex}, ${fIndex})">
+                                <button class="btn-add-room" onclick="addRoom(${bIndex}, ${fIndex})"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML += `
+                    <div class="building-col">
+                        <div class="b-header">
+                            <h2 class="b-title"><i class="fa-solid ${building.icon}"></i> ${building.name}</h2>
+                        </div>
+                        <div class="floors-wrapper">${floorsHtml}</div>
+                    </div>
+                `;
+            });
+        }
+
+        // ================= 4. إضافة وحذف الفصول =================
+        function addRoom(bIndex, fIndex) {
+            const inp = document.getElementById(`inp-room-${bIndex}-${fIndex}`);
+            let val = inp.value.trim();
+            if(val) {
+                val = val.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+                schoolMap[bIndex].floors[fIndex].rooms.push(val);
+                renderMap();
+                setTimeout(() => document.getElementById(`inp-room-${bIndex}-${fIndex}`).focus(), 50);
+            }
+        }
+
+        function deleteRoom(bIndex, fIndex, rIndex) {
+            schoolMap[bIndex].floors[fIndex].rooms.splice(rIndex, 1);
+            renderMap();
+        }
+
+        // ================= 5. حفظ الخريطة =================
+        async function saveMapToCloud() {
+            const btn = document.querySelector('.btn-save');
+            const origHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+
+            try {
+                await supabaseClient.from("school_map").upsert({
+                    id: "main_layout",
+                    map_data: schoolMap,
+                    updated_at: new Date().toISOString()
+                });
+                
+                Swal.fire({ icon: 'success', title: 'تم الحفظ بنجاح', text: 'تمت هندسة المبنى وستظهر هذه التقسيمة في مكتب المشرف العام.', confirmButtonColor: '#10b981' });
+            } catch(e) {
+                Swal.fire('خطأ', 'فشل الاتصال بالسحابة', 'error');
+            } finally {
+                btn.innerHTML = origHTML;
+            }
+        }
+    </script>
+</body>
+</html>
