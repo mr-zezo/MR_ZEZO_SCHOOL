@@ -16,7 +16,7 @@
             --primary: #1e3a8a; --secondary: #3b82f6; --accent: #f59e0b;
             --dark: #0f172a; --bg: #f8fafc; --surface: #ffffff;
             --danger: #e11d48; --success: #10b981; --border: #cbd5e1;
-            --smart: #8b5cf6; /* لون مميز للمساعد الذكي */
+            --smart: #8b5cf6;
         }
 
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
@@ -93,6 +93,14 @@
         .sug-t-name { font-size: 14px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 8px;}
         .sug-t-score { font-size: 11px; font-weight: bold; background: var(--smart); color: white; padding: 2px 8px; border-radius: 12px; }
 
+        /* ستايل المعلم الذي تم تسكينه بنجاح */
+        .sug-teacher.assigned { background: var(--success); border-color: var(--success); color: white; pointer-events: none; transform: none;}
+        .sug-teacher.assigned .sug-t-name { color: white; }
+        .sug-teacher.assigned .sug-t-score { background: rgba(255,255,255,0.3); color: white; }
+
+        .btn-finish-smart { background: var(--dark); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.2s;}
+        .btn-finish-smart:hover { background: var(--primary); }
+
         @media (max-width: 768px) {
             .top-nav { flex-direction: column; text-align: center; }
             .controls-bar { flex-direction: column; text-align: center; }
@@ -134,8 +142,8 @@
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('lower')">إشراف الصفوف الأولى (1 - 3)</button>
-        <button class="tab-btn" onclick="switchTab('upper')">إشراف الصفوف العليا (4 - 6)</button>
+        <button class="tab-btn active" id="tab-btn-lower" onclick="switchTab('lower')">إشراف الصفوف الأولى (1 - 3)</button>
+        <button class="tab-btn" id="tab-btn-upper" onclick="switchTab('upper')">إشراف الصفوف العليا (4 - 6)</button>
     </div>
 
     <!-- ================= شاشة الصفوف الأولى ================= -->
@@ -200,7 +208,7 @@
         </div>
     </div>
 
-    <!-- ================= نافذة المساعد الذكي ================= -->
+    <!-- ================= نافذة المساعد الذكي المستمرة ================= -->
     <div class="modal-overlay" id="smartModal" onclick="if(event.target===this) this.classList.remove('active')">
         <div class="modal-content">
             <div class="modal-header">
@@ -209,22 +217,23 @@
             </div>
             <div class="modal-body">
                 <div style="background:#f0fdf4; color:#166534; padding:10px; border-radius:8px; font-size:13px; font-weight:bold; margin-bottom:15px; border:1px solid #bbf7d0;">
-                    <i class="fa-solid fa-circle-info"></i> سيقوم الذكاء الاصطناعي بمسح (الخريطة) و (الجدول)، ليقترح لك المعلمين المتواجدين بالفعل في كل دور. اضغط على اسم المعلم لتسكينه فوراً!
+                    <i class="fa-solid fa-circle-info"></i> اضغط على اسم المعلم لتسكينه في الدور فوراً. يمكنك الاستمرار في اختيار المعلمين لباقي الأدوار دون إغلاق النافذة!
                 </div>
                 
                 <div class="smart-controls">
-                    <select id="smart-day">
+                    <select id="smart-day" onchange="generateSmartSuggestions()">
                         <option value="الاحد">يوم الأحد</option><option value="الاثنين">الإثنين</option><option value="الثلاثاء">الثلاثاء</option><option value="الاربعاء">الأربعاء</option><option value="الخميس">الخميس</option>
                     </select>
-                    <select id="smart-stage">
+                    <select id="smart-stage" onchange="generateSmartSuggestions()">
                         <option value="lower">صفوف أولى</option><option value="upper">صفوف عليا</option>
                     </select>
-                    <button class="btn-generate" onclick="generateSmartSuggestions()"><i class="fa-solid fa-bolt"></i> توليد الاقتراحات</button>
                 </div>
 
                 <div class="suggestion-grid" id="suggestion-container" style="margin-top:20px;">
                     <!-- تولد برمجياً -->
                 </div>
+
+                <button class="btn-finish-smart" onclick="document.getElementById('smartModal').classList.remove('active')"><i class="fa-solid fa-check-double"></i> تم الانتهاء من التوزيع</button>
             </div>
         </div>
     </div>
@@ -253,7 +262,9 @@
         function switchTab(stage) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            event.target.classList.add('active');
+            
+            // إصلاح الخطأ: تحديد الزر الصحيح الذي تم ضغطه بناءً على المرحلة
+            document.getElementById(`tab-btn-${stage}`).classList.add('active');
             document.getElementById(`tab-${stage}`).classList.add('active');
         }
 
@@ -337,12 +348,15 @@
             } catch(e) { Swal.fire('خطأ', 'فشل الحفظ', 'error'); }
         }
 
-        // ================= المساعد الذكي (الذكاء الاصطناعي) =================
+        // ================= المساعد الذكي المستمر =================
         function openSmartAssistant() {
-            // مزامنة اليوم في المساعد مع اليوم المختار حالياً
             document.getElementById("smart-day").value = document.getElementById("day-select").value;
-            document.getElementById("smart-stage").value = document.querySelector('.tab-btn.active').innerText.includes('أولى') ? 'lower' : 'upper';
-            document.getElementById("suggestion-container").innerHTML = "";
+            
+            // إصلاح الخطأ: قراءة التبويب النشط بشكل صحيح
+            const isLowerActive = document.getElementById('tab-btn-lower').classList.contains('active');
+            document.getElementById("smart-stage").value = isLowerActive ? 'lower' : 'upper';
+            
+            generateSmartSuggestions();
             document.getElementById("smartModal").classList.add("active");
         }
 
@@ -408,8 +422,10 @@
                 if(topTeachers.length > 0) {
                     let medals = ['🥇', '🥈', '🥉'];
                     topTeachers.forEach((t, i) => {
+                        // إعطاء ID فريد للزر لكي نتمكن من تغيير لونه لاحقاً
+                        const btnId = `sug_btn_${floor.locKey}_${i}`;
                         teachersHtml += `
-                            <div class="sug-teacher" onclick="applySuggestion('${stage}', '${floor.locKey}', '${t.name}')">
+                            <div class="sug-teacher" id="${btnId}" onclick="applySuggestion('${stage}', '${floor.locKey}', '${t.name}', '${btnId}')">
                                 <span class="sug-t-name">${medals[i]} ${t.name}</span>
                                 <span class="sug-t-score">${t.score} حصص هنا</span>
                             </div>
@@ -430,18 +446,32 @@
             container.innerHTML = html;
         }
 
-        // دالة التسكين التلقائي عند الضغط على الاقتراح
-        function applySuggestion(stage, locKey, teacherName) {
+        // دالة التسكين التلقائي المستمرة
+        function applySuggestion(stage, locKey, teacherName, btnId) {
             // 1. مزامنة الواجهة الخلفية مع اختيارات المساعد
             document.getElementById("day-select").value = document.getElementById("smart-day").value;
             switchTab(stage);
 
-            // 2. إيجاد الحقل وكتابة الاسم
+            // 2. إيجاد الحقل وكتابة الاسم في الخلفية
             let input = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${locKey}"]`);
             if(input) {
                 input.value = teacherName;
                 
-                // تأثير بصري جميل لتأكيد الإضافة
+                // 3. تغيير لون الزر داخل المساعد ليؤكد أنه تم التسكين
+                const clickedBtn = document.getElementById(btnId);
+                
+                // إزالة التحديد عن أي زر آخر في نفس الكارت (نفس الدور)
+                const parentCard = clickedBtn.closest('.sug-card');
+                parentCard.querySelectorAll('.sug-teacher').forEach(b => {
+                    b.classList.remove('assigned');
+                    b.innerHTML = b.innerHTML.replace(' ✔️', ''); // مسح علامة الصح القديمة
+                });
+
+                // إضافة التحديد للزر المختار
+                clickedBtn.classList.add('assigned');
+                clickedBtn.querySelector('.sug-t-name').innerHTML += ' ✔️';
+                
+                // تأثير بصري في الخلفية
                 input.style.backgroundColor = "#dcfce7";
                 input.style.borderColor = "#16a34a";
                 input.style.color = "#166534";
@@ -451,11 +481,10 @@
                     input.style.borderColor = "";
                     input.style.color = "";
                 }, 1500);
-
-                // إغلاق النافذة للعودة للعمل
-                document.getElementById('smartModal').classList.remove('active');
                 
-                Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم التسكين بنجاح!', showConfirmButton: false, timer: 1500 });
+                // تنبيه خفيف جداً
+                const Toast = Swal.mixin({ toast: true, position: 'top', showConfirmButton: false, timer: 1000 });
+                Toast.fire({ icon: 'success', title: 'تم التسكين' });
             }
         }
     </script>
