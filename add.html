@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>إلزام الصف الأول - منظومة مستر زيزو</title>
     
     <!-- مكتبات Supabase و Excel -->
@@ -72,8 +72,12 @@
         th, td { padding: 10px; font-weight: 800; }
         th { background-color: var(--primary-color); color: white; position: sticky; top: 0; z-index: 1; }
         tr:nth-child(even) { background-color: #f8fafc; }
+        
+        .action-btns { display: flex; gap: 5px; justify-content: center; }
         .btn-edit { background: var(--info); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Cairo'; font-weight: 900; transition: 0.2s;}
         .btn-edit:hover { background: #0369a1; }
+        .btn-delete { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Cairo'; font-weight: 900; transition: 0.2s;}
+        .btn-delete:hover { background: #9f1239; }
         
         .btn-clear-db { margin-top: 25px; background: var(--danger); color: white; border: none; padding: 12px 15px; border-radius: 8px; cursor: pointer; font-weight: 900; font-family: 'Cairo'; width: 100%; font-size: 15px; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px;}
         .btn-clear-db:hover { background: #9f1239; }
@@ -140,7 +144,7 @@
         
         <!-- زر مسح البيانات المحمي بكلمة مرور -->
         <button onclick="clearServerData()" class="btn-clear-db">
-            <i class="fa-solid fa-trash-can"></i> مسح قاعدة البيانات (يتطلب كلمة مرور)
+            <i class="fa-solid fa-trash-can"></i> مسح قاعدة البيانات بالكامل (يتطلب كلمة مرور)
         </button>
     </div>
 
@@ -200,7 +204,6 @@
         }
 
         // حفظ وتحديث البيانات (Supabase)
-      // حفظ وتحديث البيانات (Supabase)
         async function saveData() {
             const studentName = document.getElementById('studentFullName').value.trim();
             const studentNidVal = document.getElementById('studentNid').value.trim();
@@ -227,10 +230,9 @@
                 return;
             }
 
-            // 2. التحقق من عدم تكرار الرقم القومي للطالب في قاعدة البيانات
+            // 2. التحقق من عدم تكرار الرقم القومي للطالب
             const isDuplicate = studentsData.some(student => {
                 if (currentEditId) {
-                    // تم حل المشكلة هنا: توحيد نوع البيانات كنص (String) لضمان المقارنة الصحيحة
                     return student.c13 === studentNidVal && String(student.id) !== String(currentEditId);
                 } else {
                     return student.c13 === studentNidVal;
@@ -243,12 +245,9 @@
                 return;
             }
 
-            // 3. رسالة تحذيرية لتأكيد التعديل أو الإلغاء (بناءً على طلبك)
             if (currentEditId) {
-                const confirmEdit = confirm("أنت تقوم الآن بتعديل بيانات تلميذ مضاف مسبقاً.. هل تريد حفظ التعديلات؟\n\n- اضغط (موافق / OK) لحفظ التعديل.\n- اضغط (إلغاء / Cancel) للتراجع.");
-                if (!confirmEdit) {
-                    return; // إيقاف العملية إذا اختار المستخدم إلغاء
-                }
+                const confirmEdit = confirm("أنت تقوم الآن بتعديل بيانات تلميذ مضاف مسبقاً.. هل تريد حفظ التعديلات؟");
+                if (!confirmEdit) return; 
             }
 
             const btn = document.getElementById('submitBtn');
@@ -264,12 +263,10 @@
 
             try {
                 if (currentEditId) {
-                    // تحديث سجل موجود
                     const { error } = await supabaseClient.from(TABLE_NAME).update(record).eq('id', currentEditId);
                     if (error) throw error;
                     currentEditId = null;
                 } else {
-                    // إضافة سجل جديد
                     const { error } = await supabaseClient.from(TABLE_NAME).insert([record]);
                     if (error) throw error;
                 }
@@ -299,14 +296,38 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // ================= دالة حذف طالب محدد =================
+        async function deleteStudent(id, name) {
+            if (confirm(`هل أنت متأكد من حذف الطالب (${name}) بشكل نهائي؟\nلا يمكن التراجع عن هذا الإجراء.`)) {
+                try {
+                    const { error } = await supabaseClient.from(TABLE_NAME).delete().eq('id', id);
+                    if (error) throw error;
+                    
+                    // إذا كان الطالب المحذوف هو نفسه المفتوح للتعديل، نقوم بتفريغ الخانات
+                    if (currentEditId == id) clearForm();
+                    
+                    await loadDataFromServer();
+                } catch (err) {
+                    alert("خطأ أثناء الحذف: " + err.message);
+                }
+            }
+        }
+
         function updateTable() {
             const tbody = document.getElementById('dataTableBody'); tbody.innerHTML = '';
             
-            // عرض جميع البيانات
             studentsData.forEach(r => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${r.c1}</td><td>${r.c17}</td><td style="color:${r.status==='مسجل'?'var(--success)':'var(--danger)'}; font-weight:900;">${r.status}</td><td style="font-family:Arial;">${r.c13}</td>
-                <td><button class="btn-edit" onclick="editRecord('${r.id}')"><i class="fa-solid fa-pen"></i> تعديل</button></td>`;
+                tr.innerHTML = `
+                    <td>${r.c1}</td>
+                    <td>${r.c17}</td>
+                    <td style="color:${r.status==='مسجل'?'var(--success)':'var(--danger)'}; font-weight:900;">${r.status}</td>
+                    <td style="font-family:Arial;">${r.c13}</td>
+                    <td class="action-btns">
+                        <button class="btn-edit" onclick="editRecord('${r.id}')"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-delete" onclick="deleteStudent('${r.id}', '${r.c1}')"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
                 tbody.appendChild(tr);
             });
         }
@@ -317,9 +338,9 @@
             currentEditId = null; document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-save"></i> إدخال وحفظ البيانات (Enter)';
         }
 
-        // مسح البيانات (Supabase)
+        // مسح قاعدة البيانات بالكامل (Supabase)
         async function clearServerData() {
-            const pass = prompt('الرجاء إدخال كلمة المرور لمسح قاعدة البيانات:');
+            const pass = prompt('الرجاء إدخال كلمة المرور لمسح جميع البيانات بالكامل:');
             
             if (pass === '2026') {
                 if(confirm('تحذير نهائي: هل أنت متأكد من مسح جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء.')) {
@@ -346,17 +367,13 @@
             if (filteredData.length === 0) { alert(`لا توجد بيانات مرحلة (${stageTarget}) لتصديرها`); return; }
 
             if (format === 'csv') {
-                // ================= التعديل هنا =================
-                // تصفية البيانات لتشمل فقط من حالتهم "غير مسجل"
                 const unregisteredData = filteredData.filter(s => s.status === 'غير مسجل');
                 
                 if (unregisteredData.length === 0) {
                     alert(`جميع الطلاب في مرحلة (${stageTarget}) مسجلين بالفعل.. لا يوجد بيانات (غير مسجل) لتصديرها.`);
                     return;
                 }
-                // ===============================================
 
-                // 1. عناوين الأعمدة كما يطلبها Katalon Recorder
                 const csvHeaders = [
                     "Column1", "Column2", "Column3", "Column4", "Column5", 
                     "Column6", "Column7", "Column8", "Column9", "Column10", 
@@ -365,39 +382,24 @@
 
                 const csvRows = [csvHeaders];
 
-                // 2. ترتيب البيانات لغير المسجلين فقط
                 unregisteredData.forEach(r => {
                     csvRows.push([
-                        r.c2,  // Column1: الاسم الاول
-                        r.c3,  // Column2: الاسم الثانى
-                        r.c4,  // Column3: الاسم الثالث
-                        r.c5,  // Column4: الاسم الرابع
-                        r.c6,  // Column5: الاسم الخامس
-                        r.c8,  // Column6: اسم الام الاول
-                        r.c9,  // Column7: اسم الام الثانى
-                        r.c10, // Column8: اسم الام الثالث
-                        r.c11, // Column9: اسم الام الرابع
-                        r.c13, // Column10: الرقم القومى للطالب
-                        r.c14, // Column11: الرقم القومى للاب
-                        r.c15, // Column12: الرقم القومى للام
-                        r.c12, // Column13: رقم الموبايل
-                        "",    // Column14: فارغ
-                        ""     // Column15: فارغ
+                        r.c2, r.c3, r.c4, r.c5, r.c6, 
+                        r.c8, r.c9, r.c10, r.c11, 
+                        r.c13, r.c14, r.c15, r.c12, 
+                        "", ""
                     ]);
                 });
 
-                // 3. دمج البيانات بفاصلة (,) بدلاً من (;) ليتعرف عليها Katalon كعمود واحد قياسي
                 let csvContent = csvRows.map(row => row.map(item => `"${item || ''}"`).join(",")).join("\n");
                 
-                // 4. إنشاء وتحميل الملف
                 const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
-                link.download = `Katalon_Data_${stageTarget}_Unregistered.csv`; // تم تعديل اسم الملف للتوضيح
+                link.download = `Katalon_Data_${stageTarget}_Unregistered.csv`; 
                 link.click();
             } 
             else if (format === 'excel') {
-                // بقاء ملف الإكسل كما هو بالشكل الطبيعي (يطبع الكل مسجل وغير مسجل)
                 const excelHeaders = [
                     "اسم التلميذ الخماسي", "الاسم الأول", "الاسم الثاني", "الاسم الثالث", "الاسم الرابع", "الاسم الخامس", 
                     "اسم الأم الرباعي", "اسم الأم الأول", "اسم الأم الثاني", "اسم الأم الثالث", "اسم الأم الرابع", 
