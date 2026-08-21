@@ -137,11 +137,14 @@
         /* ================= النوافذ المنبثقة ================= */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: #f8fafc; width: 100%; max-width: 800px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-content { background: #f8fafc; width: 100%; max-width: 850px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
         .modal-header { background: var(--danger); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #9f1239;}
         .modal-body { padding: 25px; overflow-y: auto; }
         
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .form-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 15px; }
+        @media (max-width: 768px) { .form-grid-4 { grid-template-columns: 1fr 1fr; } .form-grid { grid-template-columns: 1fr; } }
+        
         .form-group { display: flex; flex-direction: column; gap: 8px; }
         .form-group label { font-size: 14px; font-weight: 800; color: var(--dark); }
         .form-group input { padding: 12px; border-radius: 8px; border: 2px solid #cbd5e1; font-size: 15px; font-weight: 700; outline: none; transition: 0.2s; }
@@ -336,6 +339,27 @@
                         <div class="form-group"><label>كلمة المرور (Gmail)</label><input type="text" id="set_school_email_pass" placeholder="كلمة المرور"></div>
                     </div>
 
+                    <!-- قسم خطة وتوزيع الفصول والقاعات -->
+                    <div class="info-systems-frame">
+                        <h3 class="frame-title"><i class="fa-solid fa-shapes"></i> خطة الفصول والقاعات الدراسية</h3>
+                        
+                        <div class="account-section-title"><i class="fa-solid fa-children"></i> مرحلة رياض الأطفال</div>
+                        <div class="form-grid" style="margin-bottom: 15px;">
+                            <div class="form-group"><label>عدد قاعات KG1</label><input type="number" min="0" id="set_cls_kg1" placeholder="مثال: 2"></div>
+                            <div class="form-group"><label>عدد قاعات KG2</label><input type="number" min="0" id="set_cls_kg2" placeholder="مثال: 2"></div>
+                        </div>
+
+                        <div class="account-section-title"><i class="fa-solid fa-layer-group"></i> المرحلة الابتدائية (الصفوف من الأول إلى السادس)</div>
+                        <div class="form-grid-4">
+                            <div class="form-group"><label>فصول الصف الأول</label><input type="number" min="0" id="set_cls_g1" placeholder="الصف 1"></div>
+                            <div class="form-group"><label>فصول الصف الثاني</label><input type="number" min="0" id="set_cls_g2" placeholder="الصف 2"></div>
+                            <div class="form-group"><label>فصول الصف الثالث</label><input type="number" min="0" id="set_cls_g3" placeholder="الصف 3"></div>
+                            <div class="form-group"><label>فصول الصف الرابع</label><input type="number" min="0" id="set_cls_g4" placeholder="الصف 4"></div>
+                            <div class="form-group"><label>فصول الصف الخامس</label><input type="number" min="0" id="set_cls_g5" placeholder="الصف 5"></div>
+                            <div class="form-group"><label>فصول الصف السادس</label><input type="number" min="0" id="set_cls_g6" placeholder="الصف 6"></div>
+                        </div>
+                    </div>
+
                     <div class="info-systems-frame">
                         <h3 class="frame-title"><i class="fa-solid fa-server"></i> حسابات نظم المعلومات</h3>
                         
@@ -495,6 +519,16 @@
                     document.getElementById("set_sys_school_pass").value = data.sys_school_pass || "";
                     document.getElementById("set_sys_kg_email").value = data.sys_kg_email || "";
                     document.getElementById("set_sys_kg_pass").value = data.sys_kg_pass || "";
+
+                    // جلب عدد القاعات والفصول الدراسية
+                    document.getElementById("set_cls_kg1").value = data.cls_kg1 || "";
+                    document.getElementById("set_cls_kg2").value = data.cls_kg2 || "";
+                    document.getElementById("set_cls_g1").value = data.cls_g1 || "";
+                    document.getElementById("set_cls_g2").value = data.cls_g2 || "";
+                    document.getElementById("set_cls_g3").value = data.cls_g3 || "";
+                    document.getElementById("set_cls_g4").value = data.cls_g4 || "";
+                    document.getElementById("set_cls_g5").value = data.cls_g5 || "";
+                    document.getElementById("set_cls_g6").value = data.cls_g6 || "";
                 }
             } catch(e) { console.log("لا توجد بيانات سابقة."); }
         }
@@ -519,7 +553,17 @@
                 sys_school_email: document.getElementById("set_sys_school_email").value,
                 sys_school_pass: document.getElementById("set_sys_school_pass").value,
                 sys_kg_email: document.getElementById("set_sys_kg_email").value,
-                sys_kg_pass: document.getElementById("set_sys_kg_pass").value
+                sys_kg_pass: document.getElementById("set_sys_kg_pass").value,
+
+                // حفظ أعداد القاعات والفصول الدراسية
+                cls_kg1: document.getElementById("set_cls_kg1").value,
+                cls_kg2: document.getElementById("set_cls_kg2").value,
+                cls_g1: document.getElementById("set_cls_g1").value,
+                cls_g2: document.getElementById("set_cls_g2").value,
+                cls_g3: document.getElementById("set_cls_g3").value,
+                cls_g4: document.getElementById("set_cls_g4").value,
+                cls_g5: document.getElementById("set_cls_g5").value,
+                cls_g6: document.getElementById("set_cls_g6").value
             };
 
             try {
@@ -531,7 +575,7 @@
                 
                 if (error) throw error;
                 
-                alert("✅ تم حفظ بيانات المدرسة بنجاح!");
+                alert("✅ تم حفظ بيانات المدرسة والفصول بنجاح!");
                 document.getElementById('settingsModal').classList.remove('active');
             } catch(e) {
                 alert("❌ خطأ في الحفظ: " + e.message);
