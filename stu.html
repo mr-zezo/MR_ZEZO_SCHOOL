@@ -18,6 +18,7 @@
         :root {
             --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; 
             --save-btn: #4f46e5; --danger: #be123c; --warning: #d97706; --info: #0284c7;
+            --success: #16a34a;
         }
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
         body { background-color: var(--bg); padding: 20px; display: flex; flex-direction: column; align-items: center; }
@@ -65,17 +66,27 @@
 
         .readonly-field { background-color: #e2e8f0; color: var(--primary); font-weight: 800; pointer-events: none;}
         
-        .actions-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
-        .btn { border: none; padding: 12px; font-size: 14px; border-radius: 6px; cursor: pointer; font-weight: 900; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+        .actions-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 20px; }
+        .btn { border: none; padding: 12px 8px; font-size: 13px; border-radius: 6px; cursor: pointer; font-weight: 900; color: white; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
         .btn-add { background-color: var(--save-btn); }
         .btn-edit { background-color: var(--warning); }
         .btn-delete { background-color: var(--danger); }
         .btn-absence { background-color: var(--dark); }
+        .btn-density-main { background-color: #0d9488; }
         .btn:hover { opacity: 0.9; transform: translateY(-2px); }
 
+        /* زر الكثافة السريع */
+        .btn-density-quick {
+            background: #0d9488; color: white; border: none; border-radius: 6px;
+            padding: 3px 8px; font-size: 11px; font-weight: 800; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 4px; transition: 0.2s;
+        }
+        .btn-density-quick:hover { background: #0f766e; }
+
+        /* النوافذ المنبثقة */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 700px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
+        .modal-content { background: white; width: 100%; max-width: 750px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
         
         .modal-header { background: var(--dark); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--danger); }
         .modal-header-titles h2 { font-size: 16px; font-weight: 900; margin: 0; color: #fcd34d; border:none; padding:0; display:flex; gap:8px;}
@@ -84,9 +95,9 @@
         .modal-body { padding: 20px; background: #fff; overflow-y:auto; max-height: 80vh; }
         
         .abs-stats { display: flex; gap: 15px; margin-bottom: 20px; }
-        .abs-card { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 10px; text-align: center; }
+        .abs-card { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 10px; text-align: center; }
         .abs-card h4 { font-size: 13px; color: #64748b; margin-bottom: 5px; font-weight:800; }
-        .abs-card h2 { font-size: 22px; font-weight: 900; direction: ltr; }
+        .abs-card h2 { font-size: 22px; font-weight: 900; }
         .abs-danger { color: var(--danger); } .abs-safe { color: #16a34a; }
 
         .abs-list { max-height: 300px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px; }
@@ -94,9 +105,23 @@
         .abs-item:last-child { border: none; }
         .abs-item span:last-child { color: var(--danger); font-weight: 900; }
 
+        /* جدول الكثافة */
+        .density-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .density-table th, .density-table td { padding: 12px 10px; text-align: center; border-bottom: 1px solid #e2e8f0; font-weight: 800; font-size: 14px; }
+        .density-table th { background: #f1f5f9; color: var(--dark); font-size: 13px; font-weight: 900; }
+        .density-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-weight: 900; font-size: 13px; }
+        .density-high { background: #fee2e2; color: #b91c1c; }
+        .density-normal { background: #dcfce7; color: #15803d; }
+
         #status-msg { display: none; padding: 10px; border-radius: 6px; margin-top: 10px; text-align: center; font-weight: 800; font-size: 14px; }
-        
         .watermark-form { display: none; text-align: center; font-size: 13px; font-weight: 900; color: #64748b; margin-top: 15px; border-top: 2px dashed #cbd5e1; padding-top: 10px; }
+
+        .auto-assigned {
+            background-color: #ecfdf5 !important;
+            border-color: #10b981 !important;
+            color: #047857 !important;
+            font-weight: 900 !important;
+        }
 
         @media (max-width: 768px) {
             .nav-right-col { align-items: center; width: 100%; }
@@ -112,7 +137,6 @@
 <body>
 
     <nav class="top-navigation hide-in-shot">
-        <!-- التعديل الجديد: قائمة الانتقال أسفل اسم المدرسة -->
         <div class="nav-right-col">
             <div class="nav-title"><i class="fa-solid fa-school"></i> مدرسة الشهيد أشرف حبيب</div>
             <select class="quick-nav-select" onchange="if(this.value) window.location.href=this.value;">
@@ -149,21 +173,36 @@
             <div class="grid-2" style="margin-bottom: 0;">
                 <div>
                     <label>الصف الدراسي</label>
-                    <select id="grade_level">
+                    <select id="grade_level" onchange="onGradeChange()">
                         <option value="KG1">KG1</option><option value="KG2">KG2</option>
                         <option value="الأول">الأول</option><option value="الثاني">الثاني</option>
                         <option value="الثالث">الثالث</option><option value="الرابع">الرابع</option>
                         <option value="الخامس">الخامس</option><option value="السادس">السادس</option>
                     </select>
                 </div>
-                <div><label>الفصل</label><input type="text" id="class_name" placeholder="مثال: 1/2"></div>
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                        <label style="margin:0;">الفصل</label>
+                        <!-- زر الكثافة السريع -->
+                        <button type="button" onclick="showClassDensityModal()" class="btn-density-quick" title="عرض كثافة فصول الصف المختار">
+                            <i class="fa-solid fa-chart-pie"></i> كثافة الصف
+                        </button>
+                    </div>
+                    <!-- قائمة الفصول الديناميكية -->
+                    <select id="class_name">
+                        <option value="" disabled selected>-- اختر الفصل --</option>
+                    </select>
+                </div>
             </div>
         </div>
 
         <div class="grid-3">
             <div><label>كود التلميذ (إلزامي)</label><input type="text" id="student_code" placeholder="رقم الكود..."></div>
             <div><label>الرقم القومي</label><input type="text" id="national_id" maxlength="14" oninput="extractDataFromNID()"></div>
-            <div><label>رقم السجل (m)</label><input type="text" id="register_num"></div>
+            <div>
+                <label>رقم السجل (m)</label>
+                <input type="text" id="register_num" placeholder="توليد تلقائي">
+            </div>
         </div>
 
         <div class="grid-3">
@@ -201,6 +240,7 @@
             <button class="btn btn-edit" onclick="updateExisting()"><i class="fa-solid fa-pen-to-square"></i> تعديل</button>
             <button class="btn btn-delete" onclick="safeDelete()"><i class="fa-solid fa-trash"></i> حذف</button>
             <button class="btn btn-absence" onclick="showAbsenceRecord()"><i class="fa-solid fa-calendar-xmark"></i> عرض الغياب</button>
+            <button class="btn btn-density-main" onclick="showClassDensityModal()"><i class="fa-solid fa-chart-simple"></i> كثافة الصف</button>
         </div>
         
         <div class="watermark-form show-in-shot" id="card-watermark"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
@@ -208,7 +248,7 @@
         <div id="status-msg" class="hide-in-shot"></div>
     </div>
 
-    <!-- نافذة سجل الغياب -->
+    <!-- ================= نافذة سجل الغياب ================= -->
     <div class="modal-overlay" id="absModal">
         <div class="modal-content" id="capture-abs">
             <div class="modal-header">
@@ -233,6 +273,41 @@
         </div>
     </div>
 
+    <!-- ================= نافذة كثافة وإحصاء الفصول الجديدة ================= -->
+    <div class="modal-overlay" id="densityModal">
+        <div class="modal-content" id="capture-density" style="max-width: 800px;">
+            <div class="modal-header" style="background: #0f766e; border-bottom-color: #115e59;">
+                <div class="modal-header-titles">
+                    <h2><i class="fa-solid fa-chart-pie"></i> كثافة وإحصاء فصول: <span id="density-grade-title" style="color:#fcd34d;"></span></h2>
+                    <div class="watermark-text show-in-shot" style="display:none;"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
+                </div>
+                <div class="hide-in-shot" style="display: flex; gap: 15px; align-items: center;">
+                    <button onclick="takeScreenshot('capture-density')" class="btn-nav btn-screenshot" style="margin:0;"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
+                    <button onclick="document.getElementById('densityModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:28px; cursor:pointer; line-height:1;">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- بطاقات إحصائيات سريعة لكثافة الصف -->
+                <div class="abs-stats">
+                    <div class="abs-card"><h4>إجمالي تلاميذ الصف</h4><h2 id="density-total-stu" style="color:var(--primary)">٠</h2></div>
+                    <div class="abs-card"><h4>عدد البنين</h4><h2 id="density-total-boys" style="color:#0284c7">٠</h2></div>
+                    <div class="abs-card"><h4>عدد البنات</h4><h2 id="density-total-girls" style="color:#e11d48">٠</h2></div>
+                    <div class="abs-card"><h4>متوسط كثافة الفصل</h4><h2 id="density-avg" style="color:#0d9488">٠</h2></div>
+                </div>
+
+                <h4 style="margin-bottom:10px; color:var(--dark); border-bottom:2px solid #eee; padding-bottom:5px; font-weight:900;">
+                    <i class="fa-solid fa-list-ol"></i> توزيع الكثافة حسب فصول الصف:
+                </h4>
+
+                <div id="density-table-container">
+                    <div style="text-align:center; padding:20px; color:#64748b; font-weight:bold;">
+                        <i class="fa-solid fa-spinner fa-spin"></i> جاري استخراج وحساب الكثافة...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // إعدادات Supabase
         const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
@@ -243,10 +318,12 @@
         const arabicWeeks = ["الأول","الثاني","الثالث","الرابع","الخامس","السادس","السابع","الثامن","التاسع","العاشر","الحادي عشر","الثاني عشر","الثالث عشر","الرابع عشر","الخامس عشر","السادس عشر","السابع عشر","الثامن عشر","التاسع عشر","العشرون","الحادي والعشرون","الثاني والعشرون","الثالث والعشرون","الرابع والعشرون","الخامس والعشرون","السادس والعشرون","السابع والعشرون","الثامن والعشرون","التاسع والعشرون","الثلاثون"];
 
         let currentStudentData = null;
+        let schoolInfoData = {};
+        let isExistingStudent = false;
 
         function toArabicNum(num) {
             if(num === 0) return "٠";
-            if(!num) return "-";
+            if(!num) return "٠";
             return String(num).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
         }
 
@@ -263,6 +340,9 @@
             } else if (targetId === 'capture-abs') {
                 let sName = document.getElementById('abs-student-name').innerText.trim();
                 fileName = sName ? `غياب_${sName}` : 'سجل_غياب';
+            } else if (targetId === 'capture-density') {
+                let gName = document.getElementById('grade_level').value;
+                fileName = `كثافة_فصول_الصف_${gName}`;
             }
 
             hiddenElements.forEach(el => el.style.display = 'none');
@@ -297,13 +377,231 @@
             });
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
+            await fetchSchoolInfo();
+            updateClassDropdown();
+
             const incomingId = new URLSearchParams(window.location.search).get('id');
             if (incomingId) { fetchStudentByCode(incomingId); }
         });
 
+        // ================= جلب بيانات فصول المدرسة =================
+        async function fetchSchoolInfo() {
+            try {
+                const { data: doc } = await supabaseClient
+                    .from("system_capsules")
+                    .select("data")
+                    .eq("id", "school_info")
+                    .maybeSingle();
+
+                if (doc && doc.data) {
+                    schoolInfoData = doc.data;
+                }
+            } catch(e) {
+                console.log("خطأ في جلب بيانات المدرسة:", e);
+            }
+        }
+
+        // ================= تحديث قائمة الفصول ديناميكياً =================
+        function updateClassDropdown(selectedClass = null) {
+            const grade = document.getElementById("grade_level").value;
+            const classSelect = document.getElementById("class_name");
+            classSelect.innerHTML = '<option value="" disabled selected>-- اختر الفصل --</option>';
+
+            let count = 0;
+            let gradeCode = "";
+
+            if (grade === "KG1") { count = parseInt(schoolInfoData.cls_kg1) || 2; gradeCode = "KG1"; }
+            else if (grade === "KG2") { count = parseInt(schoolInfoData.cls_kg2) || 2; gradeCode = "KG2"; }
+            else if (grade === "الأول") { count = parseInt(schoolInfoData.cls_g1) || 6; gradeCode = "1"; }
+            else if (grade === "الثاني") { count = parseInt(schoolInfoData.cls_g2) || 6; gradeCode = "2"; }
+            else if (grade === "الثالث") { count = parseInt(schoolInfoData.cls_g3) || 6; gradeCode = "3"; }
+            else if (grade === "الرابع") { count = parseInt(schoolInfoData.cls_g4) || 6; gradeCode = "4"; }
+            else if (grade === "الخامس") { count = parseInt(schoolInfoData.cls_g5) || 6; gradeCode = "5"; }
+            else if (grade === "السادس") { count = parseInt(schoolInfoData.cls_g6) || 6; gradeCode = "6"; }
+
+            for (let i = 1; i <= count; i++) {
+                const classVal = `${i}/${gradeCode}`;
+                const opt = document.createElement("option");
+                opt.value = classVal;
+                opt.textContent = classVal;
+                if (selectedClass && selectedClass === classVal) {
+                    opt.selected = true;
+                }
+                classSelect.appendChild(opt);
+            }
+
+            if (selectedClass && !Array.from(classSelect.options).some(o => o.value === selectedClass)) {
+                const opt = document.createElement("option");
+                opt.value = selectedClass;
+                opt.textContent = selectedClass;
+                opt.selected = true;
+                classSelect.appendChild(opt);
+            }
+        }
+
+        function onGradeChange() {
+            updateClassDropdown();
+            if (!isExistingStudent) {
+                calculateNextRegisterNumber();
+            }
+        }
+
+        // ================= توليد رقم السجل التلقائي والذكي =================
+        async function calculateNextRegisterNumber() {
+            const grade = document.getElementById("grade_level").value;
+            const gender = document.getElementById("gender").value;
+
+            if (!grade || !gender) return;
+
+            const isMale = (gender === "ذكر");
+            const minRange = isMale ? 1 : 201;
+            const maxRange = isMale ? 200 : 400;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('students')
+                    .select('register_num')
+                    .eq('grade', grade)
+                    .eq('gender', gender);
+
+                if (error) throw error;
+
+                let highestNum = 0;
+                if (data && data.length > 0) {
+                    data.forEach(st => {
+                        const num = parseInt(st.register_num);
+                        if (!isNaN(num) && num >= minRange && num <= maxRange) {
+                            if (num > highestNum) highestNum = num;
+                        }
+                    });
+                }
+
+                let nextNum = (highestNum === 0) ? minRange : (highestNum + 1);
+
+                if (nextNum > maxRange) {
+                    alert(`⚠️ تحذير: تجاوز رقم السجل الحد الأقصى المخصص (${maxRange}) لهذا النوع في الصف ${grade}!`);
+                }
+
+                const regInput = document.getElementById("register_num");
+                regInput.value = nextNum;
+                regInput.classList.add("auto-assigned");
+                setTimeout(() => regInput.classList.remove("auto-assigned"), 2000);
+
+            } catch (err) {
+                console.error("خطأ في حساب رقم السجل التلقائي:", err);
+            }
+        }
+
+        // ================= دالة عرض كثافة فصول الصف =================
+        async function showClassDensityModal() {
+            const selectedGrade = document.getElementById("grade_level").value;
+            document.getElementById("density-grade-title").innerText = "الصف " + selectedGrade;
+            
+            const container = document.getElementById("density-table-container");
+            container.innerHTML = `<div style="text-align:center; padding:25px; color:#64748b; font-weight:bold;"><i class="fa-solid fa-spinner fa-spin"></i> جاري استخراج وحساب كثافة فصول الصف ${selectedGrade}...</div>`;
+
+            document.getElementById("densityModal").classList.add("active");
+
+            try {
+                // جلب جميع تلاميذ الصف المحدد
+                const { data: students, error } = await supabaseClient
+                    .from('students')
+                    .select('class, gender')
+                    .eq('grade', selectedGrade);
+
+                if (error) throw error;
+
+                // استخراج الفصول المعرفة لهذا الصف
+                let count = 0;
+                let gradeCode = "";
+                if (selectedGrade === "KG1") { count = parseInt(schoolInfoData.cls_kg1) || 2; gradeCode = "KG1"; }
+                else if (selectedGrade === "KG2") { count = parseInt(schoolInfoData.cls_kg2) || 2; gradeCode = "KG2"; }
+                else if (selectedGrade === "الأول") { count = parseInt(schoolInfoData.cls_g1) || 6; gradeCode = "1"; }
+                else if (selectedGrade === "الثاني") { count = parseInt(schoolInfoData.cls_g2) || 6; gradeCode = "2"; }
+                else if (selectedGrade === "الثالث") { count = parseInt(schoolInfoData.cls_g3) || 6; gradeCode = "3"; }
+                else if (selectedGrade === "الرابع") { count = parseInt(schoolInfoData.cls_g4) || 6; gradeCode = "4"; }
+                else if (selectedGrade === "الخامس") { count = parseInt(schoolInfoData.cls_g5) || 6; gradeCode = "5"; }
+                else if (selectedGrade === "السادس") { count = parseInt(schoolInfoData.cls_g6) || 6; gradeCode = "6"; }
+
+                const classStats = {};
+                for (let i = 1; i <= count; i++) {
+                    const cVal = `${i}/${gradeCode}`;
+                    classStats[cVal] = { boys: 0, girls: 0, total: 0 };
+                }
+
+                let totalGradeStu = 0;
+                let totalBoys = 0;
+                let totalGirls = 0;
+
+                (students || []).forEach(st => {
+                    const cName = st.class || "غير محدد";
+                    if (!classStats[cName]) {
+                        classStats[cName] = { boys: 0, girls: 0, total: 0 };
+                    }
+                    if (st.gender === "ذكر") {
+                        classStats[cName].boys++;
+                        totalBoys++;
+                    } else {
+                        classStats[cName].girls++;
+                        totalGirls++;
+                    }
+                    classStats[cName].total++;
+                    totalGradeStu++;
+                });
+
+                const numClasses = Object.keys(classStats).length || 1;
+                const avgDensity = Math.round(totalGradeStu / numClasses);
+
+                // تعبئة بطاقات الملخص
+                document.getElementById("density-total-stu").innerText = toArabicNum(totalGradeStu);
+                document.getElementById("density-total-boys").innerText = toArabicNum(totalBoys);
+                document.getElementById("density-total-girls").innerText = toArabicNum(totalGirls);
+                document.getElementById("density-avg").innerText = toArabicNum(avgDensity);
+
+                // بناء جدول الكثافة
+                let tableHtml = `
+                    <table class="density-table">
+                        <thead>
+                            <tr>
+                                <th>الفصل الدراسي</th>
+                                <th>بنين (ذكور)</th>
+                                <th>بنات (إناث)</th>
+                                <th>إجمالي الكثافة</th>
+                                <th>الحالة والتقييم</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                for (const [cName, stats] of Object.entries(classStats)) {
+                    const isHigh = stats.total > 45;
+                    tableHtml += `
+                        <tr>
+                            <td style="font-weight:900; color:var(--primary); font-size:15px;"><i class="fa-solid fa-door-open" style="margin-left:6px; color:#64748b;"></i> فصل ${cName}</td>
+                            <td style="color:#0284c7;">${toArabicNum(stats.boys)}</td>
+                            <td style="color:#e11d48;">${toArabicNum(stats.girls)}</td>
+                            <td style="font-size:16px; font-weight:900;">${toArabicNum(stats.total)}</td>
+                            <td>
+                                <span class="density-badge ${isHigh ? 'density-high' : 'density-normal'}">
+                                    ${stats.total === 0 ? 'فارغ' : (isHigh ? 'كثافة مرتفعة' : 'كثافة معتدلة')}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                }
+
+                tableHtml += `</tbody></table>`;
+                container.innerHTML = tableHtml;
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `<div style="text-align:center; padding:20px; color:red; font-weight:bold;">حدث خطأ في جلب بيانات الكثافة.</div>`;
+            }
+        }
+
         // ================= الجلب والتحديث عبر Supabase =================
-      async function smartSearchByName(val) {
+        async function smartSearchByName(val) {
             const resBox = document.getElementById("search-results");
             const cleanVal = val.trim();
             if (cleanVal.length < 1) { resBox.style.display = "none"; return; }
@@ -343,13 +641,17 @@
         }
 
         function populateCard(code, data) {
+            isExistingStudent = true;
             currentStudentData = data;
+            
             document.getElementById("student_name").value = data.name || "";
             document.getElementById("student_code").value = code;
             document.getElementById("national_id").value = data.nid || "";
             document.getElementById("register_num").value = data.register_num || "";
             document.getElementById("grade_level").value = data.grade || "الأول";
-            document.getElementById("class_name").value = data.class || "";
+            
+            updateClassDropdown(data.class);
+
             document.getElementById("status").value = data.status || "منقول";
             document.getElementById("religion").value = data.religion || "مسلم";
             document.getElementById("father_mobile").value = data.father_mobile || "";
@@ -358,7 +660,7 @@
             document.getElementById("social_status").value = data.social_status || "";
             
             document.getElementById("search-results").style.display = "none";
-            extractDataFromNID();
+            extractDataFromNID(false);
             showStatus("✅ تم جلب بيانات التلميذ بنجاح", "success");
         }
 
@@ -409,13 +711,21 @@
             document.getElementById("absModal").classList.add("active");
         }
 
-        function saveNew() { processSave("تم الحفظ بنجاح"); }
-        function updateExisting() { if(confirm("تأكيد التعديل؟")) processSave("تم التعديل بنجاح"); }
+        function saveNew() { 
+            isExistingStudent = false;
+            processSave("تم الحفظ بنجاح"); 
+        }
+        function updateExisting() { 
+            if(confirm("تأكيد التعديل؟")) processSave("تم التعديل بنجاح"); 
+        }
 
         async function processSave(msgText) {
             const code = document.getElementById("student_code").value;
             const name = document.getElementById("student_name").value;
+            const className = document.getElementById("class_name").value;
+
             if (!code || !name) { alert("الكود والاسم مطلوبان!"); return; }
+            if (!className) { alert("يرجى اختيار الفصل الدراسي!"); return; }
             
             const dataToSave = {
                 code: code, 
@@ -426,7 +736,7 @@
                 gender: document.getElementById("gender").value,
                 age_october: document.getElementById("age_october").value,
                 grade: document.getElementById("grade_level").value, 
-                class: document.getElementById("class_name").value,
+                class: className,
                 status: document.getElementById("status").value, 
                 religion: document.getElementById("religion").value,
                 father_mobile: document.getElementById("father_mobile").value, 
@@ -474,13 +784,20 @@
             } else { alert("كلمة مرور خاطئة"); }
         }
 
-        function extractDataFromNID() {
-            let nid = document.getElementById("national_id").value;
+        function extractDataFromNID(shouldRecalculateRegister = true) {
+            let nid = document.getElementById("national_id").value.trim();
             if (nid.length === 14) {
                 let year = (nid.charAt(0) === '3' ? '20' : '19') + nid.substring(1, 3);
                 document.getElementById("dob").value = `${year}-${nid.substring(3,5)}-${nid.substring(5,7)}`;
-                document.getElementById("gender").value = (parseInt(nid.charAt(12)) % 2 === 0) ? "أنثى" : "ذكر";
+                
+                const gender = (parseInt(nid.charAt(12)) % 2 === 0) ? "أنثى" : "ذكر";
+                document.getElementById("gender").value = gender;
+                
                 calculateAgeOnOct1(year, nid.substring(3,5), nid.substring(5,7));
+
+                if (shouldRecalculateRegister && !isExistingStudent) {
+                    calculateNextRegisterNumber();
+                }
             }
         }
 
@@ -503,7 +820,11 @@
             msg.innerHTML = text;
         }
 
-        document.addEventListener("click", (e) => { if (!e.target.closest(".search-container")) document.getElementById("search-results").style.display = "none"; });
+        document.addEventListener("click", (e) => { 
+            if (!e.target.closest(".search-container")) {
+                document.getElementById("search-results").style.display = "none"; 
+            }
+        });
     </script>
 </body>
 </html>
