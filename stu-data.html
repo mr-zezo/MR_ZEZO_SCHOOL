@@ -208,11 +208,6 @@
     <div class="zizo-signature">إعداد مستر زيزو</div>
 
     <script>
-        // إعدادات Supabase
-        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
         const stdGrades = ["KG1", "KG2", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
 
         // تحديث مؤشر الاتصال
@@ -297,8 +292,8 @@
                 // جلب كل التلاميذ من المحرك (سحابي أو محلي تلقائياً)
                 const allData = await ZezoDB.getAll('students');
                 
-                // فلترة الصف المطلوب
-                let data = allData.filter(student => student.grade === g);
+                // فلترة الصف المطلوب (مع استخدام trim لتجاهل المسافات الزائدة)
+                let data = allData.filter(student => (student.grade || "").trim() === g.trim());
 
                 if (!data || data.length === 0) {
                     tbody.innerHTML = `<tr><td colspan='15' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة لهذا الصف (${g}). يمكنك استيراد ملف إكسيل.</td></tr>`;
@@ -575,7 +570,7 @@
                 try {
                     if (isReplace) {
                         const allStudents = await ZezoDB.getAll("students");
-                        const existingCodes = allStudents.filter(d => d.grade === g).map(d => d.code);
+                        const existingCodes = allStudents.filter(d => (d.grade || "").trim() === g.trim()).map(d => d.code);
                         const codesToDelete = existingCodes.filter(c => !currentCodesInTable.includes(c));
 
                         for (let code of codesToDelete) {
