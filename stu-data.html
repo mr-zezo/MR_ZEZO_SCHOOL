@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- مكتبات Supabase و Excel -->
+    <!-- مكتبات Supabase و Excel ومحرك ZezoDB -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="zezo-db.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -100,6 +100,7 @@
  <nav class="top-navigation" style="display: flex; justify-content: space-between; align-items: center; min-height: 80px; padding: 0 20px; background-color: #081f36;">
     <div class="nav-title">
         <i class="fa-solid fa-database"></i> مركز إدارة البيانات المجمعة لشئون التلاميذ
+        <span id="mode-badge" style="font-size: 11px; margin-right: 10px; padding: 3px 8px; border-radius: 5px; background: #10b981; color: white;">جاري الفحص...</span>
     </div>
 
     <div class="nav-middle" style="font-weight: bold; font-size: 24px; color: #b8b6b6;">
@@ -134,7 +135,7 @@
             <input type="file" id="file-input" accept=".xlsx, .xls" onchange="handleFile(event)">
             <button class="btn btn-import" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-file-import"></i> إكسيل</button>
             <button class="btn btn-excel" onclick="customExportToExcel()"><i class="fa-solid fa-file-excel"></i> تصدير</button>
-            <button class="btn btn-save" onclick="saveAllToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ</button>
+            <button class="btn btn-save" onclick="saveAllToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ البيانات</button>
         </div>
     </div>
 
@@ -214,40 +215,25 @@
 
         const stdGrades = ["KG1", "KG2", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
 
+        // تحديث مؤشر الاتصال
+        window.addEventListener('DOMContentLoaded', () => {
+            const mode = ZezoDB.getMode();
+            const badge = document.getElementById('mode-badge');
+            if (mode === 'offline') {
+                badge.style.background = '#f59e0b';
+                badge.innerHTML = '<i class="fa-solid fa-laptop"></i> وضع محلي (بدون نت)';
+            } else {
+                badge.style.background = '#10b981';
+                badge.innerHTML = '<i class="fa-solid fa-cloud"></i> متصل بالسحابة';
+            }
+        });
+
         function sortStudents(arr) {
             return arr.sort((a, b) => {
                 if (a.gender === "ذكر" && b.gender !== "ذكر") return -1;
                 if (a.gender !== "ذكر" && b.gender === "ذكر") return 1;
                 return (a.name || "").localeCompare((b.name || ""), 'ar');
             });
-        }
-
-        // --- دالة مساعدة لجلب كل البيانات متجاوزة حد الـ 1000 سجل ---
-        async function fetchAllStudents(gradeFilter = null) {
-            let allData = [];
-            let start = 0;
-            const step = 1000;
-            let hasMore = true;
-
-            while (hasMore) {
-                let query = supabaseClient.from("students").select("*").range(start, start + step - 1);
-                if (gradeFilter) {
-                    query = query.eq("grade", gradeFilter);
-                }
-                
-                const { data, error } = await query;
-                if (error) throw error;
-                
-                if (data && data.length > 0) {
-                    allData = allData.concat(data);
-                    start += step;
-                }
-                
-                if (!data || data.length < step) {
-                    hasMore = false;
-                }
-            }
-            return allData;
         }
 
         // --- دوال مساعدة لترقية اسم الفصل بذكاء ---
@@ -299,19 +285,23 @@
             return oldClass; 
         }
 
-        // --- 1. جلب البيانات ---
+        // --- 1. جلب البيانات (محدث ليعمل مع ZezoDB) ---
         async function loadFromSupabase() {
             const g = document.getElementById("grade-filter").value;
             if(!g) return;
             const tbody = document.getElementById("table-body");
-            tbody.innerHTML = "<tr><td colspan='15' style='text-align:center; padding:50px;'>⏳ جاري الاتصال بالسحابة وجلب بيانات الصف...</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='15' style='text-align:center; padding:50px;'>⏳ جاري جلب البيانات...</td></tr>";
             document.getElementById("search-student").value = ""; 
             
             try {
-                const data = await fetchAllStudents(g);
+                // جلب كل التلاميذ من المحرك (سحابي أو محلي تلقائياً)
+                const allData = await ZezoDB.getAll('students');
+                
+                // فلترة الصف المطلوب
+                let data = allData.filter(student => student.grade === g);
 
                 if (!data || data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan='15' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة في السحابة لهذا الصف (${g}). يمكنك استيراد ملف إكسيل.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan='15' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة لهذا الصف (${g}). يمكنك استيراد ملف إكسيل.</td></tr>`;
                     return;
                 }
 
@@ -385,13 +375,13 @@
                     arr = sortStudents(arr);
                     document.getElementById("table-body").innerHTML = "";
                     arr.forEach((s, i) => renderRow(s, i + 1));
-                    alert("تم استيراد الملف! يرجى الضغط على (حفظ) لتسجيلهم في السحابة.");
+                    alert("تم استيراد الملف! يرجى الضغط على (حفظ) لتسجيلهم في المنظومة.");
                 } catch(err) { alert("فشل قراءة الملف: " + err.message); }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        // --- 4. رسم الصفوف (مع إصلاح عرض النتيجة) ---
+        // --- 4. رسم الصفوف ---
         function renderRow(d, i) {
             const tr = document.createElement("tr");
             tr.innerHTML = `
@@ -438,7 +428,7 @@
             else alert("جميع التلاميذ الظاهرين محددة نتيجتهم بالفعل!");
         }
 
-        // --- 6. الترحيل الذكي للصف ---
+        // --- 6. الترحيل الذكي للصف (محدث ليعمل مع ZezoDB) ---
         async function promoteStudents() {
             const currentGrade = document.getElementById("grade-filter").value;
             if (!currentGrade) { alert("اختر الصف أولاً من القائمة!"); return; }
@@ -519,14 +509,17 @@
             });
 
             try {
-                const chunkSize = 500;
-                
-                for (let i = 0; i < deleteList.length; i += chunkSize) {
-                    await supabaseClient.from("students").delete().in('code', deleteList.slice(i, i + chunkSize));
+                // الحذف عبر ZezoDB
+                for (let code of deleteList) {
+                    await ZezoDB.delete("students", "code", code);
                 }
                 
-                for (let i = 0; i < upsertList.length; i += chunkSize) {
-                    await supabaseClient.from("students").upsert(upsertList.slice(i, i + chunkSize), { onConflict: 'code' });
+                // التحديث والإضافة عبر ZezoDB
+                if (upsertList.length > 0) {
+                    const chunkSize = 500;
+                    for (let i = 0; i < upsertList.length; i += chunkSize) {
+                        await ZezoDB.upsert("students", upsertList.slice(i, i + chunkSize), 'code');
+                    }
                 }
 
                 if (processCount > 0 || deleteCount > 0) {
@@ -542,7 +535,7 @@
             }
         }
 
-        // --- 7. حفظ السحابة (مع ميزة الاستبدال الكلي) ---
+        // --- 7. حفظ السحابة (محدث ليعمل مع ZezoDB) ---
         async function saveAllToCloud() {
             const g = document.getElementById("grade-filter").value;
             if (!g) { alert("اختر الصف أولاً من القائمة المنسدلة بالأعلى لتحديد أين سيتم حفظ هذه البيانات!"); return; }
@@ -581,31 +574,21 @@
 
                 try {
                     if (isReplace) {
-                        const { data: existingData, error: fetchErr } = await supabaseClient
-                            .from("students")
-                            .select("code")
-                            .eq("grade", g);
-
-                        if (fetchErr) throw fetchErr;
-
-                        const existingCodes = existingData.map(d => d.code);
+                        const allStudents = await ZezoDB.getAll("students");
+                        const existingCodes = allStudents.filter(d => d.grade === g).map(d => d.code);
                         const codesToDelete = existingCodes.filter(c => !currentCodesInTable.includes(c));
 
-                        if (codesToDelete.length > 0) {
-                            const chunkSize = 500;
-                            for (let i = 0; i < codesToDelete.length; i += chunkSize) {
-                                await supabaseClient.from("students").delete().in('code', codesToDelete.slice(i, i + chunkSize));
-                            }
+                        for (let code of codesToDelete) {
+                            await ZezoDB.delete("students", "code", code);
                         }
                     }
 
                     const chunkSize = 500;
                     for (let i = 0; i < studentsToSave.length; i += chunkSize) {
-                        const { error } = await supabaseClient.from("students").upsert(studentsToSave.slice(i, i + chunkSize), { onConflict: 'code' });
-                        if (error) throw error;
+                        await ZezoDB.upsert("students", studentsToSave.slice(i, i + chunkSize), 'code');
                     }
 
-                    alert(`✅ تم حفظ وتحديث بيانات ${studentsToSave.length} تلميذ في السحابة بنجاح!`);
+                    alert(`✅ تم حفظ وتحديث بيانات ${studentsToSave.length} تلميذ بنجاح!`);
                     loadFromSupabase(); 
                 } catch (err) {
                     alert("حدث خطأ أثناء الحفظ: " + err.message);
@@ -724,14 +707,14 @@
             });
         }
 
-        // --- 10. كبسولة الإحصاء (للمدرسة بالكامل) ---
+        // --- 10. كبسولة الإحصاء (محدث ليعمل مع ZezoDB) ---
         async function generateMasterCapsule() {
             const btn = document.querySelector('.btn-golden');
             const oldText = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري فحص السحابة...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الفحص...`;
             
             try {
-                const snap = await fetchAllStudents();
+                const snap = await ZezoDB.getAll('students');
                 
                 if (!snap || snap.length === 0) {
                     alert("⚠️ تنبيه حرج: قاعدة بيانات التلاميذ فارغة!");
@@ -785,11 +768,11 @@
                 grand.cCount = grand.cSet.size; delete grand.cSet;
                 capsule.general["إجمالي"] = grand;
 
-                await supabaseClient.from("system_capsules").upsert({
+                await ZezoDB.upsert("system_capsules", [{
                     id: "stats_2026",
                     data: capsule,
                     updatedat: new Date().toLocaleString('ar-EG')
-                });
+                }], 'id');
                 
                 btn.innerHTML = oldText;
                 alert(`🚀 تم ضغط وحفظ إحصاء (${matchedCount}) تلميذ في الكبسولة بنجاح!`);
