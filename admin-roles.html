@@ -32,11 +32,11 @@
 
             <div class="flex items-center gap-3">
                 <!-- زر كشف الكلمات المحفوظة -->
-                <button type="button" onclick="openVerifyModal()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-xs md:text-sm transition flex items-center gap-2 border border-amber-400 shadow">
-                    <i class="fa-solid fa-key"></i> كشف كلمات المرور المحفوظة
+                <button type="button" onclick="openVerifyModal()" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-xs md:text-sm transition flex items-center gap-2 border border-amber-400 shadow-lg cursor-pointer">
+                    <i class="fa-solid fa-eye text-yellow-300"></i> كشف كلمات المرور المحفوظة
                 </button>
 
-                <a href="index.html" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-lg text-xs md:text-sm transition flex items-center gap-2 border border-blue-700 shadow">
+                <a href="index.html" class="px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-lg text-xs md:text-sm transition flex items-center gap-2 border border-blue-700 shadow">
                     <i class="fa-solid fa-house"></i> الرئيسية
                 </a>
             </div>
@@ -66,8 +66,8 @@
                         <span>مستر زيزو (المدير العام)</span>
                     </div>
                     <div class="md:col-span-5 relative">
-                        <input type="text" id="pass_super_admin" placeholder="أدخل كلمة المرور الجديدة"
-                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-amber-200 focus:outline-none focus:border-amber-400 pr-10">
+                        <input type="password" id="pass_super_admin" placeholder="أدخل كلمة المرور الجديدة"
+                               class="role-pass-input w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-amber-200 focus:outline-none focus:border-amber-400 pr-10">
                         <button type="button" onclick="togglePass('pass_super_admin', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>
@@ -86,8 +86,8 @@
                         <span>شؤون الطلبة والإحصاء</span>
                     </div>
                     <div class="md:col-span-5 relative">
-                        <input type="text" id="pass_student_affairs" placeholder="أدخل كلمة المرور"
-                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400 pr-10">
+                        <input type="password" id="pass_student_affairs" placeholder="أدخل كلمة المرور"
+                               class="role-pass-input w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400 pr-10">
                         <button type="button" onclick="togglePass('pass_student_affairs', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>
@@ -107,7 +107,7 @@
                     </div>
                     <div class="md:col-span-5">
                         <div class="w-full bg-slate-800/60 border border-emerald-500/40 rounded-lg px-3 py-2 text-xs text-emerald-300 font-bold flex items-center gap-2">
-                            <i class="fa-solid fa-lock-open text-emerald-400"></i> دخول مباشر ومجاني (بدون كلمة مرور)
+                            <i class="fa-solid fa-id-card text-emerald-400"></i> دخول بالرقم القومي (بدون كلمة سر)
                         </div>
                     </div>
                     <div class="md:col-span-3 text-xs">
@@ -124,8 +124,8 @@
                         <span>مسؤول الجدول</span>
                     </div>
                     <div class="md:col-span-5 relative">
-                        <input type="text" id="pass_schedule_manager" placeholder="أدخل كلمة المرور"
-                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-400 pr-10">
+                        <input type="password" id="pass_schedule_manager" placeholder="أدخل كلمة المرور"
+                               class="role-pass-input w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-400 pr-10">
                         <button type="button" onclick="togglePass('pass_schedule_manager', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>
@@ -144,8 +144,8 @@
                         <span>المشرف العام</span>
                     </div>
                     <div class="md:col-span-5 relative">
-                        <input type="text" id="pass_general_supervisor" placeholder="أدخل كلمة المرور"
-                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400 pr-10">
+                        <input type="password" id="pass_general_supervisor" placeholder="أدخل كلمة المرور"
+                               class="role-pass-input w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400 pr-10">
                         <button type="button" onclick="togglePass('pass_general_supervisor', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>
@@ -164,8 +164,8 @@
                         <span>زائر</span>
                     </div>
                     <div class="md:col-span-5 relative">
-                        <input type="text" id="pass_visitor" placeholder="أدخل كلمة المرور"
-                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-slate-400 pr-10">
+                        <input type="password" id="pass_visitor" placeholder="أدخل كلمة المرور"
+                               class="role-pass-input w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-slate-400 pr-10">
                         <button type="button" onclick="togglePass('pass_visitor', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>
@@ -185,8 +185,8 @@
                                class="bg-slate-800 border border-slate-600 rounded px-2.5 py-1 text-xs text-indigo-200 font-bold w-36 focus:outline-none focus:border-indigo-400">
                     </div>
                     <div class="md:col-span-5 relative">
-                        <input type="text" id="pass_custom_role" placeholder="كلمة المرور للصلاحية الإضافية"
-                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-400 pr-10">
+                        <input type="password" id="pass_custom_role" placeholder="كلمة المرور للصلاحية الإضافية"
+                               class="role-pass-input w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-400 pr-10">
                         <button type="button" onclick="togglePass('pass_custom_role', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>
@@ -202,12 +202,12 @@
             <!-- زر الحفظ -->
             <div class="p-4 md:p-6 bg-slate-850 border-t border-slate-700 flex flex-wrap justify-between items-center gap-4">
                 <span class="text-xs text-slate-400">
-                    <i class="fa-solid fa-lock text-amber-400 ml-1"></i> يتم تشفير وتأمين البيانات بالسحابة فورياً.
+                    <i class="fa-solid fa-lock text-amber-400 ml-1"></i> يتم حفظ الكلمات مشفرة للتأمين وصريحة للاسترجاع بواسطة المدير.
                 </span>
                 <button type="button" onclick="saveAllRoles()" id="btnSave"
                         class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black rounded-xl shadow-lg shadow-indigo-600/30 transition transform active:scale-95 flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
-                    <span id="btnSaveText">حفظ وتفعيل التعديلات بالسحابة</span>
+                    <span id="btnSaveText">حفظ وتحديث جميع الصلاحيات</span>
                 </button>
             </div>
 
@@ -215,27 +215,28 @@
 
     </div>
 
-    <!-- نافذة الأمان للتحقق من هوية المدير العام لكشف الكلمات -->
-    <div id="verifyModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden justify-center items-center z-50 p-4">
+    <!-- نافذة التحقق لكشف الكلمات -->
+    <div id="verifyModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm hidden justify-center items-center z-50 p-4">
         <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
             <div class="bg-gradient-to-r from-amber-700 to-amber-900 p-4 text-white flex justify-between items-center">
                 <h3 class="font-bold text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield text-yellow-300"></i> التحقق الأمني لكشف كلمات السر
+                    <i class="fa-solid fa-user-shield text-yellow-300 text-lg"></i> التحقق الأمني لكشف كلمات السر
                 </h3>
-                <button onclick="closeVerifyModal()" class="text-white text-xl hover:text-amber-300">&times;</button>
+                <button onclick="closeVerifyModal()" class="text-white text-xl hover:text-amber-300 cursor-pointer">&times;</button>
             </div>
             <div class="p-5 space-y-4">
-                <p class="text-xs text-slate-300">لكشف كلمات المرور المحفوظة، يرجى كتابة **كلمة مرور مستر زيزو (المدير العام)** للتأكيد:</p>
+                <p class="text-xs text-slate-300">أدخل **كلمة مرور مستر زيزو (المدير العام)** للتأكد من هويتك وعرض كافة كلمات المرور:</p>
                 
                 <input type="password" id="adminVerifyPass" placeholder="كلمة مرور المدير العام..." 
-                       class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400">
+                       class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400"
+                       onkeydown="if(event.key === 'Enter') executeRevealPasswords()">
 
-                <div id="verifyAlert" class="hidden text-xs font-bold text-rose-400 p-2 bg-rose-950/40 rounded border border-rose-800"></div>
+                <div id="verifyAlert" class="hidden text-xs font-bold text-rose-400 p-2.5 bg-rose-950/50 rounded-lg border border-rose-800"></div>
 
                 <div class="flex justify-end gap-2 pt-2">
-                    <button onclick="closeVerifyModal()" class="px-4 py-2 bg-slate-700 text-white text-xs font-bold rounded-lg hover:bg-slate-600">إلغاء</button>
-                    <button onclick="executeRevealPasswords()" id="btnReveal" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg shadow">
-                        <i class="fa-solid fa-unlock ml-1"></i> تحقق واكشف الكلمات
+                    <button onclick="closeVerifyModal()" class="px-4 py-2 bg-slate-700 text-white text-xs font-bold rounded-lg hover:bg-slate-600 cursor-pointer">إلغاء</button>
+                    <button onclick="executeRevealPasswords()" id="btnReveal" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg shadow cursor-pointer">
+                        <i class="fa-solid fa-unlock ml-1"></i> تأكيد وكشف الكلمات
                     </button>
                 </div>
             </div>
@@ -247,6 +248,7 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // تشفير SHA-256
         function sha256(ascii) {
             function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }
             var mathPow = Math.pow;
@@ -314,10 +316,10 @@
             const icon = btn.querySelector('i');
             if (input.type === 'password') {
                 input.type = 'text';
-                icon.classList.replace('fa-eye', 'fa-eye-slash');
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
             } else {
                 input.type = 'password';
-                icon.classList.replace('fa-eye-slash', 'fa-eye');
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
             }
         }
 
@@ -331,7 +333,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // فحص الاتصال
+        // فحص الاتصال التلقائي
         window.addEventListener('DOMContentLoaded', async () => {
             const indicator = document.getElementById('connIndicator');
             try {
@@ -357,6 +359,7 @@
             document.getElementById('verifyModal').classList.add('flex');
             document.getElementById('adminVerifyPass').value = '';
             document.getElementById('verifyAlert').classList.add('hidden');
+            document.getElementById('adminVerifyPass').focus();
         }
 
         function closeVerifyModal() {
@@ -370,7 +373,7 @@
             const btn = document.getElementById('btnReveal');
 
             if (!enteredPass) {
-                alertEl.innerText = 'يرجى إدخال كلمة مرور المدير العام أولاً.';
+                alertEl.innerText = 'يرجى كتابة كلمة مرور المدير العام أولاً.';
                 alertEl.classList.remove('hidden');
                 return;
             }
@@ -379,7 +382,7 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...`;
 
             try {
-                // جلب هاش الأدمن من السحابة
+                // جلب كلمة مرور المدير العام للتحقق
                 const { data: adminRole, error } = await sbClient
                     .from('system_roles')
                     .select('*')
@@ -388,23 +391,48 @@
 
                 if (error) throw error;
 
+                // مطابقة الهاش
                 if (sha256(enteredPass) === adminRole.password_hash) {
-                    // كلمة المرور صحيحة -> نجلب كل البيانات ونكشف الكلمات
+                    // جلب جميع الصفوف
                     const { data: allRoles, error: fetchErr } = await sbClient.from('system_roles').select('*');
                     if (fetchErr) throw fetchErr;
 
+                    let revealedCount = 0;
+
                     allRoles.forEach(r => {
-                        const plain = r.plain_password || '';
-                        if (r.role_key === 'super_admin') document.getElementById('pass_super_admin').value = plain;
-                        if (r.role_key === 'student_affairs') document.getElementById('pass_student_affairs').value = plain;
-                        if (r.role_key === 'schedule_manager') document.getElementById('pass_schedule_manager').value = plain;
-                        if (r.role_key === 'general_supervisor') document.getElementById('pass_general_supervisor').value = plain;
-                        if (r.role_key === 'visitor') document.getElementById('pass_visitor').value = plain;
-                        if (r.role_key === 'custom_role') document.getElementById('pass_custom_role').value = plain;
+                        // استرجاع الكلمة من السحابة أو النسخة الاحتياطية
+                        const plain = r.plain_password || localStorage.getItem('zezo_plain_' + r.role_key) || '';
+                        
+                        let targetInput = null;
+                        if (r.role_key === 'super_admin') targetInput = document.getElementById('pass_super_admin');
+                        if (r.role_key === 'student_affairs') targetInput = document.getElementById('pass_student_affairs');
+                        if (r.role_key === 'schedule_manager') targetInput = document.getElementById('pass_schedule_manager');
+                        if (r.role_key === 'general_supervisor') targetInput = document.getElementById('pass_general_supervisor');
+                        if (r.role_key === 'visitor') targetInput = document.getElementById('pass_visitor');
+                        if (r.role_key === 'custom_role') targetInput = document.getElementById('pass_custom_role');
+
+                        if (targetInput) {
+                            targetInput.value = plain;
+                            // تحويل الحقل إلى نص واضح ومقروء فوراً
+                            targetInput.type = 'text';
+                            if (plain) revealedCount++;
+                        }
+                    });
+
+                    // تغيير كل أيقونات العيون لحالة الإظهار
+                    document.querySelectorAll('.role-pass-input').forEach(input => {
+                        const icon = input.parentElement.querySelector('button i');
+                        if (icon) icon.className = 'fa-solid fa-eye';
                     });
 
                     closeVerifyModal();
-                    showAlert(`🎉 تم التحقق بنجاح! تم كشف وعرض كلمات المرور المحفوظة في الحقول.`);
+                    
+                    if (revealedCount > 0) {
+                        showAlert(`🎉 تم التحقق بنجاح! تم كشف وعرض (${revealedCount}) كلمات مرور واضحة في الحقول.`);
+                    } else {
+                        showAlert(`ℹ️ تم التحقق بنجاح، ولكن لم يتم العثور على كلمات سر محفوظة مسبقاً. أدخل الكلمات واضغط حفظ.`, false);
+                    }
+
                 } else {
                     alertEl.innerText = '❌ كلمة مرور المدير العام غير صحيحة!';
                     alertEl.classList.remove('hidden');
@@ -415,7 +443,7 @@
                 alertEl.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-unlock ml-1"></i> تحقق واكشف الكلمات`;
+                btn.innerHTML = `<i class="fa-solid fa-unlock ml-1"></i> تأكيد وكشف الكلمات`;
             }
         }
 
@@ -447,7 +475,7 @@
 
                         let payload = {
                             password_hash: hashed,
-                            plain_password: plainVal, // حفظ الكلمة لتسهيل كشفها للمدير
+                            plain_password: plainVal, // حفظ الكلمة لتسهيل كشفها
                             updated_at: new Date().toISOString()
                         };
 
@@ -464,21 +492,24 @@
                             .eq('role_key', item.key);
 
                         if (error) throw error;
+
+                        // حفظ نسخة احتياطية
+                        localStorage.setItem('zezo_plain_' + item.key, plainVal);
                         savedCount++;
                     }
                 }
 
                 if (savedCount > 0) {
-                    showAlert(`<i class="fa-solid fa-circle-check ml-1"></i> رائع! تم بنجاح تحديث (${savedCount}) كلمات مرور في السحابة.`);
+                    showAlert(`<i class="fa-solid fa-circle-check ml-1"></i> رائع! تم بنجاح تشفير وتحديث (${savedCount}) كلمات مرور في السحابة.`);
                 } else {
-                    showAlert(`<i class="fa-solid fa-circle-info ml-1"></i> أدخل كلمة مرور في أي خانة لحفظها.`, false);
+                    showAlert(`<i class="fa-solid fa-circle-info ml-1"></i> أدخل كلمة مرور في أي خانة أولاً لحفظها.`, false);
                 }
 
             } catch (error) {
                 showAlert(`<i class="fa-solid fa-triangle-exclamation ml-1"></i> حدث خطأ أثناء الحفظ: ${error.message}`, false);
             } finally {
                 btn.disabled = false;
-                btnText.innerHTML = `حفظ وتفعيل التعديلات بالسحابة`;
+                btnText.innerHTML = `حفظ وتحديث جميع الصلاحيات`;
             }
         }
     </script>
