@@ -40,7 +40,7 @@
             </div>
 
             <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                <button type="button" onclick="openVerifyModal()" class="btn-3d px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs md:text-sm flex items-center gap-1.5 shadow">
+                <button type="button" onclick="openVerifyModal()" class="btn-3d px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs md:text-sm flex items-center gap-1.5 shadow cursor-pointer">
                     <i class="fa-solid fa-eye text-yellow-300"></i> كشف كلمات المرور
                 </button>
 
@@ -64,7 +64,7 @@
                 </div>
 
                 <div class="text-xs text-slate-500 font-bold flex items-center gap-1">
-                    <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> آخر تحديث للسجلات: <span id="lblLastActivity" class="text-slate-800 font-black">جاري الفحص...</span>
+                    <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> آخر نشاط ومزامنة: <span id="lblLastActivity" class="text-slate-800 font-black">جاري الفحص...</span>
                 </div>
             </div>
 
@@ -104,7 +104,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
                 <!-- أ) تنزيل نسخة احتياطية للجهاز -->
                 <button type="button" onclick="executeDownloadBackup()" id="btnDownload"
-                        class="btn-3d p-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex flex-col items-center justify-center gap-2 shadow-sm text-center">
+                        class="btn-3d p-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex flex-col items-center justify-center gap-2 shadow-sm text-center cursor-pointer">
                     <i class="fa-solid fa-cloud-arrow-down text-2xl text-emerald-200"></i>
                     <span class="text-sm">1. تنزيل نسخة للسحابة (.json)</span>
                     <span class="text-[11px] text-emerald-100 font-normal">حفظ كامل الجداول في المكان الذي تختاره</span>
@@ -113,7 +113,7 @@
                 <!-- ب) استيراد وتفعيل العمل محلياً بدون نت -->
                 <input type="file" id="fileLocalBackup" accept=".json" class="hidden" onchange="handleImportLocalFile(event)">
                 <button type="button" onclick="document.getElementById('fileLocalBackup').click()" id="btnImportLocal"
-                        class="btn-3d p-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold flex flex-col items-center justify-center gap-2 shadow-sm text-center">
+                        class="btn-3d p-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold flex flex-col items-center justify-center gap-2 shadow-sm text-center cursor-pointer">
                     <i class="fa-solid fa-laptop-file text-2xl text-amber-200"></i>
                     <span class="text-sm">2. استيراد والعمل محلياً بدون نت</span>
                     <span class="text-[11px] text-amber-100 font-normal">تحميل الملف وتشغيل النظام دون اتصال</span>
@@ -121,7 +121,7 @@
 
                 <!-- ج) رفع التعديلات المحلية للسحابة -->
                 <button type="button" onclick="executePushLocalToCloud()" id="btnPushCloud"
-                        class="btn-3d p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex flex-col items-center justify-center gap-2 shadow-sm text-center">
+                        class="btn-3d p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex flex-col items-center justify-center gap-2 shadow-sm text-center cursor-pointer">
                     <i class="fa-solid fa-cloud-arrow-up text-2xl text-blue-200"></i>
                     <span class="text-sm">3. رفع وتحديث السحابة (Sync)</span>
                     <span class="text-[11px] text-blue-100 font-normal">مزامنة التعديلات السحابية بأمان تام</span>
@@ -392,10 +392,10 @@
             return result;
         }
 
-        // ================= محرك الذاكرة المحلية الضخمة (IndexedDB Engine) =================
+        // ================= محرك IndexedDB المحلي =================
         const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
-        const DB_VERSION = 1;
-        const TABLE_NAMES = ['students', 'teachers', 'contract_teachers', 'system_roles', 'system_capsules', 'supervision', 'daily_logs', 'teacher_requests', 'meta_store'];
+        const DB_VERSION = 2;
+        const TABLE_NAMES = ['students', 'teachers', 'contract_teachers', 'system_roles', 'system_capsules', 'supervision', 'daily_logs', 'teacher_requests'];
 
         function openIndexedDB() {
             return new Promise((resolve, reject) => {
@@ -403,9 +403,11 @@
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
                     TABLE_NAMES.forEach(t => {
-                        if (!db.objectStoreNames.contains(t)) {
-                            db.createObjectStore(t, { keyPath: t === 'system_roles' ? 'role_key' : (t === 'students' ? 'code' : 'id'), autoIncrement: (t !== 'students' && t !== 'system_roles' && t !== 'system_capsules') });
+                        if (db.objectStoreNames.contains(t)) {
+                            db.deleteObjectStore(t);
                         }
+                        const key = (t === 'students') ? 'code' : (t === 'system_roles' ? 'role_key' : (t === 'teachers' || t === 'contract_teachers' ? 'nid' : 'id'));
+                        db.createObjectStore(t, { keyPath: key, autoIncrement: (t !== 'students' && t !== 'system_roles' && t !== 'teachers' && t !== 'contract_teachers' && t !== 'system_capsules') });
                     });
                 };
                 request.onsuccess = () => resolve(request.result);
@@ -418,7 +420,7 @@
             return new Promise((resolve, reject) => {
                 const tx = db.transaction(tableName, "readwrite");
                 const store = tx.objectStore(tableName);
-                store.clear(); // تفريغ القديم لاستبداله بالنسخة الأحدث
+                store.clear();
                 records.forEach(r => {
                     if (tableName === 'students' && !r.code) r.code = "TEMP_" + Math.random().toString(36).substr(2, 9);
                     try { store.put(r); } catch(e) { console.warn(e); }
@@ -459,7 +461,6 @@
             }
 
             try {
-                // جلب عدد السجلات الحية من السحابة
                 const [stCount, teCount, supCount, capCount] = await Promise.all([
                     sbClient.from('students').select('id', { count: 'exact', head: true }),
                     sbClient.from('teachers').select('id', { count: 'exact', head: true }),
@@ -546,7 +547,6 @@
                     masterBackup.tables[t.id] = rows;
                     totalCount += rows.length;
                     
-                    // حفظها بالـ IndexedDB أيضاً
                     await saveTableToIndexedDB(t.id, rows);
                 }
 
@@ -597,7 +597,7 @@
             return true;
         }
 
-        // ================= 2. استيراد الملف والعمل محلياً بدون نت =================
+        // ================= 2. استيراد وتفعيل العمل محلياً =================
         async function handleImportLocalFile(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -652,7 +652,7 @@
             reader.readAsText(file);
         }
 
-        // ================= 3. رفع التعديلات المحلية للسحابة (Push & Sync) =================
+        // ================= 3. رفع التعديلات المحلية للسحابة (Push & Sync) المطور والآمن =================
         async function executePushLocalToCloud() {
             if (!confirm("⚠️ هل أنت متأكد من رغبتك في رفع ومزامنة كافة البيانات المحلية وتحديث السحابة (Supabase) الآن؟")) return;
 
@@ -665,10 +665,11 @@
             btn.disabled = true;
             progressBox.classList.remove('hidden');
 
+            // ضبط المفاتيح الأساسية بدقة متناهية مطابقة لـ Supabase
             const tablesToPush = [
                 { id: 'students', label: 'التلاميذ', conflict: 'code' },
-                { id: 'teachers', label: 'المعلمون', conflict: 'nid' },
-                { id: 'contract_teachers', label: 'معلمو الأجر', conflict: 'nid' },
+                { id: 'teachers', label: 'المعلمون الأساسيون', conflict: 'nid' },
+                { id: 'contract_teachers', label: 'معلمو الأجر', conflict: 'nid' }, // ✅ تم التثبيت على nid
                 { id: 'system_roles', label: 'الصلاحيات', conflict: 'role_key' },
                 { id: 'system_capsules', label: 'بيانات المدرسة', conflict: 'id' },
                 { id: 'supervision', label: 'الإشراف', conflict: 'id' },
@@ -686,10 +687,19 @@
                     percentTxt.innerText = `${pct}%`;
                     pBar.style.width = `${pct}%`;
 
-                    const localData = await getTableFromIndexedDB(t.id);
+                    let localData = await getTableFromIndexedDB(t.id);
 
                     if (localData && localData.length > 0) {
-                        // تقسيم البيانات لدفعات 300 سجل لتجنب ثقل الاتصال
+                        // تنظيف البيانات وإزالة أي حقول معرفات وهمية قبل الرفع
+                        localData = localData.map(item => {
+                            const cleanItem = { ...item };
+                            if (t.id === 'contract_teachers' && typeof cleanItem.id === 'number') {
+                                delete cleanItem.id;
+                            }
+                            return cleanItem;
+                        });
+
+                        // تقسيم البيانات لدفعات 300 سجل
                         const chunkSize = 300;
                         for (let j = 0; j < localData.length; j += chunkSize) {
                             const chunk = localData.slice(j, j + chunkSize);
@@ -705,7 +715,7 @@
                 localStorage.setItem('zezo_last_sync_date', nowStr);
 
                 await refreshLiveStats();
-                showAlert(`🚀 تمت المزامنة بنجاح تام! تم تحديث ورفع (${syncedRecords}) سجل إلى السحابة، والمنظومة تعمل الآن في وضع السحابة المباشر.`);
+                showAlert(`🚀 تمت المزامنة بنجاح تام! تم تحديث ورفع (${syncedRecords}) سجل إلى السحابة، والمنظومة متصلة ومحدثة الآن.`);
 
             } catch (err) {
                 showAlert(`❌ حدث خطأ أثناء المزامنة: ${err.message}`, false);
@@ -756,7 +766,6 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...`;
 
             try {
-                // جلب كلمة مرور المدير العام
                 let adminRole = null;
                 const mode = localStorage.getItem('zezo_operating_mode') || 'online';
 
@@ -853,7 +862,6 @@
                             if (cUrl) payload.redirect_url = cUrl;
                         }
 
-                        // حفظ في السحابة
                         await sbClient.from('system_roles').update(payload).eq('role_key', item.key);
                         localStorage.setItem('zezo_plain_' + item.key, plainVal);
                         savedCount++;
