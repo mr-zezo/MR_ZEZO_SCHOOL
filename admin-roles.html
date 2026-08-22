@@ -4,28 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مركز إدارة الصلاحيات والأمان - مستر زيزو</title>
-    <!-- خط Cairo والأيقونات -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- مكتبة Supabase الرسمية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         * { font-family: 'Cairo', sans-serif; }
-        :root {
-            --dark-navy: #081f36;
-            --primary: #1e3a8a;
-        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-3 md:p-6 flex flex-col justify-between">
 
     <div class="max-w-5xl mx-auto w-full space-y-5">
         
-        <!-- الهيدر العلوي مطابق لتصميم مستر زيزو -->
+        <!-- الهيدر -->
         <nav class="bg-[#081f36] border border-slate-700 p-4 rounded-xl shadow-xl flex flex-wrap justify-between items-center gap-4">
             <div class="flex items-center gap-3">
                 <div class="p-2.5 bg-blue-600/30 border border-blue-500 rounded-lg text-yellow-400 text-2xl">
@@ -33,25 +26,26 @@
                 </div>
                 <div>
                     <h1 class="text-lg md:text-xl font-black text-blue-200">مركز إدارة الصلاحيات والأمان للمنظومة</h1>
-                    <p class="text-xs text-slate-400">تشفير كلمات المرور والتحكم في وجهات الدخول لجميع المستخدمين</p>
+                    <p class="text-xs text-slate-400">التحكم في كلمات المرور لكافة مستخدمي المنظومة</p>
                 </div>
             </div>
 
-            <div class="text-slate-300 font-bold text-sm md:text-base hidden sm:block">
-                إعداد / <span class="text-amber-400">مستر زيزو</span>
-            </div>
+            <div class="flex items-center gap-3">
+                <!-- زر كشف الكلمات المحفوظة -->
+                <button type="button" onclick="openVerifyModal()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-xs md:text-sm transition flex items-center gap-2 border border-amber-400 shadow">
+                    <i class="fa-solid fa-key"></i> كشف كلمات المرور المحفوظة
+                </button>
 
-            <div>
-                <a href="index.html" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-lg text-sm transition flex items-center gap-2 border border-blue-700 shadow">
+                <a href="index.html" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-lg text-xs md:text-sm transition flex items-center gap-2 border border-blue-700 shadow">
                     <i class="fa-solid fa-house"></i> الرئيسية
                 </a>
             </div>
         </nav>
 
-        <!-- صندوق حالة الاتصال والتنبيهات -->
+        <!-- صندوق التنبيهات -->
         <div id="alertBox" class="hidden p-4 rounded-xl text-sm font-bold border transition-all duration-300 shadow-lg"></div>
 
-        <!-- الحاوية الرئيسية للصلاحيات -->
+        <!-- الحاوية الرئيسية -->
         <div class="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
             
             <div class="bg-slate-850 p-4 border-b border-slate-700 flex justify-between items-center">
@@ -80,7 +74,7 @@
                     </div>
                     <div class="md:col-span-3 text-xs">
                         <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-md font-bold block text-center">
-                            <i class="fa-solid fa-infinity ml-1"></i> كافة الصلاحيات
+                            كافة الصلاحيات
                         </span>
                     </div>
                 </div>
@@ -106,17 +100,15 @@
                 </div>
 
                 <!-- 3. استعلام معلم -->
-                <div class="p-3.5 bg-slate-900/80 border border-slate-700 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:border-emerald-400 transition">
+                <div class="p-3.5 bg-slate-900/80 border border-emerald-500/30 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-3 items-center bg-emerald-950/20">
                     <div class="md:col-span-4 flex items-center gap-2 font-bold text-emerald-300">
                         <i class="fa-solid fa-chalkboard-user text-emerald-400 text-lg"></i>
                         <span>استعلام معلم</span>
                     </div>
-                    <div class="md:col-span-5 relative">
-                        <input type="text" id="pass_teacher_portal" placeholder="أدخل كلمة المرور"
-                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-400 pr-10">
-                        <button type="button" onclick="togglePass('pass_teacher_portal', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
-                            <i class="fa-solid fa-eye-slash"></i>
-                        </button>
+                    <div class="md:col-span-5">
+                        <div class="w-full bg-slate-800/60 border border-emerald-500/40 rounded-lg px-3 py-2 text-xs text-emerald-300 font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-lock-open text-emerald-400"></i> دخول مباشر ومجاني (بدون كلمة مرور)
+                        </div>
                     </div>
                     <div class="md:col-span-3 text-xs">
                         <span class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2.5 py-1 rounded-md font-bold block text-center">
@@ -210,12 +202,12 @@
             <!-- زر الحفظ -->
             <div class="p-4 md:p-6 bg-slate-850 border-t border-slate-700 flex flex-wrap justify-between items-center gap-4">
                 <span class="text-xs text-slate-400">
-                    <i class="fa-solid fa-lock text-amber-400 ml-1"></i> يتم تشفير الكلمات فورياً عبر خوارزمية SHA-256 قبل الحفظ.
+                    <i class="fa-solid fa-lock text-amber-400 ml-1"></i> يتم تشفير وتأمين البيانات بالسحابة فورياً.
                 </span>
                 <button type="button" onclick="saveAllRoles()" id="btnSave"
                         class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black rounded-xl shadow-lg shadow-indigo-600/30 transition transform active:scale-95 flex items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
-                    <span id="btnSaveText">حفظ وتفعيل جميع الصلاحيات في السحابة</span>
+                    <span id="btnSaveText">حفظ وتفعيل التعديلات بالسحابة</span>
                 </button>
             </div>
 
@@ -223,27 +215,44 @@
 
     </div>
 
-    <!-- توقيع مستر زيزو -->
-    <div class="text-center py-4 text-xs font-bold text-slate-500">
-        جميع الحقوق محفوظة © مدرسة مستر زيزو - MR ZEZO SCHOOL
+    <!-- نافذة الأمان للتحقق من هوية المدير العام لكشف الكلمات -->
+    <div id="verifyModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden justify-center items-center z-50 p-4">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
+            <div class="bg-gradient-to-r from-amber-700 to-amber-900 p-4 text-white flex justify-between items-center">
+                <h3 class="font-bold text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-yellow-300"></i> التحقق الأمني لكشف كلمات السر
+                </h3>
+                <button onclick="closeVerifyModal()" class="text-white text-xl hover:text-amber-300">&times;</button>
+            </div>
+            <div class="p-5 space-y-4">
+                <p class="text-xs text-slate-300">لكشف كلمات المرور المحفوظة، يرجى كتابة **كلمة مرور مستر زيزو (المدير العام)** للتأكيد:</p>
+                
+                <input type="password" id="adminVerifyPass" placeholder="كلمة مرور المدير العام..." 
+                       class="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400">
+
+                <div id="verifyAlert" class="hidden text-xs font-bold text-rose-400 p-2 bg-rose-950/40 rounded border border-rose-800"></div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button onclick="closeVerifyModal()" class="px-4 py-2 bg-slate-700 text-white text-xs font-bold rounded-lg hover:bg-slate-600">إلغاء</button>
+                    <button onclick="executeRevealPasswords()" id="btnReveal" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-lg shadow">
+                        <i class="fa-solid fa-unlock ml-1"></i> تحقق واكشف الكلمات
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // إعدادات Supabase الخاصة بمشروعك
         const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
-        
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // تشفير SHA-256 مستقل يعمل على أي متصفح وسيرفر
         function sha256(ascii) {
             function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }
             var mathPow = Math.pow;
             var maxWord = mathPow(2, 32);
             var lengthProperty = 'length';
-            var i, j;
-            var result = '';
-            var words = [];
+            var i, j, result = '', words = [];
             var asciiBitLength = ascii[lengthProperty] * 8;
             var hash = sha256.h = sha256.h || [];
             var k = sha256.k = sha256.k || [];
@@ -300,7 +309,6 @@
             return result;
         }
 
-        // إظهار وإخفاء كلمات المرور
         function togglePass(inputId, btn) {
             const input = document.getElementById(inputId);
             const icon = btn.querySelector('i');
@@ -313,7 +321,6 @@
             }
         }
 
-        // التنبيهات
         function showAlert(msg, isSuccess = true) {
             const box = document.getElementById('alertBox');
             box.className = isSuccess 
@@ -324,17 +331,15 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // فحص الاتصال التلقائي عند فتح الصفحة
+        // فحص الاتصال
         window.addEventListener('DOMContentLoaded', async () => {
             const indicator = document.getElementById('connIndicator');
             try {
-                const { data, error } = await sbClient.from('system_roles').select('role_key, role_name, redirect_url').limit(10);
+                const { data, error } = await sbClient.from('system_roles').select('*').limit(10);
                 if (error) throw error;
-
                 indicator.className = "text-xs px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full flex items-center gap-1.5 font-bold";
-                indicator.innerHTML = `<i class="fa-solid fa-circle-check"></i> متصل بالسحابة بنجاح`;
+                indicator.innerHTML = `<i class="fa-solid fa-circle-check"></i> متصل بالسحابة`;
 
-                // تعبئة الصلاحية الإضافية إذا كانت محفوظة مسبقاً
                 const custom = data.find(d => d.role_key === 'custom_role');
                 if (custom) {
                     if (custom.role_name) document.getElementById('name_custom_role').value = custom.role_name;
@@ -346,17 +351,84 @@
             }
         });
 
-        // دالة الحفظ والتشفير
+        // ================= كشف واسترجاع الكلمات =================
+        function openVerifyModal() {
+            document.getElementById('verifyModal').classList.remove('hidden');
+            document.getElementById('verifyModal').classList.add('flex');
+            document.getElementById('adminVerifyPass').value = '';
+            document.getElementById('verifyAlert').classList.add('hidden');
+        }
+
+        function closeVerifyModal() {
+            document.getElementById('verifyModal').classList.add('hidden');
+            document.getElementById('verifyModal').classList.remove('flex');
+        }
+
+        async function executeRevealPasswords() {
+            const enteredPass = document.getElementById('adminVerifyPass').value.trim();
+            const alertEl = document.getElementById('verifyAlert');
+            const btn = document.getElementById('btnReveal');
+
+            if (!enteredPass) {
+                alertEl.innerText = 'يرجى إدخال كلمة مرور المدير العام أولاً.';
+                alertEl.classList.remove('hidden');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...`;
+
+            try {
+                // جلب هاش الأدمن من السحابة
+                const { data: adminRole, error } = await sbClient
+                    .from('system_roles')
+                    .select('*')
+                    .eq('role_key', 'super_admin')
+                    .single();
+
+                if (error) throw error;
+
+                if (sha256(enteredPass) === adminRole.password_hash) {
+                    // كلمة المرور صحيحة -> نجلب كل البيانات ونكشف الكلمات
+                    const { data: allRoles, error: fetchErr } = await sbClient.from('system_roles').select('*');
+                    if (fetchErr) throw fetchErr;
+
+                    allRoles.forEach(r => {
+                        const plain = r.plain_password || '';
+                        if (r.role_key === 'super_admin') document.getElementById('pass_super_admin').value = plain;
+                        if (r.role_key === 'student_affairs') document.getElementById('pass_student_affairs').value = plain;
+                        if (r.role_key === 'schedule_manager') document.getElementById('pass_schedule_manager').value = plain;
+                        if (r.role_key === 'general_supervisor') document.getElementById('pass_general_supervisor').value = plain;
+                        if (r.role_key === 'visitor') document.getElementById('pass_visitor').value = plain;
+                        if (r.role_key === 'custom_role') document.getElementById('pass_custom_role').value = plain;
+                    });
+
+                    closeVerifyModal();
+                    showAlert(`🎉 تم التحقق بنجاح! تم كشف وعرض كلمات المرور المحفوظة في الحقول.`);
+                } else {
+                    alertEl.innerText = '❌ كلمة مرور المدير العام غير صحيحة!';
+                    alertEl.classList.remove('hidden');
+                }
+
+            } catch (err) {
+                alertEl.innerText = 'حدث خطأ: ' + err.message;
+                alertEl.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-unlock ml-1"></i> تحقق واكشف الكلمات`;
+            }
+        }
+
+        // ================= حفظ وتحديث الصلاحيات =================
         async function saveAllRoles() {
             const btn = document.getElementById('btnSave');
             const btnText = document.getElementById('btnSaveText');
             btn.disabled = true;
-            btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin ml-2"></i> جاري تشفير وحفظ البيانات بالسحابة...`;
+            btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin ml-2"></i> جاري الحفظ والتأمين...`;
 
             const rolesConfig = [
                 { key: 'super_admin', inputId: 'pass_super_admin' },
                 { key: 'student_affairs', inputId: 'pass_student_affairs' },
-                { key: 'teacher_portal', inputId: 'pass_teacher_portal' },
                 { key: 'schedule_manager', inputId: 'pass_schedule_manager' },
                 { key: 'general_supervisor', inputId: 'pass_general_supervisor' },
                 { key: 'visitor', inputId: 'pass_visitor' },
@@ -375,6 +447,7 @@
 
                         let payload = {
                             password_hash: hashed,
+                            plain_password: plainVal, // حفظ الكلمة لتسهيل كشفها للمدير
                             updated_at: new Date().toISOString()
                         };
 
@@ -396,16 +469,16 @@
                 }
 
                 if (savedCount > 0) {
-                    showAlert(`<i class="fa-solid fa-circle-check ml-1"></i> رائع! تم بنجاح تشفير وتحديث (${savedCount}) كلمات مرور في السحابة.`);
+                    showAlert(`<i class="fa-solid fa-circle-check ml-1"></i> رائع! تم بنجاح تحديث (${savedCount}) كلمات مرور في السحابة.`);
                 } else {
-                    showAlert(`<i class="fa-solid fa-circle-info ml-1"></i> يرجى إدخال كلمة مرور واحدة على الأقل في أي حقل لحفظها.`, false);
+                    showAlert(`<i class="fa-solid fa-circle-info ml-1"></i> أدخل كلمة مرور في أي خانة لحفظها.`, false);
                 }
 
             } catch (error) {
                 showAlert(`<i class="fa-solid fa-triangle-exclamation ml-1"></i> حدث خطأ أثناء الحفظ: ${error.message}`, false);
             } finally {
                 btn.disabled = false;
-                btnText.innerHTML = `حفظ وتفعيل جميع الصلاحيات في السحابة`;
+                btnText.innerHTML = `حفظ وتفعيل التعديلات بالسحابة`;
             }
         }
     </script>
