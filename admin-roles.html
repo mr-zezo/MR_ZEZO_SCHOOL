@@ -16,7 +16,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen p-3 md:p-6 flex flex-col justify-between">
 
-    <div class="max-w-5xl mx-auto w-full space-y-5">
+    <div class="max-w-5xl mx-auto w-full space-y-6">
         
         <!-- الهيدر -->
         <nav class="bg-[#081f36] border border-slate-700 p-4 rounded-xl shadow-xl flex flex-wrap justify-between items-center gap-4">
@@ -26,17 +26,16 @@
                 </div>
                 <div>
                     <h1 class="text-lg md:text-xl font-black text-blue-200">مركز إدارة الصلاحيات والأمان للمنظومة</h1>
-                    <p class="text-xs text-slate-400">التحكم في كلمات المرور لكافة مستخدمي المنظومة</p>
+                    <p class="text-xs text-slate-400">التحكم في كلمات المرور والنسخ الاحتياطي لقاعدة البيانات</p>
                 </div>
             </div>
 
             <div class="flex items-center gap-3">
-                <!-- زر كشف الكلمات المحفوظة -->
-                <button type="button" onclick="openVerifyModal()" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-xs md:text-sm transition flex items-center gap-2 border border-amber-400 shadow-lg cursor-pointer">
+                <button type="button" onclick="openVerifyModal()" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-xs md:text-sm transition flex items-center gap-2 border border-amber-400 shadow-lg cursor-pointer">
                     <i class="fa-solid fa-eye text-yellow-300"></i> كشف كلمات المرور المحفوظة
                 </button>
 
-                <a href="index.html" class="px-4 py-2.5 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-lg text-xs md:text-sm transition flex items-center gap-2 border border-blue-700 shadow">
+                <a href="index.html" class="px-4 py-2 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-lg text-xs md:text-sm transition flex items-center gap-2 border border-blue-700 shadow">
                     <i class="fa-solid fa-house"></i> الرئيسية
                 </a>
             </div>
@@ -45,12 +44,44 @@
         <!-- صندوق التنبيهات -->
         <div id="alertBox" class="hidden p-4 rounded-xl text-sm font-bold border transition-all duration-300 shadow-lg"></div>
 
-        <!-- الحاوية الرئيسية -->
+        <!-- ================= 1. قسم النسخ الاحتياطي الشامل لقاعدة البيانات ================= -->
+        <div class="bg-gradient-to-r from-slate-800 via-slate-800 to-indigo-950 border border-indigo-500/40 rounded-2xl p-5 md:p-6 shadow-2xl">
+            <div class="flex flex-wrap justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-indigo-600/20 border border-indigo-400/30 rounded-xl text-indigo-400 text-2xl">
+                        <i class="fa-solid fa-cloud-arrow-down"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base md:text-lg font-black text-indigo-200">النسخ الاحتياطي الشامل للمنظومة (Full Cloud Backup)</h2>
+                        <p class="text-xs text-slate-400">سحب كافة البيانات (تلاميذ، معلمون، جداول، إحصاءات، صلاحيات) وحفظها على جهازك في المسار الذي تحدده</p>
+                    </div>
+                </div>
+
+                <button type="button" onclick="executeFullCloudBackup()" id="btnBackup"
+                        class="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black rounded-xl shadow-lg shadow-emerald-600/20 transition transform active:scale-95 flex items-center gap-2 text-sm cursor-pointer">
+                    <i class="fa-solid fa-download text-lg"></i>
+                    <span id="btnBackupText">إنشاء وتنزيل النسخة الاحتياطية</span>
+                </button>
+            </div>
+
+            <!-- مؤشر تقدم سحب الجداول -->
+            <div id="backupProgressBox" class="hidden mt-4 pt-4 border-t border-slate-700">
+                <div class="flex justify-between text-xs font-bold text-slate-300 mb-2">
+                    <span id="backupStatusText"><i class="fa-solid fa-spinner fa-spin ml-1 text-emerald-400"></i> جاري الاتصال بالجداول...</span>
+                    <span id="backupPercent">0%</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-2.5 overflow-hidden border border-slate-700">
+                    <div id="backupProgressBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 2. جدول إدارة الصلاحيات وكلمات المرور ================= -->
         <div class="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
             
             <div class="bg-slate-850 p-4 border-b border-slate-700 flex justify-between items-center">
                 <span class="text-sm font-black text-slate-300 flex items-center gap-2">
-                    <i class="fa-solid fa-users-gear text-blue-400"></i> قائمة الصلاحيات والوجهات المعتمدة
+                    <i class="fa-solid fa-users-gear text-blue-400"></i> إدارة وتشفير صلاحيات المستخدمين
                 </span>
                 <span id="connIndicator" class="text-xs px-3 py-1 bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 rounded-full flex items-center gap-1.5 font-bold">
                     <i class="fa-solid fa-circle-notch fa-spin"></i> جاري الاتصال بالسحابة...
@@ -300,12 +331,11 @@
                     hash = [(temp1 + temp2) | 0].concat(hash);
                     hash[4] = (hash[4] + temp1) | 0;
                 }
-                for (i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
-            }
-            for (i = 0; i < 8; i++) {
-                for (i2 = 3; i2 >= 0; i2--) {
-                    var c = (hash[i] >> (i2 * 8)) & 255;
-                    result += ((c < 16) ? '0' : '') + c.toString(16);
+                for (i = 0; i < 8; i++) {
+                    for (i2 = 3; i2 >= 0; i2--) {
+                        var c = (hash[i] >> (i2 * 8)) & 255;
+                        result += ((c < 16) ? '0' : '') + c.toString(16);
+                    }
                 }
             }
             return result;
@@ -333,7 +363,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // فحص الاتصال التلقائي
         window.addEventListener('DOMContentLoaded', async () => {
             const indicator = document.getElementById('connIndicator');
             try {
@@ -382,7 +411,6 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...`;
 
             try {
-                // جلب كلمة مرور المدير العام للتحقق
                 const { data: adminRole, error } = await sbClient
                     .from('system_roles')
                     .select('*')
@@ -391,16 +419,13 @@
 
                 if (error) throw error;
 
-                // مطابقة الهاش
                 if (sha256(enteredPass) === adminRole.password_hash) {
-                    // جلب جميع الصفوف
                     const { data: allRoles, error: fetchErr } = await sbClient.from('system_roles').select('*');
                     if (fetchErr) throw fetchErr;
 
                     let revealedCount = 0;
 
                     allRoles.forEach(r => {
-                        // استرجاع الكلمة من السحابة أو النسخة الاحتياطية
                         const plain = r.plain_password || localStorage.getItem('zezo_plain_' + r.role_key) || '';
                         
                         let targetInput = null;
@@ -413,25 +438,18 @@
 
                         if (targetInput) {
                             targetInput.value = plain;
-                            // تحويل الحقل إلى نص واضح ومقروء فوراً
                             targetInput.type = 'text';
                             if (plain) revealedCount++;
                         }
                     });
 
-                    // تغيير كل أيقونات العيون لحالة الإظهار
                     document.querySelectorAll('.role-pass-input').forEach(input => {
                         const icon = input.parentElement.querySelector('button i');
                         if (icon) icon.className = 'fa-solid fa-eye';
                     });
 
                     closeVerifyModal();
-                    
-                    if (revealedCount > 0) {
-                        showAlert(`🎉 تم التحقق بنجاح! تم كشف وعرض (${revealedCount}) كلمات مرور واضحة في الحقول.`);
-                    } else {
-                        showAlert(`ℹ️ تم التحقق بنجاح، ولكن لم يتم العثور على كلمات سر محفوظة مسبقاً. أدخل الكلمات واضغط حفظ.`, false);
-                    }
+                    showAlert(`🎉 تم التحقق بنجاح! تم كشف وعرض (${revealedCount}) كلمات مرور واضحة.`);
 
                 } else {
                     alertEl.innerText = '❌ كلمة مرور المدير العام غير صحيحة!';
@@ -447,7 +465,7 @@
             }
         }
 
-        // ================= حفظ وتحديث الصلاحيات =================
+        // ================= حفظ الصلاحيات =================
         async function saveAllRoles() {
             const btn = document.getElementById('btnSave');
             const btnText = document.getElementById('btnSaveText');
@@ -475,7 +493,7 @@
 
                         let payload = {
                             password_hash: hashed,
-                            plain_password: plainVal, // حفظ الكلمة لتسهيل كشفها
+                            plain_password: plainVal,
                             updated_at: new Date().toISOString()
                         };
 
@@ -493,14 +511,13 @@
 
                         if (error) throw error;
 
-                        // حفظ نسخة احتياطية
                         localStorage.setItem('zezo_plain_' + item.key, plainVal);
                         savedCount++;
                     }
                 }
 
                 if (savedCount > 0) {
-                    showAlert(`<i class="fa-solid fa-circle-check ml-1"></i> رائع! تم بنجاح تشفير وتحديث (${savedCount}) كلمات مرور في السحابة.`);
+                    showAlert(`<i class="fa-solid fa-circle-check ml-1"></i> تم بنجاح تشفير وتحديث (${savedCount}) كلمات مرور بالسحابة.`);
                 } else {
                     showAlert(`<i class="fa-solid fa-circle-info ml-1"></i> أدخل كلمة مرور في أي خانة أولاً لحفظها.`, false);
                 }
@@ -511,6 +528,154 @@
                 btn.disabled = false;
                 btnText.innerHTML = `حفظ وتحديث جميع الصلاحيات`;
             }
+        }
+
+        // ================= سحب كل البيانات وتجاوز حد الـ 1000 سجل =================
+        async function fetchEntireTable(tableName) {
+            let allRows = [];
+            let start = 0;
+            const step = 1000;
+            let hasMore = true;
+
+            while (hasMore) {
+                const { data, error } = await sbClient
+                    .from(tableName)
+                    .select('*')
+                    .range(start, start + step - 1);
+
+                if (error) {
+                    console.warn(`تنبيه بخصوص جدول ${tableName}:`, error.message);
+                    break;
+                }
+
+                if (data && data.length > 0) {
+                    allRows = allRows.concat(data);
+                    start += step;
+                }
+
+                if (!data || data.length < step) {
+                    hasMore = false;
+                }
+            }
+            return allRows;
+        }
+
+        // ================= تنفيذ النسخ الاحتياطي الكامل وفتح نافذة اختيار المسار =================
+        async function executeFullCloudBackup() {
+            const btn = document.getElementById('btnBackup');
+            const btnText = document.getElementById('btnBackupText');
+            const progressBox = document.getElementById('backupProgressBox');
+            const statusText = document.getElementById('backupStatusText');
+            const percentText = document.getElementById('backupPercent');
+            const progressBar = document.getElementById('backupProgressBar');
+
+            btn.disabled = true;
+            progressBox.classList.remove('hidden');
+
+            const tablesToBackup = [
+                { id: 'students', name: 'شؤون التلاميذ' },
+                { id: 'teachers', name: 'المعلمون الأساسيون' },
+                { id: 'contract_teachers', name: 'معلمو الأجر' },
+                { id: 'system_roles', name: 'الصلاحيات والمستخدمين' },
+                { id: 'system_capsules', name: 'بيانات المدرسة والإحصاءات' },
+                { id: 'supervision', name: 'الإشراف اليومي' },
+                { id: 'daily_logs', name: 'التقارير اليومية والتقييمات' },
+                { id: 'teacher_requests', name: 'طلبات تعديل المعلمين' }
+            ];
+
+            const fullBackupData = {
+                system: "MR_ZEZO_SCHOOL_MANAGEMENT",
+                school_name: "مدرسة الشهيد أشرف حبيب",
+                backup_timestamp: new Date().toISOString(),
+                backup_date_arabic: new Date().toLocaleString('ar-EG'),
+                developer: "أ/ عبدالعزيز لولح (مستر زيزو)",
+                total_tables: tablesToBackup.length,
+                tables: {}
+            };
+
+            let totalRecordsCount = 0;
+
+            try {
+                for (let i = 0; i < tablesToBackup.length; i++) {
+                    const tbl = tablesToBackup[i];
+                    const percent = Math.round(((i + 1) / tablesToBackup.length) * 100);
+
+                    statusText.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-emerald-400 ml-1"></i> جاري سحب جدول [${tbl.name}]...`;
+                    percentText.innerText = `${percent}%`;
+                    progressBar.style.width = `${percent}%`;
+
+                    const records = await fetchEntireTable(tbl.id);
+                    fullBackupData.tables[tbl.id] = {
+                        table_label: tbl.name,
+                        records_count: records.length,
+                        data: records
+                    };
+
+                    totalRecordsCount += records.length;
+                }
+
+                statusText.innerHTML = `<i class="fa-solid fa-check text-emerald-400 ml-1"></i> اكتمل تجميع البيانات (${totalRecordsCount} سجل)! جاري فتح نافذة الحفظ...`;
+
+                // تحويل البيانات لملف JSON مهيكل ومنسق
+                const jsonString = JSON.stringify(fullBackupData, null, 2);
+                
+                // توليد اسم افتراضي مميز للملف بالتاريخ والوقت
+                const now = new Date();
+                const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+                const timeStr = `${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}`;
+                const defaultFileName = `نسخة_احتياطية_مدرسة_الشهيد_أشرف_حبيب_${dateStr}_${timeStr}.json`;
+
+                // فتح نافذة اختيار مكان الحفظ (Save As Dialog)
+                await saveFileToUserDisk(jsonString, defaultFileName);
+
+                showAlert(`✅ رائع! تم بنجاح تصدير وحفظ النسخة الاحتياطية الشاملة (${totalRecordsCount} سجل) من كافة الجداول على جهازك.`);
+
+            } catch (err) {
+                console.error("Backup error:", err);
+                showAlert(`❌ حدث خطأ أثناء عملية النسخ الاحتياطي: ${err.message}`, false);
+            } finally {
+                btn.disabled = false;
+                btnText.innerHTML = `إنشاء وتنزيل النسخة الاحتياطية`;
+                setTimeout(() => { progressBox.classList.add('hidden'); }, 3000);
+            }
+        }
+
+        // ================= دالة فتح نافذة المتصفح لاختيار مسار الحفظ =================
+        async function saveFileToUserDisk(fileContent, defaultName) {
+            // 1. إذا كان المتصفح يدعم File System Access API (نافذة اختيار المكان المباشرة)
+            if ('showSaveFilePicker' in window) {
+                try {
+                    const fileHandle = await window.showSaveFilePicker({
+                        suggestedName: defaultName,
+                        types: [{
+                            description: 'ملف نسخ احتياطي لقاعدة البيانات (*.json)',
+                            accept: { 'application/json': ['.json'] }
+                        }]
+                    });
+
+                    const writableStream = await fileHandle.createWritable();
+                    await writableStream.write(fileContent);
+                    await writableStream.close();
+                    return true;
+                } catch (err) {
+                    if (err.name === 'AbortError') {
+                        // قام المستخدم بالضغط على Cancel في نافذة الحفظ
+                        return false;
+                    }
+                }
+            }
+
+            // 2. طريقة بديلة قياسية لجميع المتصفحات والهواتف
+            const blob = new Blob([fileContent], { type: 'application/json;charset=utf-8;' });
+            const downloadUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = defaultName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(downloadUrl);
+            return true;
         }
     </script>
 </body>
