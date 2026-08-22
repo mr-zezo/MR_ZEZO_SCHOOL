@@ -48,7 +48,6 @@
             font-size: 14px; font-weight: 700; outline: none; background: white; transition: 0.2s;
         }
         .gate-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.15); }
-        .gate-input:disabled { background: #e2e8f0; color: #64748b; cursor: not-allowed; border-style: dashed; }
         
         .pass-box { position: relative; width: 100%; }
         .pass-btn { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer; font-size: 16px; }
@@ -138,21 +137,15 @@
         .link-btn:hover i.icon-main, .link-btn:hover i.fa-chevron-left { color: white; }
         .link-btn:hover i.fa-chevron-left { transform: translateX(-5px); }
 
-        .link-btn:active { transform: translateY(4px); border-bottom-width: 0px; margin-bottom: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-
         .admin-special-btn { background: #f5f3ff !important; border-color: #c4b5fd !important; border-bottom: 4px solid #8b5cf6 !important; color: var(--admin) !important; }
-        .admin-special-btn i.icon-main { color: var(--admin) !important; }
-        .admin-special-btn:hover { background: var(--admin) !important; color: white !important; border-color: var(--admin) !important; border-bottom-color: #4c1d95 !important;}
+        .admin-special-btn:hover { background: var(--admin) !important; color: white !important; }
         
         .supervisor-portal-btn { background: #fffbeb !important; border-color: #fde68a !important; border-bottom: 4px solid #f59e0b !important; color: #b45309 !important; }
-        .supervisor-portal-btn i.icon-main { color: #d97706 !important; }
-        .supervisor-portal-btn:hover { background: #d97706 !important; color: white !important; border-color: #d97706 !important; border-bottom-color: #92400e !important;}
+        .supervisor-portal-btn:hover { background: #d97706 !important; color: white !important; }
 
         .map-btn { background: #f0fdf4 !important; border-color: #bbf7d0 !important; border-bottom: 4px solid #22c55e !important; color: #166534 !important; }
-        .map-btn i.icon-main { color: #16a34a !important; }
-        .map-btn:hover { background: #16a34a !important; color: white !important; border-color: #16a34a !important; border-bottom-color: #14532d !important;}
+        .map-btn:hover { background: #16a34a !important; color: white !important; }
 
-        /* العدادات */
         .stats-section-title { font-size: 18px; font-weight: 900; color: var(--dark); margin-bottom: 15px; border-bottom: 3px dashed #94a3b8; padding-bottom: 5px; display: inline-block;}
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .stat-card { 
@@ -162,8 +155,7 @@
             border-bottom: 4px solid #cbd5e1; border-top: 1px solid #cbd5e1; border-left: 1px solid #cbd5e1;
             box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
-        .stat-card:hover { transform: translateY(-3px); border-bottom-color: #94a3b8; box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-
+        .stat-card:hover { transform: translateY(-3px); }
         .stat-info h3 { color: #64748b; font-size: 14px; font-weight: 800; margin-bottom: 2px; }
         .stat-info h2 { color: var(--dark); font-size: 26px; font-weight: 900; }
         .stat-icon { font-size: 32px; opacity: 0.15; }
@@ -171,7 +163,7 @@
 </head>
 <body>
 
-    <!-- 1. شاشة تسجيل الدخول الكاملة -->
+    <!-- 1. شاشة تسجيل الدخول الكاملة (الحاجز) -->
     <div id="loginGate">
         <div class="gate-card">
             <div class="gate-header">
@@ -183,12 +175,13 @@
             <div class="gate-body">
                 <div id="gateAlert" class="gate-alert"></div>
 
+                <!-- اختيار الصلاحية -->
                 <div class="form-group-gate">
                     <label for="gateRole"><i class="fa-solid fa-user-shield text-blue-600"></i> تحديد الصلاحية / نوع الحساب:</label>
                     <select id="gateRole" class="gate-input" onchange="onGateRoleChanged()">
                         <option value="super_admin">👑 مستر زيزو (المدير العام)</option>
+                        <option value="teacher_portal">👨‍🏫 استعلام معلم (بالرقم القومي)</option>
                         <option value="student_affairs">👥 شؤون الطلبة والإحصاء</option>
-                        <option value="teacher_portal">👨‍🏫 استعلام معلم (دخول مباشر بدون كلمة سر)</option>
                         <option value="schedule_manager">📅 مسؤول الجدول</option>
                         <option value="general_supervisor">👔 المشرف العام</option>
                         <option value="visitor">👁️ زائر</option>
@@ -196,12 +189,13 @@
                     </select>
                 </div>
 
-                <div class="form-group-gate" id="passwordGroup">
-                    <label for="gatePassword"><i class="fa-solid fa-lock text-blue-600"></i> كلمة المرور:</label>
+                <!-- حقل الإدخال الديناميكي (كلمة مرور أو رقم قومي) -->
+                <div class="form-group-gate" id="inputGroup">
+                    <label id="lblInput" for="gateInputVal"><i class="fa-solid fa-lock text-blue-600"></i> كلمة المرور:</label>
                     <div class="pass-box">
-                        <input type="password" id="gatePassword" class="gate-input" placeholder="••••••••" 
+                        <input type="password" id="gateInputVal" class="gate-input" placeholder="••••••••" 
                                onkeydown="if(event.key === 'Enter') handleGateLogin()">
-                        <button type="button" class="pass-btn" onclick="toggleGatePassword(this)">
+                        <button type="button" class="pass-btn" id="btnTogglePass" onclick="toggleGatePassword(this)">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>
                     </div>
@@ -214,7 +208,7 @@
 
                 <button type="button" class="btn-gate-submit" id="btnGateSubmit" onclick="handleGateLogin()">
                     <i class="fa-solid fa-arrow-right-to-bracket"></i>
-                    <span id="btnGateText">دخول للمنظومة</span>
+                    <span id="btnGateText">تسجيل الدخول للمنظومة</span>
                 </button>
             </div>
         </div>
@@ -267,7 +261,7 @@
                         <a href="tea-data.html" class="link-btn"><div style="display:flex; align-items:center;"><i class="fa-solid fa-table-list icon-main"></i> إدارة البيانات المجمعة</div><i class="fa-solid fa-chevron-left"></i></a>
                         <a href="tea.html" class="link-btn"><div style="display:flex; align-items:center;"><i class="fa-solid fa-id-card icon-main"></i> بطاقة المعلم</div><i class="fa-solid fa-chevron-left"></i></a>
                         <a href="tea-stats.html" class="link-btn"><div style="display:flex; align-items:center;"><i class="fa-solid fa-chart-line icon-main"></i> إحصاء وميزانية المعلمين</div><i class="fa-solid fa-chevron-left"></i></a>
-                        <a href="teacher-portal.html" target="_blank" class="link-btn" style="background:#f0fdf4; border-color:#bbf7d0; border-bottom-color:#4ade80;"><div style="display:flex; align-items:center;"><i class="fa-solid fa-user-tie icon-main" style="color:var(--success)"></i> بوابة المعلم (الاستعلام)</div><i class="fa-solid fa-chevron-left"></i></a>
+                        <a href="teacher-portal.html" class="link-btn" style="background:#f0fdf4; border-color:#bbf7d0; border-bottom-color:#4ade80;"><div style="display:flex; align-items:center;"><i class="fa-solid fa-user-tie icon-main" style="color:var(--success)"></i> بوابة المعلم (الاستعلام)</div><i class="fa-solid fa-chevron-left"></i></a>
                         <a href="schedule.html" class="link-btn"><div style="display:flex; align-items:center;"><i class="fa-solid fa-table-cells icon-main"></i> الجدول المدرسي</div><i class="fa-solid fa-chevron-left"></i></a>
                         <a href="supervision.html" class="link-btn"><div style="display:flex; align-items:center;"><i class="fa-solid fa-clipboard-user icon-main"></i> الإشراف اليومي</div><i class="fa-solid fa-chevron-left"></i></a>
                     </div>
@@ -406,13 +400,13 @@
         }
 
         function toggleGatePassword(btn) {
-            const passInput = document.getElementById('gatePassword');
+            const inp = document.getElementById('gateInputVal');
             const icon = btn.querySelector('i');
-            if (passInput.type === 'password') {
-                input.type = 'text';
+            if (inp.type === 'password') {
+                inp.type = 'text';
                 icon.classList.replace('fa-eye-slash', 'fa-eye');
             } else {
-                passInput.type = 'password';
+                inp.type = 'password';
                 icon.classList.replace('fa-eye', 'fa-eye-slash');
             }
         }
@@ -428,50 +422,97 @@
             const savedRole = localStorage.getItem('zezo_gate_role');
             const savedPass = localStorage.getItem('zezo_gate_pass');
             if (savedRole) document.getElementById('gateRole').value = savedRole;
-            if (savedPass) document.getElementById('gatePassword').value = savedPass;
+            if (savedPass) document.getElementById('gateInputVal').value = savedPass;
         }
 
-        // عند تغيير الصلاحية في القائمة المنسدلة
+        // ================= التبديل الذكي بين الرقم القومي وباسورد الأدوار =================
         function onGateRoleChanged() {
-            const currentRole = document.getElementById('gateRole').value;
-            const passInput = document.getElementById('gatePassword');
+            const role = document.getElementById('gateRole').value;
+            const lbl = document.getElementById('lblInput');
+            const inp = document.getElementById('gateInputVal');
+            const btnPass = document.getElementById('btnTogglePass');
+            const btnSubmitText = document.getElementById('btnGateText');
 
-            if (currentRole === 'teacher_portal') {
-                // تعطيل حقل كلمة المرور لاستعلام المعلم
-                passInput.value = '';
-                passInput.disabled = true;
-                passInput.placeholder = 'دخول فوري بدون كلمة مرور';
+            if (role === 'teacher_portal') {
+                lbl.innerHTML = '<i class="fa-solid fa-id-card text-emerald-600"></i> الرقم القومي للمعلم (14 رقم):';
+                inp.type = 'tel';
+                inp.maxLength = 14;
+                inp.placeholder = 'أدخل الرقم القومي الخاص بك (14 رقم)';
+                inp.style.fontFamily = 'Arial, sans-serif';
+                btnPass.style.display = 'none';
+                btnSubmitText.innerText = 'بحث واستعلام بيانات المعلم';
+
+                // استرجاع الرقم القومي إن كان محفوظاً
+                inp.value = localStorage.getItem('saved_teacher_nid') || '';
             } else {
-                passInput.disabled = false;
-                passInput.placeholder = '••••••••';
+                lbl.innerHTML = '<i class="fa-solid fa-lock text-blue-600"></i> كلمة المرور:';
+                inp.type = 'password';
+                inp.removeAttribute('maxLength');
+                inp.placeholder = '••••••••';
+                inp.style.fontFamily = "'Cairo', sans-serif";
+                btnPass.style.display = 'block';
+                btnSubmitText.innerText = 'تسجيل الدخول للمنظومة';
+
                 const savedRole = localStorage.getItem('zezo_gate_role');
-                if (currentRole === savedRole) {
-                    passInput.value = localStorage.getItem('zezo_gate_pass') || '';
+                if (role === savedRole) {
+                    inp.value = localStorage.getItem('zezo_gate_pass') || '';
                 } else {
-                    passInput.value = '';
+                    inp.value = '';
                 }
             }
         }
 
+        // ================= معالجة تسجيل الدخول =================
         async function handleGateLogin() {
             const role = document.getElementById('gateRole').value;
-            const password = document.getElementById('gatePassword').value.trim();
+            const inputVal = document.getElementById('gateInputVal').value.trim();
             const remember = document.getElementById('gateRemember').checked;
-
             const btn = document.getElementById('btnGateSubmit');
             const btnText = document.getElementById('btnGateText');
 
-            // 1. استثناء معلم: دخول فوري بدون كلمة مرور
+            // 1. في حالة استعلام معلم (بالرقم القومي)
             if (role === 'teacher_portal') {
-                showGateAlert('مرحباً بك في بوابة المعلم، جاري التحويل...', true);
-                setTimeout(() => {
-                    window.location.href = 'teacher-portal.html';
-                }, 400);
+                if (inputVal.length !== 14) {
+                    showGateAlert('يرجى كتابة الرقم القومي كاملاً (14 رقم).');
+                    return;
+                }
+
+                btn.disabled = true;
+                btnText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق من الرقم القومي...';
+
+                try {
+                    // فحص وجود المعلم في قاعدة البيانات الأساسية أو الأجر
+                    const [resT, resC] = await Promise.all([
+                        supabaseClient.from('teachers').select('name, nid').eq('nid', inputVal).maybeSingle(),
+                        supabaseClient.from('contract_teachers').select('name, nid').eq('nid', inputVal).maybeSingle()
+                    ]);
+
+                    const teacher = resT.data || resC.data;
+
+                    if (!teacher) {
+                        showGateAlert('الرقم القومي غير مسجل لدينا في قاعدة بيانات المعلمين!');
+                        return;
+                    }
+
+                    // حفظ الرقم القومي للانتقال الفوري
+                    localStorage.setItem('saved_teacher_nid', inputVal);
+                    showGateAlert(`مرحباً بك أ/ ${teacher.name}، جاري فتح بوابتك...`, true);
+
+                    setTimeout(() => {
+                        window.location.href = `teacher-portal.html?nid=${inputVal}`;
+                    }, 600);
+
+                } catch (err) {
+                    showGateAlert('حدث خطأ في الاتصال: ' + err.message);
+                } finally {
+                    btn.disabled = false;
+                    btnText.innerText = 'بحث واستعلام بيانات المعلم';
+                }
                 return;
             }
 
-            // باقي الصلاحيات تتطلب كلمة مرور
-            if (!password) {
+            // 2. لباقي الصلاحيات (بكلمة المرور)
+            if (!inputVal) {
                 showGateAlert('يرجى كتابة كلمة المرور للمتابعة.');
                 return;
             }
@@ -493,10 +534,10 @@
                     return;
                 }
 
-                if (sha256(password) === data.password_hash) {
+                if (sha256(inputVal) === data.password_hash) {
                     if (remember) {
                         localStorage.setItem('zezo_gate_role', role);
-                        localStorage.setItem('zezo_gate_pass', password);
+                        localStorage.setItem('zezo_gate_pass', inputVal);
                     } else {
                         localStorage.removeItem('zezo_gate_role');
                         localStorage.removeItem('zezo_gate_pass');
@@ -521,7 +562,7 @@
                 showGateAlert('حدث خطأ في الاتصال: ' + err.message);
             } finally {
                 btn.disabled = false;
-                btnText.innerHTML = 'دخول للمنظومة';
+                btnText.innerHTML = 'تسجيل الدخول للمنظومة';
             }
         }
     </script>
