@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز إدارة الصلاحيات والأمان - مستر زيزو</title>
+    <!-- خط Cairo والأيقونات -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- مكتبة Supabase الرسمية -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        * { font-family: 'Cairo', sans-serif; }
+        :root {
+            --dark-navy: #081f36;
+            --primary: #1e3a8a;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-3 md:p-6 flex flex-col justify-between">
+
+    <div class="max-w-5xl mx-auto w-full space-y-5">
+        
+        <!-- الهيدر العلوي مطابق لتصميم مستر زيزو -->
+        <nav class="bg-[#081f36] border border-slate-700 p-4 rounded-xl shadow-xl flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-blue-600/30 border border-blue-500 rounded-lg text-yellow-400 text-2xl">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-black text-blue-200">مركز إدارة الصلاحيات والأمان للمنظومة</h1>
+                    <p class="text-xs text-slate-400">تشفير كلمات المرور والتحكم في وجهات الدخول لجميع المستخدمين</p>
+                </div>
+            </div>
+
+            <div class="text-slate-300 font-bold text-sm md:text-base hidden sm:block">
+                إعداد / <span class="text-amber-400">مستر زيزو</span>
+            </div>
+
+            <div>
+                <a href="index.html" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-lg text-sm transition flex items-center gap-2 border border-blue-700 shadow">
+                    <i class="fa-solid fa-house"></i> الرئيسية
+                </a>
+            </div>
+        </nav>
+
+        <!-- صندوق حالة الاتصال والتنبيهات -->
+        <div id="alertBox" class="hidden p-4 rounded-xl text-sm font-bold border transition-all duration-300 shadow-lg"></div>
+
+        <!-- الحاوية الرئيسية للصلاحيات -->
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
+            
+            <div class="bg-slate-850 p-4 border-b border-slate-700 flex justify-between items-center">
+                <span class="text-sm font-black text-slate-300 flex items-center gap-2">
+                    <i class="fa-solid fa-users-gear text-blue-400"></i> قائمة الصلاحيات والوجهات المعتمدة
+                </span>
+                <span id="connIndicator" class="text-xs px-3 py-1 bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 rounded-full flex items-center gap-1.5 font-bold">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> جاري الاتصال بالسحابة...
+                </span>
+            </div>
+
+            <div class="p-4 md:p-6 space-y-3" id="rolesList">
+
+                <!-- 1. مستر زيزو -->
+                <div class="p-3.5 bg-slate-900/80 border border-amber-500/40 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:border-amber-400 transition">
+                    <div class="md:col-span-4 flex items-center gap-2 font-bold text-amber-300">
+                        <i class="fa-solid fa-crown text-amber-400 text-lg"></i>
+                        <span>مستر زيزو (المدير العام)</span>
+                    </div>
+                    <div class="md:col-span-5 relative">
+                        <input type="text" id="pass_super_admin" placeholder="أدخل كلمة المرور الجديدة"
+                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-amber-200 focus:outline-none focus:border-amber-400 pr-10">
+                        <button type="button" onclick="togglePass('pass_super_admin', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
+                            <i class="fa-solid fa-eye-slash"></i>
+                        </button>
+                    </div>
+                    <div class="md:col-span-3 text-xs">
+                        <span class="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-md font-bold block text-center">
+                            <i class="fa-solid fa-infinity ml-1"></i> كافة الصلاحيات
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 2. شؤون الطلبة -->
+                <div class="p-3.5 bg-slate-900/80 border border-slate-700 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:border-blue-400 transition">
+                    <div class="md:col-span-4 flex items-center gap-2 font-bold text-blue-300">
+                        <i class="fa-solid fa-users-gear text-blue-400 text-lg"></i>
+                        <span>شؤون الطلبة والإحصاء</span>
+                    </div>
+                    <div class="md:col-span-5 relative">
+                        <input type="text" id="pass_student_affairs" placeholder="أدخل كلمة المرور"
+                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-400 pr-10">
+                        <button type="button" onclick="togglePass('pass_student_affairs', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
+                            <i class="fa-solid fa-eye-slash"></i>
+                        </button>
+                    </div>
+                    <div class="md:col-span-3 text-xs">
+                        <span class="bg-blue-500/10 text-blue-300 border border-blue-500/20 px-2.5 py-1 rounded-md font-bold block text-center">
+                            <i class="fa-solid fa-arrow-left ml-1"></i> stu-absence.html
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 3. استعلام معلم -->
+                <div class="p-3.5 bg-slate-900/80 border border-slate-700 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:border-emerald-400 transition">
+                    <div class="md:col-span-4 flex items-center gap-2 font-bold text-emerald-300">
+                        <i class="fa-solid fa-chalkboard-user text-emerald-400 text-lg"></i>
+                        <span>استعلام معلم</span>
+                    </div>
+                    <div class="md:col-span-5 relative">
+                        <input type="text" id="pass_teacher_portal" placeholder="أدخل كلمة المرور"
+                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-400 pr-10">
+                        <button type="button" onclick="togglePass('pass_teacher_portal', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
+                            <i class="fa-solid fa-eye-slash"></i>
+                        </button>
+                    </div>
+                    <div class="md:col-span-3 text-xs">
+                        <span class="bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 px-2.5 py-1 rounded-md font-bold block text-center">
+                            <i class="fa-solid fa-arrow-left ml-1"></i> teacher-portal.html
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 4. مسؤول الجدول -->
+                <div class="p-3.5 bg-slate-900/80 border border-slate-700 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:border-purple-400 transition">
+                    <div class="md:col-span-4 flex items-center gap-2 font-bold text-purple-300">
+                        <i class="fa-solid fa-calendar-days text-purple-400 text-lg"></i>
+                        <span>مسؤول الجدول</span>
+                    </div>
+                    <div class="md:col-span-5 relative">
+                        <input type="text" id="pass_schedule_manager" placeholder="أدخل كلمة المرور"
+                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-400 pr-10">
+                        <button type="button" onclick="togglePass('pass_schedule_manager', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
+                            <i class="fa-solid fa-eye-slash"></i>
+                        </button>
+                    </div>
+                    <div class="md:col-span-3 text-xs">
+                        <span class="bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2.5 py-1 rounded-md font-bold block text-center">
+                            <i class="fa-solid fa-arrow-left ml-1"></i> REDA.html
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 5. المشرف العام -->
+                <div class="p-3.5 bg-slate-900/80 border border-slate-700 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:border-cyan-400 transition">
+                    <div class="md:col-span-4 flex items-center gap-2 font-bold text-cyan-300">
+                        <i class="fa-solid fa-user-tie text-cyan-400 text-lg"></i>
+                        <span>المشرف العام</span>
+                    </div>
+                    <div class="md:col-span-5 relative">
+                        <input type="text" id="pass_general_supervisor" placeholder="أدخل كلمة المرور"
+                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-400 pr-10">
+                        <button type="button" onclick="togglePass('pass_general_supervisor', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
+                            <i class="fa-solid fa-eye-slash"></i>
+                        </button>
+                    </div>
+                    <div class="md:col-span-3 text-xs">
+                        <span class="bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 px-2.5 py-1 rounded-md font-bold block text-center">
+                            <i class="fa-solid fa-arrow-left ml-1"></i> supervisor.html
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 6. زائر -->
+                <div class="p-3.5 bg-slate-900/80 border border-slate-700 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:border-slate-400 transition">
+                    <div class="md:col-span-4 flex items-center gap-2 font-bold text-slate-300">
+                        <i class="fa-solid fa-eye text-slate-400 text-lg"></i>
+                        <span>زائر</span>
+                    </div>
+                    <div class="md:col-span-5 relative">
+                        <input type="text" id="pass_visitor" placeholder="أدخل كلمة المرور"
+                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-slate-400 pr-10">
+                        <button type="button" onclick="togglePass('pass_visitor', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
+                            <i class="fa-solid fa-eye-slash"></i>
+                        </button>
+                    </div>
+                    <div class="md:col-span-3 text-xs">
+                        <span class="bg-slate-700/50 text-slate-400 border border-slate-600 px-2.5 py-1 rounded-md font-bold block text-center">
+                            (يحدد لاحقاً)
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 7. صلاحية إضافية -->
+                <div class="p-3.5 bg-slate-900/80 border border-dashed border-indigo-500/40 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-3 items-center hover:border-indigo-400 transition">
+                    <div class="md:col-span-4 flex items-center gap-2 font-bold text-indigo-300">
+                        <i class="fa-solid fa-plus-circle text-indigo-400 text-lg"></i>
+                        <input type="text" id="name_custom_role" value="صلاحية إضافية" 
+                               class="bg-slate-800 border border-slate-600 rounded px-2.5 py-1 text-xs text-indigo-200 font-bold w-36 focus:outline-none focus:border-indigo-400">
+                    </div>
+                    <div class="md:col-span-5 relative">
+                        <input type="text" id="pass_custom_role" placeholder="كلمة المرور للصلاحية الإضافية"
+                               class="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-400 pr-10">
+                        <button type="button" onclick="togglePass('pass_custom_role', this)" class="absolute left-3 top-2.5 text-slate-400 hover:text-white">
+                            <i class="fa-solid fa-eye-slash"></i>
+                        </button>
+                    </div>
+                    <div class="md:col-span-3">
+                        <input type="text" id="url_custom_role" placeholder="مسار الصفحة (مثال: new.html)" 
+                               class="bg-slate-800 border border-slate-600 rounded-lg px-2.5 py-1.5 text-xs w-full text-indigo-300 focus:outline-none focus:border-indigo-400 text-center">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- زر الحفظ -->
+            <div class="p-4 md:p-6 bg-slate-850 border-t border-slate-700 flex flex-wrap justify-between items-center gap-4">
+                <span class="text-xs text-slate-400">
+                    <i class="fa-solid fa-lock text-amber-400 ml-1"></i> يتم تشفير الكلمات فورياً عبر خوارزمية SHA-256 قبل الحفظ.
+                </span>
+                <button type="button" onclick="saveAllRoles()" id="btnSave"
+                        class="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black rounded-xl shadow-lg shadow-indigo-600/30 transition transform active:scale-95 flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                    <span id="btnSaveText">حفظ وتفعيل جميع الصلاحيات في السحابة</span>
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- توقيع مستر زيزو -->
+    <div class="text-center py-4 text-xs font-bold text-slate-500">
+        جميع الحقوق محفوظة © مدرسة مستر زيزو - MR ZEZO SCHOOL
+    </div>
+
+    <script>
+        // إعدادات Supabase الخاصة بمشروعك
+        const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // تشفير SHA-256 مستقل يعمل على أي متصفح وسيرفر
+        function sha256(ascii) {
+            function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }
+            var mathPow = Math.pow;
+            var maxWord = mathPow(2, 32);
+            var lengthProperty = 'length';
+            var i, j;
+            var result = '';
+            var words = [];
+            var asciiBitLength = ascii[lengthProperty] * 8;
+            var hash = sha256.h = sha256.h || [];
+            var k = sha256.k = sha256.k || [];
+            var primeCounter = k[lengthProperty];
+            var isComposite = {};
+            for (var candidate = 2; primeCounter < 64; candidate++) {
+                if (!isComposite[candidate]) {
+                    for (i = 0; i < 300; i += candidate) isComposite[i] = candidate;
+                    hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
+                    k[primeCounter++] = (mathPow(candidate, 1/3) * maxWord) | 0;
+                }
+            }
+            ascii += '\x80';
+            while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
+            for (i = 0; i < ascii[lengthProperty]; i++) {
+                j = ascii.charCodeAt(i);
+                if (j >> 8) return;
+                words[i >> 2] |= j << ((3 - i % 4) * 8);
+            }
+            words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
+            words[words[lengthProperty]] = (asciiBitLength) | 0;
+            for (j = 0; j < words[lengthProperty];) {
+                var w = words.slice(j, j += 16);
+                var oldHash = hash;
+                hash = hash.slice(0, 8);
+                for (i = 0; i < 64; i++) {
+                    var i2 = i + j;
+                    var w15 = w[i - 15], w2 = w[i - 2];
+                    var a = hash[0], e = hash[4];
+                    var temp1 = hash[7]
+                        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+                        + ((e & hash[5]) ^ ((~e) & hash[6]))
+                        + k[i]
+                        + (w[i] = (i < 16) ? w[i] : (
+                                w[i - 16]
+                                + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+                                + w[i - 7]
+                                + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+                            ) | 0
+                        );
+                    var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+                        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+                    hash = [(temp1 + temp2) | 0].concat(hash);
+                    hash[4] = (hash[4] + temp1) | 0;
+                }
+                for (i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+            }
+            for (i = 0; i < 8; i++) {
+                for (i2 = 3; i2 >= 0; i2--) {
+                    var c = (hash[i] >> (i2 * 8)) & 255;
+                    result += ((c < 16) ? '0' : '') + c.toString(16);
+                }
+            }
+            return result;
+        }
+
+        // إظهار وإخفاء كلمات المرور
+        function togglePass(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        // التنبيهات
+        function showAlert(msg, isSuccess = true) {
+            const box = document.getElementById('alertBox');
+            box.className = isSuccess 
+                ? 'p-4 rounded-xl text-sm font-bold border bg-emerald-600/20 text-emerald-300 border-emerald-500 shadow-lg'
+                : 'p-4 rounded-xl text-sm font-bold border bg-rose-600/20 text-rose-300 border-rose-500 shadow-lg';
+            box.innerHTML = msg;
+            box.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // فحص الاتصال التلقائي عند فتح الصفحة
+        window.addEventListener('DOMContentLoaded', async () => {
+            const indicator = document.getElementById('connIndicator');
+            try {
+                const { data, error } = await sbClient.from('system_roles').select('role_key, role_name, redirect_url').limit(10);
+                if (error) throw error;
+
+                indicator.className = "text-xs px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-full flex items-center gap-1.5 font-bold";
+                indicator.innerHTML = `<i class="fa-solid fa-circle-check"></i> متصل بالسحابة بنجاح`;
+
+                // تعبئة الصلاحية الإضافية إذا كانت محفوظة مسبقاً
+                const custom = data.find(d => d.role_key === 'custom_role');
+                if (custom) {
+                    if (custom.role_name) document.getElementById('name_custom_role').value = custom.role_name;
+                    if (custom.redirect_url) document.getElementById('url_custom_role').value = custom.redirect_url;
+                }
+            } catch (err) {
+                indicator.className = "text-xs px-3 py-1 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-full flex items-center gap-1.5 font-bold";
+                indicator.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> فشل الاتصال: ${err.message}`;
+            }
+        });
+
+        // دالة الحفظ والتشفير
+        async function saveAllRoles() {
+            const btn = document.getElementById('btnSave');
+            const btnText = document.getElementById('btnSaveText');
+            btn.disabled = true;
+            btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin ml-2"></i> جاري تشفير وحفظ البيانات بالسحابة...`;
+
+            const rolesConfig = [
+                { key: 'super_admin', inputId: 'pass_super_admin' },
+                { key: 'student_affairs', inputId: 'pass_student_affairs' },
+                { key: 'teacher_portal', inputId: 'pass_teacher_portal' },
+                { key: 'schedule_manager', inputId: 'pass_schedule_manager' },
+                { key: 'general_supervisor', inputId: 'pass_general_supervisor' },
+                { key: 'visitor', inputId: 'pass_visitor' },
+                { key: 'custom_role', inputId: 'pass_custom_role', nameId: 'name_custom_role', urlId: 'url_custom_role' }
+            ];
+
+            let savedCount = 0;
+
+            try {
+                for (const item of rolesConfig) {
+                    const passInput = document.getElementById(item.inputId);
+                    const plainVal = passInput.value.trim();
+
+                    if (plainVal !== '') {
+                        const hashed = sha256(plainVal);
+
+                        let payload = {
+                            password_hash: hashed,
+                            updated_at: new Date().toISOString()
+                        };
+
+                        if (item.key === 'custom_role') {
+                            const cName = document.getElementById(item.nameId).value.trim();
+                            const cUrl = document.getElementById(item.urlId).value.trim();
+                            if (cName) payload.role_name = cName;
+                            if (cUrl) payload.redirect_url = cUrl;
+                        }
+
+                        const { error } = await sbClient
+                            .from('system_roles')
+                            .update(payload)
+                            .eq('role_key', item.key);
+
+                        if (error) throw error;
+                        savedCount++;
+                    }
+                }
+
+                if (savedCount > 0) {
+                    showAlert(`<i class="fa-solid fa-circle-check ml-1"></i> رائع! تم بنجاح تشفير وتحديث (${savedCount}) كلمات مرور في السحابة.`);
+                } else {
+                    showAlert(`<i class="fa-solid fa-circle-info ml-1"></i> يرجى إدخال كلمة مرور واحدة على الأقل في أي حقل لحفظها.`, false);
+                }
+
+            } catch (error) {
+                showAlert(`<i class="fa-solid fa-triangle-exclamation ml-1"></i> حدث خطأ أثناء الحفظ: ${error.message}`, false);
+            } finally {
+                btn.disabled = false;
+                btnText.innerHTML = `حفظ وتفعيل جميع الصلاحيات في السحابة`;
+            }
+        }
+    </script>
+</body>
+</html>
