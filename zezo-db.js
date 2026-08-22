@@ -1,16 +1,17 @@
 // =================================================================
 // محرك بيانات مستر زيزو الموحد (Zezo Unified Database Engine)
-// يدعم التبديل التلقائي بين السحابة (Supabase) والذاكرة المحلية (Offline)
 // =================================================================
 
+// ⚠️ ضع مفاتيح مشروعك هنا لكي يعمل الأونلاين ⚠️
+const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const ZezoDB = {
-    
-    // 1. معرفة حالة النظام الحالية
     getMode: function() {
         return localStorage.getItem('zezo_operating_mode') || 'online';
     },
 
-    // 2. إعدادات الذاكرة المحلية (يجب أن تتطابق مع صفحة الإدارة)
     DB_NAME: "MR_ZEZO_OFFLINE_STORAGE_V3",
     STORE_NAME: "school_master_store",
 
@@ -28,10 +29,8 @@ const ZezoDB = {
         });
     },
 
-    // ================= دوال جلب البيانات (Read) =================
     getAll: async function(tableName) {
         if (this.getMode() === 'offline') {
-            // جلب من الذاكرة المحلية
             const db = await this.openLocalDB();
             return new Promise((resolve, reject) => {
                 const tx = db.transaction(this.STORE_NAME, "readonly");
@@ -41,7 +40,6 @@ const ZezoDB = {
                 req.onerror = () => reject(req.error);
             });
         } else {
-            // جلب من السحابة (Supabase)
             let all = [];
             let start = 0;
             const step = 1000;
@@ -58,22 +56,17 @@ const ZezoDB = {
         }
     },
 
-    // ================= دوال الحفظ والتعديل (Insert / Update) =================
     upsert: async function(tableName, recordsArray, conflictKey = 'id') {
         if (this.getMode() === 'offline') {
-            // حفظ في الذاكرة المحلية
             let currentData = await this.getAll(tableName);
-            
-            // دمج البيانات الجديدة مع القديمة
             recordsArray.forEach(newRecord => {
                 const index = currentData.findIndex(old => old[conflictKey] === newRecord[conflictKey]);
                 if (index > -1) {
-                    currentData[index] = { ...currentData[index], ...newRecord }; // تحديث
+                    currentData[index] = { ...currentData[index], ...newRecord };
                 } else {
-                    currentData.push(newRecord); // إضافة جديدة
+                    currentData.push(newRecord);
                 }
             });
-
             const db = await this.openLocalDB();
             return new Promise((resolve, reject) => {
                 const tx = db.transaction(this.STORE_NAME, "readwrite");
@@ -82,22 +75,17 @@ const ZezoDB = {
                 tx.oncomplete = () => resolve({ success: true });
                 tx.onerror = () => reject(tx.error);
             });
-
         } else {
-            // حفظ في السحابة (Supabase)
             const { data, error } = await supabaseClient.from(tableName).upsert(recordsArray, { onConflict: conflictKey });
             if (error) throw error;
             return { success: true, data };
         }
     },
 
-    // ================= دوال الحذف (Delete) =================
     delete: async function(tableName, keyName, keyValue) {
         if (this.getMode() === 'offline') {
-            // حذف من الذاكرة المحلية
             let currentData = await this.getAll(tableName);
             currentData = currentData.filter(record => record[keyName] !== keyValue);
-            
             const db = await this.openLocalDB();
             return new Promise((resolve, reject) => {
                 const tx = db.transaction(this.STORE_NAME, "readwrite");
@@ -106,9 +94,7 @@ const ZezoDB = {
                 tx.oncomplete = () => resolve({ success: true });
                 tx.onerror = () => reject(tx.error);
             });
-
         } else {
-            // حذف من السحابة (Supabase)
             const { error } = await supabaseClient.from(tableName).delete().eq(keyName, keyValue);
             if (error) throw error;
             return { success: true };
