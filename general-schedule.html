@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>الجدول المدرسي العام الشامل - نظام مستر زيزو</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- مكتبة Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- مكتبة التقاط الشاشة -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <!-- مكتبات ExcelJS و FileSaver لتعديل وتنزيل ملفات الإكسيل بدقة القالب -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #1e3a8a; --secondary: #3b82f6; --dark: #0f172a; --bg: #f1f5f9;
+            --border: #cbd5e1; --text: #1e293b; --accent: #0284c7; --gold: #f59e0b;
+            --sun-color: #eff6ff; --mon-color: #f0fdf4; --tue-color: #fffbeb;
+            --wed-color: #fdf2f8; --thu-color: #faf5ff;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 10px; display: flex; flex-direction: column; align-items: center; }
+
+        .top-nav {
+            width: 100%; max-width: 1650px; background: var(--dark); padding: 12px 15px;
+            border-radius: 12px; color: white; display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            flex-wrap: wrap; gap: 10px; border-bottom: 4px solid var(--primary);
+        }
+        .nav-right { display: flex; align-items: center; gap: 10px; }
+        .nav-right i { font-size: 24px; color: #fcd34d; }
+        .nav-right h1 { font-size: 16px; font-weight: 900; margin: 0; }
+
+        .nav-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .btn-action {
+            background: #1e3a8a; color: white; border: none; padding: 6px 14px;
+            border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px; text-decoration: none; transition: 0.2s;
+        }
+        .btn-action:hover { transform: translateY(-2px); opacity: 0.95; }
+        
+        /* أزرار التصدير لقوالب الإكسيل */
+        .btn-excel-lower { background: #16a34a !important; border: 1px solid #86efac; }
+        .btn-excel-upper { background: #9333ea !important; border: 1px solid #d8b4fe; }
+
+        .btn-print { background: #059669; }
+        .btn-shot { background: #64748b; }
+
+        .control-bar {
+            width: 100%; max-width: 1650px; background: white; padding: 10px 15px;
+            border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+            flex-wrap: wrap; gap: 10px;
+        }
+
+        .search-box {
+            display: flex; align-items: center; gap: 8px; flex: 1; min-width: 250px;
+            background: #f8fafc; border: 2px solid var(--border); border-radius: 8px; padding: 6px 12px;
+        }
+        .search-box i { color: #64748b; font-size: 14px; }
+        .search-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 13px; font-weight: 700; }
+
+        .stats-badges { display: flex; gap: 8px; flex-wrap: wrap; }
+        .stat-pill {
+            background: #f8fafc; border: 1px solid var(--border); padding: 4px 10px;
+            border-radius: 6px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 4px;
+        }
+        .stat-pill b { color: var(--primary); font-size: 13px; }
+
+        .schedule-card {
+            width: 100%; max-width: 1650px; background: white; border-radius: 12px;
+            border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        .table-responsive {
+            width: 100%; max-height: 75vh; overflow-x: auto; overflow-y: auto; position: relative; -webkit-overflow-scrolling: touch;
+        }
+
+        .schedule-table {
+            width: 100%; border-collapse: separate; border-spacing: 0; text-align: center; font-size: 12px; font-weight: 700; min-width: 1700px;
+        }
+
+        .schedule-table thead th {
+            position: sticky; top: 0; z-index: 20; background: #0f172a; color: white;
+            padding: 6px 2px; border: 1px solid #334155; font-size: 12px; font-weight: 900;
+        }
+
+        .col-sticky-serial { position: sticky; right: 0; z-index: 15; background: #f8fafc; width: 36px; min-width: 36px; border-left: 1px solid var(--border) !important; }
+        .col-sticky-name {
+            position: sticky; right: 36px; z-index: 15; background: #f8fafc; width: 145px; min-width: 145px;
+            text-align: right !important; padding-right: 8px !important; border-left: 3px solid #64748b !important;
+            box-shadow: -3px 0 5px rgba(0,0,0,0.08); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        thead th.col-sticky-serial, thead th.col-sticky-name { z-index: 30; background: #0f172a !important; color: #fcd34d !important; }
+
+        .col-subject-input {
+            width: 90px; border: 1px dashed var(--border); background: transparent;
+            text-align: center; font-weight: 800; font-size: 12px; outline: none; border-radius: 4px;
+        }
+        .col-subject-input:focus { border-color: var(--primary); background: #fef3c7; }
+
+        .day-header { font-size: 13px; font-weight: 900; padding: 4px; }
+        .head-sun { background: #1e3a8a !important; }
+        .head-mon { background: #047857 !important; }
+        .head-tue { background: #b45309 !important; }
+        .head-wed { background: #be185d !important; }
+        .head-thu { background: #6d28d9 !important; }
+
+        .period-subhead { font-size: 10px !important; background: #1e293b !important; color: #cbd5e1 !important; width: 34px; min-width: 34px; }
+        .schedule-table td { padding: 4px 1px; border: 1px solid #e2e8f0; height: 38px; }
+
+        .cell-sun { background-color: var(--sun-color); }
+        .cell-mon { background-color: var(--mon-color); }
+        .cell-tue { background-color: var(--tue-color); }
+        .cell-wed { background-color: var(--wed-color); }
+        .cell-thu { background-color: var(--thu-color); }
+
+        .schedule-table tbody tr:hover td { background-color: #fef08a !important; }
+
+        .cell-content { display: inline-block; padding: 2px 4px; border-radius: 4px; font-size: 11px; font-weight: 900; color: #0f172a; }
+        .class-badge { background: white; border: 1px solid #94a3b8; }
+        .total-quota-badge { background: #e0f2fe; color: #0369a1; font-weight: 900; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+
+        .stage-badge { display: inline-block; padding: 2px 6px; border-radius: 6px; font-size: 10px; font-weight: 900; white-space: nowrap; }
+        .stage-lower { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .stage-upper { background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; }
+        .stage-mixed { background: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; }
+
+        .schedule-footer { padding: 10px 15px; background: #f8fafc; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: #64748b; }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-right">
+            <i class="fa-solid fa-table-list"></i>
+            <div>
+                <h1>الجدول المدرسي العام الشامل</h1>
+                <div style="font-size: 11px; opacity: 0.8;">مدرسة الشهيد أشرف حبيب (المسند لهم حصص فقط)</div>
+            </div>
+        </div>
+
+        <div class="nav-actions">
+            <!-- أزرار التصدير لقوالب الإكسيل المربوطة بالروابط المحددة -->
+            <button onclick="exportToTemplate('lower')" class="btn-action btn-excel-lower" title="ترحيل وتنزيل شيت إكسيل الصفوف الأولى">
+                <i class="fa-solid fa-file-excel"></i> إكسيل الصفوف الأولى
+            </button>
+            <button onclick="exportToTemplate('upper')" class="btn-action btn-excel-upper" title="ترحيل وتنزيل شيت إكسيل الصفوف العليا">
+                <i class="fa-solid fa-file-excel"></i> إكسيل الصفوف العليا
+            </button>
+
+            <button onclick="window.print()" class="btn-action btn-print"><i class="fa-solid fa-print"></i> طباعة</button>
+            <button onclick="takeScreenshot('schedule-capture-area')" class="btn-action btn-shot"><i class="fa-solid fa-camera"></i> صورة</button>
+            <a href="schedule.html" class="btn-action" style="background:#475569;"><i class="fa-solid fa-table-cells"></i> جدول المعلم</a>
+            <a href="index.html" class="btn-action"><i class="fa-solid fa-house"></i> الرئيسية</a>
+        </div>
+    </nav>
+
+    <div class="control-bar">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="scheduleSearchInput" placeholder="بحث بالاسم المختصر، المرحلة، أو الفصل..." oninput="filterScheduleTable()">
+        </div>
+
+        <div class="stats-badges">
+            <div class="stat-pill"><i class="fa-solid fa-chalkboard-user" style="color:var(--primary)"></i> المعلمين المسند لهم: <b id="stat-teachers-count">٠</b></div>
+            <div class="stat-pill"><i class="fa-solid fa-clock" style="color:#059669"></i> الحصص: <b id="stat-total-lessons">٠</b></div>
+            <div class="stat-pill"><i class="fa-solid fa-layer-group" style="color:#7e22ce"></i> تصنيف آلي من الحصص</div>
+        </div>
+    </div>
+
+    <div class="schedule-card" id="schedule-capture-area">
+        <div class="table-responsive">
+            <table class="schedule-table" id="mainScheduleTable">
+                <thead>
+                    <tr>
+                        <th rowspan="2" class="col-sticky-serial">م</th>
+                        <th rowspan="2" class="col-sticky-name">الاسم المختصر</th>
+                        <th rowspan="2" style="width:100px; background:#fff; color:#0f172a;">المادة</th>
+                        
+                        <th colspan="8" class="day-header head-sun">الأحد</th>
+                        <th colspan="8" class="day-header head-mon">الإثنين</th>
+                        <th colspan="8" class="day-header head-tue">الثلاثاء</th>
+                        <th colspan="8" class="day-header head-wed">الأربعاء</th>
+                        <th colspan="8" class="day-header head-thu">الخميس</th>
+                        
+                        <th rowspan="2" style="width: 48px; background:#1e3a8a; color:#fcd34d;">النصاب</th>
+                        <th rowspan="2" style="width: 80px; background:#0f172a; color:#38bdf8;">المرحلة</th>
+                    </tr>
+                    
+                    <tr>
+                        <th class="period-subhead">١</th><th class="period-subhead">٢</th><th class="period-subhead">٣</th><th class="period-subhead">٤</th><th class="period-subhead">٥</th><th class="period-subhead">٦</th><th class="period-subhead">٧</th><th class="period-subhead">٨</th>
+                        <th class="period-subhead">١</th><th class="period-subhead">٢</th><th class="period-subhead">٣</th><th class="period-subhead">٤</th><th class="period-subhead">٥</th><th class="period-subhead">٦</th><th class="period-subhead">٧</th><th class="period-subhead">٨</th>
+                        <th class="period-subhead">١</th><th class="period-subhead">٢</th><th class="period-subhead">٣</th><th class="period-subhead">٤</th><th class="period-subhead">٥</th><th class="period-subhead">٦</th><th class="period-subhead">٧</th><th class="period-subhead">٨</th>
+                        <th class="period-subhead">١</th><th class="period-subhead">٢</th><th class="period-subhead">٣</th><th class="period-subhead">٤</th><th class="period-subhead">٥</th><th class="period-subhead">٦</th><th class="period-subhead">٧</th><th class="period-subhead">٨</th>
+                        <th class="period-subhead">١</th><th class="period-subhead">٢</th><th class="period-subhead">٣</th><th class="period-subhead">٤</th><th class="period-subhead">٥</th><th class="period-subhead">٦</th><th class="period-subhead">٧</th><th class="period-subhead">٨</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleTableBody">
+                    <tr><td colspan="44" style="padding:30px; text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> جاري فحص ومزامنة المعلمين المسند لهم حصص فقط...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="schedule-footer">
+            <div><i class="fa-solid fa-laptop-code"></i> تصميم: أ. عبدالعزيز لولح (مستر زيزو)</div>
+            <div>يعتمد / مدير المدرسة: ..............................</div>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        const toAr = n => String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
+
+        // روابط قوالب الإكسيل المعتمدة على Supabase Storage
+        const TEMPLATE_LOWER_URL = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/TAP%20a.xlsx";
+        const TEMPLATE_UPPER_URL = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/TAP%20b.xlsx";
+
+        let activeTeachersList = [];
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await fetchActiveTeachersSchedule();
+        });
+
+        // ================= جلب فقط من له جدول من السحابة =================
+        async function fetchActiveTeachersSchedule() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from("teachers")
+                    .select("*")
+                    .eq("emp_status", "على رأس العمل")
+                    .order('name', { ascending: true });
+
+                if (error) throw error;
+
+                const filtered = [];
+
+                (data || []).forEach(t => {
+                    const sched = t.schedule || {};
+                    
+                    let hasLessons = false;
+                    for (const key in sched) {
+                        if (sched[key] && sched[key].trim() !== "") {
+                            hasLessons = true;
+                            break;
+                        }
+                    }
+
+                    if (hasLessons) {
+                        let sName = t.short_name;
+                        if (!sName) {
+                            const parts = (t.name || "").trim().split(/\s+/);
+                            if (parts.length === 1) sName = parts[0];
+                            else if (parts[0] === "عبد" || parts[0] === "ابو" || parts[0] === "أبو") sName = parts[0] + " " + parts[1] + " " + parts[parts.length - 1];
+                            else sName = parts[0] + " " + parts[parts.length - 1];
+                        }
+
+                        const getDaySlots = (dayName) => {
+                            const slots = [];
+                            for(let i=1; i<=8; i++) {
+                                slots.push(sched[`${dayName}_${i}`] || "");
+                            }
+                            return slots;
+                        };
+
+                        filtered.push({
+                            code: t.code,
+                            name: sName,
+                            fullName: t.name,
+                            subject: t.teaching_subject || t.specialization || "",
+                            sun: getDaySlots("الاحد"),
+                            mon: getDaySlots("الاثنين"),
+                            tue: getDaySlots("الثلاثاء"),
+                            wed: getDaySlots("الاربعاء"),
+                            thu: getDaySlots("الخميس"),
+                            rawSchedule: sched
+                        });
+                    }
+                });
+
+                activeTeachersList = filtered;
+                renderScheduleTable(activeTeachersList);
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById("scheduleTableBody").innerHTML = `<tr><td colspan="44" style="color:red; padding:20px; text-align:center;">حدث خطأ في مزامنة البيانات من السحابة.</td></tr>`;
+            }
+        }
+
+        // ================= تحديد المرحلة =================
+        function determineTeacherStage(allPeriods) {
+            let hasLower = false, hasUpper = false;
+
+            allPeriods.forEach(clsStr => {
+                if (!clsStr) return;
+                const parts = clsStr.split('/');
+                const gradePart = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+
+                if (gradePart === "1" || gradePart === "2" || gradePart === "3" || gradePart.includes("KG")) {
+                    hasLower = true;
+                } else if (gradePart === "4" || gradePart === "5" || gradePart === "6") {
+                    hasUpper = true;
+                }
+            });
+
+            if (hasLower && !hasUpper) return { text: "صفوف أولى", cls: "stage-lower", type: "lower" };
+            if (!hasLower && hasUpper) return { text: "صفوف عليا", cls: "stage-upper", type: "upper" };
+            if (hasLower && hasUpper) return { text: "مشترك", cls: "stage-mixed", type: "mixed" };
+            return { text: "عام", cls: "stage-mixed", type: "mixed" };
+        }
+
+        // ================= رسم الجدول =================
+        function renderScheduleTable(list) {
+            const tbody = document.getElementById("scheduleTableBody");
+            tbody.innerHTML = "";
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="44" style="padding:20px; text-align:center; color:var(--danger);">لا يوجد معلمين مسند لهم حصص حالياً.</td></tr>`;
+                return;
+            }
+
+            let totalLessonsAssigned = 0;
+
+            list.forEach((t, index) => {
+                const allPeriods = [...t.sun, ...t.mon, ...t.tue, ...t.wed, ...t.thu];
+                const activeLessons = allPeriods.filter(p => p && p.trim() !== "").length;
+                totalLessonsAssigned += activeLessons;
+
+                const stageInfo = determineTeacherStage(allPeriods);
+
+                let rowHtml = `
+                    <tr>
+                        <td class="col-sticky-serial" style="font-weight:900;">${toAr(index + 1)}</td>
+                        <td class="col-sticky-name" style="font-weight:900; color:var(--primary);" title="${t.fullName}">${t.name}</td>
+                        <td><input type="text" class="col-subject-input" value="${t.subject}" placeholder="المادة..."></td>
+                `;
+
+                t.sun.forEach(c => rowHtml += `<td class="cell-sun">${c ? `<span class="cell-content class-badge">${c}</span>` : ''}</td>`);
+                t.mon.forEach(c => rowHtml += `<td class="cell-mon">${c ? `<span class="cell-content class-badge">${c}</span>` : ''}</td>`);
+                t.tue.forEach(c => rowHtml += `<td class="cell-tue">${c ? `<span class="cell-content class-badge">${c}</span>` : ''}</td>`);
+                t.wed.forEach(c => rowHtml += `<td class="cell-wed">${c ? `<span class="cell-content class-badge">${c}</span>` : ''}</td>`);
+                t.thu.forEach(c => rowHtml += `<td class="cell-thu">${c ? `<span class="cell-content class-badge">${c}</span>` : ''}</td>`);
+
+                rowHtml += `
+                        <td><span class="total-quota-badge">${toAr(activeLessons)}</span></td>
+                        <td><span class="stage-badge ${stageInfo.cls}">${stageInfo.text}</span></td>
+                    </tr>
+                `;
+
+                tbody.innerHTML += rowHtml;
+            });
+
+            document.getElementById("stat-teachers-count").innerText = toAr(list.length);
+            document.getElementById("stat-total-lessons").innerText = toAr(totalLessonsAssigned);
+        }
+
+        // ================= ترحيل البيانات وتنزيل الإكسيل من القوالب =================
+        async function exportToTemplate(stageType) {
+            const baseUrl = (stageType === 'lower') ? TEMPLATE_LOWER_URL : TEMPLATE_UPPER_URL;
+            // إضافة وقت منع الكاش لضمان جلب أحدث قالب من Storage
+            const templateUrl = `${baseUrl}?t=${new Date().getTime()}`;
+            
+            const stageLabel = (stageType === 'lower') ? "الصفوف الأولى" : "الصفوف العليا";
+            const fileName = (stageType === 'lower') ? `الجدول_العام_للصفوف_الأولى_${new Date().toLocaleDateString('ar-EG')}.xlsx` : `الجدول_العام_للصفوف_العليا_${new Date().toLocaleDateString('ar-EG')}.xlsx`;
+
+            const isTargetClass = (clsStr) => {
+                if (!clsStr) return false;
+                const parts = clsStr.split('/');
+                const g = parts.length > 1 ? parts[1].trim() : parts[0].trim();
+                if (stageType === 'lower') {
+                    return g === "1" || g === "2" || g === "3" || g.includes("KG");
+                } else {
+                    return g === "4" || g === "5" || g === "6";
+                }
+            };
+
+            // فلترة من له حصص في المرحلة المطلوبة
+            const targetTeachers = activeTeachersList.filter(t => {
+                const allPeriods = [...t.sun, ...t.mon, ...t.tue, ...t.wed, ...t.thu];
+                return allPeriods.some(c => isTargetClass(c));
+            });
+
+            if (targetTeachers.length === 0) {
+                alert(`⚠️ لا يوجد معلمين مسند لهم حصص في ${stageLabel}!`);
+                return;
+            }
+
+            try {
+                // 1. جلب ملف القالب من الرابط
+                const response = await fetch(templateUrl);
+                if (!response.ok) throw new Error("تعذر تحميل قالب الإكسيل من السيرفر.");
+                const arrayBuffer = await response.arrayBuffer();
+
+                // 2. تحميل القالب بمكتبة ExcelJS
+                const workbook = new ExcelJS.Workbook();
+                await workbook.xlsx.load(arrayBuffer);
+                const worksheet = workbook.worksheets[0];
+
+                const daysList = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس"];
+                let startRow = 4; // بداية كتابة المعلمين من الصف الرابع
+
+                targetTeachers.forEach((t, idx) => {
+                    const row = worksheet.getRow(startRow + idx);
+
+                    // عمود A (المسلسل) وعمود B (الاسم المختصر)
+                    row.getCell(1).value = (idx + 1);
+                    row.getCell(2).value = t.name;
+
+                    let colIndex = 3; // بداية من العمود C (الأحد الحصة الأولى)
+
+                    daysList.forEach(dName => {
+                        for (let p = 1; p <= 8; p++) {
+                            const rawVal = t.rawSchedule[`${dName}_${p}`] || "";
+                            if (isTargetClass(rawVal)) {
+                                row.getCell(colIndex).value = rawVal;
+                            } else {
+                                row.getCell(colIndex).value = "";
+                            }
+                            colIndex++;
+                        }
+                    });
+
+                    row.commit();
+                });
+
+                // 3. كتابة وتنزيل الملف على جهاز المستخدم
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+                saveAs(blob, fileName);
+
+                alert(`✅ تم بنجاح ترحيل جدول ${stageLabel} وتنزيل الملف!`);
+
+            } catch (err) {
+                console.error(err);
+                alert("❌ حدث خطأ أثناء ترحيل الإكسيل: " + err.message);
+            }
+        }
+
+        // ================= فلترة وبحث سريع =================
+        function filterScheduleTable() {
+            const q = document.getElementById("scheduleSearchInput").value.trim().toLowerCase();
+            if (!q) {
+                renderScheduleTable(activeTeachersList);
+                return;
+            }
+
+            const filtered = activeTeachersList.filter(t => {
+                const allPeriods = [...t.sun, ...t.mon, ...t.tue, ...t.wed, ...t.thu];
+                const stageInfo = determineTeacherStage(allPeriods);
+
+                const matchName = t.name.toLowerCase().includes(q) || t.fullName.toLowerCase().includes(q);
+                const matchStage = stageInfo.text.toLowerCase().includes(q);
+                const matchCells = allPeriods.join(" ").toLowerCase().includes(q);
+
+                return matchName || matchStage || matchCells;
+            });
+
+            renderScheduleTable(filtered);
+        }
+
+        function takeScreenshot(targetId) {
+            const targetEl = document.getElementById(targetId);
+            const scrollArea = targetEl.querySelector('.table-responsive');
+            
+            let origMaxHeight = scrollArea.style.maxHeight;
+            let origOverflow = scrollArea.style.overflow;
+            
+            scrollArea.style.maxHeight = 'none';
+            scrollArea.style.overflow = 'visible';
+
+            html2canvas(targetEl, { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
+                scrollArea.style.maxHeight = origMaxHeight;
+                scrollArea.style.overflow = origOverflow;
+
+                let link = document.createElement('a');
+                link.download = `الجدول_العام_الشامل_${new Date().toLocaleDateString('ar-EG')}.jpg`;
+                link.href = canvas.toDataURL("image/jpeg", 0.95);
+                link.click();
+            }).catch(err => {
+                alert("حدث خطأ أثناء الالتقاط.");
+            });
+        }
+    </script>
+</body>
+</html>
