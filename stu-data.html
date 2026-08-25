@@ -2,48 +2,53 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>مركز إدارة البيانات المجمعة - مستر زيزو</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>منظومة مستر زيزو لادارة بيانات المدرسة - مركز إدارة البيانات المجمعة</title>
+    
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- مكتبات Supabase و Excel ومحرك ZezoDB -->
+    <!-- مكتبات Supabase و Excel الرسمية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="zezo-db.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
         :root { 
-            --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; 
+            --primary: #0f2b48; --dark: #0f172a; --bg: #f1f5f9; 
             --save-btn: #4f46e5; --danger: #be123c; --warning: #d97706; --info: #0284c7; --success: #16a34a;
         }
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
-        body { background-color: var(--bg); height: 100vh; display: flex; flex-direction: column; overflow: hidden; padding: 10px 20px; }
+        body { background-color: var(--bg); height: 100vh; display: flex; flex-direction: column; overflow: hidden; padding: 8px 12px; }
 
-        .top-navigation { width: 100%; background: var(--dark); padding: 10px 20px; border-radius: 10px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .nav-title { font-size: 15px; font-weight: 900; color: #93c5fd; }
-        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .top-navigation { width: 100%; background: var(--primary); padding: 10px 16px; border-radius: 14px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-bottom: 3px solid #f59e0b; flex-wrap: wrap; gap: 8px; }
+        .nav-title { font-size: 14px; font-weight: 900; color: #f8fafc; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .nav-middle { font-weight: 800; font-size: 16px; color: #cbd5e1; display: none; }
+        @media(min-width: 768px) { .nav-middle { display: block; } .nav-title { font-size: 16px; } }
+        .btn-nav { text-decoration: none; color: white; background: #1e3a8a; padding: 6px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s; border: 1px solid rgba(255,255,255,0.2); }
         .btn-nav:hover { background: var(--info); }
 
-        .tool-bar { background: white; padding: 8px 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid #cbd5e1; flex-wrap: wrap; gap: 8px; }
-        .controls-group { display: flex; gap: 8px; align-items: center; }
-        select, .search-input { padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 13px; outline: none; cursor: pointer; }
-        .search-input { cursor: text; width: 180px; }
-        .search-input:focus { border-color: var(--info); }
+        .tool-bar { background: white; padding: 8px 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border: 1px solid #cbd5e1; flex-wrap: wrap; gap: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .controls-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        select, .search-input { padding: 6px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 12px; outline: none; cursor: pointer; background-color: #f8fafc; }
+        .search-input { cursor: text; width: 150px; }
+        .search-input:focus, select:focus { border-color: var(--info); background: white; }
 
-        .btn { border: none; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-weight: 700; color: white; display: flex; align-items: center; gap: 6px; font-size: 12px; transition: 0.2s; }
+        .btn { border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 800; color: white; display: flex; align-items: center; gap: 5px; font-size: 11.5px; transition: 0.15s ease; border-bottom: 3px solid rgba(0,0,0,0.2); touch-action: manipulation; }
+        .btn:active { transform: translateY(2px); border-bottom-width: 1px; }
         .btn-stats { background: var(--info); }
         .btn-import { background: #7c3aed; }
         .btn-excel { background: #166534; } 
-        .btn-save { background: var(--save-btn); box-shadow: 0 0 12px rgba(79, 70, 229, 0.3); }
-        .btn-golden { background: linear-gradient(135deg, #d97706, #b45309); color: white; font-weight: 900; box-shadow: 0 0 10px rgba(217,119,6,0.4); }
+        .btn-save { background: var(--save-btn); }
+        .btn-golden { background: linear-gradient(135deg, #d97706, #b45309); color: white; font-weight: 900; }
         .btn-pass-all { background: var(--success); }
-        .btn-promote { background: var(--danger); box-shadow: 0 0 10px rgba(190, 18, 60, 0.3); }
-        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-promote { background: var(--danger); }
+        .btn:hover { opacity: 0.92; }
 
-        .table-wrapper { flex-grow: 1; overflow: auto; background: white; border-radius: 10px; border: 1px solid #cbd5e1; }
-        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 1550px; table-layout: fixed; }
+        .table-wrapper { flex-grow: 1; overflow: auto; background: white; border-radius: 12px; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; text-align: right; min-width: 1500px; table-layout: fixed; }
         
-        th:nth-child(1) { width: 40px; }  
+        th:nth-child(1) { width: 45px; }  
         th:nth-child(2) { width: 230px; } 
         th:nth-child(3) { width: 65px; }  
         th:nth-child(4) { width: 95px; }  
@@ -59,71 +64,73 @@
         th:nth-child(14) { width: 85px; } 
         th:nth-child(15) { width: 110px; } 
 
-        thead th { position: sticky; top: 0; background: var(--primary); color: white; padding: 10px 4px; font-size: 12px; z-index: 5; border: 1px solid #1e40af; }
-        .th-content { display: flex; align-items: center; gap: 5px; }
-        .export-cb { accent-color: white; cursor: pointer; }
+        thead th { position: sticky; top: 0; background: var(--primary); color: white; padding: 8px 4px; font-size: 11.5px; z-index: 5; border: 1px solid #1e3a8a; }
+        .th-content { display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .export-cb { accent-color: #f59e0b; cursor: pointer; width: 14px; height: 14px; }
 
         tbody td { padding: 2px; border: 1px solid #e2e8f0; }
-        .editable-input, .result-select { width: 100%; border: none; background: transparent; font-size: 12.5px; font-weight: 600; font-family: 'Cairo'; padding: 5px; outline: none; }
-        .editable-input:focus, .result-select:focus { background: #f0f7ff; box-shadow: inset 0 0 0 2px var(--info); border-radius: 3px; }
-        .readonly-cell { background-color: #f8fafc; color: var(--primary); font-weight: 800; }
+        .editable-input, .result-select { width: 100%; border: none; background: transparent; font-size: 12px; font-weight: 600; font-family: 'Cairo'; padding: 4px 6px; outline: none; }
+        .editable-input:focus, .result-select:focus { background: #eff6ff; box-shadow: inset 0 0 0 2px var(--info); border-radius: 4px; }
+        .readonly-cell { background-color: #f8fafc; color: var(--primary); font-weight: 800; text-align: center; }
         .result-select { cursor: pointer; color: var(--primary); font-weight: 900; }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 12px; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: var(--bg); width: 90%; max-width: 950px; border-radius: 12px; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        .modal-header { background: var(--primary); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 20px; overflow-y: auto; }
+        .modal-content { background: var(--bg); width: 100%; max-width: 900px; border-radius: 16px; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .modal-header { background: var(--primary); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-b: 2px solid #f59e0b; }
+        .modal-body { padding: 16px; overflow-y: auto; }
         
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: white; padding: 15px; border-radius: 10px; border-top: 4px solid var(--info); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .stat-card h4 { color: var(--dark); font-size: 14px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 6px; }
-        .stat-line { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px; }
-        .stat-val { color: var(--primary); font-weight: 900; font-size: 15px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .stat-card { background: white; padding: 12px 14px; border-radius: 12px; border-top: 4px solid var(--info); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .stat-card h4 { color: var(--dark); font-size: 13px; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+        .stat-line { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px; }
+        .stat-val { color: var(--primary); font-weight: 900; font-size: 14px; }
 
-        .radar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
-        .class-chip { padding: 10px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; background: white; display: flex; flex-direction: column; gap: 6px; }
-        .class-name { font-size: 15px; font-weight: 900; color: var(--dark); border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
-        .class-details { display: flex; justify-content: space-around; font-size: 12px; font-weight: 700; color: #475569; }
-        .class-total { font-size: 13px; font-weight: 900; background: #f8fafc; padding: 3px; border-radius: 4px; color: var(--primary); }
+        .radar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+        .class-chip { padding: 8px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; background: white; display: flex; flex-direction: column; gap: 4px; }
+        .class-name { font-size: 13.5px; font-weight: 900; color: var(--dark); border-bottom: 1px dashed #cbd5e1; padding-bottom: 2px; }
+        .class-details { display: flex; justify-content: space-around; font-size: 11px; font-weight: 700; color: #475569; }
+        .class-total { font-size: 12px; font-weight: 900; background: #f8fafc; padding: 2px; border-radius: 4px; color: var(--primary); }
         
-        .density-low { border-bottom: 4px solid var(--info); } 
-        .density-mid { border-bottom: 4px solid var(--warning); }
-        .density-high { border-bottom: 4px solid var(--danger); background: #fef2f2; }
+        .density-low { border-bottom: 3px solid var(--info); } 
+        .density-mid { border-bottom: 3px solid var(--warning); }
+        .density-high { border-bottom: 3px solid var(--danger); background: #fef2f2; }
 
         #file-input { display: none; }
-        .zizo-signature { position: fixed; bottom: 5px; left: 5px; background: white; padding: 2px 12px; border-radius: 10px; font-size: 10px; font-weight: 900; border: 1px solid #ddd; z-index: 100;}
+        .zizo-signature { position: fixed; bottom: 4px; left: 6px; background: white; padding: 2px 10px; border-radius: 8px; font-size: 10px; font-weight: 900; border: 1px solid #cbd5e1; z-index: 50; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
- <nav class="top-navigation" style="display: flex; justify-content: space-between; align-items: center; min-height: 80px; padding: 0 20px; background-color: #081f36;">
-    <div class="nav-title">
-        <i class="fa-solid fa-database"></i> مركز إدارة البيانات المجمعة لشئون التلاميذ
-        <span id="mode-badge" style="font-size: 11px; margin-right: 10px; padding: 3px 8px; border-radius: 5px; background: #10b981; color: white;">جاري الفحص...</span>
-    </div>
+    <!-- الشريط العلوي -->
+    <nav class="top-navigation">
+        <div class="nav-title">
+            <i class="fa-solid fa-users-gear text-amber-400"></i> مركز إدارة البيانات المجمعة لشئون التلاميذ
+            <span id="mode-badge" style="font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 800; background: #10b981; color: white;">جاري الفحص...</span>
+        </div>
 
-    <div class="nav-middle" style="font-weight: bold; font-size: 24px; color: #b8b6b6;">
-        إعداد / مستر زيزو
-    </div>
+        <div class="nav-middle">
+            منظومة مستر زيزو لإدارة بيانات المدرسة
+        </div>
 
-    <div style="display:flex; gap:8px;">
-        <a href="index.html" class="btn-nav" style="background:#1e3a8a; padding: 10px 30px; color: white; text-decoration: none; border-radius: 5px;">
-            <i class="fa-solid fa-house"></i> الرئيسية
-        </a>
-    </div>
-</nav>
+        <div style="display:flex; gap:8px;">
+            <a href="index.html" class="btn-nav">
+                <i class="fa-solid fa-house"></i> الرئيسية
+            </a>
+        </div>
+    </nav>
 
+    <!-- شريط الأدوات والعمليات -->
     <div class="tool-bar">
         <div class="controls-group">
-            <select id="grade-filter" onchange="loadFromSupabase()">
+            <select id="grade-filter" onchange="loadStudentData()">
                 <option value="" disabled selected>اختر الصف لفلترة البيانات...</option>
                 <option value="KG1">KG1</option><option value="KG2">KG2</option>
                 <option value="الأول">الصف الأول</option><option value="الثاني">الصف الثاني</option>
                 <option value="الثالث">الصف الثالث</option><option value="الرابع">الصف الرابع</option>
                 <option value="الخامس">الصف الخامس</option><option value="السادس">الصف السادس</option>
             </select>
-            <input type="text" id="search-student" class="search-input" placeholder="🔍 بحث عن تلميذ بالصف..." oninput="filterTableByName()">
+            <input type="text" id="search-student" class="search-input" placeholder="🔍 بحث بالاسم..." oninput="filterTableByName()">
             <button class="btn btn-stats" onclick="toggleModal(true)"><i class="fa-solid fa-chart-pie"></i> إحصاء</button>
             <button class="btn btn-golden" onclick="generateMasterCapsule()"><i class="fa-solid fa-bolt"></i> اعتماد إحصاء</button>
         </div>
@@ -131,14 +138,15 @@
         <div class="controls-group">
             <button class="btn btn-pass-all" onclick="markVisibleAsPass()"><i class="fa-solid fa-check-double"></i> الكل ناجح</button>
             <button class="btn btn-promote" id="btn-promote" onclick="promoteStudents()"><i class="fa-solid fa-angles-up"></i> ترحيل الصف</button>
-            <div style="width: 1px; height: 25px; background: #cbd5e1; margin: 0 5px;"></div>
+            <div style="width: 1px; height: 22px; background: #cbd5e1; margin: 0 3px;"></div>
             <input type="file" id="file-input" accept=".xlsx, .xls" onchange="handleFile(event)">
             <button class="btn btn-import" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-file-import"></i> إكسيل</button>
             <button class="btn btn-excel" onclick="customExportToExcel()"><i class="fa-solid fa-file-excel"></i> تصدير</button>
-            <button class="btn btn-save" onclick="saveAllToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ البيانات</button>
+            <button class="btn btn-save" onclick="saveAllStudents()"><i class="fa-solid fa-floppy-disk"></i> حفظ البيانات</button>
         </div>
     </div>
 
+    <!-- جدول البيانات -->
     <div class="table-wrapper">
         <table id="main-table">
             <thead>
@@ -161,16 +169,17 @@
                 </tr>
             </thead>
             <tbody id="table-body">
-                <tr><td colspan="15" style="text-align:center; padding:100px; color:#94a3b8; font-size:15px;">اختر الصف من القائمة أو استورد ملف إكسيل للبدء...</td></tr>
+                <tr><td colspan="15" style="text-align:center; padding:90px; color:#94a3b8; font-size:14px; font-weight:700;">اختر الصف من القائمة المنسدلة بالأعلى أو استورد ملف إكسيل للبدء...</td></tr>
             </tbody>
         </table>
     </div>
 
+    <!-- نافذة الإحصاء السريع ورادار الكثافة -->
     <div class="modal-overlay" id="statsModal" onclick="if(event.target.id==='statsModal')toggleModal(false)">
         <div class="modal-content">
             <div class="modal-header">
-                <h2><i class="fa-solid fa-chart-line"></i> التحليل الإحصائي للصف <span id="modal-grade-title"></span></h2>
-                <button onclick="toggleModal(false)" style="background:transparent; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+                <h2 style="font-size:15px; font-weight:900;"><i class="fa-solid fa-chart-line text-yellow-300"></i> التحليل الإحصائي للصف <span id="modal-grade-title"></span></h2>
+                <button onclick="toggleModal(false)" style="background:transparent; border:none; color:white; font-size:22px; cursor:pointer;">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="stats-grid">
@@ -178,7 +187,7 @@
                         <h4><i class="fa-solid fa-users" style="color:var(--info)"></i> القوة الإجمالية</h4>
                         <div class="stat-line"><span>بنين:</span> <span class="stat-val" id="st-b">0</span></div>
                         <div class="stat-line"><span>بنات:</span> <span class="stat-val" id="st-g">0</span></div>
-                        <div class="stat-line" style="border-top:1px solid #eee; padding-top:6px;"><span style="color:var(--danger)">الإجمالي:</span> <span class="stat-val" style="color:var(--danger)" id="st-all">0</span></div>
+                        <div class="stat-line" style="border-top:1px solid #eee; padding-top:4px;"><span style="color:var(--danger)">الإجمالي:</span> <span class="stat-val" style="color:var(--danger)" id="st-all">0</span></div>
                     </div>
                     <div class="stat-card">
                         <h4><i class="fa-solid fa-star-and-crescent" style="color:var(--primary)"></i> ديانة (مسلم)</h4> 
@@ -199,27 +208,130 @@
                         <div class="stat-line"><span>دمج:</span> <span class="stat-val" id="st-dmj">0</span></div>
                     </div>
                 </div>
-                <h4 style="margin-bottom:12px; border-bottom:2px solid #eee; padding-bottom:5px; color:var(--dark)"><i class="fa-solid fa-school-flag" style="color:var(--info)"></i> رادار كثافة الفصول</h4>
+                <h4 style="margin-bottom:10px; border-bottom:2px solid #eee; padding-bottom:4px; color:var(--dark); font-size:13px;"><i class="fa-solid fa-school-flag" style="color:var(--info)"></i> رادار كثافة الفصول</h4>
                 <div class="radar-grid" id="class-radar"></div>
             </div>
         </div>
     </div>
 
-    <div class="zizo-signature">إعداد مستر زيزو</div>
+    <!-- التوقيع -->
+    <div class="zizo-signature">منظومة مستر زيزو لإدارة بيانات المدرسة © 2026/2027</div>
 
     <script>
+        // إعدادات المحرك المزدوج (Online Supabase + Offline IndexedDB)
+        const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
+        const DB_VERSION = 2;
         const stdGrades = ["KG1", "KG2", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
+
+        // محرك IndexedDB المدمج فائق السرعة
+        function openLocalDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('students')) {
+                        db.createObjectStore('students', { keyPath: 'code' });
+                    }
+                    if (!db.objectStoreNames.contains('system_capsules')) {
+                        db.createObjectStore('system_capsules', { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+
+        // محرك ZezoDB الموحد لربط العمليات (أونلاين / أوفلاين)
+        const ZezoEngine = {
+            getMode: () => localStorage.getItem('ZEZO_APP_MODE') || 'online',
+
+            async getAll(table) {
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(table, 'readonly');
+                        const store = tx.objectStore(table);
+                        const req = store.getAll();
+                        req.onsuccess = () => resolve(req.result || []);
+                        req.onerror = () => reject(req.error);
+                    });
+                } else {
+                    let allData = [];
+                    let start = 0;
+                    const step = 1000;
+                    let hasMore = true;
+                    while (hasMore) {
+                        const { data, error } = await sbClient.from(table).select('*').range(start, start + step - 1);
+                        if (error) throw error;
+                        if (!data || data.length === 0) break;
+                        allData = allData.concat(data);
+                        start += step;
+                        if (data.length < step) hasMore = false;
+                    }
+                    return allData;
+                }
+            },
+
+            async upsert(table, records, conflictKey = 'code') {
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(table, 'readwrite');
+                        const store = tx.objectStore(table);
+                        records.forEach(r => store.put(r));
+                        tx.oncomplete = () => resolve(true);
+                        tx.onerror = () => reject(tx.error);
+                    });
+                } else {
+                    const chunkSize = 300;
+                    for (let i = 0; i < records.length; i += chunkSize) {
+                        const chunk = records.slice(i, i + chunkSize);
+                        const { error } = await sbClient.from(table).upsert(chunk, { onConflict: conflictKey });
+                        if (error) throw error;
+                    }
+                    return true;
+                }
+            },
+
+            async delete(table, keyField, keyValues) {
+                const keys = Array.isArray(keyValues) ? keyValues : [keyValues];
+                if (keys.length === 0) return true;
+
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction(table, 'readwrite');
+                        const store = tx.objectStore(table);
+                        keys.forEach(k => store.delete(k));
+                        tx.oncomplete = () => resolve(true);
+                        tx.onerror = () => reject(tx.error);
+                    });
+                } else {
+                    const chunkSize = 300;
+                    for (let i = 0; i < keys.length; i += chunkSize) {
+                        const chunk = keys.slice(i, i + chunkSize);
+                        const { error } = await sbClient.from(table).delete().in(keyField, chunk);
+                        if (error) throw error;
+                    }
+                    return true;
+                }
+            }
+        };
 
         // تحديث مؤشر الاتصال
         window.addEventListener('DOMContentLoaded', () => {
-            const mode = ZezoDB.getMode();
+            const mode = ZezoEngine.getMode();
             const badge = document.getElementById('mode-badge');
             if (mode === 'offline') {
-                badge.style.background = '#f59e0b';
-                badge.innerHTML = '<i class="fa-solid fa-laptop"></i> وضع محلي (بدون نت)';
+                badge.style.background = '#d97706';
+                badge.innerHTML = '<i class="fa-solid fa-laptop"></i> وضع محلي (أوفلاين)';
             } else {
                 badge.style.background = '#10b981';
-                badge.innerHTML = '<i class="fa-solid fa-cloud"></i> متصل بالسحابة';
+                badge.innerHTML = '<i class="fa-solid fa-globe"></i> متصل بالسحابة (أونلاين)';
             }
         });
 
@@ -227,101 +339,89 @@
             return arr.sort((a, b) => {
                 if (a.gender === "ذكر" && b.gender !== "ذكر") return -1;
                 if (a.gender !== "ذكر" && b.gender === "ذكر") return 1;
-                return (a.name || "").localeCompare((b.name || ""), 'ar');
+                return (a.name || "").localeCompare((a.name || ""), 'ar');
             });
         }
 
-        // --- دوال مساعدة لترقية اسم الفصل بذكاء ---
+        // تحويل الأرقام لإنجليزية لمعالجة الفصول بدقة
         function toEnglishNum(str) {
             if (!str) return "";
             const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
             let result = String(str);
             for (let i = 0; i < 10; i++) {
-                let regex = new RegExp(arabicNumbers[i], 'g');
-                result = result.replace(regex, i);
+                result = result.replace(new RegExp(arabicNumbers[i], 'g'), i);
             }
             return result;
         }
 
+        // ترقية رقم الفصل بذكاء مع ترحيل الصف
         function getNextClassName(oldClass, currentGradeText, nextGradeText) {
             if(!oldClass) return "";
-            
-            const gradeNums = {
-                "KG1":"1", "KG2":"2", 
-                "الأول":"1", "الثاني":"2", "الثالث":"3", 
-                "الرابع":"4", "الخامس":"5", "السادس":"6"
-            };
-            
+            const gradeNums = { "KG1":"1", "KG2":"2", "الأول":"1", "الثاني":"2", "الثالث":"3", "الرابع":"4", "الخامس":"5", "السادس":"6" };
             let currNum = gradeNums[currentGradeText];
             let nextNum = gradeNums[nextGradeText];
             
             if(currNum && nextNum) {
-                let cleanClass = toEnglishNum(oldClass).trim();
-                cleanClass = cleanClass.replace(/\\/g, '/').replace(/-/g, '/');
-                
+                let cleanClass = toEnglishNum(oldClass).trim().replace(/\\/g, '/').replace(/-/g, '/');
                 if (cleanClass.includes('/')) {
                     let parts = cleanClass.split('/');
                     let p0 = parts[0].trim(); 
                     let p1 = parts[1].trim(); 
-                    
-                    if (p1 === currNum) {
-                        return p0 + '/' + nextNum; 
-                    } else if (p0 === currNum) {
-                        return nextNum + '/' + p1; 
-                    } else if (p0 === p1 && p0 === currNum) {
-                        return nextNum + '/' + nextNum; 
-                    } else {
-                        return p0 + '/' + nextNum;
-                    }
-                } else {
-                    return cleanClass;
+                    if (p1 === currNum) return p0 + '/' + nextNum; 
+                    else if (p0 === currNum) return nextNum + '/' + p1; 
+                    else return p0 + '/' + nextNum;
                 }
+                return cleanClass;
             }
             return oldClass; 
         }
 
-        // --- 1. جلب البيانات (محدث ليعمل مع ZezoDB) ---
-        async function loadFromSupabase() {
+        // 1. جلب وعرض بيانات الصف المحدد
+        async function loadStudentData() {
             const g = document.getElementById("grade-filter").value;
             if(!g) return;
             const tbody = document.getElementById("table-body");
-            tbody.innerHTML = "<tr><td colspan='15' style='text-align:center; padding:50px;'>⏳ جاري جلب البيانات...</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='15' style='text-align:center; padding:50px; font-weight:800; color:#1e3a8a;'><i class='fa-solid fa-spinner fa-spin text-xl'></i> جاري جلب وتجهيز البيانات...</td></tr>";
             document.getElementById("search-student").value = ""; 
             
             try {
-                // جلب كل التلاميذ من المحرك (سحابي أو محلي تلقائياً)
-                const allData = await ZezoDB.getAll('students');
-                
-                // فلترة الصف المطلوب (مع استخدام trim لتجاهل المسافات الزائدة)
+                const allData = await ZezoEngine.getAll('students');
                 let data = allData.filter(student => (student.grade || "").trim() === g.trim());
 
                 if (!data || data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan='15' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة لهذا الصف (${g}). يمكنك استيراد ملف إكسيل.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan='15' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة لهذا الصف (${g}). يمكنك استيراد ملف إكسيل للبدء.</td></tr>`;
                     return;
                 }
 
                 let arr = data.filter(d => d.transfer_type !== "محول من");
                 arr = sortStudents(arr);
+
+                // تسريع الرندرة الفائقة عبر DocumentFragment
+                const fragment = document.createDocumentFragment();
+                arr.forEach((s, i) => {
+                    fragment.appendChild(createRowElement(s, i + 1));
+                });
+
                 tbody.innerHTML = "";
-                arr.forEach((s, i) => renderRow(s, i + 1));
+                tbody.appendChild(fragment);
             } catch (err) {
-                tbody.innerHTML = `<tr><td colspan='15' style='text-align:center; padding:40px; color:red;'>❌ خطأ في جلب البيانات: ${err.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan='15' style='text-align:center; padding:40px; color:red; font-weight:bold;'>❌ خطأ في جلب البيانات: ${err.message}</td></tr>`;
             }
         }
 
-        // --- 2. البحث داخل الصف المعروض ---
+        // 2. البحث الفوري داخل الصف
         function filterTableByName() {
-            let input = document.getElementById("search-student").value.toLowerCase();
-            let rows = document.querySelectorAll("#table-body tr");
+            const input = document.getElementById("search-student").value.toLowerCase();
+            const rows = document.querySelectorAll("#table-body tr");
             rows.forEach(row => {
                 if(row.cells.length < 2) return;
-                let name = row.querySelector('[data-field="name"]').value.toLowerCase();
-                if(name.includes(input)) row.style.display = "";
-                else row.style.display = "none";
+                const nameInp = row.querySelector('[data-field="name"]');
+                const name = nameInp ? nameInp.value.toLowerCase() : "";
+                row.style.display = name.includes(input) ? "" : "none";
             });
         }
 
-        // --- 3. استيراد الإكسيل ---
+        // 3. استيراد ملف الإكسيل
         function handleFile(e) {
             const file = e.target.files[0];
             if(!file) return;
@@ -333,7 +433,7 @@
                     let arr = [];
                     
                     jsonData.forEach(row => {
-                        const nid = String(row.nid || row["الرقم القومي"] || "");
+                        const nid = String(row.nid || row["الرقم القومي"] || "").trim();
                         let dob = "", gen = "", age = "";
                         if (nid.length === 14) {
                             const y = (nid[0] === '3' ? '20' : '19') + nid.substring(1, 3);
@@ -368,19 +468,24 @@
                     });
 
                     arr = sortStudents(arr);
-                    document.getElementById("table-body").innerHTML = "";
-                    arr.forEach((s, i) => renderRow(s, i + 1));
-                    alert("تم استيراد الملف! يرجى الضغط على (حفظ) لتسجيلهم في المنظومة.");
-                } catch(err) { alert("فشل قراءة الملف: " + err.message); }
+                    const fragment = document.createDocumentFragment();
+                    arr.forEach((s, i) => fragment.appendChild(createRowElement(s, i + 1)));
+
+                    const tbody = document.getElementById("table-body");
+                    tbody.innerHTML = "";
+                    tbody.appendChild(fragment);
+                    alert("✅ تم استيراد الملف بنجاح! اضغط على (حفظ البيانات) لتثبيتها في المنظومة.");
+                } catch(err) { alert("❌ فشل قراءة الملف: " + err.message); }
+                finally { e.target.value = ''; }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        // --- 4. رسم الصفوف ---
-        function renderRow(d, i) {
+        // 4. إنشاء صف الجدول فائق السرعة
+        function createRowElement(d, i) {
             const tr = document.createElement("tr");
             tr.innerHTML = `
-                <td>${i}</td>
+                <td style="text-align:center; font-weight:bold;">${i}</td>
                 <td><input class="editable-input" value="${d.name || ''}" data-field="name"></td>
                 <td><input class="editable-input" value="${d.class || ''}" data-field="class"></td>
                 <td><input class="editable-input" value="${(d.code && !d.code.startsWith('TEMP_')) ? d.code : ''}" data-field="code"></td>
@@ -402,50 +507,46 @@
                 <td><input class="editable-input" value="${d.transfer_type || 'أساسي'}" data-field="transfer_type"></td>
                 <td><input class="editable-input" value="${d.father_mobile || ''}" data-field="father_mobile"></td>
             `;
-            document.getElementById("table-body").appendChild(tr);
+            return tr;
         }
 
-        // --- 5. تحديد الكل ناجح ---
+        // 5. تحديد الكل ناجح
         function markVisibleAsPass() {
-            let rows = document.querySelectorAll("#table-body tr");
+            const rows = document.querySelectorAll("#table-body tr");
             let count = 0;
             rows.forEach(row => {
-                if(row.cells.length < 2) return; 
-                if(row.style.display !== "none") { 
-                    let select = row.querySelector('[data-field="result"]');
-                    if(select && !select.value) { 
-                        select.value = "ناجح";
-                        count++;
-                    }
+                if(row.cells.length < 2 || row.style.display === "none") return;
+                const select = row.querySelector('[data-field="result"]');
+                if(select && !select.value) { 
+                    select.value = "ناجح";
+                    count++;
                 }
             });
             if(count > 0) alert(`تم تحديد النتيجة "ناجح" لعدد (${count}) تلميذ من المعروضين.`);
             else alert("جميع التلاميذ الظاهرين محددة نتيجتهم بالفعل!");
         }
 
-        // --- 6. الترحيل الذكي للصف (محدث ليعمل مع ZezoDB) ---
+        // 6. الترحيل الذكي الشامل للصف
         async function promoteStudents() {
             const currentGrade = document.getElementById("grade-filter").value;
-            if (!currentGrade) { alert("اختر الصف أولاً من القائمة!"); return; }
+            if (!currentGrade) { alert("اختر الصف أولاً من القائمة المنسدلة!"); return; }
 
             const rows = document.querySelectorAll("#table-body tr");
             if(rows.length === 0 || rows[0].cells.length < 2) return;
 
             let missingCount = 0;
-            let processCount = 0;
-            let deleteCount = 0;
             const nextGradeMap = {"KG1":"KG2", "KG2":"الأول", "الأول":"الثاني", "الثاني":"الثالث", "الثالث":"الرابع", "الرابع":"الخامس", "الخامس":"السادس", "السادس":"خريج"};
 
             rows.forEach(row => {
-                if(row.cells.length > 2) {
-                    if(!row.querySelector('[data-field="result"]').value) missingCount++;
+                if(row.cells.length > 2 && !row.querySelector('[data-field="result"]').value) {
+                    missingCount++;
                 }
             });
 
             if(missingCount > 0) {
-                if(!confirm(`تنبيه: يوجد (${missingCount}) تلميذ لم يتم اختيار نتيجتهم.\nهل تريد تجاهلهم وترحيل الباقي فقط؟`)) return;
+                if(!confirm(`⚠️ تنبيه: يوجد (${missingCount}) تلميذ لم تحدد نتيجتهم.\nهل تريد تجاهلهم وترحيل الباقي فقط؟`)) return;
             } else {
-                if(!confirm(`هل أنت متأكد من ترحيل جميع تلاميذ الصف (${currentGrade})؟\n\n- الناجح سيصعد للصف الأعلى مع تعديل فصله.\n- الراسب (باقي) سيصعد حسب القانون وتتغير حالته لمنقول.\n- الراسب (منقول) سيبقى في صفه وتتغير حالته لباقي.\n- خريجو الصف السادس سيتم حذفهم نهائياً من المنظومة.`)) return;
+                if(!confirm(`هل أنت متأكد من ترحيل جميع تلاميذ الصف (${currentGrade})؟\n\n- الناجح يصعد للصف الأعلى وتعديل رقم فصله تلقائياً.\n- الراسب (باقي) يصعد وتصبح حالته منقول.\n- الراسب (منقول) يبقى بصفه وتصبح حالته باقي.\n- خريجو الصف السادس يتم حذفهم نهائياً من المنظومة.`)) return;
             }
 
             const btn = document.getElementById("btn-promote");
@@ -453,14 +554,12 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الترحيل...`;
             
             let upsertList = [];
-            let deleteList = [];
+            let deleteCodes = [];
 
             rows.forEach(row => {
                 if(row.cells.length < 2) return;
-                
                 let s = { grade: currentGrade };
-                const inputs = row.querySelectorAll("input, select");
-                inputs.forEach(i => {
+                row.querySelectorAll("input, select").forEach(i => {
                     if(i.getAttribute("data-field")) s[i.getAttribute("data-field")] = i.value;
                 });
 
@@ -470,19 +569,16 @@
                 let currentStatus = String(s.status || "").trim().replace(/ى/g, 'ي');
 
                 if(s.result === "ناجح") {
-                    if (currentGrade === "السادس") {
-                        shouldDelete = true;
-                    } else {
+                    if (currentGrade === "السادس") shouldDelete = true;
+                    else {
                         s.grade = nextGradeMap[currentGrade];
                         s.status = "منقول";
                         s.class = getNextClassName(s.class, currentGrade, s.grade);
                     }
-                } 
-                else if (s.result === "راسب") {
+                } else if (s.result === "راسب") {
                     if(currentStatus === "باقي") { 
-                        if (currentGrade === "السادس") {
-                            shouldDelete = true; 
-                        } else {
+                        if (currentGrade === "السادس") shouldDelete = true; 
+                        else {
                             s.grade = nextGradeMap[currentGrade];
                             s.status = "منقول";
                             s.class = getNextClassName(s.class, currentGrade, s.grade);
@@ -493,47 +589,35 @@
                 }
 
                 if (shouldDelete) {
-                    deleteList.push(String(s.code));
-                    deleteCount++;
+                    deleteCodes.push(String(s.code));
                 } else {
                     s.last_result = s.result;
                     delete s.result; 
                     upsertList.push(s);
-                    processCount++;
                 }
             });
 
             try {
-                // الحذف عبر ZezoDB
-                for (let code of deleteList) {
-                    await ZezoDB.delete("students", "code", code);
+                if (deleteCodes.length > 0) {
+                    await ZezoEngine.delete("students", "code", deleteCodes);
                 }
-                
-                // التحديث والإضافة عبر ZezoDB
                 if (upsertList.length > 0) {
-                    const chunkSize = 500;
-                    for (let i = 0; i < upsertList.length; i += chunkSize) {
-                        await ZezoDB.upsert("students", upsertList.slice(i, i + chunkSize), 'code');
-                    }
+                    await ZezoEngine.upsert("students", upsertList, 'code');
                 }
 
-                if (processCount > 0 || deleteCount > 0) {
-                    alert(`🚀 تمت عملية الترحيل بنجاح!\n- تم تحديث ونقل: (${processCount}) تلميذ.\n- تم طي قيد وحذف: (${deleteCount}) خريج من المنظومة.`);
-                    loadFromSupabase(); 
-                } else {
-                    alert("لم يتم العثور على أي تلميذ جاهز للترحيل.");
-                }
+                alert(`🚀 تمت عملية الترحيل بنجاح!\n- تم تحديث وترحيل: (${upsertList.length}) تلميذ.\n- تم إنهاء قيد وحذف: (${deleteCodes.length}) خريج من المنظومة.`);
+                loadStudentData();
             } catch (err) {
-                alert("حدث خطأ أثناء الترحيل: " + err.message);
+                alert("❌ حدث خطأ أثناء الترحيل: " + err.message);
             } finally {
                 btn.innerHTML = oldText;
             }
         }
 
-        // --- 7. حفظ السحابة (محدث ليعمل مع ZezoDB) ---
-        async function saveAllToCloud() {
+        // 7. حفظ وتحديث بيانات التلاميذ في المنظومة
+        async function saveAllStudents() {
             const g = document.getElementById("grade-filter").value;
-            if (!g) { alert("اختر الصف أولاً من القائمة المنسدلة بالأعلى لتحديد أين سيتم حفظ هذه البيانات!"); return; }
+            if (!g) { alert("اختر الصف أولاً من القائمة المنسدلة لتحديد مكان الحفظ!"); return; }
             
             const rows = document.querySelectorAll("#table-body tr");
             if(rows.length === 0 || rows[0].cells.length < 2) {
@@ -560,44 +644,42 @@
                 }
             });
 
-            if (studentsToSave.length > 0) {
-                const isReplace = confirm(`هل تريد استبدال بيانات الصف (${g}) بالكامل بما هو معروض في الجدول الآن؟\n\n- اختر "موافق / OK" لحذف أي تلاميذ قدامى في هذا الصف غير موجودين في الجدول الحالي (استبدال كلي).\n- اختر "إلغاء / Cancel" لتحديث وإضافة المعروض فقط دون حذف القديم.`);
+            if (studentsToSave.length === 0) {
+                alert("لا توجد أسماء تلاميذ صالحة للحفظ!"); return;
+            }
 
-                const btn = document.querySelector('.btn-save');
-                const oldText = btn.innerHTML;
-                btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...`;
+            const isReplace = confirm(`هل تريد استبدال بيانات الصف (${g}) بالكامل بما هو معروض الآن؟\n\n- اضغط "موافق" لحذف أي تلاميذ مسجلين سابقاً بهذا الصف وغير موجودين بالجدول الحالي (استبدال كلي).\n- اضغط "إلغاء" لتحديث وإضافة المعروض فقط دون حذف السابق.`);
 
-                try {
-                    if (isReplace) {
-                        const allStudents = await ZezoDB.getAll("students");
-                        const existingCodes = allStudents.filter(d => (d.grade || "").trim() === g.trim()).map(d => d.code);
-                        const codesToDelete = existingCodes.filter(c => !currentCodesInTable.includes(c));
+            const btn = document.querySelector('.btn-save');
+            const oldText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...`;
 
-                        for (let code of codesToDelete) {
-                            await ZezoDB.delete("students", "code", code);
-                        }
+            try {
+                if (isReplace) {
+                    const allStudents = await ZezoEngine.getAll("students");
+                    const existingCodes = allStudents.filter(d => (d.grade || "").trim() === g.trim()).map(d => d.code);
+                    const codesToDelete = existingCodes.filter(c => !currentCodesInTable.includes(c));
+
+                    if (codesToDelete.length > 0) {
+                        await ZezoEngine.delete("students", "code", codesToDelete);
                     }
-
-                    const chunkSize = 500;
-                    for (let i = 0; i < studentsToSave.length; i += chunkSize) {
-                        await ZezoDB.upsert("students", studentsToSave.slice(i, i + chunkSize), 'code');
-                    }
-
-                    alert(`✅ تم حفظ وتحديث بيانات ${studentsToSave.length} تلميذ بنجاح!`);
-                    loadFromSupabase(); 
-                } catch (err) {
-                    alert("حدث خطأ أثناء الحفظ: " + err.message);
-                } finally {
-                    btn.innerHTML = oldText;
                 }
+
+                await ZezoEngine.upsert("students", studentsToSave, 'code');
+                alert(`✅ تم حفظ وتحديث بيانات (${studentsToSave.length}) تلميذ بنجاح وفق النمط [${ZezoEngine.getMode()}].`);
+                loadStudentData(); 
+            } catch (err) {
+                alert("❌ حدث خطأ أثناء الحفظ: " + err.message);
+            } finally {
+                btn.innerHTML = oldText;
             }
         }
 
-        // --- 8. التصدير للإكسيل ---
+        // 8. تصدير مخصص لإكسيل بالأعمدة المحددة
         function customExportToExcel() {
             const rows = document.querySelectorAll("#table-body tr");
             if(rows.length === 0 || rows[0].cells.length < 2) {
-                alert("لا توجد بيانات لتصديرها! يرجى اختيار الصف أو استيراد البيانات أولاً.");
+                alert("لا توجد بيانات لتصديرها! يرجى اختيار الصف أولاً.");
                 return;
             }
 
@@ -631,7 +713,7 @@
             });
 
             if (data.length === 0) {
-                alert("لا يوجد تلاميذ متطابقون مع عملية البحث الحالية لتصديرهم.");
+                alert("لا يوجد تلاميذ مطابقون لعملية البحث الحالية لتصديرهم.");
                 return;
             }
 
@@ -642,16 +724,15 @@
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "بيانات التلاميذ");
 
-                let gradeName = document.getElementById("grade-filter").value;
-                let fileName = gradeName ? `كشف_تلاميذ_الصف_${gradeName}.xlsx` : `كشف_تلاميذ_مخصص.xlsx`;
-
+                const gradeName = document.getElementById("grade-filter").value;
+                const fileName = gradeName ? `كشف_تلاميذ_الصف_${gradeName}.xlsx` : `كشف_تلاميذ_مخصص.xlsx`;
                 XLSX.writeFile(wb, fileName);
             } catch(err) {
                 alert("حدث خطأ أثناء التصدير: " + err.message);
             }
         }
 
-        // --- 9. الإحصاء السريع ---
+        // 9. الإحصاء السريع المباشر
         function toggleModal(show) {
             const modal = document.getElementById('statsModal');
             if(show) {
@@ -662,7 +743,7 @@
         }
 
         function calculateStats() {
-            let st = {tb:0, tg:0, mb:0, mg:0, cb:0, cg:0, mon:0, baq:0, dmj:0, cls:{}};
+            let st = { tb:0, tg:0, mb:0, mg:0, cb:0, cg:0, mon:0, baq:0, dmj:0, cls:{} };
             
             document.querySelectorAll("#table-body tr").forEach(r => {
                 if(r.cells.length < 2) return;
@@ -694,7 +775,8 @@
             document.getElementById("st-cb").innerText = st.cb; document.getElementById("st-cg").innerText = st.cg; document.getElementById("st-call").innerText = st.cb + st.cg;
             document.getElementById("st-mon").innerText = st.mon; document.getElementById("st-baq").innerText = st.baq; document.getElementById("st-dmj").innerText = st.dmj;
 
-            const radar = document.getElementById("class-radar"); radar.innerHTML = "";
+            const radar = document.getElementById("class-radar"); 
+            radar.innerHTML = "";
             Object.keys(st.cls).sort().forEach(c => {
                 const tot = st.cls[c].b + st.cls[c].g; 
                 let density = tot > 50 ? "density-high" : (tot >= 45 ? "density-mid" : "density-low");
@@ -702,17 +784,17 @@
             });
         }
 
-        // --- 10. كبسولة الإحصاء (محدث ليعمل مع ZezoDB) ---
+        // 10. كبسولة الإحصاء الشاملة للمدرسة
         async function generateMasterCapsule() {
             const btn = document.querySelector('.btn-golden');
             const oldText = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الفحص...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الفحص والاعتماد...`;
             
             try {
-                const snap = await ZezoDB.getAll('students');
+                const snap = await ZezoEngine.getAll('students');
                 
                 if (!snap || snap.length === 0) {
-                    alert("⚠️ تنبيه حرج: قاعدة بيانات التلاميذ فارغة!");
+                    alert("⚠️ تنبيه: قاعدة بيانات التلاميذ فارغة، لا يوجد بيانات لاعتمادها!");
                     btn.innerHTML = oldText; return;
                 }
 
@@ -746,7 +828,7 @@
                     const isD = (s.dmj === "دمج");
                     const clsName = s.class || "بدون";
 
-                    if(s.class) { capsule.general[g].cSet.add(s.class); grand.cSet.add(g+s.class); }
+                    if(s.class) { capsule.general[g].cSet.add(s.class); grand.cSet.add(g + s.class); }
                     if(isB){ capsule.general[g].tb++; grand.tb++; if(isM){capsule.general[g].mb++;grand.mb++}else{capsule.general[g].cb++;grand.cb++} if(isD){capsule.general[g].db++;grand.db++} }
                     else { capsule.general[g].tg++; grand.tg++; if(isM){capsule.general[g].mg++;grand.mg++}else{capsule.general[g].cg++;grand.cg++} if(isD){capsule.general[g].dg++;grand.dg++} }
 
@@ -763,17 +845,17 @@
                 grand.cCount = grand.cSet.size; delete grand.cSet;
                 capsule.general["إجمالي"] = grand;
 
-                await ZezoDB.upsert("system_capsules", [{
+                await ZezoEngine.upsert("system_capsules", [{
                     id: "stats_2026",
                     data: capsule,
-                    updatedat: new Date().toLocaleString('ar-EG')
+                    updated_at: new Date().toLocaleString('ar-EG')
                 }], 'id');
                 
-                btn.innerHTML = oldText;
-                alert(`🚀 تم ضغط وحفظ إحصاء (${matchedCount}) تلميذ في الكبسولة بنجاح!`);
+                alert(`🚀 تم ضغط واعتماد إحصاء (${matchedCount}) تلميذ في الكبسولة بنجاح!`);
             } catch(err) { 
+                alert("❌ فشل الاعتماد: " + err.message); 
+            } finally {
                 btn.innerHTML = oldText; 
-                alert("فشل الاعتماد: " + err.message); 
             }
         }
     </script>
