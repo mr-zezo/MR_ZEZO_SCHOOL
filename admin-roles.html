@@ -3,272 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>مركز إدارة المنظومة والمزامنة - مستر زيزو</title>
-    <!-- خط Cairo والأيقونات -->
+    <title>منظومة مستر زيزو لادارة بيانات المدرسة</title>
+    
+    <!-- خط Cairo والأيقونات الرسمية -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS للتصميم المتجاوب -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- مكتبة Supabase الرسمية -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         * { font-family: 'Cairo', sans-serif; box-sizing: border-box; }
-        body { background-color: #f1f5f9; color: #1e293b; }
+        body { background-color: #f1f5f9; color: #1e293b; -webkit-tap-highlight-color: transparent; }
         .card-3d { background: #ffffff; border: 1px solid #e2e8f0; border-bottom: 4px solid #cbd5e1; border-radius: 16px; transition: all 0.2s ease; }
         .card-3d:hover { border-bottom-color: #94a3b8; }
-        .btn-3d { border-bottom: 4px solid rgba(0,0,0,0.2); transition: all 0.1s ease; }
+        .btn-3d { border-bottom: 4px solid rgba(0,0,0,0.2); transition: all 0.1s ease; touch-action: manipulation; }
         .btn-3d:active { transform: translateY(3px); border-bottom-width: 1px; margin-bottom: 3px; }
         input:focus, select:focus { outline: none; }
     </style>
 </head>
-<body class="min-h-screen p-3 md:p-6 flex flex-col justify-between">
+<body class="min-h-screen p-2.5 sm:p-4 md:p-6 flex flex-col justify-between">
 
-    <div class="max-w-6xl mx-auto w-full space-y-5">
+    <div class="max-w-6xl mx-auto w-full space-y-4 sm:space-y-5">
         
-        <!-- 1. الشريط العلوي المتوافق مع الموبايل -->
-        <nav class="bg-[#0f2b48] text-white p-4 md:p-5 rounded-2xl shadow-lg flex flex-wrap justify-between items-center gap-4 border-b-4 border-amber-500">
-            <div class="flex items-center gap-3">
-                <div class="p-2.5 bg-blue-600/30 border border-blue-400/40 rounded-xl text-yellow-400 text-2xl">
-                    <i class="fa-solid fa-server"></i>
+        <!-- 1. الشريط العلوي المتجاوب -->
+        <nav class="bg-[#0f2b48] text-white p-3.5 sm:p-5 rounded-2xl shadow-lg flex flex-col sm:flex-row justify-between items-center gap-3 border-b-4 border-amber-500">
+            <div class="flex items-center gap-3 text-center sm:text-right w-full sm:w-auto justify-center sm:justify-start">
+                <div class="p-2 sm:p-2.5 bg-blue-600/30 border border-blue-400/40 rounded-xl text-yellow-400 text-xl sm:text-2xl shrink-0">
+                    <i class="fa-solid fa-school-flag"></i>
                 </div>
                 <div>
-                    <h1 class="text-base md:text-xl font-black text-white">مركز إدارة المنظومة والمزامنة الشاملة</h1>
-                    <p class="text-xs text-blue-200">التحكم في قواعد البيانات، العمل بدون إنترنت، وإدارة الصلاحيات</p>
+                    <h1 class="text-sm sm:text-lg md:text-xl font-black text-white leading-snug">منظومة مستر زيزو لادارة بيانات المدرسة</h1>
+                    <p class="text-[11px] sm:text-xs text-blue-200">مركز إدارة قواعد البيانات، الأمان، والتبديل (أونلاين / أوفلاين)</p>
                 </div>
             </div>
 
-            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-                <button type="button" onclick="openVerifyModal()" class="btn-3d px-3.5 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs md:text-sm flex items-center gap-1.5 shadow cursor-pointer">
-                    <i class="fa-solid fa-eye text-yellow-300"></i> كشف كلمات المرور
+            <div class="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                <button type="button" onclick="openVerifyModal()" class="btn-3d flex-1 sm:flex-initial px-3 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow cursor-pointer">
+                    <i class="fa-solid fa-lock-open text-yellow-300"></i> كشف الصلاحيات
                 </button>
 
-                <a href="index.html" class="btn-3d px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white font-bold rounded-xl text-xs md:text-sm flex items-center gap-1.5 shadow">
+                <a href="index.html" class="btn-3d flex-1 sm:flex-initial px-3.5 py-2 bg-blue-700 hover:bg-blue-600 text-white font-bold rounded-xl text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow">
                     <i class="fa-solid fa-house"></i> الرئيسية
                 </a>
             </div>
         </nav>
 
         <!-- صندوق التنبيهات -->
-        <div id="alertBox" class="hidden p-4 rounded-xl text-sm font-bold border transition-all duration-300 shadow-md"></div>
+        <div id="alertBox" class="hidden p-3.5 rounded-xl text-xs sm:text-sm font-bold border transition-all duration-300 shadow-md"></div>
 
-        <!-- 2. بطاقة المؤشرات الحية وأوقات المزامنة -->
-        <div class="card-3d p-4 md:p-6">
-            <div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-200 pb-3 mb-4">
+        <!-- 2. حالة المنظومة والتبديل المباشر بين النمطين -->
+        <div class="card-3d p-3.5 sm:p-5 md:p-6">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-2.5 border-b border-slate-200 pb-3 mb-3.5">
                 <div class="flex items-center gap-2">
-                    <span class="text-sm font-extrabold text-slate-700"><i class="fa-solid fa-circle-nodes text-blue-600 ml-1"></i> حالة التشغيل الحالية:</span>
-                    <span id="badgeMode" class="text-xs px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full font-black flex items-center gap-1">
-                        <i class="fa-solid fa-cloud"></i> وضع السحابة المتصل (Online)
+                    <span class="text-xs sm:text-sm font-extrabold text-slate-700"><i class="fa-solid fa-circle-nodes text-blue-600 ml-1"></i> نمط التشغيل الفعّال:</span>
+                    <span id="badgeMode" class="text-[11px] sm:text-xs px-2.5 py-1 bg-slate-100 text-slate-700 border rounded-full font-black flex items-center gap-1">
+                        جاري الفحص...
                     </span>
                 </div>
 
-                <div class="text-xs text-slate-500 font-bold flex items-center gap-1">
-                    <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> آخر نشاط ومزامنة: <span id="lblLastActivity" class="text-slate-800 font-black">جاري الفحص...</span>
+                <div class="text-[11px] sm:text-xs text-slate-500 font-bold flex items-center gap-1">
+                    <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> آخر تحديث / مزامنة: <span id="lblLastActivity" class="text-slate-800 font-black">لم تسجل بعد</span>
                 </div>
+            </div>
+
+            <!-- أزرار التبديل لنمط التشغيل -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4">
+                <button type="button" onclick="setAppMode('online')" id="btnSetOnline"
+                        class="btn-3d p-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white shadow">
+                    <i class="fa-solid fa-globe text-emerald-300 text-base sm:text-lg"></i>
+                    <span>وضع أونلاين (قاعدة سوبابيز السحابية)</span>
+                </button>
+
+                <button type="button" onclick="setAppMode('offline')" id="btnSetOffline"
+                        class="btn-3d p-3 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white shadow">
+                    <i class="fa-solid fa-laptop text-amber-200 text-base sm:text-lg"></i>
+                    <span>وضع أوفلاين (البيانات المحلية على الجهاز)</span>
+                </button>
             </div>
 
             <!-- إحصاءات الجداول السريعة -->
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                <div class="p-3 bg-blue-50/80 border border-blue-200 rounded-xl">
-                    <div class="text-xs text-blue-700 font-bold">التلاميذ بالسحابة</div>
-                    <div id="cnt_students" class="text-xl md:text-2xl font-black text-blue-900 mt-1">...</div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-center">
+                <div class="p-2.5 sm:p-3 bg-blue-50/80 border border-blue-200 rounded-xl">
+                    <div class="text-[11px] sm:text-xs text-blue-700 font-bold">التلاميذ</div>
+                    <div id="cnt_students" class="text-lg sm:text-2xl font-black text-blue-900 mt-0.5">...</div>
                 </div>
-                <div class="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl">
-                    <div class="text-xs text-emerald-700 font-bold">قوة المعلمين</div>
-                    <div id="cnt_teachers" class="text-xl md:text-2xl font-black text-emerald-900 mt-1">...</div>
+                <div class="p-2.5 sm:p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl">
+                    <div class="text-[11px] sm:text-xs text-emerald-700 font-bold">قوة المعلمين</div>
+                    <div id="cnt_teachers" class="text-lg sm:text-2xl font-black text-emerald-900 mt-0.5">...</div>
                 </div>
-                <div class="p-3 bg-purple-50/80 border border-purple-200 rounded-xl">
-                    <div class="text-xs text-purple-700 font-bold">جداول الإشراف</div>
-                    <div id="cnt_supervision" class="text-xl md:text-2xl font-black text-purple-900 mt-1">...</div>
+                <div class="p-2.5 sm:p-3 bg-purple-50/80 border border-purple-200 rounded-xl">
+                    <div class="text-[11px] sm:text-xs text-purple-700 font-bold">جداول الإشراف</div>
+                    <div id="cnt_supervision" class="text-lg sm:text-2xl font-black text-purple-900 mt-0.5">...</div>
                 </div>
-                <div class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl">
-                    <div class="text-xs text-amber-700 font-bold">الكبسولات والإحصاءات</div>
-                    <div id="cnt_capsules" class="text-xl md:text-2xl font-black text-amber-900 mt-1">...</div>
+                <div class="p-2.5 sm:p-3 bg-amber-50/80 border border-amber-200 rounded-xl">
+                    <div class="text-[11px] sm:text-xs text-amber-700 font-bold">بيانات المدرسة</div>
+                    <div id="cnt_capsules" class="text-lg sm:text-2xl font-black text-amber-900 mt-0.5">...</div>
                 </div>
             </div>
         </div>
 
-        <!-- 3. مركز المزامنة المزدوج والنسخ الاحتياطي (سحابي / محلي) -->
-        <div class="card-3d p-4 md:p-6 bg-gradient-to-br from-white via-slate-50 to-blue-50/40">
-            <div class="flex items-center gap-3 mb-4">
-                <div class="p-2.5 bg-indigo-100 text-indigo-700 rounded-xl text-xl">
-                    <i class="fa-solid fa-arrows-rotate"></i>
+        <!-- 3. عمليات النسخ الاحتياطي والاستعادة -->
+        <div class="card-3d p-3.5 sm:p-5 md:p-6 bg-gradient-to-br from-white via-slate-50 to-blue-50/40">
+            <div class="flex items-center gap-2.5 mb-3.5">
+                <div class="p-2 sm:p-2.5 bg-indigo-100 text-indigo-700 rounded-xl text-lg sm:text-xl">
+                    <i class="fa-solid fa-database"></i>
                 </div>
                 <div>
-                    <h2 class="text-base md:text-lg font-black text-slate-800">إدارة التبادل والمزامنة (Offline / Online Sync)</h2>
-                    <p class="text-xs text-slate-500 font-semibold">تصدير قاعدة البيانات على الجهاز، العمل محلياً بدون نت، وإعادة رفع التعديلات للسحابة</p>
+                    <h2 class="text-sm sm:text-base md:text-lg font-black text-slate-800">إدارة الباك أب واستعادة البيانات</h2>
+                    <p class="text-[11px] sm:text-xs text-slate-500 font-semibold">تصدير النسخ إلى (D:\MR_ZEZO_SCHOOL\Backup) واسترجاعها بأمان</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-                <!-- أ) تنزيل نسخة احتياطية للجهاز -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3.5 pt-1">
+                
+                <!-- 1. تنزيل نسخة احتياطية على الجهاز -->
                 <button type="button" onclick="executeDownloadBackup()" id="btnDownload"
-                        class="btn-3d p-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex flex-col items-center justify-center gap-2 shadow-sm text-center cursor-pointer">
-                    <i class="fa-solid fa-cloud-arrow-down text-2xl text-emerald-200"></i>
-                    <span class="text-sm">1. تنزيل نسخة للسحابة (.json)</span>
-                    <span class="text-[11px] text-emerald-100 font-normal">حفظ كامل الجداول في المكان الذي تختاره</span>
+                        class="btn-3d p-3.5 sm:p-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold flex flex-col items-center justify-center gap-1.5 shadow-sm text-center cursor-pointer">
+                    <i class="fa-solid fa-file-arrow-down text-2xl sm:text-3xl text-emerald-200"></i>
+                    <span class="text-xs sm:text-sm font-black">1. تنزيل باك أب للجهاز (.json)</span>
+                    <span class="text-[10px] sm:text-[11px] text-emerald-100 font-normal">حفظ كامل الجداول في مجلد الباك أب</span>
                 </button>
 
-                <!-- ب) استيراد وتفعيل العمل محلياً بدون نت -->
+                <!-- 2. تحديث السحابة من ملف باك أب -->
+                <input type="file" id="fileCloudRestore" accept=".json" class="hidden" onchange="handleRestoreDirectToCloud(event)">
+                <button type="button" onclick="document.getElementById('fileCloudRestore').click()" id="btnRestoreCloud"
+                        class="btn-3d p-3.5 sm:p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex flex-col items-center justify-center gap-1.5 shadow-sm text-center cursor-pointer">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl sm:text-3xl text-blue-200"></i>
+                    <span class="text-xs sm:text-sm font-black">2. تحديث السحابة من ملف باك أب</span>
+                    <span class="text-[10px] sm:text-[11px] text-blue-100 font-normal">اختيار ملف وتحديث سوبابيز مباشرة</span>
+                </button>
+
+                <!-- 3. استيراد الباك أب للعمل أوفلاين -->
                 <input type="file" id="fileLocalBackup" accept=".json" class="hidden" onchange="handleImportLocalFile(event)">
                 <button type="button" onclick="document.getElementById('fileLocalBackup').click()" id="btnImportLocal"
-                        class="btn-3d p-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold flex flex-col items-center justify-center gap-2 shadow-sm text-center cursor-pointer">
-                    <i class="fa-solid fa-laptop-file text-2xl text-amber-200"></i>
-                    <span class="text-sm">2. استيراد والعمل محلياً بدون نت</span>
-                    <span class="text-[11px] text-amber-100 font-normal">تحميل الملف وتشغيل النظام دون اتصال</span>
+                        class="btn-3d p-3.5 sm:p-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold flex flex-col items-center justify-center gap-1.5 shadow-sm text-center cursor-pointer">
+                    <i class="fa-solid fa-laptop-file text-2xl sm:text-3xl text-amber-200"></i>
+                    <span class="text-xs sm:text-sm font-black">3. استيراد باك أب للعمل أوفلاين</span>
+                    <span class="text-[10px] sm:text-[11px] text-amber-100 font-normal">تغذية قاعدة الجهاز والعمل بدون إنترنت</span>
                 </button>
 
-                <!-- ج) رفع التعديلات المحلية للسحابة -->
-                <button type="button" onclick="executePushLocalToCloud()" id="btnPushCloud"
-                        class="btn-3d p-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold flex flex-col items-center justify-center gap-2 shadow-sm text-center cursor-pointer">
-                    <i class="fa-solid fa-cloud-arrow-up text-2xl text-blue-200"></i>
-                    <span class="text-sm">3. رفع وتحديث السحابة (Sync)</span>
-                    <span class="text-[11px] text-blue-100 font-normal">مزامنة التعديلات السحابية بأمان تام</span>
-                </button>
             </div>
 
             <!-- شريط تقدم العمليات -->
-            <div id="syncProgressBox" class="hidden mt-4 pt-4 border-t border-slate-200">
-                <div class="flex justify-between text-xs font-bold text-slate-700 mb-1.5">
-                    <span id="syncStatusText"><i class="fa-solid fa-spinner fa-spin ml-1 text-blue-600"></i> جاري معالجة البيانات...</span>
+            <div id="syncProgressBox" class="hidden mt-3.5 pt-3 border-t border-slate-200">
+                <div class="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                    <span id="syncStatusText"><i class="fa-solid fa-spinner fa-spin ml-1 text-blue-600"></i> جاري المعالجة...</span>
                     <span id="syncPercent" class="text-blue-700 font-black">0%</span>
                 </div>
-                <div class="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
-                    <div id="syncProgressBar" class="bg-gradient-to-r from-blue-600 to-indigo-600 h-3 rounded-full transition-all duration-200" style="width: 0%"></div>
+                <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                    <div id="syncProgressBar" class="bg-gradient-to-r from-blue-600 to-indigo-600 h-2.5 rounded-full transition-all duration-200" style="width: 0%"></div>
                 </div>
             </div>
         </div>
 
-        <!-- 4. جدول إدارة وتشفير الصلاحيات وكلمات المرور -->
-        <div class="card-3d p-4 md:p-6">
-            <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-4">
-                <div class="flex items-center gap-2 font-black text-slate-800 text-sm md:text-base">
+        <!-- 4. جدول إدارة كلمات المرور والصلاحيات -->
+        <div class="card-3d p-3.5 sm:p-5 md:p-6">
+            <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-3 mb-3.5 gap-2">
+                <div class="flex items-center gap-2 font-black text-slate-800 text-xs sm:text-base">
                     <i class="fa-solid fa-shield-halved text-blue-600"></i> إدارة صلاحيات وكلمات مرور المستخدمين
                 </div>
-                <span class="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg font-bold">
-                    تشفير SHA-256
+                <span class="text-[11px] bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-lg font-bold">
+                    تشفير مزدوج AES-256 + SHA-256
                 </span>
             </div>
 
-            <div class="space-y-3" id="rolesContainer">
+            <div class="space-y-2.5" id="rolesContainer">
 
-                <!-- 1. مستر زيزو -->
-                <div class="p-3 bg-amber-50/60 border border-amber-300 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
-                    <div class="md:col-span-4 font-bold text-amber-900 flex items-center gap-2 text-sm">
-                        <i class="fa-solid fa-crown text-amber-500 text-base"></i> مستر زيزو (المدير العام)
+                <!-- مستر زيزو -->
+                <div class="p-2.5 sm:p-3 bg-amber-50/60 border border-amber-300 rounded-xl grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                    <div class="sm:col-span-4 font-bold text-amber-900 flex items-center gap-2 text-xs sm:text-sm">
+                        <i class="fa-solid fa-crown text-amber-500 text-sm sm:text-base"></i> مستر زيزو (المدير العام)
                     </div>
-                    <div class="md:col-span-5 relative">
-                        <input type="password" id="pass_super_admin" placeholder="أدخل كلمة المرور الجديدة"
-                               class="role-pass-input w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:border-amber-500 pr-9">
+                    <div class="sm:col-span-5 relative">
+                        <input type="password" id="pass_super_admin" placeholder="كلمة مرور المدير العام..."
+                               class="role-pass-input w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-amber-500 pr-9">
                         <button type="button" onclick="togglePass('pass_super_admin', this)" class="absolute left-2.5 top-2.5 text-slate-400 hover:text-slate-700">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>
                     </div>
-                    <div class="md:col-span-3 text-xs text-center font-bold text-amber-800 bg-amber-100/70 py-1.5 rounded-lg">
+                    <div class="sm:col-span-3 text-[11px] sm:text-xs text-center font-bold text-amber-800 bg-amber-100/70 py-1.5 rounded-lg">
                         كافة الصلاحيات
                     </div>
                 </div>
 
-                <!-- 2. شؤون الطلبة -->
-                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
-                    <div class="md:col-span-4 font-bold text-slate-800 flex items-center gap-2 text-sm">
-                        <i class="fa-solid fa-users-gear text-blue-600 text-base"></i> شؤون الطلبة والإحصاء
+                <!-- شؤون الطلبة -->
+                <div class="p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                    <div class="sm:col-span-4 font-bold text-slate-800 flex items-center gap-2 text-xs sm:text-sm">
+                        <i class="fa-solid fa-users-gear text-blue-600 text-sm sm:text-base"></i> شؤون الطلبة والإحصاء
                     </div>
-                    <div class="md:col-span-5 relative">
+                    <div class="sm:col-span-5 relative">
                         <input type="password" id="pass_student_affairs" placeholder="أدخل كلمة المرور"
-                               class="role-pass-input w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:border-blue-500 pr-9">
+                               class="role-pass-input w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-blue-500 pr-9">
                         <button type="button" onclick="togglePass('pass_student_affairs', this)" class="absolute left-2.5 top-2.5 text-slate-400 hover:text-slate-700">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>
                     </div>
-                    <div class="md:col-span-3 text-xs text-center font-bold text-blue-800 bg-blue-50 py-1.5 rounded-lg border border-blue-100">
-                        <i class="fa-solid fa-arrow-left ml-1"></i> stu-absence.html
+                    <div class="sm:col-span-3 text-[11px] sm:text-xs text-center font-bold text-blue-800 bg-blue-50 py-1.5 rounded-lg border border-blue-100">
+                        stu-absence.html
                     </div>
                 </div>
 
-                <!-- 3. استعلام معلم -->
-                <div class="p-3 bg-emerald-50/50 border border-emerald-200 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
-                    <div class="md:col-span-4 font-bold text-emerald-900 flex items-center gap-2 text-sm">
-                        <i class="fa-solid fa-chalkboard-user text-emerald-600 text-base"></i> استعلام معلم
+                <!-- استعلام معلم -->
+                <div class="p-2.5 sm:p-3 bg-emerald-50/50 border border-emerald-200 rounded-xl grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                    <div class="sm:col-span-4 font-bold text-emerald-900 flex items-center gap-2 text-xs sm:text-sm">
+                        <i class="fa-solid fa-chalkboard-user text-emerald-600 text-sm sm:text-base"></i> استعلام معلم
                     </div>
-                    <div class="md:col-span-5">
-                        <div class="w-full bg-white border border-emerald-300 rounded-lg px-3 py-2 text-xs text-emerald-800 font-bold flex items-center gap-2">
-                            <i class="fa-solid fa-id-card text-emerald-600"></i> دخول مباشر بالرقم القومي (بدون باسورد)
+                    <div class="sm:col-span-5">
+                        <div class="w-full bg-white border border-emerald-300 rounded-lg px-3 py-2 text-[11px] sm:text-xs text-emerald-800 font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-id-card text-emerald-600"></i> دخول بالرقم القومي (بدون باسورد)
                         </div>
                     </div>
-                    <div class="md:col-span-3 text-xs text-center font-bold text-emerald-800 bg-emerald-100/70 py-1.5 rounded-lg">
-                        <i class="fa-solid fa-arrow-left ml-1"></i> teacher-portal.html
+                    <div class="sm:col-span-3 text-[11px] sm:text-xs text-center font-bold text-emerald-800 bg-emerald-100/70 py-1.5 rounded-lg">
+                        teacher-portal.html
                     </div>
                 </div>
 
-                <!-- 4. مسؤول الجدول -->
-                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
-                    <div class="md:col-span-4 font-bold text-slate-800 flex items-center gap-2 text-sm">
-                        <i class="fa-solid fa-calendar-days text-purple-600 text-base"></i> مسؤول الجدول
+                <!-- مسؤول الجدول -->
+                <div class="p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                    <div class="sm:col-span-4 font-bold text-slate-800 flex items-center gap-2 text-xs sm:text-sm">
+                        <i class="fa-solid fa-calendar-days text-purple-600 text-sm sm:text-base"></i> مسؤول الجدول
                     </div>
-                    <div class="md:col-span-5 relative">
+                    <div class="sm:col-span-5 relative">
                         <input type="password" id="pass_schedule_manager" placeholder="أدخل كلمة المرور"
-                               class="role-pass-input w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:border-purple-500 pr-9">
+                               class="role-pass-input w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-purple-500 pr-9">
                         <button type="button" onclick="togglePass('pass_schedule_manager', this)" class="absolute left-2.5 top-2.5 text-slate-400 hover:text-slate-700">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>
                     </div>
-                    <div class="md:col-span-3 text-xs text-center font-bold text-purple-800 bg-purple-50 py-1.5 rounded-lg border border-purple-100">
-                        <i class="fa-solid fa-arrow-left ml-1"></i> REDA.html
+                    <div class="sm:col-span-3 text-[11px] sm:text-xs text-center font-bold text-purple-800 bg-purple-50 py-1.5 rounded-lg border border-purple-100">
+                        REDA.html
                     </div>
                 </div>
 
-                <!-- 5. المشرف العام -->
-                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
-                    <div class="md:col-span-4 font-bold text-slate-800 flex items-center gap-2 text-sm">
-                        <i class="fa-solid fa-user-tie text-teal-600 text-base"></i> المشرف العام
+                <!-- المشرف العام -->
+                <div class="p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                    <div class="sm:col-span-4 font-bold text-slate-800 flex items-center gap-2 text-xs sm:text-sm">
+                        <i class="fa-solid fa-user-tie text-teal-600 text-sm sm:text-base"></i> المشرف العام
                     </div>
-                    <div class="md:col-span-5 relative">
+                    <div class="sm:col-span-5 relative">
                         <input type="password" id="pass_general_supervisor" placeholder="أدخل كلمة المرور"
-                               class="role-pass-input w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:border-teal-500 pr-9">
+                               class="role-pass-input w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-teal-500 pr-9">
                         <button type="button" onclick="togglePass('pass_general_supervisor', this)" class="absolute left-2.5 top-2.5 text-slate-400 hover:text-slate-700">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>
                     </div>
-                    <div class="md:col-span-3 text-xs text-center font-bold text-teal-800 bg-teal-50 py-1.5 rounded-lg border border-teal-100">
-                        <i class="fa-solid fa-arrow-left ml-1"></i> supervisor.html
+                    <div class="sm:col-span-3 text-[11px] sm:text-xs text-center font-bold text-teal-800 bg-teal-50 py-1.5 rounded-lg border border-teal-100">
+                        supervisor.html
                     </div>
                 </div>
 
-                <!-- 6. زائر -->
-                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
-                    <div class="md:col-span-4 font-bold text-slate-800 flex items-center gap-2 text-sm">
-                        <i class="fa-solid fa-eye text-slate-500 text-base"></i> زائر
+                <!-- زائر -->
+                <div class="p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                    <div class="sm:col-span-4 font-bold text-slate-800 flex items-center gap-2 text-xs sm:text-sm">
+                        <i class="fa-solid fa-eye text-slate-500 text-sm sm:text-base"></i> زائر
                     </div>
-                    <div class="md:col-span-5 relative">
+                    <div class="sm:col-span-5 relative">
                         <input type="password" id="pass_visitor" placeholder="أدخل كلمة المرور"
-                               class="role-pass-input w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:border-slate-500 pr-9">
+                               class="role-pass-input w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-slate-500 pr-9">
                         <button type="button" onclick="togglePass('pass_visitor', this)" class="absolute left-2.5 top-2.5 text-slate-400 hover:text-slate-700">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>
                     </div>
-                    <div class="md:col-span-3 text-xs text-center font-bold text-slate-600 bg-slate-200/70 py-1.5 rounded-lg">
-                        (يحدد لاحقاً)
+                    <div class="sm:col-span-3 text-[11px] sm:text-xs text-center font-bold text-slate-600 bg-slate-200/70 py-1.5 rounded-lg">
+                        (عام)
                     </div>
                 </div>
 
-                <!-- 7. صلاحية إضافية -->
-                <div class="p-3 bg-slate-50 border border-dashed border-indigo-300 rounded-xl grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
-                    <div class="md:col-span-4 font-bold text-indigo-900 flex items-center gap-1.5 text-sm">
-                        <i class="fa-solid fa-plus-circle text-indigo-600 text-base"></i>
+                <!-- صلاحية إضافية -->
+                <div class="p-2.5 sm:p-3 bg-slate-50 border border-dashed border-indigo-300 rounded-xl grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                    <div class="sm:col-span-4 font-bold text-indigo-900 flex items-center gap-1.5 text-xs sm:text-sm">
+                        <i class="fa-solid fa-plus-circle text-indigo-600 text-sm sm:text-base"></i>
                         <input type="text" id="name_custom_role" value="صلاحية إضافية" 
-                               class="bg-white border border-slate-300 rounded px-2 py-1 text-xs text-indigo-900 font-bold w-32 focus:border-indigo-500">
+                               class="bg-white border border-slate-300 rounded px-2 py-1 text-xs text-indigo-900 font-bold w-28 sm:w-32 focus:border-indigo-500">
                     </div>
-                    <div class="md:col-span-5 relative">
-                        <input type="password" id="pass_custom_role" placeholder="كلمة المرور للصلاحية الإضافية"
-                               class="role-pass-input w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-800 focus:border-indigo-500 pr-9">
+                    <div class="sm:col-span-5 relative">
+                        <input type="password" id="pass_custom_role" placeholder="كلمة مرور الصلاحية الإضافية"
+                               class="role-pass-input w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-indigo-500 pr-9">
                         <button type="button" onclick="togglePass('pass_custom_role', this)" class="absolute left-2.5 top-2.5 text-slate-400 hover:text-slate-700">
                             <i class="fa-solid fa-eye-slash"></i>
                         </button>
                     </div>
-                    <div class="md:col-span-3">
-                        <input type="text" id="url_custom_role" placeholder="مسار الصفحة (مثال: new.html)" 
+                    <div class="sm:col-span-3">
+                        <input type="text" id="url_custom_role" placeholder="مثال: new.html" 
                                class="bg-white border border-slate-300 rounded-lg px-2 py-1.5 text-xs w-full text-indigo-800 focus:border-indigo-500 text-center font-bold">
                     </div>
                 </div>
@@ -276,14 +295,14 @@
             </div>
 
             <!-- زر الحفظ -->
-            <div class="pt-4 mt-4 border-t border-slate-200 flex flex-wrap justify-between items-center gap-3">
-                <span class="text-xs text-slate-500 font-bold">
-                    <i class="fa-solid fa-shield-halved text-amber-500 ml-1"></i> يتم التشفير والحفظ فورياً في السحابة والذاكرة المحلية.
+            <div class="pt-3.5 mt-3.5 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-2.5">
+                <span class="text-[11px] sm:text-xs text-slate-500 font-bold text-center sm:text-right">
+                    <i class="fa-solid fa-lock text-amber-500 ml-1"></i> يتم التشفير التام والحفظ في السحابة والذاكرة المحلية.
                 </span>
                 <button type="button" onclick="saveAllRoles()" id="btnSave"
-                        class="btn-3d px-8 py-3 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white font-extrabold rounded-xl shadow-md flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-center">
+                        class="btn-3d px-6 sm:px-8 py-2.5 sm:py-3 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white font-extrabold rounded-xl shadow-md flex items-center gap-2 cursor-pointer w-full sm:w-auto justify-center text-xs sm:text-sm">
                     <i class="fa-solid fa-floppy-disk text-yellow-400"></i>
-                    <span id="btnSaveText">حفظ وتحديث الصلاحيات</span>
+                    <span id="btnSaveText">حفظ وتحديث الصلاحيات المشفرة</span>
                 </button>
             </div>
         </div>
@@ -291,36 +310,36 @@
     </div>
 
     <!-- نافذة الأمان للتحقق من هوية المدير العام لكشف الكلمات -->
-    <div id="verifyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden justify-center items-center z-50 p-4">
+    <div id="verifyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden justify-center items-center z-50 p-3 sm:p-4">
         <div class="bg-white border border-slate-300 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
-            <div class="bg-gradient-to-r from-amber-600 to-amber-700 p-4 text-white flex justify-between items-center">
-                <h3 class="font-extrabold text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-user-shield text-yellow-300 text-lg"></i> التحقق الأمني لكشف كلمات المرور
+            <div class="bg-gradient-to-r from-amber-600 to-amber-700 p-3.5 sm:p-4 text-white flex justify-between items-center">
+                <h3 class="font-extrabold text-xs sm:text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-user-shield text-yellow-300 text-base sm:text-lg"></i> التحقق الأمني لفك التشفير
                 </h3>
-                <button onclick="closeVerifyModal()" class="text-white text-xl hover:text-amber-200 cursor-pointer">&times;</button>
+                <button onclick="closeVerifyModal()" class="text-white text-lg hover:text-amber-200 cursor-pointer">&times;</button>
             </div>
-            <div class="p-5 space-y-4">
-                <p class="text-xs text-slate-600 font-bold">يرجى كتابة **كلمة مرور مستر زيزو (المدير العام)** للتأكد من هويتك وعرض كافة كلمات المرور:</p>
+            <div class="p-4 sm:p-5 space-y-3 sm:space-y-4">
+                <p class="text-[11px] sm:text-xs text-slate-600 font-bold leading-relaxed">يرجى كتابة **كلمة مرور مستر زيزو (المدير العام)** لاستخدامها كمفتاح فك تشفير وعرض كلمات المرور:</p>
                 
                 <input type="password" id="adminVerifyPass" placeholder="كلمة مرور المدير العام..." 
-                       class="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-800 focus:border-amber-500 font-bold"
+                       class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 focus:border-amber-500 font-bold"
                        onkeydown="if(event.key === 'Enter') executeRevealPasswords()">
 
-                <div id="verifyAlert" class="hidden text-xs font-bold text-rose-700 p-2.5 bg-rose-50 rounded-xl border border-rose-200"></div>
+                <div id="verifyAlert" class="hidden text-[11px] sm:text-xs font-bold text-rose-700 p-2.5 bg-rose-50 rounded-xl border border-rose-200"></div>
 
-                <div class="flex justify-end gap-2 pt-2">
-                    <button onclick="closeVerifyModal()" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-300 cursor-pointer">إلغاء</button>
-                    <button onclick="executeRevealPasswords()" id="btnReveal" class="px-5 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow cursor-pointer">
-                        <i class="fa-solid fa-unlock ml-1"></i> تأكيد وكشف
+                <div class="flex justify-end gap-2 pt-1">
+                    <button onclick="closeVerifyModal()" class="px-3.5 py-2 bg-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-300 cursor-pointer">إلغاء</button>
+                    <button onclick="executeRevealPasswords()" id="btnReveal" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold rounded-xl shadow cursor-pointer flex items-center gap-1">
+                        <i class="fa-solid fa-unlock ml-1"></i> فك التشفير وعرض
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- توقيع مستر زيزو -->
-    <div class="text-center py-4 text-xs font-black text-slate-400">
-        جميع الحقوق محفوظة © منظومة مستر زيزو لإدارة المدارس ٢٠٢٦ / ٢٠٢٧
+    <!-- التذييل الثابت -->
+    <div class="text-center py-3 text-[11px] sm:text-xs font-black text-slate-400">
+        جميع الحقوق محفوظة © منظومة مستر زيزو لادارة بيانات المدرسة ٢٠٢٦ / ٢٠٢٧
     </div>
 
     <script>
@@ -329,85 +348,95 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // تشفير SHA-256
-        function sha256(ascii) {
-            function rightRotate(value, amount) { return (value >>> amount) | (value << (32 - amount)); }
-            var mathPow = Math.pow;
-            var maxWord = mathPow(2, 32);
-            var lengthProperty = 'length';
-            var i, j, result = '', words = [];
-            var asciiBitLength = ascii[lengthProperty] * 8;
-            var hash = sha256.h = sha256.h || [];
-            var k = sha256.k = sha256.k || [];
-            var primeCounter = k[lengthProperty];
-            var isComposite = {};
-            for (var candidate = 2; primeCounter < 64; candidate++) {
-                if (!isComposite[candidate]) {
-                    for (i = 0; i < 300; i += candidate) isComposite[i] = candidate;
-                    hash[primeCounter] = (mathPow(candidate, .5) * maxWord) | 0;
-                    k[primeCounter++] = (mathPow(candidate, 1/3) * maxWord) | 0;
-                }
+        const DEFAULT_BACKUP_PATH = "D:\\MR_ZEZO_SCHOOL\\Backup";
+        let directoryHandle = null;
+
+        // الجداول والمفاتيح الأساسية
+        const SYSTEM_TABLES = [
+            { id: 'students', label: 'التلاميذ', conflict: 'code', keyField: 'code' },
+            { id: 'teachers', label: 'المعلمون', conflict: 'nid', keyField: 'nid' },
+            { id: 'contract_teachers', label: 'معلمو الأجر', conflict: 'nid', keyField: 'nid' },
+            { id: 'system_roles', label: 'الصلاحيات', conflict: 'role_key', keyField: 'role_key' },
+            { id: 'system_capsules', label: 'بيانات المدرسة', conflict: 'id', keyField: 'id' },
+            { id: 'supervision', label: 'الإشراف', conflict: 'id', keyField: 'id' },
+            { id: 'daily_logs', label: 'السجلات', conflict: 'id', keyField: 'id' },
+            { id: 'teacher_requests', label: 'الطلبات', conflict: 'id', keyField: 'id' }
+        ];
+
+        // ================= محرك التشفير الآمن Web Crypto (SHA-256 + AES-GCM) =================
+        async function cryptoHashSHA256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function deriveKey(masterPassword, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                "raw", enc.encode(masterPassword), { name: "PBKDF2" }, false, ["deriveKey"]
+            );
+            return crypto.subtle.deriveKey(
+                { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+                keyMaterial,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["encrypt", "decrypt"]
+            );
+        }
+
+        async function encryptPassword(plainText, masterPassword) {
+            const enc = new TextEncoder();
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const key = await deriveKey(masterPassword, salt);
+            const cipherBuffer = await crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: iv }, key, enc.encode(plainText)
+            );
+            const combined = new Uint8Array(salt.length + iv.length + cipherBuffer.byteLength);
+            combined.set(salt, 0);
+            combined.set(iv, salt.length);
+            combined.set(new Uint8Array(cipherBuffer), salt.length + iv.length);
+            return btoa(String.fromCharCode.apply(null, combined));
+        }
+
+        async function decryptPassword(cipherBase64, masterPassword) {
+            try {
+                const combinedStr = atob(cipherBase64);
+                const combined = new Uint8Array(combinedStr.length);
+                for (let i = 0; i < combinedStr.length; i++) combined[i] = combinedStr.charCodeAt(i);
+                
+                const salt = combined.slice(0, 16);
+                const iv = combined.slice(16, 28);
+                const cipherData = combined.slice(28);
+                
+                const key = await deriveKey(masterPassword, salt);
+                const decryptedBuffer = await crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: iv }, key, cipherData
+                );
+                return new TextDecoder().decode(decryptedBuffer);
+            } catch (e) {
+                return null;
             }
-            ascii += '\x80';
-            while (ascii[lengthProperty] % 64 - 56) ascii += '\x00';
-            for (i = 0; i < ascii[lengthProperty]; i++) {
-                j = ascii.charCodeAt(i);
-                if (j >> 8) return;
-                words[i >> 2] |= j << ((3 - i % 4) * 8);
-            }
-            words[words[lengthProperty]] = ((asciiBitLength / maxWord) | 0);
-            words[words[lengthProperty]] = (asciiBitLength) | 0;
-            for (j = 0; j < words[lengthProperty];) {
-                var w = words.slice(j, j += 16);
-                var oldHash = hash;
-                hash = hash.slice(0, 8);
-                for (i = 0; i < 64; i++) {
-                    var i2 = i + j;
-                    var w15 = w[i - 15], w2 = w[i - 2];
-                    var a = hash[0], e = hash[4];
-                    var temp1 = hash[7]
-                        + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
-                        + ((e & hash[5]) ^ ((~e) & hash[6]))
-                        + k[i]
-                        + (w[i] = (i < 16) ? w[i] : (
-                                w[i - 16]
-                                + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
-                                + w[i - 7]
-                                + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
-                            ) | 0
-                        );
-                    var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
-                        + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
-                    hash = [(temp1 + temp2) | 0].concat(hash);
-                    hash[4] = (hash[4] + temp1) | 0;
-                }
-                for (i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
-            }
-            for (i = 0; i < 8; i++) {
-                for (i2 = 3; i2 >= 0; i2--) {
-                    var c = (hash[i] >> (i2 * 8)) & 255;
-                    result += ((c < 16) ? '0' : '') + c.toString(16);
-                }
-            }
-            return result;
         }
 
         // ================= محرك IndexedDB المحلي =================
         const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
         const DB_VERSION = 2;
-        const TABLE_NAMES = ['students', 'teachers', 'contract_teachers', 'system_roles', 'system_capsules', 'supervision', 'daily_logs', 'teacher_requests'];
 
         function openIndexedDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
-                    TABLE_NAMES.forEach(t => {
-                        if (db.objectStoreNames.contains(t)) {
-                            db.deleteObjectStore(t);
+                    SYSTEM_TABLES.forEach(t => {
+                        if (db.objectStoreNames.contains(t.id)) {
+                            db.deleteObjectStore(t.id);
                         }
-                        const key = (t === 'students') ? 'code' : (t === 'system_roles' ? 'role_key' : (t === 'teachers' || t === 'contract_teachers' ? 'nid' : 'id'));
-                        db.createObjectStore(t, { keyPath: key, autoIncrement: (t !== 'students' && t !== 'system_roles' && t !== 'teachers' && t !== 'contract_teachers' && t !== 'system_capsules') });
+                        db.createObjectStore(t.id, { 
+                            keyPath: t.keyField, 
+                            autoIncrement: (t.keyField === 'id') 
+                        });
                     });
                 };
                 request.onsuccess = () => resolve(request.result);
@@ -441,67 +470,99 @@
             });
         }
 
-        // ================= فحص السحابة والعدادات الحية =================
+        // ================= نمط التشغيل وإدارة الحالة =================
+        function getAppMode() {
+            return localStorage.getItem('ZEZO_APP_MODE') || 'online';
+        }
+
+        async function setAppMode(mode) {
+            localStorage.setItem('ZEZO_APP_MODE', mode);
+            await refreshLiveStats();
+            if (mode === 'online') {
+                showAlert(`🌐 تم تفعيل وضع أونلاين بنجاح! المنظومة تعتمد الآن كلياً على سوبابيز.`);
+            } else {
+                showAlert(`💻 تم تفعيل وضع أوفلاين بنجاح! المنظومة تعمل الآن محلياً من قاعدة بيانات الجهاز.`);
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', async () => {
             await refreshLiveStats();
         });
 
         async function refreshLiveStats() {
-            const mode = localStorage.getItem('zezo_operating_mode') || 'online';
+            const mode = getAppMode();
             const badge = document.getElementById('badgeMode');
-            const lastSync = localStorage.getItem('zezo_last_sync_date') || 'لم تسجل بعد';
+            const lastSync = localStorage.getItem('ZEZO_LAST_SYNC_DATE') || 'لم تسجل بعد';
             document.getElementById('lblLastActivity').innerText = lastSync;
 
             if (mode === 'offline') {
-                badge.className = "text-xs px-3 py-1 bg-amber-100 text-amber-900 border border-amber-300 rounded-full font-black flex items-center gap-1";
-                badge.innerHTML = `<i class="fa-solid fa-laptop"></i> الوضع المحلي المستقل (Offline)`;
+                badge.className = "text-[11px] sm:text-xs px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-300 rounded-full font-black flex items-center gap-1";
+                badge.innerHTML = `<i class="fa-solid fa-laptop"></i> وضع العمل المحلي (Offline)`;
+                
+                try {
+                    const [st, te, sup, cap] = await Promise.all([
+                        getTableFromIndexedDB('students'),
+                        getTableFromIndexedDB('teachers'),
+                        getTableFromIndexedDB('supervision'),
+                        getTableFromIndexedDB('system_capsules')
+                    ]);
+                    document.getElementById('cnt_students').innerText = st.length.toLocaleString('ar-EG');
+                    document.getElementById('cnt_teachers').innerText = te.length.toLocaleString('ar-EG');
+                    document.getElementById('cnt_supervision').innerText = sup.length.toLocaleString('ar-EG');
+                    document.getElementById('cnt_capsules').innerText = cap.length.toLocaleString('ar-EG');
+                } catch(e) {}
+
             } else {
-                badge.className = "text-xs px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full font-black flex items-center gap-1";
-                badge.innerHTML = `<i class="fa-solid fa-cloud"></i> وضع السحابة المتصل (Online)`;
-            }
+                badge.className = "text-[11px] sm:text-xs px-2.5 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full font-black flex items-center gap-1";
+                badge.innerHTML = `<i class="fa-solid fa-globe"></i> وضع السحابة المتصل (Online)`;
 
-            try {
-                const [stCount, teCount, supCount, capCount] = await Promise.all([
-                    sbClient.from('students').select('id', { count: 'exact', head: true }),
-                    sbClient.from('teachers').select('id', { count: 'exact', head: true }),
-                    sbClient.from('supervision').select('id', { count: 'exact', head: true }),
-                    sbClient.from('system_capsules').select('id', { count: 'exact', head: true })
-                ]);
+                try {
+                    const [stCount, teCount, supCount, capCount] = await Promise.all([
+                        sbClient.from('students').select('id', { count: 'exact', head: true }),
+                        sbClient.from('teachers').select('id', { count: 'exact', head: true }),
+                        sbClient.from('supervision').select('id', { count: 'exact', head: true }),
+                        sbClient.from('system_capsules').select('id', { count: 'exact', head: true })
+                    ]);
 
-                document.getElementById('cnt_students').innerText = (stCount.count || 0).toLocaleString('ar-EG');
-                document.getElementById('cnt_teachers').innerText = (teCount.count || 0).toLocaleString('ar-EG');
-                document.getElementById('cnt_supervision').innerText = (supCount.count || 0).toLocaleString('ar-EG');
-                document.getElementById('cnt_capsules').innerText = (capCount.count || 0).toLocaleString('ar-EG');
-
-            } catch (e) {
-                console.log("فحص العدادات بدون اتصال مباشر");
+                    document.getElementById('cnt_students').innerText = (stCount.count || 0).toLocaleString('ar-EG');
+                    document.getElementById('cnt_teachers').innerText = (teCount.count || 0).toLocaleString('ar-EG');
+                    document.getElementById('cnt_supervision').innerText = (supCount.count || 0).toLocaleString('ar-EG');
+                    document.getElementById('cnt_capsules').innerText = (capCount.count || 0).toLocaleString('ar-EG');
+                } catch (e) {
+                    console.log("تعذر فحص العدادات السحابية");
+                }
             }
         }
 
         function showAlert(msg, isSuccess = true) {
             const box = document.getElementById('alertBox');
             box.className = isSuccess 
-                ? 'p-4 rounded-xl text-sm font-bold border bg-emerald-50 text-emerald-800 border-emerald-300 shadow-md'
-                : 'p-4 rounded-xl text-sm font-bold border bg-rose-50 text-rose-800 border-rose-300 shadow-md';
+                ? 'p-3.5 rounded-xl text-xs sm:text-sm font-bold border bg-emerald-50 text-emerald-800 border-emerald-300 shadow-md'
+                : 'p-3.5 rounded-xl text-xs sm:text-sm font-bold border bg-rose-50 text-rose-800 border-rose-300 shadow-md';
             box.innerHTML = msg;
             box.classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // ================= 1. تصدير وحفظ نسخة السحابة (Download Backup) =================
-        async function fetchAllFromCloud(table) {
-            let all = [];
-            let start = 0;
-            const step = 1000;
-            let hasMore = true;
-            while(hasMore) {
-                const { data, error } = await sbClient.from(table).select('*').range(start, start + step - 1);
-                if (error || !data || data.length === 0) break;
-                all = all.concat(data);
-                start += step;
-                if (data.length < step) hasMore = false;
+        // ================= 1. تنزيل نسخة احتياطية على الجهاز =================
+        async function fetchAllFromSource(tableId) {
+            const mode = getAppMode();
+            if (mode === 'offline') {
+                return await getTableFromIndexedDB(tableId);
+            } else {
+                let all = [];
+                let start = 0;
+                const step = 1000;
+                let hasMore = true;
+                while(hasMore) {
+                    const { data, error } = await sbClient.from(tableId).select('*').range(start, start + step - 1);
+                    if (error || !data || data.length === 0) break;
+                    all = all.concat(data);
+                    start += step;
+                    if (data.length < step) hasMore = false;
+                }
+                return all;
             }
-            return all;
         }
 
         async function executeDownloadBackup() {
@@ -514,20 +575,10 @@
             btn.disabled = true;
             progressBox.classList.remove('hidden');
 
-            const tables = [
-                { id: 'students', label: 'شؤون التلاميذ' },
-                { id: 'teachers', label: 'المعلمون' },
-                { id: 'contract_teachers', label: 'معلمو الأجر' },
-                { id: 'system_roles', label: 'الصلاحيات' },
-                { id: 'system_capsules', label: 'بيانات المدرسة' },
-                { id: 'supervision', label: 'الإشراف' },
-                { id: 'daily_logs', label: 'السجلات' },
-                { id: 'teacher_requests', label: 'الطلبات' }
-            ];
-
             const masterBackup = {
                 app: "MR_ZEZO_SCHOOL",
                 version: "2026_2027",
+                source: getAppMode(),
                 exported_at: new Date().toISOString(),
                 arabic_date: new Date().toLocaleString('ar-EG'),
                 tables: {}
@@ -536,36 +587,34 @@
             let totalCount = 0;
 
             try {
-                for (let i = 0; i < tables.length; i++) {
-                    const t = tables[i];
-                    const pct = Math.round(((i + 1) / tables.length) * 100);
-                    statusTxt.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600 ml-1"></i> جاري سحب جدول [${t.label}]...`;
+                for (let i = 0; i < SYSTEM_TABLES.length; i++) {
+                    const t = SYSTEM_TABLES[i];
+                    const pct = Math.round(((i + 1) / SYSTEM_TABLES.length) * 100);
+                    statusTxt.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-emerald-600 ml-1"></i> استخراج جدول [${t.label}]...`;
                     percentTxt.innerText = `${pct}%`;
                     pBar.style.width = `${pct}%`;
 
-                    const rows = await fetchAllFromCloud(t.id);
+                    const rows = await fetchAllFromSource(t.id);
                     masterBackup.tables[t.id] = rows;
                     totalCount += rows.length;
-                    
-                    await saveTableToIndexedDB(t.id, rows);
                 }
 
-                statusTxt.innerHTML = `<i class="fa-solid fa-check text-emerald-600 ml-1"></i> اكتمل تجميع (${totalCount}) سجل! جاري فتح نافذة الحفظ...`;
+                statusTxt.innerHTML = `<i class="fa-solid fa-check text-emerald-600 ml-1"></i> اكتمل تجميع (${totalCount}) سجل! حفظ الملف...`;
 
                 const jsonStr = JSON.stringify(masterBackup, null, 2);
                 const now = new Date();
-                const fileName = `نسخة_مدرسة_الشهيد_أشرف_حبيب_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}.json`;
+                const fileName = `نسخة_منظومة_مستر_زيزو_${now.getFullYear()}_${now.getMonth()+1}_${now.getDate()}.json`;
 
                 await saveFileToLocalPath(jsonStr, fileName);
 
                 const dateStr = new Date().toLocaleString('ar-EG');
-                localStorage.setItem('zezo_last_sync_date', dateStr);
+                localStorage.setItem('ZEZO_LAST_SYNC_DATE', dateStr);
                 document.getElementById('lblLastActivity').innerText = dateStr;
 
-                showAlert(`🎉 تم بنجاح تنزيل وحفظ النسخة الاحتياطية الشاملة (${totalCount} سجل) على جهازك.`);
+                showAlert(`🎉 تم بنجاح تصدير الباك أب الشامل (${totalCount} سجل) وحفظه بنجاح.`);
 
             } catch (err) {
-                showAlert(`❌ خطأ أثناء التنزيل: ${err.message}`, false);
+                showAlert(`❌ خطأ أثناء تنزيل النسخة: ${err.message}`, false);
             } finally {
                 btn.disabled = false;
                 setTimeout(() => progressBox.classList.add('hidden'), 3000);
@@ -573,13 +622,18 @@
         }
 
         async function saveFileToLocalPath(content, fileName) {
-            if ('showSaveFilePicker' in window) {
+            if (window.electronAPI && window.electronAPI.saveBackupDirectly) {
+                return await window.electronAPI.saveBackupDirectly(DEFAULT_BACKUP_PATH, fileName, content);
+            }
+
+            if ('showDirectoryPicker' in window) {
                 try {
-                    const handle = await window.showSaveFilePicker({
-                        suggestedName: fileName,
-                        types: [{ description: 'ملف قاعدة بيانات المنظومة (*.json)', accept: { 'application/json': ['.json'] } }]
-                    });
-                    const writable = await handle.createWritable();
+                    if (!directoryHandle) {
+                        showAlert(`ℹ️ حدد مجلد الباك أب (${DEFAULT_BACKUP_PATH}) مرة واحدة للربط التلقائي.`, true);
+                        directoryHandle = await window.showDirectoryPicker();
+                    }
+                    const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
+                    const writable = await fileHandle.createWritable();
                     await writable.write(content);
                     await writable.close();
                     return true;
@@ -587,6 +641,7 @@
                     if (e.name === 'AbortError') return false;
                 }
             }
+
             const blob = new Blob([content], { type: 'application/json;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -597,7 +652,81 @@
             return true;
         }
 
-        // ================= 2. استيراد وتفعيل العمل محلياً =================
+        // ================= 2. تحديث السحابة (Supabase) من ملف باك أب =================
+        async function handleRestoreDirectToCloud(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!confirm(`⚠️ تحذير أمني:\nهل أنت متأكد من رغبتك في تحديث قاعدة بيانات سوبابيز من ملف الباك أب (${file.name})؟`)) {
+                event.target.value = '';
+                return;
+            }
+
+            const progressBox = document.getElementById('syncProgressBox');
+            const statusTxt = document.getElementById('syncStatusText');
+            const percentTxt = document.getElementById('syncPercent');
+            const pBar = document.getElementById('syncProgressBar');
+
+            progressBox.classList.remove('hidden');
+            statusTxt.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-blue-600 ml-1"></i> قراءة ملف الباك أب...`;
+            percentTxt.innerText = `10%`;
+            pBar.style.width = `10%`;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!parsed.app || !parsed.tables) {
+                        throw new Error("الملف المحدد غير صالح أو تالف!");
+                    }
+
+                    let totalPushed = 0;
+                    for (let i = 0; i < SYSTEM_TABLES.length; i++) {
+                        const t = SYSTEM_TABLES[i];
+                        const records = parsed.tables[t.id] || [];
+                        const pct = Math.round(((i + 1) / SYSTEM_TABLES.length) * 100);
+                        
+                        statusTxt.innerHTML = `<i class="fa-solid fa-cloud-arrow-up fa-bounce text-blue-600 ml-1"></i> تحديث جدول [${t.label}] في سوبابيز...`;
+                        percentTxt.innerText = `${pct}%`;
+                        pBar.style.width = `${pct}%`;
+
+                        if (records.length > 0) {
+                            const cleanRecords = records.map(item => {
+                                const clean = { ...item };
+                                if (t.id === 'contract_teachers' && typeof clean.id === 'number') {
+                                    delete clean.id;
+                                }
+                                return clean;
+                            });
+
+                            const chunkSize = 200;
+                            for (let j = 0; j < cleanRecords.length; j += chunkSize) {
+                                const chunk = cleanRecords.slice(j, j + chunkSize);
+                                const { error } = await sbClient.from(t.id).upsert(chunk, { onConflict: t.conflict });
+                                if (error) throw new Error(`خطأ في رفع جدول ${t.label}: ${error.message}`);
+                            }
+                            totalPushed += records.length;
+                        }
+                    }
+
+                    localStorage.setItem('ZEZO_APP_MODE', 'online');
+                    const nowStr = new Date().toLocaleString('ar-EG');
+                    localStorage.setItem('ZEZO_LAST_SYNC_DATE', nowStr + ' (تحديث سحابي)');
+
+                    await refreshLiveStats();
+                    showAlert(`🚀 تم تحديث قاعدة بيانات سوبابيز السحابية بنجاح (${totalPushed} سجل).`);
+
+                } catch (err) {
+                    showAlert(`❌ فشل تحديث السحابة: ${err.message}`, false);
+                } finally {
+                    setTimeout(() => progressBox.classList.add('hidden'), 3000);
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // ================= 3. استيراد وتفعيل العمل محلياً (أوفلاين) =================
         async function handleImportLocalFile(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -608,7 +737,7 @@
             const pBar = document.getElementById('syncProgressBar');
 
             progressBox.classList.remove('hidden');
-            statusTxt.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-600 ml-1"></i> جاري فحص ملف النسخة الاحتياطية...`;
+            statusTxt.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-600 ml-1"></i> فحص ملف الباك أب...`;
             percentTxt.innerText = `10%`;
             pBar.style.width = `10%`;
 
@@ -617,33 +746,32 @@
                 try {
                     const parsed = JSON.parse(e.target.result);
                     if (!parsed.app || !parsed.tables) {
-                        throw new Error("الملف المحدد ليس ملف نسخ احتياطي صالح للمنظومة!");
+                        throw new Error("ملف النسخ الاحتياطي غير صالح!");
                     }
 
                     let importedCount = 0;
-                    const tableKeys = Object.keys(parsed.tables);
-
-                    for (let i = 0; i < tableKeys.length; i++) {
-                        const tName = tableKeys[i];
-                        const records = parsed.tables[tName] || [];
-                        const pct = Math.round(((i + 1) / tableKeys.length) * 100);
-                        statusTxt.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-amber-600 ml-1"></i> جاري تهيئة جدول [${tName}] محلياً...`;
+                    for (let i = 0; i < SYSTEM_TABLES.length; i++) {
+                        const t = SYSTEM_TABLES[i];
+                        const records = parsed.tables[t.id] || [];
+                        const pct = Math.round(((i + 1) / SYSTEM_TABLES.length) * 100);
+                        
+                        statusTxt.innerHTML = `<i class="fa-solid fa-laptop-file text-amber-600 ml-1"></i> تهيئة جدول [${t.label}] محلياً...`;
                         percentTxt.innerText = `${pct}%`;
                         pBar.style.width = `${pct}%`;
 
-                        await saveTableToIndexedDB(tName, records);
+                        await saveTableToIndexedDB(t.id, records);
                         importedCount += records.length;
                     }
 
-                    localStorage.setItem('zezo_operating_mode', 'offline');
+                    localStorage.setItem('ZEZO_APP_MODE', 'offline');
                     const syncDate = parsed.arabic_date || new Date().toLocaleString('ar-EG');
-                    localStorage.setItem('zezo_last_sync_date', syncDate + ' (محلي)');
+                    localStorage.setItem('ZEZO_LAST_SYNC_DATE', syncDate + ' (محلي)');
 
                     await refreshLiveStats();
-                    showAlert(`✅ تم تفعيل الوضع المحلي بنجاح! تم استيراد (${importedCount}) سجل إلى قاعدة بيانات المتصفح، يمكنك الآن العمل بالكامل بدون إنترنت.`);
+                    showAlert(`✅ تم استيراد (${importedCount}) سجل بنجاح! تم تفعيل وضع الأوفلاين والمنظومة جاهزة للعمل على الهاتف أو الجهاز.`);
 
                 } catch (err) {
-                    showAlert(`❌ فشل استيراد الملف: ${err.message}`, false);
+                    showAlert(`❌ فشل استيراد الملف محلياً: ${err.message}`, false);
                 } finally {
                     setTimeout(() => progressBox.classList.add('hidden'), 2500);
                     event.target.value = '';
@@ -652,80 +780,7 @@
             reader.readAsText(file);
         }
 
-        // ================= 3. رفع التعديلات المحلية للسحابة (Push & Sync) المطور والآمن =================
-        async function executePushLocalToCloud() {
-            if (!confirm("⚠️ هل أنت متأكد من رغبتك في رفع ومزامنة كافة البيانات المحلية وتحديث السحابة (Supabase) الآن؟")) return;
-
-            const btn = document.getElementById('btnPushCloud');
-            const progressBox = document.getElementById('syncProgressBox');
-            const statusTxt = document.getElementById('syncStatusText');
-            const percentTxt = document.getElementById('syncPercent');
-            const pBar = document.getElementById('syncProgressBar');
-
-            btn.disabled = true;
-            progressBox.classList.remove('hidden');
-
-            // ضبط المفاتيح الأساسية بدقة متناهية مطابقة لـ Supabase
-            const tablesToPush = [
-                { id: 'students', label: 'التلاميذ', conflict: 'code' },
-                { id: 'teachers', label: 'المعلمون الأساسيون', conflict: 'nid' },
-                { id: 'contract_teachers', label: 'معلمو الأجر', conflict: 'nid' }, // ✅ تم التثبيت على nid
-                { id: 'system_roles', label: 'الصلاحيات', conflict: 'role_key' },
-                { id: 'system_capsules', label: 'بيانات المدرسة', conflict: 'id' },
-                { id: 'supervision', label: 'الإشراف', conflict: 'id' },
-                { id: 'daily_logs', label: 'السجلات', conflict: 'id' },
-                { id: 'teacher_requests', label: 'الطلبات', conflict: 'id' }
-            ];
-
-            let syncedRecords = 0;
-
-            try {
-                for (let i = 0; i < tablesToPush.length; i++) {
-                    const t = tablesToPush[i];
-                    const pct = Math.round(((i + 1) / tablesToPush.length) * 100);
-                    statusTxt.innerHTML = `<i class="fa-solid fa-cloud-arrow-up fa-bounce text-blue-600 ml-1"></i> جاري مزامنة جدول [${t.label}] مع السحابة...`;
-                    percentTxt.innerText = `${pct}%`;
-                    pBar.style.width = `${pct}%`;
-
-                    let localData = await getTableFromIndexedDB(t.id);
-
-                    if (localData && localData.length > 0) {
-                        // تنظيف البيانات وإزالة أي حقول معرفات وهمية قبل الرفع
-                        localData = localData.map(item => {
-                            const cleanItem = { ...item };
-                            if (t.id === 'contract_teachers' && typeof cleanItem.id === 'number') {
-                                delete cleanItem.id;
-                            }
-                            return cleanItem;
-                        });
-
-                        // تقسيم البيانات لدفعات 300 سجل
-                        const chunkSize = 300;
-                        for (let j = 0; j < localData.length; j += chunkSize) {
-                            const chunk = localData.slice(j, j + chunkSize);
-                            const { error } = await sbClient.from(t.id).upsert(chunk, { onConflict: t.conflict });
-                            if (error) throw new Error(`خطأ في رفع جدول ${t.label}: ` + error.message);
-                        }
-                        syncedRecords += localData.length;
-                    }
-                }
-
-                localStorage.setItem('zezo_operating_mode', 'online');
-                const nowStr = new Date().toLocaleString('ar-EG');
-                localStorage.setItem('zezo_last_sync_date', nowStr);
-
-                await refreshLiveStats();
-                showAlert(`🚀 تمت المزامنة بنجاح تام! تم تحديث ورفع (${syncedRecords}) سجل إلى السحابة، والمنظومة متصلة ومحدثة الآن.`);
-
-            } catch (err) {
-                showAlert(`❌ حدث خطأ أثناء المزامنة: ${err.message}`, false);
-            } finally {
-                btn.disabled = false;
-                setTimeout(() => progressBox.classList.add('hidden'), 3000);
-            }
-        }
-
-        // ================= 4. إدارة كلمات المرور وكشفها =================
+        // ================= 4. تشفير وإدارة الصلاحيات =================
         function togglePass(inputId, btn) {
             const input = document.getElementById(inputId);
             const icon = btn.querySelector('i');
@@ -763,11 +818,11 @@
             }
 
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري فك التشفير...`;
 
             try {
                 let adminRole = null;
-                const mode = localStorage.getItem('zezo_operating_mode') || 'online';
+                const mode = getAppMode();
 
                 if (mode === 'offline') {
                     const roles = await getTableFromIndexedDB('system_roles');
@@ -777,7 +832,9 @@
                     adminRole = data;
                 }
 
-                if (adminRole && sha256(enteredPass) === adminRole.password_hash) {
+                const enteredHash = await cryptoHashSHA256(enteredPass);
+
+                if (adminRole && enteredHash === adminRole.password_hash) {
                     let allRoles = [];
                     if (mode === 'offline') {
                         allRoles = await getTableFromIndexedDB('system_roles');
@@ -786,8 +843,13 @@
                         allRoles = data || [];
                     }
 
-                    allRoles.forEach(r => {
-                        const plain = r.plain_password || localStorage.getItem('zezo_plain_' + r.role_key) || '';
+                    for (const r of allRoles) {
+                        let plain = '';
+                        if (r.encrypted_vault) {
+                            plain = await decryptPassword(r.encrypted_vault, enteredPass) || '';
+                        }
+                        if (!plain && r.role_key === 'super_admin') plain = enteredPass;
+
                         let targetInput = null;
                         if (r.role_key === 'super_admin') targetInput = document.getElementById('pass_super_admin');
                         if (r.role_key === 'student_affairs') targetInput = document.getElementById('pass_student_affairs');
@@ -796,11 +858,11 @@
                         if (r.role_key === 'visitor') targetInput = document.getElementById('pass_visitor');
                         if (r.role_key === 'custom_role') targetInput = document.getElementById('pass_custom_role');
 
-                        if (targetInput) {
+                        if (targetInput && plain) {
                             targetInput.value = plain;
                             targetInput.type = 'text';
                         }
-                    });
+                    }
 
                     document.querySelectorAll('.role-pass-input').forEach(input => {
                         const icon = input.parentElement.querySelector('button i');
@@ -808,7 +870,7 @@
                     });
 
                     closeVerifyModal();
-                    showAlert(`🎉 تم التحقق بنجاح! تم كشف وعرض كلمات المرور في الحقول.`);
+                    showAlert(`🎉 تم التحقق وفك تشفير كلمات المرور بنجاح وعرضها داخل الخانات.`);
                 } else {
                     alertEl.innerText = '❌ كلمة مرور المدير العام غير صحيحة!';
                     alertEl.classList.remove('hidden');
@@ -819,15 +881,22 @@
                 alertEl.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-unlock ml-1"></i> تأكيد وكشف`;
+                btn.innerHTML = `<i class="fa-solid fa-unlock ml-1"></i> فك التشفير وعرض`;
             }
         }
 
         async function saveAllRoles() {
             const btn = document.getElementById('btnSave');
             const btnText = document.getElementById('btnSaveText');
+            
+            const adminPassInput = document.getElementById('pass_super_admin').value.trim();
+            if (!adminPassInput) {
+                showAlert(`⚠️ يجب إدخال كلمة مرور (المدير العام) لتشفير وتأمين باقي الصلاحيات بها!`, false);
+                return;
+            }
+
             btn.disabled = true;
-            btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin ml-2"></i> جاري الحفظ...`;
+            btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin ml-2"></i> جاري التشفير والحفظ...`;
 
             const rolesConfig = [
                 { key: 'super_admin', inputId: 'pass_super_admin' },
@@ -839,6 +908,7 @@
             ];
 
             let savedCount = 0;
+            const mode = getAppMode();
 
             try {
                 for (const item of rolesConfig) {
@@ -846,12 +916,13 @@
                     const plainVal = passInput.value.trim();
 
                     if (plainVal !== '') {
-                        const hashed = sha256(plainVal);
+                        const hashed = await cryptoHashSHA256(plainVal);
+                        const encryptedVault = await encryptPassword(plainVal, adminPassInput);
 
                         let payload = {
                             role_key: item.key,
                             password_hash: hashed,
-                            plain_password: plainVal,
+                            encrypted_vault: encryptedVault,
                             updated_at: new Date().toISOString()
                         };
 
@@ -862,14 +933,20 @@
                             if (cUrl) payload.redirect_url = cUrl;
                         }
 
-                        await sbClient.from('system_roles').update(payload).eq('role_key', item.key);
-                        localStorage.setItem('zezo_plain_' + item.key, plainVal);
+                        if (mode === 'offline') {
+                            const db = await openIndexedDB();
+                            const tx = db.transaction('system_roles', 'readwrite');
+                            tx.objectStore('system_roles').put(payload);
+                        } else {
+                            await sbClient.from('system_roles').upsert(payload, { onConflict: 'role_key' });
+                        }
+
                         savedCount++;
                     }
                 }
 
                 if (savedCount > 0) {
-                    showAlert(`✅ تم حفظ وتحديث (${savedCount}) كلمات مرور بنجاح.`);
+                    showAlert(`✅ تم تشفير وحفظ (${savedCount}) صلاحيات بنجاح وفق النمط [${mode}].`);
                 } else {
                     showAlert(`ℹ️ أدخل كلمة مرور في أي خانة أولاً لحفظها.`, false);
                 }
@@ -878,7 +955,7 @@
                 showAlert(`❌ خطأ أثناء الحفظ: ${error.message}`, false);
             } finally {
                 btn.disabled = false;
-                btnText.innerHTML = `حفظ وتحديث الصلاحيات`;
+                btnText.innerHTML = `حفظ وتحديث الصلاحيات المشفرة`;
             }
         }
     </script>
