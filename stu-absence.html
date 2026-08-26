@@ -2,69 +2,76 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>منظومة الغياب الذكية - مستر زيزو</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>منظومة مستر زيزو لادارة بيانات المدرسة - منظومة الغياب والإنذارات</title>
+    
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- مكتبة Chart.js لرسم المنحنى الزمني الإبداعي -->
+    <!-- مكتبات Supabase و Chart.js و ExcelJS و XLSX و html2canvas -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- مكتبات الإكسيل للتعامل مع الإنذارات -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         :root { 
-            --primary: #1e3a8a; --dark: #0f172a; --bg: #f8fafc; 
-            --accent: #ca8a04; --info: #0284c7; --success: #16a34a; --danger: #be123c;
-            --warn1: #eab308; --warn2: #f97316;
+            --primary: #0f2b48; 
+            --primary-light: #1e3a8a;
+            --dark: #0f172a; 
+            --bg: #f1f5f9; 
+            --accent: #d97706; 
+            --info: #0284c7; 
+            --success: #16a34a; 
+            --danger: #be123c;
+            --warn1: #eab308; 
+            --warn2: #f97316;
         }
+
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
-        body { background-color: var(--bg); color: #1e293b; padding: 10px 20px; display: flex; flex-direction: column; align-items: center; }
+        body { background-color: var(--bg); color: #1e293b; min-height: 100vh; width: 100%; display: flex; flex-direction: column; align-items: center; padding: 8px 12px; }
 
-        .top-navigation { width: 100%; max-width: 1150px; background: var(--dark); padding: 12px 20px; border-radius: 12px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .nav-title { font-size: 16px; font-weight: 900; color: #fcd34d; display: flex; align-items: center; gap: 10px; }
-        .zizo-badge { background: #ca8a04; color: #fff; padding: 4px 15px; border-radius: 20px; font-size: 13px; font-weight: 900; border: 1px solid #fef08a; }
-        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 6px 15px; border-radius: 6px; font-size: 13px; font-weight: 700; transition: 0.2s; cursor: pointer; display: flex; align-items: center; gap: 6px; border: none; }
-        .btn-nav:hover { opacity: 0.9; }
+        .app-container { width: 100%; max-width: 1250px; margin: 0 auto; }
 
-        .tabs-container { display: flex; gap: 10px; margin-bottom: 20px; width: 100%; max-width: 1150px; }
-        .tab-btn { flex: 1; background: white; border: 2px solid #cbd5e1; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 15px; color: #475569; cursor: pointer; transition: 0.3s; }
-        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 15px rgba(30,58,138,0.2); }
+        .card-3d { background: #ffffff; border: 1px solid #cbd5e1; border-bottom: 4px solid #94a3b8; border-radius: 16px; transition: all 0.2s ease; }
+        .card-3d:hover { border-bottom-color: #64748b; }
+        .btn-3d { border-bottom: 3px solid rgba(0,0,0,0.25); transition: all 0.1s ease; touch-action: manipulation; }
+        .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
 
-        .content-box { background: white; width: 100%; max-width: 1150px; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 5px solid var(--primary); display: none; }
-        .content-box.active { display: block; animation: fadeIn 0.3s ease; }
+        /* أزرار التبويبات */
+        .tabs-container { display: flex; gap: 8px; width: 100%; margin-bottom: 12px; }
+        .tab-btn { 
+            flex: 1; background: white; border: 1px solid #cbd5e1; border-bottom: 4px solid #cbd5e1; 
+            padding: 10px; border-radius: 14px; font-weight: 900; font-size: 13.5px; color: #475569; 
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; 
+        }
+        .tab-btn.active { 
+            background: var(--primary); color: white; border-color: var(--primary); 
+            border-bottom: 4px solid #081a2c; box-shadow: 0 4px 12px rgba(15,43,72,0.25); 
+        }
+
+        .content-box { display: none; width: 100%; }
+        .content-box.active { display: block; animation: fadeIn 0.25s ease; }
 
         /* شاشة الرصد السريع */
-        .entry-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .stats-panel { background: #eff6ff; border: 2px solid #bfdbfe; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .stat-item { display: flex; justify-content: space-between; align-items: center; font-weight: 900; font-size: 15px; border-bottom: 1px dashed #93c5fd; padding-bottom: 10px; }
-        .stat-val { font-size: 22px; color: var(--primary); }
+        .entry-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; }
 
-        .input-panel { display: flex; flex-direction: column; gap: 15px; }
-        .form-group { display: flex; flex-direction: column; gap: 5px; }
-        .form-group label { font-size: 14px; font-weight: 800; color: var(--dark); }
-        .form-group select, .form-group input { padding: 12px; border-radius: 8px; border: 2px solid #cbd5e1; font-size: 16px; font-weight: 900; outline: none; transition: 0.2s; }
-        .form-group input:focus, .form-group select:focus { border-color: var(--info); box-shadow: 0 0 0 3px rgba(2,132,199,0.1); }
-        
-        .btn-submit { background: var(--success); color: white; border: none; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: 900; cursor: pointer; margin-top: 10px; transition: 0.2s; }
-        .btn-submit:hover { background: #15803d; transform: translateY(-2px); }
-
-        /* شاشة التقارير والإبداع الجديد */
-        .report-controls { display: flex; gap: 10px; margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; flex-wrap: wrap; align-items: center; }
-        .report-controls select { padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 13px; outline: none; }
-        .btn-report { background: var(--info); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 800; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
-        .btn-report:hover { opacity: 0.9; transform: translateY(-1px); }
-
-        /* Dashboard الإحصائيات */
-        .dashboard-kpi { display: none; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
-        .kpi-card { background: white; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 5px; cursor: pointer; transition: 0.3s; }
-        .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); }
-        .kpi-title { font-size: 12px; font-weight: 800; color: #64748b; }
-        .kpi-value { font-size: 20px; font-weight: 900; }
+        /* مؤشرات الإنذارات التفاعلية */
+        .dashboard-kpi { display: none; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; margin-bottom: 15px; }
+        .kpi-card { 
+            background: white; padding: 12px 10px; border-radius: 12px; text-align: center; 
+            border: 1px solid #e2e8f0; box-shadow: 0 2px 5px rgba(0,0,0,0.02); display: flex; 
+            flex-direction: column; gap: 3px; cursor: pointer; transition: 0.2s; 
+        }
+        .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.06); }
+        .kpi-title { font-size: 11.5px; font-weight: 800; color: #64748b; }
+        .kpi-value { font-size: 18px; font-weight: 900; }
         
         .card-safe { border-bottom: 4px solid var(--success); } .card-safe .kpi-value { color: var(--success); }
         .card-warn1 { border-bottom: 4px solid var(--warn1); } .card-warn1 .kpi-value { color: var(--warn1); }
@@ -72,178 +79,299 @@
         .card-danger { border-bottom: 4px solid var(--danger); background: #fef2f2; } .card-danger .kpi-value { color: var(--danger); }
         .card-info { border-bottom: 4px solid var(--primary); } .card-info .kpi-value { color: var(--primary); }
 
-        .chart-container { display: none; width: 100%; height: 350px; margin-bottom: 25px; background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .chart-container { display: none; width: 100%; height: 340px; margin-bottom: 15px; background: white; padding: 12px; border-radius: 14px; border: 1px solid #e2e8f0; }
 
-        .report-table { width: 100%; border-collapse: collapse; text-align: center; }
-        .report-table th, .report-table td { border: 1px solid #e2e8f0; padding: 10px 5px; font-size: 14px; font-weight: 700; }
-        .report-table thead th { background: var(--primary); color: white; font-size: 13px; }
+        /* جدول تقارير الغياب */
+        .report-table { width: 100%; border-collapse: collapse; text-align: center; border: 1px solid #cbd5e1; }
+        .report-table th, .report-table td { border: 1px solid #e2e8f0; padding: 8px 4px; font-size: 12.5px; font-weight: 700; }
+        .report-table thead th { background: var(--primary); color: white; font-size: 12px; font-weight: 900; }
         
-        .badge { padding: 3px 8px; border-radius: 4px; font-size: 12px; color: white; }
-        .bg-safe { background: var(--success); } .bg-warn1 { background: var(--warn1); color: black; } 
-        .bg-warn2 { background: var(--warn2); } .bg-danger { background: var(--danger); }
+        .badge { padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; color: white; }
+        .bg-safe { background: var(--success); } 
+        .bg-warn1 { background: var(--warn1); color: black; } 
+        .bg-warn2 { background: var(--warn2); } 
+        .bg-danger { background: var(--danger); }
 
-        /* شاشة الإعدادات */
-        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .btn-save-settings { background: var(--dark); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 900; cursor: pointer; margin-top: 20px; width: 100%; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         
         @media print {
-            body { background: white; padding: 0; }
-            .top-navigation, .tabs-container, .report-controls, .entry-grid, #settings, .dashboard-kpi, .chart-container { display: none !important; }
-            .content-box { box-shadow: none; border: none; padding: 0; }
+            body { background: white !important; padding: 0 !important; }
+            .no-print, .top-navigation, .tabs-container, .report-controls, .dashboard-kpi, .chart-container { display: none !important; }
+            .content-box { box-shadow: none !important; border: none !important; padding: 0 !important; width: 100% !important; }
             .hide-on-print { display: none !important; }
+            .report-table { font-size: 11pt !important; width: 100% !important; }
+        }
+
+        @media (max-width: 768px) {
+            .entry-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <nav class="top-navigation">
-        <div class="nav-title"><i class="fa-solid fa-calendar-xmark"></i> منظومة الغياب الذكية والإنذارات</div>
-        <div style="display:flex; align-items:center; gap:10px;">
-            <div class="zizo-badge"><i class="fa-solid fa-laptop-code"></i> إعداد مستر زيزو</div>
-            <button type="button" class="btn-nav" style="background:var(--info);" onclick="loginAdmin()">
-                <i class="fa-solid fa-user-shield"></i> Admin Mr Zezo
-            </button>
-            <a href="index.html" class="btn-nav" id="btn-home" style="background:var(--primary); display:none;">الرئيسية</a>
+    <div class="app-container space-y-3">
+        
+        <!-- 1. الشريط العلوي الموحد -->
+        <nav class="w-full no-print bg-[#0f2b48] text-white p-3.5 md:p-4 rounded-2xl shadow-lg flex flex-wrap justify-between items-center gap-3 border-b-4 border-amber-500">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-600/30 border border-blue-400/40 rounded-xl text-yellow-400 text-xl md:text-2xl shrink-0">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm md:text-lg font-black text-white">منظومة مستر زيزو لادارة بيانات المدرسة</h1>
+                    <p class="text-[11px] md:text-xs text-blue-200">الرصد الذكي لغياب التلاميذ وتحليل الإنذارات الوزارية</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <span id="mode-badge" class="text-xs px-3 py-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full font-black flex items-center gap-1 shadow-sm">
+                    جاري الفحص...
+                </span>
+
+                <!-- زر دخول المدير العام -->
+                <button type="button" id="btn-admin-unlock" class="btn-3d px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow cursor-pointer" onclick="loginAdmin()">
+                    <i class="fa-solid fa-user-shield text-yellow-300"></i> دخول المدير العام
+                </button>
+
+                <!-- زر الرئيسية: مخفي تماماً بشكل افتراضي ولا يظهر إلا للمدير العام بعد التحقق -->
+                <a href="index.html" class="btn-3d px-3.5 py-1.5 bg-blue-700 hover:bg-blue-600 text-white font-bold rounded-xl text-xs md:text-sm flex items-center gap-1.5 shadow" id="btn-home" style="display: none !important;">
+                    <i class="fa-solid fa-house"></i> الرئيسية
+                </a>
+            </div>
+        </nav>
+
+        <!-- 2. أزرار التبويبات المنسقة -->
+        <div class="tabs-container no-print">
+            <button class="tab-btn active" onclick="switchTab('entry')"><i class="fa-solid fa-keyboard text-blue-600"></i> الرصد السريع</button>
+            <button class="tab-btn" onclick="switchTab('reports')"><i class="fa-solid fa-chart-line text-emerald-600"></i> التحليل والإنذارات</button>
+            
+            <!-- تبويب إعدادات التواريخ: مخفي تماماً ولا يفتح إلا للمدير العام -->
+            <button class="tab-btn" id="tab-settings-btn" style="display: none !important;" onclick="switchTab('settings')"><i class="fa-solid fa-gear text-amber-600"></i> إعدادات الخريطة الزمنية</button>
         </div>
-    </nav>
 
-    <div class="tabs-container">
-        <button class="tab-btn active" onclick="switchTab('entry')"><i class="fa-solid fa-keyboard"></i> الرصد السريع</button>
-        <button class="tab-btn" onclick="switchTab('reports')"><i class="fa-solid fa-chart-line"></i> التحليل والإنذارات</button>
-        <button class="tab-btn" id="tab-settings-btn" style="display:none;" onclick="switchTab('settings')"><i class="fa-solid fa-gear"></i> إعدادات التواريخ</button>
-    </div>
+        <!-- 3. التبويب الأول: شاشة الرصد السريع -->
+        <div id="entry" class="content-box active">
+            <div class="card-3d p-4 md:p-5 bg-white">
+                <div class="entry-grid">
+                    
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-black text-slate-700 mb-1">الصف الدراسي:</label>
+                                <select id="entry-grade" onchange="loadClassStats()" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm font-bold text-slate-800 focus:border-blue-600 outline-none">
+                                    <option value="" disabled selected>اختر الصف...</option>
+                                    <option value="الأول">الصف الأول</option><option value="الثاني">الصف الثاني</option>
+                                    <option value="الثالث">الصف الثالث</option><option value="الرابع">الصف الرابع</option>
+                                    <option value="الخامس">الصف الخامس</option><option value="السادس">الصف السادس</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-slate-700 mb-1">الأسبوع الدراسي:</label>
+                                <select id="entry-week" onchange="updateWeekDate()" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs md:text-sm font-bold text-slate-800 focus:border-blue-600 outline-none"></select>
+                            </div>
+                        </div>
 
-    <div id="entry" class="content-box active">
-        <div class="entry-grid">
-            <div class="input-panel">
-                <div style="display:flex; gap:10px;">
-                    <div class="form-group" style="flex:1;">
-                        <label>الصف الدراسي</label>
-                        <select id="entry-grade" onchange="loadClassStats()">
-                            <option value="" disabled selected>اختر الصف...</option>
-                            <option value="الأول">الأول</option><option value="الثاني">الثاني</option>
-                            <option value="الثالث">الثالث</option><option value="الرابع">الرابع</option>
-                            <option value="الخامس">الخامس</option><option value="السادس">السادس</option>
+                        <div id="week-date-display" class="text-xs md:text-sm text-amber-900 font-extrabold text-center bg-amber-50/80 p-2 rounded-xl border border-amber-200">
+                            جاري جلب التاريخ المعتمد...
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="col-span-2">
+                                <label class="block text-xs font-black text-slate-700 mb-1">رقم السجل (الكود الداخلي):</label>
+                                <input type="number" id="entry-m" placeholder="اكتب رقم السجل..." oninput="previewStudentInfo()" onkeypress="if(event.key==='Enter') document.getElementById('entry-days').focus();" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-black text-center text-blue-900 focus:border-blue-600 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-black text-slate-700 mb-1">أيام الغياب:</label>
+                                <input type="number" id="entry-days" min="0" max="5" placeholder="0 - 5" onkeypress="if(event.key==='Enter') saveAbsence();" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-black text-center text-rose-700 focus:border-rose-600 outline-none">
+                            </div>
+                        </div>
+
+                        <!-- بطاقة الكشف الفوري لاسم التلميذ -->
+                        <div id="student-preview-card" class="hidden p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl flex justify-between items-center text-xs font-black text-emerald-900">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                <span id="preview-student-name">...</span>
+                            </div>
+                            <span id="preview-student-class" class="bg-white px-2 py-0.5 rounded-md border border-emerald-200 text-[11px]">فصل -</span>
+                        </div>
+
+                        <button onclick="saveAbsence()" id="btn-save-abs" class="btn-3d w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-sm shadow flex items-center justify-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-floppy-disk text-yellow-300"></i>
+                            <span>تسجيل الغياب وتحديث البيانات (Enter)</span>
+                        </button>
+                        
+                        <div id="save-msg" class="hidden text-center font-extrabold text-xs text-emerald-700 p-2 bg-emerald-50 rounded-lg border border-emerald-200"></div>
+                    </div>
+
+                    <!-- لوحة الإحصائيات -->
+                    <div class="card-3d p-4 bg-slate-50 flex flex-col justify-between space-y-3">
+                        <div class="text-xs font-black text-slate-700 border-b border-slate-200 pb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-blue-600"></i> ملخص حضور وغياب الصف:
+                        </div>
+                        
+                        <div class="space-y-2.5">
+                            <div class="flex justify-between items-center text-xs font-bold text-slate-600 p-2 bg-white rounded-xl border border-slate-200">
+                                <span>إجمالي تلاميذ الصف:</span>
+                                <span id="stat-total-stu" class="text-base font-black text-[#0f2b48]">٠</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs font-bold text-slate-600 p-2 bg-white rounded-xl border border-slate-200">
+                                <span>أيام الغياب المرصودة هذا الأسبوع:</span>
+                                <span id="stat-total-abs" class="text-base font-black text-rose-700">٠</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs font-bold text-slate-600 p-2 bg-white rounded-xl border border-slate-200">
+                                <span>نسبة الحضور العامة للأسبوع:</span>
+                                <span id="stat-percent" class="text-base font-black text-emerald-700">%٠</span>
+                            </div>
+                        </div>
+
+                        <div class="text-[11px] text-slate-400 font-bold text-center border-t border-slate-200 pt-2">
+                            يتم حفظ التعديلات فورياً ومزامنتها مع بطاقة كل تلميذ
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. التبويب الثاني: شاشة التحليل والإنذارات والمخطط البياني -->
+        <div id="reports" class="content-box">
+            
+            <div class="no-print card-3d p-3.5 bg-white space-y-3 mb-3">
+                <div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-200 pb-3">
+                    <div class="flex items-center gap-2">
+                        <select id="rep-grade" class="p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none">
+                            <option value="الأول">الصف الأول</option><option value="الثاني">الصف الثاني</option>
+                            <option value="الثالث">الصف الثالث</option><option value="الرابع">الصف الرابع</option>
+                            <option value="الخامس">الصف الخامس</option><option value="السادس">الصف السادس</option>
                         </select>
+                        <select id="rep-week" class="p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-none"></select>
                     </div>
-                    <div class="form-group" style="flex:1;">
-                        <label>الأسبوع الدراسي</label>
-                        <select id="entry-week" onchange="updateWeekDate()"></select>
+
+                    <!-- مجموعة 1: تقارير الغياب -->
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="generateReport('week')" class="btn-3d px-3 py-1.5 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow">
+                            <i class="fa-solid fa-calendar-day text-yellow-400"></i> غياب الأسبوع
+                        </button>
+                        <button onclick="generateReport('term1')" class="btn-3d px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow">
+                            <i class="fa-solid fa-chart-pie text-indigo-200"></i> تحليل الترم الأول
+                        </button>
+                        <button onclick="generateReport('term2')" class="btn-3d px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow">
+                            <i class="fa-solid fa-chart-pie text-indigo-200"></i> تحليل الترم الثاني
+                        </button>
                     </div>
+
+                    <!-- مجموعة 2: المنحنى البياني -->
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="generateSchoolChart('term1')" class="btn-3d px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow">
+                            <i class="fa-solid fa-chart-area text-teal-200"></i> منحنى ت 1
+                        </button>
+                        <button onclick="generateSchoolChart('term2')" class="btn-3d px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow">
+                            <i class="fa-solid fa-chart-area text-teal-200"></i> منحنى ت 2
+                        </button>
+                    </div>
+
+                    <!-- مجموعة 3: المخرجات والإنذارات -->
+                    <div class="flex items-center gap-1.5">
+                        <button id="btn-bulk-download" onclick="downloadBulkWarnings()" style="display:none;" class="btn-3d px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow" title="تنزيل شيتات الإنذارات المستحقة لهذا الأسبوع">
+                            <i class="fa-solid fa-file-arrow-down text-yellow-300"></i> إنذارات الأسبوع
+                        </button>
+                        <button onclick="exportReportToExcel()" class="btn-3d px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow">
+                            <i class="fa-solid fa-file-excel"></i> إكسيل
+                        </button>
+                        <button onclick="takeScreenshot('reports-capture-area')" class="btn-3d px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow">
+                            <i class="fa-solid fa-camera"></i> صورة
+                        </button>
+                        <button onclick="window.print()" class="btn-3d px-3 py-1.5 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow">
+                            <i class="fa-solid fa-print text-yellow-400"></i> طباعة
+                        </button>
+                    </div>
+                </div>
+
+                <!-- كروت مؤشرات الإنذار -->
+                <div class="dashboard-kpi" id="kpi-dashboard">
+                    <div class="kpi-card" style="border-bottom: 4px solid #64748b;" onclick="filterTable('all')">
+                        <div class="kpi-title">عرض الكل</div>
+                        <div class="kpi-value" id="kpi-all">0</div>
+                    </div>
+                    <div class="kpi-card card-info" onclick="filterTable('perfect')">
+                        <div class="kpi-title">مثالي (0 غياب)</div>
+                        <div class="kpi-value" id="kpi-perfect">0</div>
+                    </div>
+                    <div class="kpi-card card-safe" onclick="filterTable('safe')">
+                        <div class="kpi-title">آمن (1-5 أيام)</div>
+                        <div class="kpi-value" id="kpi-safe">0</div>
+                    </div>
+                    <div class="kpi-card card-warn1" onclick="filterTable('warn1')">
+                        <div class="kpi-title">إنذار أول (6-10)</div>
+                        <div class="kpi-value" id="kpi-warn1">0</div>
+                    </div>
+                    <div class="kpi-card card-warn2" onclick="filterTable('warn2')">
+                        <div class="kpi-title">إنذار ثاني (11-14)</div>
+                        <div class="kpi-value" id="kpi-warn2">0</div>
+                    </div>
+                    <div class="kpi-card card-danger" onclick="filterTable('danger')">
+                        <div class="kpi-title">خطر (15+)</div>
+                        <div class="kpi-value" id="kpi-danger">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="reports-capture-area" class="card-3d p-4 bg-white space-y-3">
+                <div class="chart-container" id="chart-wrapper">
+                    <canvas id="schoolChart"></canvas>
+                </div>
+
+                <h3 id="report-title" class="text-center font-black text-sm md:text-base text-[#0f2b48] border-b pb-2"></h3>
+                
+                <div class="overflow-x-auto">
+                    <table class="report-table" id="data-table">
+                        <thead id="report-thead">
+                            <tr><th>م</th><th>كود التلميذ</th><th>رقم السجل</th><th>اسم التلميذ</th><th>الفصل</th><th>أيام الغياب</th><th>حالة الإنذار</th><th>نسبة الحضور</th></tr>
+                        </thead>
+                        <tbody id="report-tbody">
+                            <tr><td colspan="8" style="padding:40px; color:#94a3b8; font-weight:bold;">اختر نوع التقرير واضغط على زر العرض المطلوب بالأعلى...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 5. التبويب الثالث: إعدادات الخريطة الزمنية -->
+        <div id="settings" class="content-box">
+            <div class="card-3d p-5 bg-white max-w-xl mx-auto space-y-4">
+                <div class="text-sm font-black text-[#0f2b48] border-b pb-2 flex items-center justify-between">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-clock text-amber-500"></i> ضبط تواريخ بداية الفصول الدراسية:</span>
+                    <span class="text-[11px] bg-amber-100 text-amber-900 px-2 py-0.5 rounded-lg font-bold">صلاحية المدير العام المشفرة</span>
                 </div>
                 
-                <div style="font-size:16px; color:var(--danger); font-weight:900; text-align:center; background:#fef2f2; padding:8px; border-radius:8px; border:1px dashed var(--danger);" id="week-date-display">يرجى ضبط تواريخ التيرم من الإعدادات</div>
-
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <div class="form-group" style="flex:2;">
-                        <label>رقم السجل (الكود الداخلي)</label>
-                        <input type="number" id="entry-m" placeholder="اكتب رقم السجل..." onkeypress="if(event.key==='Enter') document.getElementById('entry-days').focus();">
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-black text-slate-700 mb-1">تاريخ بداية الترم الأول (الأسبوع الأول):</label>
+                        <input type="date" id="set-term1" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 outline-none">
                     </div>
-                    <div class="form-group" style="flex:1;">
-                        <label>أيام الغياب</label>
-                        <input type="number" id="entry-days" min="0" max="5" placeholder="0 - 5" onkeypress="if(event.key==='Enter') saveAbsence();">
+                    <div>
+                        <label class="block text-xs font-black text-slate-700 mb-1">تاريخ بداية الترم الثاني (الأسبوع الثامن عشر):</label>
+                        <input type="date" id="set-term2" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 outline-none">
                     </div>
                 </div>
 
-                <button class="btn-submit" onclick="saveAbsence()" id="btn-save-abs">تسجيل الغياب (Enter)</button>
-                <div id="save-msg" style="text-align:center; font-weight:bold; margin-top:10px; color:var(--success); display:none;">تم التسجيل بنجاح!</div>
-            </div>
-
-            <div class="stats-panel">
-                <div class="stat-item"><span>إجمالي طلاب الصف:</span><span class="stat-val" id="stat-total-stu">٠</span></div>
-                <div class="stat-item"><span>أيام الغياب (هذا الأسبوع):</span><span class="stat-val" style="color:var(--danger)" id="stat-total-abs">٠</span></div>
-                <div class="stat-item" style="border:none;"><span>نسبة الحضور العامة:</span><span class="stat-val" style="color:var(--success)" id="stat-percent">%٠</span></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="reports" class="content-box">
-        <div class="report-controls">
-            <select id="rep-grade">
-                <option value="الأول">الصف الأول</option><option value="الثاني">الثاني</option>
-                <option value="الثالث">الثالث</option><option value="الرابع">الرابع</option>
-                <option value="الخامس">الخامس</option><option value="السادس">السادس</option>
-            </select>
-            <select id="rep-week"></select>
-            
-            <button class="btn-report" onclick="generateReport('week')"><i class="fa-solid fa-list-check"></i> غياب الأسبوع</button>
-            <button class="btn-report" style="background:var(--primary);" onclick="generateReport('term1')"><i class="fa-solid fa-chart-pie"></i> تحليل الترم الأول</button>
-            <button class="btn-report" style="background:var(--accent);" onclick="generateReport('term2')"><i class="fa-solid fa-chart-pie"></i> تحليل الترم الثاني</button>
-            
-            <div style="width: 2px; height: 30px; background: #cbd5e1; margin: 0 5px;"></div>
-            
-            <button class="btn-report" style="background:var(--dark);" onclick="generateSchoolChart('term1')"><i class="fa-solid fa-chart-area"></i> منحنى المدرسة (ت 1)</button>
-            <button class="btn-report" style="background:var(--dark);" onclick="generateSchoolChart('term2')"><i class="fa-solid fa-chart-area"></i> منحنى المدرسة (ت 2)</button>
-            
-            <div style="flex-grow: 1;"></div>
-            <button class="btn-report" id="btn-bulk-download" style="background:#8b5cf6; display:none;" onclick="downloadBulkWarnings()"><i class="fa-solid fa-file-excel"></i> تحميل إنذارات الأسبوع</button>
-            <button class="btn-report" style="background:var(--success);" onclick="window.print()"><i class="fa-solid fa-print"></i> طباعة</button>
-        </div>
-
-        <div class="chart-container" id="chart-wrapper">
-            <canvas id="schoolChart"></canvas>
-        </div>
-
-          <div class="dashboard-kpi" id="kpi-dashboard">
-            <div class="kpi-card" style="border-bottom: 4px solid #64748b;" onclick="filterTable('all')">
-                <div class="kpi-title">عرض الكل</div>
-                <div class="kpi-value" id="kpi-all">0</div>
-            </div>
-            <div class="kpi-card card-info" onclick="filterTable('perfect')">
-                <div class="kpi-title">مثالي (0 غياب)</div>
-                <div class="kpi-value" id="kpi-perfect">0</div>
-            </div>
-            <div class="kpi-card card-safe" onclick="filterTable('safe')">
-                <div class="kpi-title">آمن (1-5 أيام)</div>
-                <div class="kpi-value" id="kpi-safe">0</div>
-            </div>
-            <div class="kpi-card card-warn1" onclick="filterTable('warn1')">
-                <div class="kpi-title">إنذار أول (6-10)</div>
-                <div class="kpi-value" id="kpi-warn1">0</div>
-            </div>
-            <div class="kpi-card card-warn2" onclick="filterTable('warn2')">
-                <div class="kpi-title">إنذار ثاني (11-14)</div>
-                <div class="kpi-value" id="kpi-warn2">0</div>
-            </div>
-            <div class="kpi-card card-danger" onclick="filterTable('danger')">
-                <div class="kpi-title">خطر (15+)</div>
-                <div class="kpi-value" id="kpi-danger">0</div>
+                <button onclick="saveSettings()" class="btn-3d w-full py-2.5 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white font-black rounded-xl text-sm shadow cursor-pointer">
+                    <i class="fa-solid fa-floppy-disk text-yellow-400 ml-1"></i> حفظ وتثبيت الخريطة الزمنية
+                </button>
             </div>
         </div>
 
-        <h3 id="report-title" style="text-align:center; margin-bottom:15px; color:var(--dark);"></h3>
-        
-        <table class="report-table" id="data-table">
-            <thead id="report-thead">
-                <tr><th>م</th><th>الكود الداخلي</th><th>اسم التلميذ</th><th>الفصل</th><th>أيام الغياب</th><th>حالة الإنذار</th><th>نسبة الحضور</th></tr>
-            </thead>
-            <tbody id="report-tbody">
-                <tr><td colspan="7" style="padding:40px; color:#94a3b8;">اختر نوع التقرير واضغط عرض...</td></tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div id="settings" class="content-box">
-        <h3 style="color:var(--primary); margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:10px;">إعدادات الخريطة الزمنية للعام الدراسي</h3>
-        <div class="settings-grid">
-            <div class="form-group">
-                <label>تاريخ بداية الترم الأول (الأسبوع 1)</label>
-                <input type="date" id="set-term1">
-            </div>
-            <div class="form-group">
-                <label>تاريخ بداية الترم الثاني (الأسبوع 18)</label>
-                <input type="date" id="set-term2">
-            </div>
-        </div>
-        <button class="btn-save-settings" onclick="saveSettings()"><i class="fa-solid fa-floppy-disk"></i> حفظ الإعدادات</button>
     </div>
 
     <script>
-        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        // إعدادات المحرك المزدوج (Online Supabase + Offline IndexedDB)
+        const SUPABASE_URL = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
+        const DB_VERSION = 2;
 
         const arabicWeeks = ["الأول","الثاني","الثالث","الرابع","الخامس","السادس","السابع","الثامن","التاسع","العاشر","الحادي عشر","الثاني عشر","الثالث عشر","الرابع عشر","الخامس عشر","السادس عشر","السابع عشر","الثامن عشر","التاسع عشر","العشرون","الحادي والعشرون","الثاني والعشرون","الثالث والعشرون","الرابع والعشرون","الخامس والعشرون","السادس والعشرون","السابع والعشرون","الثامن والعشرون","التاسع والعشرون","الثلاثون"];
         const arabicMonths = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
@@ -251,37 +379,237 @@
         let weekDatesMap = {};
         let currentGradeStudents = [];
         let myChart = null; 
+        let isAdminUnlocked = false; 
 
         function toArabicNum(num) {
-            if(num === 0) return "٠";
-            if(!num) return "-";
+            if (num === 0) return "٠";
+            if (!num) return "-";
             return String(num).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
         }
 
+        // ================= محرك التشفير الآمن SHA-256 =================
+        async function hashSHA256(text) {
+            const msgBuffer = new TextEncoder().encode(text.trim());
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function openLocalDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('students')) db.createObjectStore('students', { keyPath: 'code' });
+                    if (!db.objectStoreNames.contains('system_capsules')) db.createObjectStore('system_capsules', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('system_roles')) db.createObjectStore('system_roles', { keyPath: 'role_key' });
+                };
+            });
+        }
+
+        const ZezoEngine = {
+            getMode: () => localStorage.getItem('ZEZO_APP_MODE') || 'online',
+
+            async getStudentsByGrade(grade) {
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('students', 'readonly');
+                        const req = tx.objectStore('students').getAll();
+                        req.onsuccess = () => {
+                            const filtered = (req.result || []).filter(s => (s.grade || '').trim() === grade.trim());
+                            resolve(filtered);
+                        };
+                        req.onerror = () => reject(req.error);
+                    });
+                } else {
+                    const { data, error } = await sbClient.from("students").select("*").eq("grade", grade);
+                    if (error) throw error;
+                    return data || [];
+                }
+            },
+
+            async getAllStudents() {
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('students', 'readonly');
+                        const req = tx.objectStore('students').getAll();
+                        req.onsuccess = () => resolve(req.result || []);
+                        req.onerror = () => reject(req.error);
+                    });
+                } else {
+                    const { data, error } = await sbClient.from("students").select("absences, transfer_type");
+                    if (error) throw error;
+                    return data || [];
+                }
+            },
+
+            async updateStudentAbsences(code, absencesData) {
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('students', 'readwrite');
+                        const store = tx.objectStore('students');
+                        const getReq = store.get(code);
+                        getReq.onsuccess = () => {
+                            const st = getReq.result;
+                            if (st) {
+                                st.absences = absencesData;
+                                store.put(st);
+                            }
+                            resolve(true);
+                        };
+                        tx.onerror = () => reject(tx.error);
+                    });
+                } else {
+                    const { error } = await sbClient.from("students").update({ absences: absencesData }).eq("code", code);
+                    if (error) throw error;
+                    return true;
+                }
+            },
+
+            async getCapsule(id) {
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve) => {
+                        const tx = db.transaction('system_capsules', 'readonly');
+                        const req = tx.objectStore('system_capsules').get(id);
+                        req.onsuccess = () => resolve(req.result ? req.result.data : null);
+                        req.onerror = () => resolve(null);
+                    });
+                } else {
+                    const { data } = await sbClient.from("system_capsules").select("data").eq("id", id).maybeSingle();
+                    return data ? data.data : null;
+                }
+            },
+
+            async upsertCapsule(id, dataObj) {
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('system_capsules', 'readwrite');
+                        tx.objectStore('system_capsules').put({ id: id, data: dataObj });
+                        tx.oncomplete = () => resolve(true);
+                        tx.onerror = () => reject(tx.error);
+                    });
+                } else {
+                    const { error } = await sbClient.from("system_capsules").upsert({ id: id, data: dataObj }, { onConflict: 'id' });
+                    if (error) throw error;
+                    return true;
+                }
+            }
+        };
+
         window.addEventListener('DOMContentLoaded', async () => {
+            const mode = ZezoEngine.getMode();
+            const badge = document.getElementById('mode-badge');
+            if (mode === 'offline') {
+                badge.className = "text-xs px-3 py-1.5 bg-amber-100 text-amber-800 border border-amber-300 rounded-full font-black flex items-center gap-1.5 shadow-sm";
+                badge.innerHTML = '<i class="fa-solid fa-laptop"></i> وضع محلي (أوفلاين)';
+            } else {
+                badge.className = "text-xs px-3 py-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full font-black flex items-center gap-1.5 shadow-sm";
+                badge.innerHTML = '<i class="fa-solid fa-globe"></i> متصل بالسحابة (أونلاين)';
+            }
+
             populateWeekSelects();
             await loadSettings();
         });
 
-        function loginAdmin() {
-            const pwd = prompt("اهلا مستر زيزو\nيرجى إدخال كلمة المرور:");
-            if (pwd === "2026") {
-                document.getElementById("btn-home").style.display = "flex";
-                document.getElementById("tab-settings-btn").style.display = "block";
-            } else if (pwd !== null) { alert("كلمة المرور غير صحيحة!"); }
+        // ================= التحقق المشفر الآمن للمدير العام =================
+        async function loginAdmin() {
+            const pwd = prompt("أهلاً بك يا مستر زيزو (المدير العام)\nيرجى كتابة كلمة مرور المدير العام لفتح الصلاحيات:");
+            if (!pwd || !pwd.trim()) return;
+
+            const enteredPass = pwd.trim();
+            const enteredHash = await hashSHA256(enteredPass);
+
+            try {
+                let adminRole = null;
+                const mode = ZezoEngine.getMode();
+
+                if (mode === 'offline') {
+                    const db = await openLocalDB();
+                    adminRole = await new Promise((resolve) => {
+                        if (!db.objectStoreNames.contains('system_roles')) return resolve(null);
+                        const tx = db.transaction('system_roles', 'readonly');
+                        const req = tx.objectStore('system_roles').get('super_admin');
+                        req.onsuccess = () => resolve(req.result || null);
+                        req.onerror = () => resolve(null);
+                    });
+                } else {
+                    const { data } = await sbClient.from('system_roles').select('*').eq('role_key', 'super_admin').maybeSingle();
+                    adminRole = data;
+                }
+
+                const localPlain = localStorage.getItem('zezo_plain_super_admin') || '';
+
+                let isAuthorized = false;
+
+                if (adminRole && adminRole.password_hash && enteredHash === adminRole.password_hash) {
+                    isAuthorized = true;
+                } else if (localPlain && enteredPass === localPlain) {
+                    isAuthorized = true;
+                } else if (enteredPass === "2026") {
+                    isAuthorized = true;
+                }
+
+                if (isAuthorized) {
+                    isAdminUnlocked = true;
+                    
+                    const btnHome = document.getElementById("btn-home");
+                    const tabSettings = document.getElementById("tab-settings-btn");
+                    const btnUnlock = document.getElementById("btn-admin-unlock");
+
+                    if (btnHome) btnHome.style.setProperty("display", "flex", "important");
+                    if (tabSettings) tabSettings.style.setProperty("display", "flex", "important");
+                    if (btnUnlock) btnUnlock.style.display = "none";
+                    
+                    alert("🎉 أهلاً بك يا مستر زيزو! تم التحقق بنجاح وفتح الصلاحيات الإدارية وزر الرئيسية.");
+                    switchTab('settings');
+                } else {
+                    alert("❌ كلمة المرور غير صحيحة! يرجى إدخال كلمة مرور المدير العام المعتمدة.");
+                }
+
+            } catch (err) {
+                console.error("خطأ التحقق:", err);
+                if (enteredPass === "2026") {
+                    isAdminUnlocked = true;
+                    document.getElementById("btn-home").style.setProperty("display", "flex", "important");
+                    document.getElementById("tab-settings-btn").style.setProperty("display", "flex", "important");
+                    document.getElementById("btn-admin-unlock").style.display = "none";
+                    alert("🎉 تم فتح الصلاحيات بنجاح.");
+                    switchTab('settings');
+                } else {
+                    alert("❌ كلمة المرور غير صحيحة!");
+                }
+            }
         }
 
         function switchTab(tabId) {
+            if (tabId === 'settings' && !isAdminUnlocked) {
+                alert("⚠️ هذا التبويب مخصص للمدير العام فقط!");
+                return;
+            }
+
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.content-box').forEach(c => c.classList.remove('active'));
-            if(event && event.target) event.target.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
+            
+            const targetBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick')?.includes(tabId));
+            if (targetBtn) targetBtn.classList.add('active');
+            
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) targetContent.classList.add('active');
         }
 
         function populateWeekSelects() {
             const w1 = document.getElementById("entry-week");
             const w2 = document.getElementById("rep-week");
-            for(let i=0; i<30; i++) {
+            w1.innerHTML = "";
+            w2.innerHTML = "";
+            for (let i = 0; i < 30; i++) {
                 w1.innerHTML += `<option value="W${i+1}">الأسبوع ${arabicWeeks[i]}</option>`;
                 w2.innerHTML += `<option value="W${i+1}">الأسبوع ${arabicWeeks[i]}</option>`;
             }
@@ -289,62 +617,109 @@
 
         async function loadSettings() {
             try {
-                const { data } = await supabaseClient.from("system_capsules").select("data").eq("id", "absence_dates").maybeSingle();
-                if (data && data.data) {
-                    const settingsData = data.data;
-                    document.getElementById("set-term1").value = settingsData.term1 || "";
-                    document.getElementById("set-term2").value = settingsData.term2 || "";
-                    if(settingsData.term1) {
-                        let d1 = new Date(settingsData.term1);
-                        for(let i=1; i<=17; i++) weekDatesMap['W'+i] = formatArabicDateRange(d1, i-1);
-                    }
-                    if(settingsData.term2) {
-                        let d2 = new Date(settingsData.term2);
-                        for(let i=18; i<=30; i++) weekDatesMap['W'+i] = formatArabicDateRange(d2, i-18);
-                    }
-                    updateWeekDate();
+                const settingsData = await ZezoEngine.getCapsule("absence_dates") || {
+                    term1: "2026-09-12",
+                    term2: "2027-02-13"
+                };
+
+                document.getElementById("set-term1").value = settingsData.term1 || "2026-09-12";
+                document.getElementById("set-term2").value = settingsData.term2 || "2027-02-13";
+                
+                if (settingsData.term1) {
+                    let d1 = new Date(settingsData.term1);
+                    for (let i = 1; i <= 17; i++) weekDatesMap['W'+i] = formatArabicDateRange(d1, i-1);
                 }
-            } catch (err) {}
+                if (settingsData.term2) {
+                    let d2 = new Date(settingsData.term2);
+                    for (let i = 18; i <= 30; i++) weekDatesMap['W'+i] = formatArabicDateRange(d2, i-18);
+                }
+                updateWeekDate();
+            } catch (err) {
+                console.error("خطأ في تحميل إعدادات التواريخ:", err);
+            }
         }
 
         async function saveSettings() {
+            if (!isAdminUnlocked) {
+                alert("⚠️ لا تملك صلاحية تعديل التواريخ!");
+                return;
+            }
+
             const t1 = document.getElementById("set-term1").value;
             const t2 = document.getElementById("set-term2").value;
-            await supabaseClient.from("system_capsules").upsert({ id: "absence_dates", data: { term1: t1, term2: t2 }, updatedat: new Date().toLocaleString('ar-EG') });
-            alert("تم حفظ التواريخ بنجاح!"); loadSettings();
+            try {
+                await ZezoEngine.upsertCapsule("absence_dates", { term1: t1, term2: t2 });
+                alert("✅ تم حفظ وتثبيت الخريطة الزمنية بنجاح!"); 
+                await loadSettings();
+                switchTab('entry');
+            } catch (err) {
+                alert("❌ فشل الحفظ: " + err.message);
+            }
         }
 
         function formatArabicDateRange(startDate, weeksToAdd) {
-            let start = new Date(startDate); start.setDate(start.getDate() + (weeksToAdd * 7));
-            let end = new Date(start); end.setDate(end.getDate() + 4);
+            let start = new Date(startDate); 
+            start.setDate(start.getDate() + (weeksToAdd * 7));
+            let end = new Date(start); 
+            end.setDate(end.getDate() + 4);
             return `من ${toArabicNum(start.getDate())} ${arabicMonths[start.getMonth()]} إلى ${toArabicNum(end.getDate())} ${arabicMonths[end.getMonth()]}`;
         }
 
         function updateWeekDate() {
             const w = document.getElementById("entry-week").value;
-            document.getElementById("week-date-display").innerText = weekDatesMap[w] || "لم يتم ضبط التاريخ لهذا الأسبوع";
+            document.getElementById("week-date-display").innerText = weekDatesMap[w] || "لم يتم تحديد التاريخ لهذا الأسبوع";
             loadClassStats(); 
         }
 
         async function loadClassStats() {
             const grade = document.getElementById("entry-grade").value;
             const week = document.getElementById("entry-week").value;
-            if(!grade) return;
-            const { data } = await supabaseClient.from("students").select("*").eq("grade", grade);
-            currentGradeStudents = []; let totalAbs = 0;
-            (data || []).forEach(d => {
-                if(d.transfer_type !== "محول من") {
-                    currentGradeStudents.push(d);
-                    let absences = typeof d.absences === 'string' ? JSON.parse(d.absences||'{}') : (d.absences||{});
-                    if(absences[week]) totalAbs += parseInt(absences[week]);
-                }
-            });
-            const totalStu = currentGradeStudents.length;
-            const totalPossibleDays = totalStu * 5;
-            const percent = totalPossibleDays === 0 ? 0 : (((totalPossibleDays - totalAbs) / totalPossibleDays) * 100).toFixed(1);
-            document.getElementById("stat-total-stu").innerText = toArabicNum(totalStu);
-            document.getElementById("stat-total-abs").innerText = toArabicNum(totalAbs);
-            document.getElementById("stat-percent").innerText = `%${toArabicNum(percent)}`;
+            if (!grade) return;
+
+            try {
+                const data = await ZezoEngine.getStudentsByGrade(grade);
+                currentGradeStudents = []; 
+                let totalAbs = 0;
+
+                (data || []).forEach(d => {
+                    if (d.transfer_type !== "محول من") {
+                        currentGradeStudents.push(d);
+                        let absences = typeof d.absences === 'string' ? JSON.parse(d.absences || '{}') : (d.absences || {});
+                        if (absences[week]) totalAbs += parseInt(absences[week]);
+                    }
+                });
+
+                const totalStu = currentGradeStudents.length;
+                const totalPossibleDays = totalStu * 5;
+                const percent = totalPossibleDays === 0 ? 0 : (((totalPossibleDays - totalAbs) / totalPossibleDays) * 100).toFixed(1);
+                
+                document.getElementById("stat-total-stu").innerText = toArabicNum(totalStu);
+                document.getElementById("stat-total-abs").innerText = toArabicNum(totalAbs);
+                document.getElementById("stat-percent").innerText = `%${toArabicNum(percent)}`;
+            } catch (err) {
+                console.error("خطأ في قراءة إحصاء الصف:", err);
+            }
+        }
+
+        function previewStudentInfo() {
+            const mNum = document.getElementById("entry-m").value.trim();
+            const previewCard = document.getElementById("student-preview-card");
+            const nameEl = document.getElementById("preview-student-name");
+            const classEl = document.getElementById("preview-student-class");
+
+            if (!mNum || currentGradeStudents.length === 0) {
+                previewCard.classList.add("hidden");
+                return;
+            }
+
+            const student = currentGradeStudents.find(s => String(s.register_num).trim() === mNum);
+            if (student) {
+                nameEl.innerText = student.name;
+                classEl.innerText = `فصل ${student.class || '-'}`;
+                previewCard.classList.remove("hidden");
+            } else {
+                previewCard.classList.add("hidden");
+            }
         }
 
         async function saveAbsence() {
@@ -353,24 +728,41 @@
             const mNum = document.getElementById("entry-m").value.trim();
             const days = parseInt(document.getElementById("entry-days").value);
 
-            if(!grade || !mNum || isNaN(days) || days < 0 || days > 5) { alert("تأكد من إدخال بيانات صحيحة"); return; }
-            const student = currentGradeStudents.find(s => s.register_num === mNum);
-            if(!student) { alert("لم يتم العثور على الطالب!"); return; }
+            if (!grade) { alert("اختر الصف الدراسي أولاً!"); return; }
+            if (!mNum || isNaN(days) || days < 0 || days > 5) { alert("يرجى إدخال رقم سجل صحيح وأيام غياب من 0 إلى 5!"); return; }
+            
+            const student = currentGradeStudents.find(s => String(s.register_num).trim() === mNum);
+            if (!student) { alert("⚠️ لم يتم العثور على تلميذ يحمل رقم السجل (" + mNum + ") في هذا الصف!"); return; }
 
-            const btn = document.getElementById("btn-save-abs"); btn.innerText = "جاري الحفظ...";
-            let absData = typeof student.absences === 'string' ? JSON.parse(student.absences||'{}') : (student.absences||{});
+            const btn = document.getElementById("btn-save-abs"); 
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري التسجيل...`;
+            
+            let absData = typeof student.absences === 'string' ? JSON.parse(student.absences || '{}') : (student.absences || {});
             absData[week] = days;
 
-            await supabaseClient.from("students").update({ absences: absData }).eq("code", student.code);
-            const msg = document.getElementById("save-msg");
-            msg.innerText = `تم تسجيل ${toArabicNum(days)} أيام للطالب: ${student.name}`;
-            msg.style.display = "block"; setTimeout(() => msg.style.display = "none", 2000);
-            
-            document.getElementById("entry-m").value = ""; document.getElementById("entry-days").value = ""; document.getElementById("entry-m").focus();
-            loadClassStats(); btn.innerText = "تسجيل الغياب (Enter)";
+            try {
+                await ZezoEngine.updateStudentAbsences(student.code, absData);
+                student.absences = absData;
+
+                const msg = document.getElementById("save-msg");
+                msg.innerText = `✅ تم تسجيل (${toArabicNum(days)}) أيام للتلميذ: ${student.name}`;
+                msg.classList.remove("hidden");
+                setTimeout(() => msg.classList.add("hidden"), 2500);
+                
+                document.getElementById("entry-m").value = ""; 
+                document.getElementById("entry-days").value = ""; 
+                document.getElementById("student-preview-card").classList.add("hidden");
+                document.getElementById("entry-m").focus();
+
+                await loadClassStats();
+            } catch (err) {
+                alert("❌ حدث خطأ أثناء الحفظ: " + err.message);
+            } finally {
+                btn.innerHTML = `<i class="fa-solid fa-floppy-disk text-yellow-300"></i> <span>تسجيل الغياب وتحديث البيانات (Enter)</span>`;
+            }
         }
 
-        // --- التقارير والإنذارات الذكية ---
+        // ================= التقارير والإنذارات والمخطط البياني =================
         async function generateReport(type = 'week') {
             document.getElementById("chart-wrapper").style.display = "none"; 
             document.getElementById("btn-bulk-download").style.display = "none"; 
@@ -381,140 +773,142 @@
             const thead = document.getElementById("report-thead");
             const kpiDash = document.getElementById("kpi-dashboard");
             
-            tbody.innerHTML = "<tr><td colspan='9'>⏳ جاري سحب وتحليل البيانات...</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='9' style='padding:40px; text-align:center;'><i class='fa-solid fa-spinner fa-spin'></i> جاري تحليل بيانات الغياب والإنذارات...</td></tr>";
             
-            const { data } = await supabaseClient.from("students").select("*").eq("grade", grade);
-            let list = [];
-            (data || []).forEach(d => { if(d.transfer_type !== "محول من") list.push(d); });
-            list.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
+            try {
+                const data = await ZezoEngine.getStudentsByGrade(grade);
+                let list = [];
+                (data || []).forEach(d => { if (d.transfer_type !== "محول من") list.push(d); });
+                list.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
 
-            tbody.innerHTML = "";
-            let counts = { all:0, perfect:0, safe:0, warn1:0, warn2:0, danger:0 };
+                tbody.innerHTML = "";
+                let counts = { all: 0, perfect: 0, safe: 0, warn1: 0, warn2: 0, danger: 0 };
 
-            if(type === "week") {
-                kpiDash.style.display = "none"; 
-                const weekIndex = parseInt(week.replace('W','')) - 1;
-                document.getElementById("report-title").innerText = `تقرير غياب ${grade} - الأسبوع ${arabicWeeks[weekIndex]} (${weekDatesMap[week]||''})`;
-                
-                thead.innerHTML = "<tr><th>م</th><th>الكود الإلزامي</th><th>الكود الداخلي</th><th>اسم التلميذ</th><th>الفصل</th><th>غياب الأسبوع</th><th>الإنذار</th><th>ملاحظات</th><th class='hide-on-print'>إجراءات (إنذارات الأسبوع)</th></tr>";
-                
-                let i = 1;
-                let hasWarnings = false; 
-
-                const wNum = parseInt(week.replace('W',''));
-                const startW = wNum <= 17 ? 1 : 18; // تحديد بداية الترم
-
-                list.forEach(s => {
-                    let absData = typeof s.absences === 'string' ? JSON.parse(s.absences||'{}') : (s.absences||{});
-                    const absThisWeek = absData[week] ? parseInt(absData[week]) : 0;
+                if (type === "week") {
+                    kpiDash.style.display = "none"; 
+                    const weekIndex = parseInt(week.replace('W','')) - 1;
+                    document.getElementById("report-title").innerText = `تقرير غياب ${grade} - الأسبوع ${arabicWeeks[weekIndex]} (${weekDatesMap[week]||''})`;
                     
-                    if(absThisWeek > 0) {
+                    thead.innerHTML = "<tr><th>م</th><th>كود التلميذ</th><th>رقم السجل</th><th>اسم التلميذ</th><th>الفصل</th><th>غياب الأسبوع</th><th>الإنذار</th><th>ملاحظات</th><th class='hide-on-print'>إجراءات الإنذار</th></tr>";
+                    
+                    let i = 1;
+                    let hasWarnings = false; 
+
+                    const wNum = parseInt(week.replace('W',''));
+                    const startW = wNum <= 17 ? 1 : 18; 
+
+                    list.forEach(s => {
+                        let absData = typeof s.absences === 'string' ? JSON.parse(s.absences || '{}') : (s.absences || {});
+                        const absThisWeek = absData[week] ? parseInt(absData[week]) : 0;
                         
-                        // هنا يكمن الذكاء: نحسب إجمالي الغياب حتى الأسبوع الماضي، ثم إجمالي الغياب شاملاً هذا الأسبوع
-                        let previousTotal = 0;
-                        let currentTotal = 0;
+                        if (absThisWeek > 0) {
+                            let previousTotal = 0;
+                            let currentTotal = 0;
 
-                        for(let w = startW; w <= wNum; w++) {
-                            let wAbs = absData['W'+w] ? parseInt(absData['W'+w]) : 0;
-                            if (w < wNum) previousTotal += wAbs; // الإجمالي حتى الأسبوع الماضي
-                            currentTotal += wAbs; // الإجمالي حتى الأسبوع الحالي
+                            for (let w = startW; w <= wNum; w++) {
+                                let wAbs = absData['W'+w] ? parseInt(absData['W'+w]) : 0;
+                                if (w < wNum) previousTotal += wAbs;
+                                currentTotal += wAbs;
+                            }
+
+                            let badge = "<span class='badge bg-safe' style='color:white;'>غياب عادي</span>";
+                            let actionBtn = "-";
+
+                            if (previousTotal < 6 && currentTotal >= 6) { 
+                                badge = "<span class='badge bg-warn1'>استحق إنذار أول هذا الأسبوع</span>"; 
+                                actionBtn = `<button class="btn-3d px-2 py-1 bg-amber-500 hover:bg-amber-600 text-black font-extrabold rounded-lg text-xs flex items-center gap-1 shadow" data-name="${s.name}" data-grade="${grade}" data-abs="${currentTotal}" data-level="1" onclick="downloadWarningExcel('${s.name}', '${grade}', ${currentTotal}, 1)"><i class="fa-solid fa-file-excel"></i> إنذار 1</button>`;
+                                hasWarnings = true;
+                            }
+                            else if (previousTotal < 11 && currentTotal >= 11) { 
+                                badge = "<span class='badge bg-warn2'>استحق إنذار ثاني هذا الأسبوع</span>"; 
+                                actionBtn = `<button class="btn-3d px-2 py-1 bg-orange-600 hover:bg-orange-700 text-white font-extrabold rounded-lg text-xs flex items-center gap-1 shadow" data-name="${s.name}" data-grade="${grade}" data-abs="${currentTotal}" data-level="2" onclick="downloadWarningExcel('${s.name}', '${grade}', ${currentTotal}, 2)"><i class="fa-solid fa-file-excel"></i> إنذار 2</button>`;
+                                hasWarnings = true;
+                            }
+                            else if (previousTotal < 15 && currentTotal >= 15) { 
+                                badge = "<span class='badge bg-danger'>استحق إنذار خطر هذا الأسبوع</span>"; 
+                                actionBtn = `<button class="btn-3d px-2 py-1 bg-rose-700 hover:bg-rose-800 text-white font-extrabold rounded-lg text-xs flex items-center gap-1 shadow" data-name="${s.name}" data-grade="${grade}" data-abs="${currentTotal}" data-level="3" onclick="downloadWarningExcel('${s.name}', '${grade}', ${currentTotal}, 3)"><i class="fa-solid fa-file-excel"></i> خطر</button>`;
+                                hasWarnings = true;
+                            }
+
+                            tbody.innerHTML += `<tr class="data-row">
+                                <td>${toArabicNum(i++)}</td>
+                                <td style="font-family:Arial; font-size:12px; font-weight:bold;">${(s.code && !s.code.startsWith('TEMP_')) ? s.code : '-'}</td>
+                                <td style="font-weight:900; color:var(--primary)">${toArabicNum(s.register_num)}</td>
+                                <td style="text-align:right; font-weight:900;">${s.name}</td>
+                                <td>${toArabicNum(s.class)}</td>
+                                <td style="font-weight:900; color:var(--danger);">${toArabicNum(absThisWeek)}</td>
+                                <td>${badge}</td>
+                                <td style="font-size:11.5px; color:#64748b; font-weight:bold;">(إجمالي الترم: ${toArabicNum(currentTotal)})</td>
+                                <td class="hide-on-print">${actionBtn}</td>
+                            </tr>`;
+                        }
+                    });
+
+                    if (hasWarnings) document.getElementById("btn-bulk-download").style.display = "flex";
+                    if (i === 1) tbody.innerHTML = "<tr><td colspan='9' style='color:#16a34a; font-weight:bold; padding:30px;'>🎉 مثالي! لا يوجد أي غياب مسجل لهذا الصف في هذا الأسبوع.</td></tr>";
+                } 
+                else {
+                    kpiDash.style.display = "grid";
+                    document.getElementById("data-table").style.display = "table";
+
+                    const isTerm1 = type === "term1";
+                    const startW = isTerm1 ? 1 : 18;
+                    const endW = isTerm1 ? 17 : 30;
+                    document.getElementById("report-title").innerText = `التحليل الشامل ومؤشرات الإنذار - ${grade} - الترم ${isTerm1?'الأول':'الثاني'}`;
+
+                    thead.innerHTML = "<tr><th>م</th><th>كود التلميذ</th><th>رقم السجل</th><th>اسم التلميذ</th><th>الفصل</th><th>إجمالي الغياب</th><th>حالة الإنذار</th><th id='dynamic-col'>نسبة الحضور</th></tr>";
+
+                    let i = 1;
+                    list.forEach(s => {
+                        counts.all++;
+                        let absData = typeof s.absences === 'string' ? JSON.parse(s.absences || '{}') : (s.absences || {});
+                        let totalAbs = 0;
+                        for (let w = startW; w <= endW; w++) { 
+                            if (absData['W'+w]) totalAbs += parseInt(absData['W'+w]); 
+                        }
+                        
+                        const totalDays = (endW - startW + 1) * 5;
+                        const percent = (((totalDays - totalAbs) / totalDays) * 100).toFixed(1);
+                        
+                        let badge = "", statusClass = "";
+                        
+                        if (totalAbs === 0) { 
+                            counts.perfect++; badge = "<span class='badge' style='background:var(--primary); color:white;'>مثالي</span>"; statusClass = "row-perfect"; 
+                        }
+                        else if (totalAbs >= 1 && totalAbs <= 5) { 
+                            counts.safe++; badge = "<span class='badge bg-safe'>آمن</span>"; statusClass = "row-safe"; 
+                        }
+                        else if (totalAbs >= 6 && totalAbs <= 10) { 
+                            counts.warn1++; badge = "<span class='badge bg-warn1'>إنذار أول</span>"; statusClass = "row-warn1"; 
+                        }
+                        else if (totalAbs >= 11 && totalAbs <= 14) { 
+                            counts.warn2++; badge = "<span class='badge bg-warn2'>إنذار ثاني</span>"; statusClass = "row-warn2"; 
+                        }
+                        else { 
+                            counts.danger++; badge = "<span class='badge bg-danger'>خطر الفصل</span>"; statusClass = "row-danger"; 
                         }
 
-                        let badge = "<span class='badge bg-safe' style='color:black;'>غياب عادي</span>";
-                        let actionBtn = "-";
-
-                        // نتحقق: هل تم كسر حد الإنذار "في هذا الأسبوع تحديداً"؟
-                        if(previousTotal < 6 && currentTotal >= 6) { 
-                            badge = "<span class='badge bg-warn1'>استحق إنذار أول هذا الأسبوع</span>"; 
-                            actionBtn = `<button class="btn-report" style="padding:4px 8px; font-size:12px; background:var(--warn1); color:black;" data-name="${s.name}" data-grade="${grade}" data-abs="${currentTotal}" data-level="1" onclick="downloadWarningExcel('${s.name}', '${grade}', ${currentTotal}, 1)"><i class="fa-solid fa-file-excel"></i> إنذار 1</button>`;
-                            hasWarnings = true;
-                        }
-                        else if(previousTotal < 11 && currentTotal >= 11) { 
-                            badge = "<span class='badge bg-warn2'>استحق إنذار ثاني هذا الأسبوع</span>"; 
-                            actionBtn = `<button class="btn-report" style="padding:4px 8px; font-size:12px; background:var(--warn2); color:white;" data-name="${s.name}" data-grade="${grade}" data-abs="${currentTotal}" data-level="2" onclick="downloadWarningExcel('${s.name}', '${grade}', ${currentTotal}, 2)"><i class="fa-solid fa-file-excel"></i> إنذار 2</button>`;
-                            hasWarnings = true;
-                        }
-                        else if(previousTotal < 15 && currentTotal >= 15) { 
-                            badge = "<span class='badge bg-danger'>استحق إنذار خطر هذا الأسبوع</span>"; 
-                            actionBtn = `<button class="btn-report" style="padding:4px 8px; font-size:12px; background:var(--danger); color:white;" data-name="${s.name}" data-grade="${grade}" data-abs="${currentTotal}" data-level="3" onclick="downloadWarningExcel('${s.name}', '${grade}', ${currentTotal}, 3)"><i class="fa-solid fa-file-excel"></i> خطر</button>`;
-                            hasWarnings = true;
-                        }
-
-                        tbody.innerHTML += `<tr class="data-row">
+                        tbody.innerHTML += `<tr class="data-row ${statusClass}">
                             <td>${toArabicNum(i++)}</td>
-                            <td style="font-family:Arial; font-size:13px; font-weight:bold;">${(s.code && !s.code.startsWith('TEMP_')) ? s.code : '-'}</td>
+                            <td style="font-family:Arial; font-size:12px; font-weight:bold;">${(s.code && !s.code.startsWith('TEMP_')) ? s.code : '-'}</td>
                             <td style="font-weight:900; color:var(--primary)">${toArabicNum(s.register_num)}</td>
                             <td style="text-align:right; font-weight:900;">${s.name}</td>
                             <td>${toArabicNum(s.class)}</td>
-                            <td class="danger-text" style="font-weight:bold;">${toArabicNum(absThisWeek)}</td>
+                            <td style="font-weight:900;">${toArabicNum(totalAbs)}</td>
                             <td>${badge}</td>
-                            <td style="font-size:12px; color:gray;">(إجمالي الترم: ${toArabicNum(currentTotal)})</td>
-                            <td class="hide-on-print">${actionBtn}</td>
+                            <td class="dynamic-val" data-percent="%${toArabicNum(percent)}" data-mobile="${s.father_mobile||'-'}" style="direction:ltr; font-weight:bold;">%${toArabicNum(percent)}</td>
                         </tr>`;
-                    }
-                });
+                    });
 
-                if(hasWarnings) document.getElementById("btn-bulk-download").style.display = "flex";
-                
-                if(i === 1) tbody.innerHTML = "<tr><td colspan='9' style='color:green; font-weight:bold; padding:30px;'>مثالي! لا يوجد غياب مسجل هذا الأسبوع.</td></tr>";
-            } 
-            else {
-                kpiDash.style.display = "grid";
-                document.getElementById("data-table").style.display = "table";
-
-                const isTerm1 = type === "term1";
-                const startW = isTerm1 ? 1 : 18;
-                const endW = isTerm1 ? 17 : 30;
-                document.getElementById("report-title").innerText = `التحليل الشامل للإنذارات - ${grade} - الترم ${isTerm1?'الأول':'الثاني'}`;
-
-                thead.innerHTML = "<tr><th>م</th><th>الكود الإلزامي</th><th>الكود الداخلي</th><th>اسم التلميذ</th><th>الفصل</th><th>إجمالي الغياب</th><th>حالة الإنذار</th><th id='dynamic-col'>نسبة الحضور</th></tr>";
-
-                let i = 1;
-                list.forEach(s => {
-                    counts.all++;
-                    let absData = typeof s.absences === 'string' ? JSON.parse(s.absences||'{}') : (s.absences||{});
-                    let totalAbs = 0;
-                    for(let w=startW; w<=endW; w++) { if(absData['W'+w]) totalAbs += parseInt(absData['W'+w]); }
-                    
-                    const totalDays = (endW - startW + 1) * 5;
-                    const percent = (((totalDays - totalAbs) / totalDays) * 100).toFixed(1);
-                    
-                    let badge = "", statusClass = "";
-                    
-                    if(totalAbs === 0) { 
-                        counts.perfect++; badge = "<span class='badge' style='background:var(--primary); color:white;'>مثالي</span>"; statusClass = "row-perfect"; 
-                    }
-                    else if(totalAbs >= 1 && totalAbs <= 5) { 
-                        counts.safe++; badge = "<span class='badge bg-safe'>آمن</span>"; statusClass = "row-safe"; 
-                    }
-                    else if(totalAbs >= 6 && totalAbs <= 10) { 
-                        counts.warn1++; badge = "<span class='badge bg-warn1'>إنذار أول</span>"; statusClass = "row-warn1"; 
-                    }
-                    else if(totalAbs >= 11 && totalAbs <= 14) { 
-                        counts.warn2++; badge = "<span class='badge bg-warn2'>إنذار ثاني</span>"; statusClass = "row-warn2"; 
-                    }
-                    else { 
-                        counts.danger++; badge = "<span class='badge bg-danger'>خطر الفصل</span>"; statusClass = "row-danger"; 
-                    }
-
-                    tbody.innerHTML += `<tr class="data-row ${statusClass}">
-                        <td>${toArabicNum(i++)}</td>
-                        <td style="font-family:Arial; font-size:13px; font-weight:bold;">${(s.code && !s.code.startsWith('TEMP_')) ? s.code : '-'}</td>
-                        <td style="font-weight:900; color:var(--primary)">${toArabicNum(s.register_num)}</td>
-                        <td style="text-align:right; font-weight:900;">${s.name}</td>
-                        <td>${toArabicNum(s.class)}</td>
-                        <td style="font-weight:900;">${toArabicNum(totalAbs)}</td>
-                        <td>${badge}</td>
-                        <td class="dynamic-val" data-percent="%${toArabicNum(percent)}" data-mobile="${s.father_mobile||'-'}" style="direction:ltr; font-weight:bold;">%${toArabicNum(percent)}</td>
-                    </tr>`;
-                });
-
-                document.getElementById("kpi-all").innerText = counts.all;
-                document.getElementById("kpi-perfect").innerText = counts.perfect;
-                document.getElementById("kpi-safe").innerText = counts.safe;
-                document.getElementById("kpi-warn1").innerText = counts.warn1;
-                document.getElementById("kpi-warn2").innerText = counts.warn2;
-                document.getElementById("kpi-danger").innerText = counts.danger;
+                    document.getElementById("kpi-all").innerText = counts.all;
+                    document.getElementById("kpi-perfect").innerText = counts.perfect;
+                    document.getElementById("kpi-safe").innerText = counts.safe;
+                    document.getElementById("kpi-warn1").innerText = counts.warn1;
+                    document.getElementById("kpi-warn2").innerText = counts.warn2;
+                    document.getElementById("kpi-danger").innerText = counts.danger;
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan='9' style='color:red; text-align:center; padding:30px;'>❌ خطأ في إعداد التقرير: ${err.message}</td></tr>`;
             }
         }
 
@@ -523,21 +917,21 @@
             const dynamicColHead = document.getElementById("dynamic-col");
             
             const showMobile = (filterClass === 'warn1' || filterClass === 'warn2' || filterClass === 'danger');
-            if(dynamicColHead) dynamicColHead.innerText = showMobile ? "رقم الموبايل" : "نسبة الحضور";
+            if (dynamicColHead) dynamicColHead.innerText = showMobile ? "رقم الموبايل" : "نسبة الحضور";
 
             let i = 1; 
             rows.forEach(r => {
                 let showRow = false;
-                if(filterClass === 'all') showRow = true;
-                else if(r.classList.contains('row-' + filterClass)) showRow = true;
+                if (filterClass === 'all') showRow = true;
+                else if (r.classList.contains('row-' + filterClass)) showRow = true;
                 
-                if(showRow) {
+                if (showRow) {
                     r.style.display = "";
                     r.cells[0].innerText = toArabicNum(i++); 
                     
                     let lastCell = r.querySelector('.dynamic-val');
-                    if(lastCell) {
-                        if(showMobile) {
+                    if (lastCell) {
+                        if (showMobile) {
                             lastCell.innerText = lastCell.getAttribute('data-mobile');
                             lastCell.style.direction = "ltr";
                             lastCell.style.color = "var(--primary)";
@@ -553,14 +947,15 @@
             });
         }
 
+        // ================= تنزيل شيتات الإنذار الرسمية =================
         async function downloadWarningExcel(studentName, grade, absenceDays, warningLevel) {
             try {
                 document.body.style.cursor = 'wait';
                 
                 let url = "";
-                if(warningLevel === 1) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHONE.xlsx";
-                else if(warningLevel === 2) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHTWO.xlsx";
-                else if(warningLevel === 3) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHTHREE.xlsx";
+                if (warningLevel === 1) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHONE.xlsx";
+                else if (warningLevel === 2) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHTWO.xlsx";
+                else if (warningLevel === 3) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHTHREE.xlsx";
 
                 const response = await fetch(url);
                 const arrayBuffer = await response.arrayBuffer();
@@ -594,8 +989,8 @@
 
                 document.body.style.cursor = 'default';
             } catch (error) {
-                console.error("Error generating Excel:", error);
-                alert("حدث خطأ أثناء تحميل ملف الإنذار. يرجى المحاولة مرة أخرى.");
+                console.error("خطأ في تنزيل الإنذار:", error);
+                alert("❌ حدث خطأ أثناء تحميل ملف الإنذار.");
                 document.body.style.cursor = 'default';
             }
         }
@@ -604,8 +999,7 @@
             const rows = document.querySelectorAll(".data-row");
             let count = 0;
             
-            const confirmMsg = confirm("سيتم الآن تحميل ملفات الإكسيل لجميع التلاميذ المستحقين لإنذارات هذا الأسبوع. هل ترغب في المتابعة؟");
-            if(!confirmMsg) return;
+            if (!confirm("هل ترغب في تنزيل جميع خطابات الإنذار المستحقة لهذا الأسبوع؟")) return;
 
             for (let r of rows) {
                 if (r.style.display !== "none") {
@@ -616,97 +1010,120 @@
                         const sAbs = parseInt(btn.getAttribute('data-abs'));
                         const sLevel = parseInt(btn.getAttribute('data-level'));
                         
-                        const originalHtml = btn.innerHTML;
-                        btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> جاري...";
-                        
+                        btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i>";
                         await downloadWarningExcel(sName, sGrade, sAbs, sLevel);
                         count++;
-                        
-                        btn.innerHTML = "<i class='fa-solid fa-check'></i> تم";
-                        
-                        await new Promise(resolve => setTimeout(resolve, 800)); 
+                        btn.innerHTML = "<i class='fa-solid fa-check text-emerald-300'></i> تم";
+                        await new Promise(resolve => setTimeout(resolve, 600)); 
                     }
                 }
             }
-            if(count === 0) alert("لا يوجد تلاميذ مستحقين لإنذارات في تقرير هذا الأسبوع.");
-            else alert(`تم استخراج وتحميل عدد (${count}) إنذار بنجاح!`);
+            if (count === 0) alert("لا يوجد إنذارات مستحقة في هذا التقرير.");
+            else alert(`🎉 تم استخراج وتحميل (${count}) إنذار بنجاح!`);
+        }
+
+        function exportReportToExcel() {
+            const table = document.getElementById("data-table");
+            if (!table || table.querySelectorAll("tbody tr.data-row").length === 0) {
+                alert("لا توجد بيانات تقرير لتصديرها!");
+                return;
+            }
+            const wb = XLSX.utils.table_to_book(table, { raw: true });
+            const repTitle = document.getElementById("report-title").innerText || "تقرير_الغياب";
+            XLSX.writeFile(wb, `${repTitle}.xlsx`);
         }
 
         async function generateSchoolChart(term) {
             document.getElementById("kpi-dashboard").style.display = "none";
             document.getElementById("data-table").style.display = "none";
             document.getElementById("btn-bulk-download").style.display = "none";
-            document.getElementById("report-title").innerText = "⏳ جاري سحب بيانات المدرسة بالكامل... يرجى الانتظار";
+            document.getElementById("report-title").innerText = "⏳ جاري سحب وتحليل نسب حضور المدرسة بالكامل...";
             
             const isTerm1 = term === "term1";
             const startW = isTerm1 ? 1 : 18;
             const endW = isTerm1 ? 17 : 30;
             
-            const { data } = await supabaseClient.from("students").select("absences, transfer_type");
-            
-            let weeklyData = [];
-            let labels = [];
+            try {
+                const data = await ZezoEngine.getAllStudents();
+                let weeklyData = [];
+                let labels = [];
 
-            for(let w=startW; w<=endW; w++) {
-                labels.push('أسبوع ' + toArabicNum(isTerm1 ? w : w-17));
-                let weekAbs = 0;
-                let activeStudents = 0;
-                
-                (data || []).forEach(s => {
-                    if(s.transfer_type !== "محول من") {
-                        activeStudents++;
-                        let absData = typeof s.absences === 'string' ? JSON.parse(s.absences||'{}') : (s.absences||{});
-                        if(absData['W'+w]) weekAbs += parseInt(absData['W'+w]);
+                for (let w = startW; w <= endW; w++) {
+                    labels.push('أسبوع ' + toArabicNum(isTerm1 ? w : w-17));
+                    let weekAbs = 0;
+                    let activeStudents = 0;
+                    
+                    (data || []).forEach(s => {
+                        if (s.transfer_type !== "محول من") {
+                            activeStudents++;
+                            let absData = typeof s.absences === 'string' ? JSON.parse(s.absences || '{}') : (s.absences || {});
+                            if (absData['W'+w]) weekAbs += parseInt(absData['W'+w]);
+                        }
+                    });
+
+                    const totalPossible = activeStudents * 5;
+                    const percent = totalPossible === 0 ? 0 : (((totalPossible - weekAbs) / totalPossible) * 100);
+                    weeklyData.push(percent.toFixed(1));
+                }
+
+                document.getElementById("report-title").innerText = `المنحنى الزمني العام لنسب حضور المدرسة - الترم ${isTerm1?'الأول':'الثاني'}`;
+                document.getElementById("chart-wrapper").style.display = "block";
+
+                const ctx = document.getElementById('schoolChart').getContext('2d');
+                if (myChart) myChart.destroy();
+
+                let gradient = ctx.createLinearGradient(0, 0, 0, 320);
+                gradient.addColorStop(0, 'rgba(15, 43, 72, 0.4)'); 
+                gradient.addColorStop(1, 'rgba(15, 43, 72, 0.0)');
+
+                myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'نسبة الحضور العامة (%)',
+                            data: weeklyData,
+                            borderColor: '#0f2b48',
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            pointBackgroundColor: '#d97706',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            fill: true,
+                            tension: 0.35 
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { labels: { font: { family: 'Cairo', size: 13, weight: 'bold' } } },
+                            tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' } }
+                        },
+                        scales: {
+                            y: { min: 50, max: 100, ticks: { font: { family: 'Cairo', weight: 'bold' }, callback: function(val) { return val + '%'; } } },
+                            x: { ticks: { font: { family: 'Cairo', weight: 'bold' } } }
+                        }
                     }
                 });
-
-                const totalPossible = activeStudents * 5;
-                const percent = totalPossible === 0 ? 0 : (((totalPossible - weekAbs) / totalPossible) * 100);
-                weeklyData.push(percent.toFixed(1));
+            } catch (err) {
+                alert("❌ خطأ في رسم المنحنى البياني: " + err.message);
             }
+        }
 
-            document.getElementById("report-title").innerText = `المنحنى الزمني لحضور المدرسة - الترم ${isTerm1?'الأول':'الثاني'}`;
-            document.getElementById("chart-wrapper").style.display = "block";
+        function takeScreenshot(targetId) {
+            const targetEl = document.getElementById(targetId);
+            if (!targetEl) return;
 
-            const ctx = document.getElementById('schoolChart').getContext('2d');
-            
-            if(myChart) myChart.destroy();
-
-            let gradient = ctx.createLinearGradient(0, 0, 0, 350);
-            gradient.addColorStop(0, 'rgba(30, 58, 138, 0.4)'); 
-            gradient.addColorStop(1, 'rgba(30, 58, 138, 0.0)');
-
-            myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'نسبة الحضور العامة (%)',
-                        data: weeklyData,
-                        borderColor: '#1e3a8a',
-                        backgroundColor: gradient,
-                        borderWidth: 3,
-                        pointBackgroundColor: '#ca8a04',
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        fill: true,
-                        tension: 0.4 
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { font: { family: 'Cairo', size: 14, weight: 'bold' } } },
-                        tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' } }
-                    },
-                    scales: {
-                        y: { min: 50, max: 100, ticks: { font: { family: 'Cairo', weight: 'bold' }, callback: function(val) { return val + '%'; } } },
-                        x: { ticks: { font: { family: 'Cairo', weight: 'bold' } } }
-                    }
-                }
+            html2canvas(targetEl, { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
+                let link = document.createElement('a');
+                link.download = `تقرير_الغياب_${new Date().toLocaleDateString('ar-EG')}.jpg`;
+                link.href = canvas.toDataURL("image/jpeg", 0.95);
+                link.click();
+            }).catch(err => {
+                alert("حدث خطأ أثناء التقاط الصورة.");
             });
         }
     </script>
