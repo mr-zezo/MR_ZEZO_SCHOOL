@@ -159,7 +159,7 @@
             </div>
         </div>
 
-        <!-- 4. جدول إدارة الصلاحيات وكلمات المرور -->
+        <!-- 4. جدول إدارة وتشفير الصلاحيات وكلمات المرور -->
         <div class="card-3d p-3.5 sm:p-5 md:p-6">
             <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-3 mb-3.5 gap-2">
                 <div class="flex items-center gap-2 font-black text-slate-800 text-xs sm:text-base">
@@ -727,7 +727,7 @@
             reader.readAsText(file);
         }
 
-        // ================= 4. تشفير وحفظ الصلاحيات (المطابق لجداول سوبابيز بدقة 100%) =================
+        // ================= 4. إدارة وحفظ الصلاحيات (مع معالجة role_name الإلزامية) =================
         function togglePass(inputId, btn) {
             const input = document.getElementById(inputId);
             const icon = btn.querySelector('i');
@@ -782,7 +782,6 @@
                 const enteredHash = await cryptoHashSHA256(enteredPass);
                 const localAdminPass = localStorage.getItem('zezo_plain_super_admin') || '';
 
-                // التحقق الشامل من كلمة المرور
                 let isMatch = false;
                 if (adminRole && adminRole.password_hash && enteredHash === adminRole.password_hash) {
                     isMatch = true;
@@ -854,12 +853,13 @@
             btn.disabled = true;
             btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin ml-2"></i> جاري الحفظ...`;
 
+            // تعريف الصلاحيات مع أسمائها وروابطها لتفادي خطأ NOT NULL
             const rolesConfig = [
-                { key: 'super_admin', inputId: 'pass_super_admin', label: 'مستر زيزو (المدير العام)' },
-                { key: 'student_affairs', inputId: 'pass_student_affairs', label: 'شؤون الطلبة والإحصاء' },
-                { key: 'schedule_manager', inputId: 'pass_schedule_manager', label: 'مسؤول الجدول' },
-                { key: 'general_supervisor', inputId: 'pass_general_supervisor', label: 'المشرف العام' },
-                { key: 'visitor', inputId: 'pass_visitor', label: 'زائر' },
+                { key: 'super_admin', inputId: 'pass_super_admin', label: 'مستر زيزو (المدير العام)', url: 'index.html' },
+                { key: 'student_affairs', inputId: 'pass_student_affairs', label: 'شؤون الطلبة والإحصاء', url: 'stu-absence.html' },
+                { key: 'schedule_manager', inputId: 'pass_schedule_manager', label: 'مسؤول الجدول', url: 'REDA.html' },
+                { key: 'general_supervisor', inputId: 'pass_general_supervisor', label: 'المشرف العام', url: 'supervisor.html' },
+                { key: 'visitor', inputId: 'pass_visitor', label: 'زائر', url: 'index.html' },
                 { key: 'custom_role', inputId: 'pass_custom_role', nameId: 'name_custom_role', urlId: 'url_custom_role' }
             ];
 
@@ -874,11 +874,12 @@
                     if (plainVal !== '') {
                         const hashed = await cryptoHashSHA256(plainVal);
 
-                        // إرسال الحقول الموجودة في قاعدة بيانات سوبابيز فقط
                         let payload = {
                             role_key: item.key,
+                            role_name: item.label || 'صلاحية مستخدم',
                             password_hash: hashed,
-                            plain_password: plainVal
+                            plain_password: plainVal,
+                            redirect_url: item.url || ''
                         };
 
                         if (item.key === 'custom_role') {
