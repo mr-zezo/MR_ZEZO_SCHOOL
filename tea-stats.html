@@ -2,242 +2,378 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>ميزانية العجز والزيادة - مستر زيزو</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منظومة مستر زيزو لادارة بيانات المدرسة - ميزانية العجز والزيادة للمعلمين</title>
+    
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- تم استبدال Firebase بـ Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- مكتبة التقاط الشاشة -->
+    <!-- مكتبات Supabase و JSZip للماكرو و FileSaver و html2canvas -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         :root { 
-            --primary: #1e3a8a; --dark: #0f172a; --bg: #f1f5f9; 
-            --danger: #be123c; --success: #16a34a; --info: #0284c7; --warning: #d97706;
-            --card-bg: #ffffff;
+            --primary: #0f2b48; 
+            --primary-light: #1e3a8a;
+            --dark: #051321; 
+            --bg: #f1f5f9; 
+            --danger: #be123c; 
+            --success: #16a34a; 
+            --info: #0284c7; 
+            --warning: #d97706;
         }
+
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
-        body { background-color: var(--bg); color: #1e293b; padding: 15px; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
+        body { background-color: var(--bg); color: #1e293b; padding: 10px 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; justify-content: space-between; }
 
-        .top-nav { width: 100%; max-width: 1300px; background: var(--dark); padding: 12px 25px; border-radius: 15px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .nav-title { font-size: 18px; font-weight: 900; color: #ccccca; display: flex; align-items: center; gap: 12px; }
-        .zizo-badge { background: linear-gradient(135deg, #d92606, #b41d09); color: #fff; padding: 6px 30px; border-radius: 20px; font-size: 13px; font-weight: 900; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border: 1px solid #0f0f0e; }
-        .btn-nav { text-decoration: none; color: white; background: #334155; padding: 8px 18px; border-radius: 8px; font-size: 14px; font-weight: 700; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
-        .btn-nav:hover { background: var(--info); transform: translateY(-2px); }
+        .cockpit-container { width: 100%; max-width: 1740px; margin: 0 auto; }
 
-        .dashboard-grid { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 20px; width: 100%; max-width: 1300px; margin-bottom: 25px; }
+        .card-3d { background: #ffffff; border: 1px solid #cbd5e1; border-bottom: 4.5px solid #94a3b8; border-radius: 20px; transition: all 0.2s ease; }
+        .card-3d:hover { border-bottom-color: #0f2b48; }
         
-        .dash-card { background: var(--card-bg); padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; display: flex; flex-direction: column; }
-        .dash-title { font-size: 16px; font-weight: 900; color: var(--dark); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+        .btn-3d { border-bottom: 4px solid rgba(0,0,0,0.25); transition: all 0.1s ease; touch-action: manipulation; }
+        .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
+
+        .kpi-strip-card {
+            background: white; padding: 14px 22px; border-radius: 18px;
+            display: flex; align-items: center; justify-content: space-between;
+            border: 1px solid #cbd5e1; border-bottom: 4.5px solid #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: 0.2s;
+        }
+        .kpi-strip-card:hover { transform: translateY(-2px); border-bottom-color: #0f2b48; }
+
+        .dashboard-grid-1080 { 
+            display: grid; 
+            grid-template-columns: 1.25fr 2.15fr 1.2fr; 
+            gap: 18px; 
+            width: 100%; 
+            align-items: stretch;
+        }
+        @media (max-width: 1300px) { .dashboard-grid-1080 { grid-template-columns: 1fr; } }
         
-        .staff-stats { display: flex; flex-direction: column; gap: 12px; }
-        .staff-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px 15px; border-radius: 10px; font-weight: 800; font-size: 14px; border: 1px dashed #cbd5e1; }
-        .staff-item.total { background: var(--primary); color: white; border: none; font-size: 16px; }
-        .staff-val { font-size: 18px; color: var(--danger); }
-        .staff-item.total .staff-val { color: #fcd34d; }
+        .dash-card { 
+            background: white; padding: 20px 22px; border-radius: 20px; 
+            border: 1px solid #cbd5e1; border-bottom: 5px solid #94a3b8; 
+            display: flex; flex-direction: column; justify-content: space-between; 
+            box-shadow: 0 6px 20px rgba(0,0,0,0.03); min-height: 640px; 
+        }
+        .dash-title { 
+            font-size: 15.5px; font-weight: 900; color: #0f2b48; 
+            margin-bottom: 12px; display: flex; align-items: center; 
+            justify-content: space-between; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; 
+        }
 
-        .subjects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
-        .sub-chip { background: #f0f9ff; border: 1px solid #bae6fd; padding: 10px; border-radius: 10px; text-align: center; display: flex; flex-direction: column; gap: 5px; transition: 0.2s; }
-        .sub-chip:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(2, 132, 199, 0.15); border-color: var(--info); }
-        .sub-name { font-size: 12px; font-weight: 800; color: #0369a1; line-height: 1.3; }
-        .sub-count { font-size: 18px; font-weight: 900; color: var(--primary); }
+        .deficit-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; }
+        .deficit-table th { background: #0f2b48; color: white; padding: 8px 6px; font-weight: 900; font-size: 12.5px; }
+        .deficit-table td { padding: 7.5px 6px; border-bottom: 1px solid #e2e8f0; font-weight: 800; font-size: 13.5px; }
+        .deficit-table tr:hover td { background-color: #f8fafc; }
 
-        .action-center { display: flex; flex-direction: column; gap: 12px; }
-        .action-select { padding: 12px; border-radius: 10px; border: 2px solid var(--info); font-weight: 900; font-size: 14px; outline: none; background: #f8fafc; cursor: pointer; width: 100%; color: var(--dark); }
-        .btn-action { border: none; padding: 12px; border-radius: 10px; font-weight: 900; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; transition: 0.2s; width: 100%; }
-        .btn-print { background: var(--success); box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3); }
-        .btn-all-budget { background: var(--primary); box-shadow: 0 4px 15px rgba(30, 58, 138, 0.3); }
-        .btn-plan { background: var(--warning); color: #000; }
-        .btn-action:hover { transform: translateY(-2px); opacity: 0.9; }
-
-        /* Loader */
-        #excel-loader { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; color: white; font-weight: 900; font-size: 20px; }
+        .subjects-grid-1080 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        @media (max-width: 1450px) { .subjects-grid-1080 { grid-template-columns: repeat(3, 1fr); } }
         
-        /* Modals & Windows Setup */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .sub-chip { 
+            background: #f0f9ff; border: 1.5px solid #bae6fd; padding: 12px 8px; border-radius: 16px; 
+            text-align: center; display: flex; flex-direction: column; gap: 4px; transition: 0.15s; 
+        }
+        .sub-chip:hover { transform: translateY(-3px); box-shadow: 0 8px 18px rgba(2, 132, 199, 0.18); border-color: var(--info); }
+        .sub-name { font-size: 13px; font-weight: 900; color: #0369a1; line-height: 1.2; }
+        .sub-count { font-size: 22px; font-weight: 900; color: #0f2b48; }
+
+        .retire-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #fff1f2; border: 1px solid #fecdd3; border-right: 5px solid #be123c;
+            padding: 11px 16px; border-radius: 12px; font-size: 13.5px; font-weight: 800;
+        }
+
+        .action-button-stack { display: flex; flex-direction: column; gap: 14px; }
+        .btn-op { 
+            padding: 15px 18px; border-radius: 14px; font-weight: 900; font-size: 14.5px; 
+            cursor: pointer; color: white; display: flex; align-items: center; justify-content: space-between; 
+            transition: 0.15s; width: 100%; box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+        }
+
+        #excel-loader { display: none; position: fixed; inset: 0; background: rgba(5,19,33,0.9); z-index: 3000; justify-content: center; align-items: center; flex-direction: column; color: white; font-weight: 900; font-size: 18px; }
+        
+        .modal-overlay { position: fixed; inset: 0; background: rgba(5,19,33,0.85); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: white; width: 100%; max-width: 1200px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 95vh; }
-        .modal-header { background: var(--dark); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--danger); }
+        .modal-content { background: white; width: 100%; max-width: 1150px; border-radius: 22px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-header { background: #0f2b48; color: white; padding: 14px 22px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #f59e0b; }
+        .modal-body { padding: 20px; overflow-y: auto; background: #ffffff; } 
         
-        .modal-header-titles h2 { font-size: 18px; font-weight: 900; margin: 0; color: #fcd34d; display: flex; align-items: center; gap: 10px; }
-        .watermark-text { font-size: 13px; font-weight: 900; margin-top: 5px; opacity: 0.9; color: #fff; }
-        
-        /* أزرار النافذة (سكرين شوت + إغلاق) */
-        .btn-screenshot { background: var(--success); border: none; color: white; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-family: 'Cairo'; font-weight: 900; font-size: 14px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-        .btn-screenshot:hover { background: #15803d; transform: scale(1.05); }
-        .btn-close-modal { background: none; border: none; color: #cbd5e1; font-size: 32px; cursor: pointer; transition: 0.2s; line-height: 1; }
-        .btn-close-modal:hover { color: #ef4444; }
-
-        .modal-body { padding: 25px; overflow-y: auto; background: #ffffff; } 
-        
-        /* الجداول العامة */
-        .preview-container { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; }
         .preview-top-table, .preview-teachers-table, .plan-table, .modern-budget-table { width: 100%; border-collapse: collapse; text-align: center; background: white; }
-        
-        .preview-top-table th, .preview-top-table td { border: 1px solid #000; padding: 6px; font-size: 14px; font-weight: 900; color: #000; }
-        .preview-top-table thead th { background: #e2e8f0; border-bottom: 2px solid #000; }
+        .preview-top-table th, .preview-top-table td { border: 1px solid #000; padding: 8px 5px; font-size: 13.5px; font-weight: 900; color: #000; }
+        .preview-top-table thead th { background: #f1f5f9; border-bottom: 2px solid #000; }
         .preview-top-table .sum-row { background: #e2e8f0; border-top: 2px solid #000; }
-        .pt-cell-danger { font-size: 20px; color: var(--danger); vertical-align: middle; }
-        .pt-cell-success { font-size: 20px; color: var(--info); vertical-align: middle; }
 
-        .preview-teachers-table { border: 3px solid #cbd5e1; }
-        .preview-teachers-table th, .preview-teachers-table td { border: 1px solid #cbd5e1; padding: 10px; font-size: 15px; font-weight: 800; color: #1e293b; }
-        .preview-teachers-table thead th { background: #f1f5f9; border-bottom: 2px solid #94a3b8; }
-        .preview-teachers-table td:nth-child(2) { text-align: right; padding-right: 15px; }
-
-        .modern-budget-table { border: 2px solid #e2e8f0; border-radius: 10px; overflow: hidden; }
-        .modern-budget-table th, .modern-budget-table td { padding: 12px 15px; border-bottom: 1px solid #e2e8f0; border-left: 1px solid #e2e8f0; }
-        .modern-budget-table thead th { background: var(--primary); color: white; }
-        .modern-budget-table tbody tr:hover { background: #f8fafc; }
+        .preview-teachers-table { border: 2px solid #000; margin-top: 10px; }
+        .preview-teachers-table th, .preview-teachers-table td { border: 1px solid #000; padding: 8px; font-size: 13.5px; font-weight: 800; color: #000; }
         
-        .plan-table th, .plan-table td { border: 1px solid #cbd5e1; padding: 8px 4px; font-size: 12px; font-weight: 800; }
-        .plan-table th { background: #f1f5f9; color: var(--dark); }
-        .plan-table input { width: 45px; padding: 5px; border: 2px solid #cbd5e1; border-radius: 6px; text-align: center; font-weight: 900; outline: none; }
-        .btn-save-plan { background: var(--success); color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 900; cursor: pointer; margin-top: 20px; width: 100%; font-size: 16px; }
-
-        .zizo-signature-bottom { position: fixed; bottom: 10px; left: 10px; background: white; padding: 5px 15px; border-radius: 20px; font-weight: 900; font-size: 11px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); z-index: 100; }
+        .modern-budget-table { border: 1px solid #cbd5e1; border-radius: 12px; }
+        .modern-budget-table th, .modern-budget-table td { padding: 11px 15px; border-bottom: 1px solid #e2e8f0; font-size: 13.5px; font-weight: 800; }
+        .modern-budget-table thead th { background: #0f2b48; color: white; font-size: 13.5px; font-weight: 900; }
         
-        @media (max-width: 1000px) { .dashboard-grid { grid-template-columns: 1fr; } }
+        .plan-table th, .plan-table td { border: 1px solid #cbd5e1; padding: 7px 3px; font-size: 12px; font-weight: 800; }
+        .plan-table th { background: #f8fafc; color: #0f2b48; font-weight: 900; }
+        .plan-table input { width: 44px; padding: 5px; border: 1.5px solid #cbd5e1; border-radius: 6px; text-align: center; font-weight: 900; outline: none; }
+        .plan-table input:focus { border-color: #0f2b48; background: #eff6ff; }
     </style>
 </head>
 <body>
 
-    <nav class="top-nav">
-        <div class="nav-title">
-            <i class="fa-solid fa-chart-line"></i> منظومة ميزانية العجز والزيادة
-            <span class="zizo-badge"><i class="fa-solid fa-laptop-code"></i> إعداد مستر زيزو</span>
-        </div>
-        <div style="display:flex; gap:10px;">
-            <a href="index.html" class="btn-nav" style="background:var(--primary)"><i class="fa-solid fa-house"></i> الرئيسية</a>
-        </div>
-    </nav>
-
-    <div class="dashboard-grid">
-        <div class="dash-card">
-            <div class="dash-title"><i class="fa-solid fa-users-gear" style="color:var(--info)"></i> قوة العاملين بالمدرسة</div>
-            <div class="staff-stats">
-                <div class="staff-item total"><span>إجمالي العاملين</span><span class="staff-val" id="st-total">٠</span></div>
-                <div class="staff-item"><span>المعلمين</span><span class="staff-val" id="st-teachers">٠</span></div>
-                <div class="staff-item"><span>إداريين ومشرفي نشاط</span><span class="staff-val" id="st-admins">٠</span></div>
-                <div class="staff-item"><span>العمال</span><span class="staff-val" id="st-workers">٠</span></div>
+    <div class="cockpit-container space-y-4">
+        
+        <!-- 1. الشريط العلوي مع ملء المساحة الوسطى -->
+        <nav class="w-full no-print bg-[#0f2b48] text-white p-3.5 md:p-4 rounded-2xl shadow-lg flex flex-wrap justify-between items-center gap-3 border-b-4 border-amber-500">
+            
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-blue-600/30 border border-blue-400/40 rounded-xl text-yellow-400 text-2xl shrink-0">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm md:text-lg font-black text-white">منظومة مستر زيزو لادارة بيانات المدرسة</h1>
+                    <p class="text-xs text-blue-200 font-bold">ميزانية العجز والزيادة للمعلمين وخطة الحصص المعتمدة</p>
+                </div>
             </div>
+
+            <!-- بادج التوثيق الفخم -->
+            <div class="hidden lg:flex items-center gap-2 bg-white/5 border border-white/10 px-5 py-2 rounded-full text-xs font-bold text-slate-200">
+                <i class="fa-solid fa-school text-yellow-400 text-base"></i>
+                <span>مدرسة الشهيد أشرف حبيب الابتدائية</span>
+                <span class="text-slate-400">|</span>
+                <span>العام الدراسي ٢٠٢٦ / ٢٠٢٧</span>
+                <span class="text-slate-400">|</span>
+                <span class="text-amber-300 font-black">إعداد: مستر زيزو</span>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+                <span id="mode-badge" class="text-xs px-3.5 py-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full font-black flex items-center gap-1 shadow-sm">
+                    جاري الفحص...
+                </span>
+                <a href="index.html" class="btn-3d px-4 py-2 bg-blue-700 hover:bg-blue-600 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-house"></i> الرئيسية
+                </a>
+            </div>
+        </nav>
+
+        <!-- 2. شريط المؤشرات القيادية الحية الـ 4 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            
+            <div class="kpi-strip-card border-r-4 border-r-blue-600">
+                <div>
+                    <div class="text-xs font-bold text-slate-500">إجمالي الحصص المطلوبة للخطة</div>
+                    <div id="kpi-req-periods" class="text-2xl font-black text-[#0f2b48] mt-0.5">٠</div>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+            </div>
+
+            <div class="kpi-strip-card border-r-4 border-r-emerald-600">
+                <div>
+                    <div class="text-xs font-bold text-slate-500">إجمالي أنصبة المعلمين المتاحة</div>
+                    <div id="kpi-av-quota" class="text-2xl font-black text-emerald-800 mt-0.5">٠</div>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-user-check"></i>
+                </div>
+            </div>
+
+            <div class="kpi-strip-card border-r-4 border-r-amber-500">
+                <div>
+                    <div class="text-xs font-bold text-slate-500">صافي ميزان المدرسة العام</div>
+                    <div id="kpi-net-balance" class="text-xl font-black text-amber-900 mt-0.5">متوازن</div>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-scale-unbalanced-flip"></i>
+                </div>
+            </div>
+
+            <div class="kpi-strip-card border-r-4 border-r-purple-600">
+                <div>
+                    <div class="text-xs font-bold text-slate-500">إجمالي قوة العاملين بالمدرسة</div>
+                    <div id="kpi-total-staff" class="text-2xl font-black text-purple-950 mt-0.5">٠</div>
+                </div>
+                <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center text-xl">
+                    <i class="fa-solid fa-users-gear"></i>
+                </div>
+            </div>
+
         </div>
 
-        <div class="dash-card">
-            <div class="dash-title"><i class="fa-solid fa-book-open" style="color:var(--warning)"></i> حصر معلمي المواد</div>
-            <div class="subjects-grid">
-                <div class="sub-chip"><span class="sub-name">عربي تخصص</span><span class="sub-count" id="sub-ar-spec">٠</span></div>
-                <div class="sub-chip"><span class="sub-name">عربي فصل</span><span class="sub-count" id="sub-ar-class">٠</span></div>
-                <div class="sub-chip"><span class="sub-name">رياضيات تخصص</span><span class="sub-count" id="sub-math-spec">٠</span></div>
-                <div class="sub-chip"><span class="sub-name">رياضيات فصل</span><span class="sub-count" id="sub-math-class">٠</span></div>
-                <div class="sub-chip"><span class="sub-name">إنجليزي</span><span class="sub-count" id="sub-eng">٠</span></div>
-                <div class="sub-chip"><span class="sub-name">علوم</span><span class="sub-count" id="sub-sci">٠</span></div>
-                <div class="sub-chip"><span class="sub-name">دراسات</span><span class="sub-count" id="sub-soc">٠</span></div>
-                <div class="sub-chip"><span class="sub-name">تكنولوجيا</span><span class="sub-count" id="sub-tech">٠</span></div>
-                <div class="sub-chip"><span class="sub-name">رياضية</span><span class="sub-count" id="sub-pe">٠</span></div>
-                <div class="sub-chip"><span class="sub-name">فنية</span><span class="sub-count" id="sub-art">٠</span></div>
-                <div class="sub-chip"><span class="sub-name">مهارات</span><span class="sub-count" id="sub-skills">٠</span></div>
-                <div class="sub-chip"><span class="sub-name">موسيقى</span><span class="sub-count" id="sub-music">٠</span></div>
-                <div class="sub-chip"><span class="sub-name">رياض أطفال</span><span class="sub-count" id="sub-kg">٠</span></div>
+        <!-- 3. شبكة العمليات الرئيسية الموسعة -->
+        <div class="dashboard-grid-1080">
+            
+            <!-- العمود 1 (الأيمن): جدول عجز وزيادة المواد بالحصة -->
+            <div class="dash-card">
+                <div>
+                    <div class="dash-title">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-chart-column text-blue-600"></i> ميزان عجز وزيادة المواد بالحصة</span>
+                        <span class="text-[11px] bg-blue-50 text-blue-900 px-2.5 py-0.5 rounded-lg font-black">أرقام الحصص</span>
+                    </div>
+                    
+                    <div class="overflow-y-auto max-h-[500px] border border-slate-200 rounded-xl">
+                        <table class="deficit-table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: right; padding-right: 10px;">المادة</th>
+                                    <th>مطلوب</th>
+                                    <th>متاح</th>
+                                    <th>الصافي</th>
+                                </tr>
+                            </thead>
+                            <tbody id="live-deficit-tbody">
+                                <tr><td colspan="4" style="padding:25px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i> جاري الحساب...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="text-xs text-slate-600 font-black text-center border-t border-slate-100 pt-3">
+                    <span class="text-rose-700">● الأحمر: عجز</span> &nbsp;|&nbsp; <span class="text-emerald-700">● الأخضر: زيادة</span>
+                </div>
             </div>
+
+            <!-- العمود 2 (الأوسط): حصر معلمي الـ 13 مادة + كارت أقرب 3 للمعاش -->
+            <div class="dash-card">
+                <div>
+                    <div class="dash-title">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-book-open text-blue-600"></i> حصر المعلمين حسب مواد وتخصصات التدريس</span>
+                        <span class="text-xs bg-slate-100 text-slate-700 px-3 py-1 rounded-full font-black">١٣ تخصص</span>
+                    </div>
+
+                    <div class="subjects-grid-1080 mb-4">
+                        <div class="sub-chip"><span class="sub-name">عربي تخصص</span><span class="sub-count" id="sub-ar-spec">٠</span></div>
+                        <div class="sub-chip"><span class="sub-name">عربي فصل</span><span class="sub-count" id="sub-ar-class">٠</span></div>
+                        <div class="sub-chip"><span class="sub-name">رياضيات تخصص</span><span class="sub-count" id="sub-math-spec">٠</span></div>
+                        <div class="sub-chip"><span class="sub-name">رياضيات فصل</span><span class="sub-count" id="sub-math-class">٠</span></div>
+                        <div class="sub-chip"><span class="sub-name">لغة إنجليزية</span><span class="sub-count" id="sub-eng">٠</span></div>
+                        <div class="sub-chip"><span class="sub-name">علوم</span><span class="sub-count" id="sub-sci">٠</span></div>
+                        <div class="sub-chip"><span class="sub-name">دراسات اجتماعية</span><span class="sub-count" id="sub-soc">٠</span></div>
+                        <div class="sub-chip"><span class="sub-name">تكنولوجيا معلومات</span><span class="sub-count" id="sub-tech">٠</span></div>
+                        <div class="sub-chip"><span class="sub-name">تربية رياضية</span><span class="sub-count" id="sub-pe">٠</span></div>
+                        <div class="sub-chip"><span class="sub-name">تربية فنية</span><span class="sub-count" id="sub-art">٠</span></div>
+                        <div class="sub-chip"><span class="sub-name">مهارات مهنية</span><span class="sub-count" id="sub-skills">٠</span></div>
+                        <div class="sub-chip"><span class="sub-name">تربية موسيقية</span><span class="sub-count" id="sub-music">٠</span></div>
+                    </div>
+                </div>
+
+                <!-- كارت أقرب 3 معلمين للمعاش -->
+                <div class="border-t border-slate-200 pt-3">
+                    <div class="text-xs md:text-sm font-black text-[#0f2b48] mb-2.5 flex items-center justify-between">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-hourglass-half text-rose-600"></i> ترقب: أقرب ٣ معلمين لبلوغ سن المعاش (الـ 60 عاماً)</span>
+                        <span class="text-[11px] text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full font-bold">مباشر</span>
+                    </div>
+
+                    <div class="space-y-2" id="top3-retirees-container">
+                        <div class="text-center py-4 text-slate-400 text-xs font-bold">جاري الفحص وحساب التواريخ...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- العمود 3 (الأيسر): مركز العمليات وتوليد الاستمارات -->
+            <div class="dash-card">
+                <div>
+                    <div class="dash-title">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-bolt text-yellow-500"></i> مركز العمليات والاستمارات</span>
+                        <i class="fa-solid fa-file-export text-slate-400"></i>
+                    </div>
+
+                    <div class="action-button-stack">
+                        <button class="btn-3d btn-op bg-[#0f2b48] hover:bg-[#1e3a8a]" onclick="buildAllBudgetTable()">
+                            <span class="flex items-center gap-2.5"><i class="fa-solid fa-table-list text-yellow-400 text-lg"></i> ميزانية جميع المواد الشاملة</span>
+                            <i class="fa-solid fa-chevron-left text-xs opacity-70"></i>
+                        </button>
+
+                        <button class="btn-3d btn-op bg-amber-600 hover:bg-amber-700" onclick="toggleModal('planModal', true)">
+                            <span class="flex items-center gap-2.5"><i class="fa-solid fa-sliders text-yellow-200 text-lg"></i> إعداد وتعديل خطة الحصص</span>
+                            <i class="fa-solid fa-chevron-left text-xs opacity-70"></i>
+                        </button>
+                    </div>
+
+                    <div class="border-t border-slate-200 pt-4 mt-4">
+                        <div class="text-xs font-black text-slate-700 mb-2 flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-excel text-emerald-600"></i> تصدير استمارة ميزانية مادة لإكسيل (.xlsm بالماكرو):
+                        </div>
+                        <select id="subject-selector" class="action-select p-3 bg-slate-50 border-2 border-blue-600 rounded-xl font-bold text-xs md:text-sm w-full outline-none" onchange="openQuickPreview()">
+                            <option value="" disabled selected>اختر المادة لتوليد وتصدير استمارتها...</option>
+                            <option value="arabic_religion_lower">لغة عربية ودين صفوف أولى</option>
+                            <option value="arabic_religion_upper">لغة عربية ودين صفوف عليا</option>
+                            <option value="arabic_religion_all">لغة عربية ودين مجمع</option>
+                            <option value="math_lower">رياضيات صفوف أولى</option>
+                            <option value="math_upper">رياضيات صفوف عليا</option>
+                            <option value="math_all">رياضيات مجمع</option>
+                            <option value="english">إنجليزي مجمع</option>
+                            <option value="science">علوم</option>
+                            <option value="social">دراسات اجتماعية</option>
+                            <option value="tech">تكنولوجيا المعلومات</option>
+                            <option value="pe">تربية رياضية</option>
+                            <option value="art">تربية فنية</option>
+                            <option value="skills">مهارات مهنية</option>
+                            <option value="music">تربية موسيقية</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-200 pt-4 mt-3">
+                    <div class="text-xs font-black text-slate-700 mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-users text-purple-600"></i> تفصيل القوة العاملة:
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs font-bold">
+                        <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div class="text-[11px] text-slate-500">معلمون</div>
+                            <div id="st-teachers" class="text-lg font-black text-emerald-700 mt-0.5">٠</div>
+                        </div>
+                        <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div class="text-[11px] text-slate-500">إداريون</div>
+                            <div id="st-admins" class="text-lg font-black text-blue-900 mt-0.5">٠</div>
+                        </div>
+                        <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div class="text-[11px] text-slate-500">عمال</div>
+                            <div id="st-workers" class="text-lg font-black text-slate-700 mt-0.5">٠</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <div class="dash-card">
-            <div class="dash-title"><i class="fa-solid fa-bolt" style="color:var(--danger)"></i> مركز العمليات</div>
-            <div class="action-center">
-                <button class="btn-action btn-all-budget" onclick="buildAllBudgetTable()"><i class="fa-solid fa-table"></i> عرض ميزانية جميع المواد</button>
-                <button class="btn-action btn-plan" onclick="toggleModal('planModal', true)"><i class="fa-solid fa-gear"></i> إعداد خطة المدرسة</button>
-                
-                <button class="btn-action" style="background: var(--danger); box-shadow: 0 4px 15px rgba(190, 24, 60, 0.3);" onclick="toggleModal('retirementModal', true)">
-                    <i class="fa-solid fa-hourglass-half"></i> ترقب المحالين للمعاش
-                </button>
-                
-                <div style="border-top:1px dashed #cbd5e1; margin:5px 0;"></div>
-                
-                <div style="font-size:12px; font-weight:800; color:#64748b; margin-bottom:5px;">ترحيل الاستمارة إلى إكسيل:</div>
-                <select id="subject-selector" class="action-select" onchange="openQuickPreview()">
-                    <option value="" disabled selected>اختر المادة المراد استخراجها...</option>
-                    <option value="arabic_religion_lower">لغة عربية وتربية دينية صفوف اولى</option>
-                    <option value="arabic_religion_upper">لغة عربية وتربية دينية صفوف عليا</option>
-                    <option value="arabic_religion_all">لغة عربية وتربية دينية مجمع</option>
-                    <option value="math_lower">رياضيات صفوف اولى</option>
-                    <option value="math_upper">رياضيات صفوف عليا</option>
-                    <option value="math_all">رياضيات مجمع</option>
-                    <option value="english">انجليزى مجمع</option>
-                    <option value="science">علوم</option>
-                    <option value="social">دراسات</option>
-                    <option value="tech">تكنولوجيا</option>
-                    <option value="pe">تربية رياضية</option>
-                    <option value="art">تربية فنية</option>
-                    <option value="skills">مهارات</option>
-                    <option value="music">موسيقى</option>
-                </select>
-            </div>
-        </div>
     </div>
 
+    <!-- شاشة معالجة الإكسيل -->
     <div id="excel-loader">
-        <i class="fa-solid fa-spinner fa-spin fa-3x" style="color: #fcd34d; margin-bottom: 20px;"></i>
-        <div>جاري جلب قالب الإكسيل وتعبئته بالبيانات...</div>
+        <i class="fa-solid fa-spinner fa-spin fa-2x text-yellow-400 mb-3"></i>
+        <div>جاري ترحيل البيانات وحقنها في قالب الماكرو (.xlsm)...</div>
     </div>
 
-    <!-- ================= 1. نافذة المعاشات ================= -->
-    <div class="modal-overlay" id="retirementModal">
-        <div class="modal-content" id="capture-retirement">
-            <div class="modal-header">
-                <div class="modal-header-titles">
-                    <h2><i class="fa-solid fa-hourglass-half"></i> شاشة ترقب: أقرب ١٠ عاملين لبلوغ سن المعاش</h2>
-                    <div class="watermark-text"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
-                </div>
-                <div class="hide-in-shot" style="display: flex; gap: 15px; align-items: center;">
-                    <button onclick="takeScreenshot('capture-retirement', 'بيان_ترقب_المعاشات')" class="btn-screenshot"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
-                    <button onclick="toggleModal('retirementModal', false)" class="btn-close-modal">&times;</button>
-                </div>
-            </div>
-            <div class="modal-body">
-                <table class="modern-budget-table" style="border: 1px solid #cbd5e1;">
-                    <thead>
-                        <tr>
-                            <th style="width: 10%;">م</th>
-                            <th style="text-align: right; width: 40%;">اسم الموظف</th>
-                            <th style="width: 25%;">تاريخ الإحالة للمعاش</th>
-                            <th style="width: 25%;">العداد الزمني (أيام)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="retirement-body">
-                        <tr><td colspan="4" style="padding:20px; color:#94a3b8; text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> جاري حساب البيانات...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================= 2. نافذة المعاينة السريعة ================= -->
+    <!-- ================= 1. نافذة المعاينة السريعة للاستمارة ================= -->
     <div class="modal-overlay" id="previewModal">
         <div class="modal-content" id="capture-preview">
             <div class="modal-header">
-                <div class="modal-header-titles">
-                    <h2><i class="fa-solid fa-eye"></i> معاينة الميزانية: <span id="prev-sub-name" style="color:white; margin-right:5px;"></span></h2>
-                    <div class="watermark-text"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-eye text-yellow-300 text-lg"></i>
+                    <h2 class="text-sm md:text-base font-black text-white">معاينة استمارة ميزانية مادة: <span id="prev-sub-name" class="text-yellow-300 mr-1"></span></h2>
                 </div>
-                <div class="hide-in-shot" style="display: flex; gap: 15px; align-items: center;">
-                    <button onclick="takeScreenshot('capture-preview', 'معاينة_الميزانية')" class="btn-screenshot"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
-                    <button onclick="toggleModal('previewModal', false)" class="btn-close-modal">&times;</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="takeScreenshot('capture-preview', 'معاينة_الميزانية')" class="btn-3d px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow cursor-pointer"><i class="fa-solid fa-camera"></i> صورة</button>
+                    <button onclick="toggleModal('previewModal', false)" class="text-white text-2xl font-bold cursor-pointer hover:text-rose-300 mr-2">&times;</button>
                 </div>
             </div>
             <div class="modal-body">
-                <div class="preview-container">
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
                     <table class="preview-top-table">
                         <thead>
                             <tr>
                                 <th style="width: 15%;">الصف</th>
                                 <th style="width: 15%;">عدد الفصول</th>
                                 <th style="width: 15%;">عدد الحصص</th>
-                                <th style="width: 25%;">الوظيفة</th>
+                                <th style="width: 25%;">الوظيفة على الكادر</th>
                                 <th style="width: 10%;">العدد</th>
                                 <th style="width: 10%;">النصاب</th>
                                 <th style="width: 10%;">العجز بالحصص</th>
@@ -246,89 +382,103 @@
                         <tbody id="prev-top-body"></tbody>
                     </table>
 
-                    <h3 style="font-size: 16px; font-weight: 900; margin-bottom: 10px; color: var(--dark); border-bottom: 2px solid #cbd5e1; padding-bottom: 5px;">
-                        <i class="fa-solid fa-users"></i> أسماء المعلمين المسكنين
-                    </h3>
-                    <table class="preview-teachers-table" style="border-color: #000;">
+                    <div class="text-xs font-black text-[#0f2b48] border-b pb-1 pt-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-users text-blue-600"></i> أسماء المعلمين المسكنين على المادة:
+                    </div>
+                    <table class="preview-teachers-table">
                         <thead>
-                            <tr style="background:#e2e8f0;">
-                                <th style="border: 1px solid #000; width: 5%;">م</th>
-                                <th style="border: 1px solid #000; width: 45%; text-align: right;">اسم المعلم</th>
-                                <th style="border: 1px solid #000; width: 25%;">الدرجة المالية / الكادر</th>
-                                <th style="border: 1px solid #000; width: 25%;">النصاب القانوني</th>
+                            <tr style="background:#f1f5f9;">
+                                <th style="width: 6%;">م</th>
+                                <th style="width: 44%; text-align: right;">اسم المعلم</th>
+                                <th style="width: 25%;">الدرجة المالية / الكادر</th>
+                                <th style="width: 25%;">النصاب القانوني</th>
                             </tr>
                         </thead>
                         <tbody id="prev-teachers-body"></tbody>
                     </table>
 
-                    <div class="hide-in-shot" style="margin-top: 20px;">
-                        <button class="btn-action btn-print" style="width: 100%; padding: 15px; font-size: 16px;" onclick="injectAndDownloadExcel()"><i class="fa-solid fa-file-excel"></i> تصدير الميزانية إلى الإكسيل الرسمي للطباعة</button>
+                    <div class="pt-2">
+                        <button class="btn-3d w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-black text-sm flex items-center justify-center gap-2 shadow cursor-pointer" onclick="injectAndDownloadExcelWithMacro()">
+                            <i class="fa-solid fa-file-excel text-yellow-300"></i> تصدير الميزانية إلى الإكسيل الرسمي بالماكرو (.xlsm)
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ================= 3. نافذة الميزانية الشاملة ================= -->
+    <!-- ================= 2. نافذة الميزانية الشاملة ================= -->
     <div class="modal-overlay" id="allBudgetModal">
         <div class="modal-content" id="capture-all-budget">
             <div class="modal-header">
-                <div class="modal-header-titles">
-                    <h2><i class="fa-solid fa-table-list"></i> الميزانية الشاملة لجميع المواد الدراسية</h2>
-                    <div class="watermark-text"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-table-list text-yellow-300 text-lg"></i>
+                    <h2 class="text-sm md:text-base font-black text-white">الميزانية الشاملة لجميع المواد والتخصصات</h2>
                 </div>
-                <div class="hide-in-shot" style="display: flex; gap: 15px; align-items: center;">
-                    <button onclick="takeScreenshot('capture-all-budget', 'الميزانية_الشاملة')" class="btn-screenshot"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
-                    <button onclick="toggleModal('allBudgetModal', false)" class="btn-close-modal">&times;</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="takeScreenshot('capture-all-budget', 'الميزانية_الشاملة')" class="btn-3d px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow cursor-pointer"><i class="fa-solid fa-camera"></i> صورة</button>
+                    <button onclick="toggleModal('allBudgetModal', false)" class="text-white text-2xl font-bold cursor-pointer hover:text-rose-300 mr-2">&times;</button>
                 </div>
             </div>
             <div class="modal-body">
-                <table class="modern-budget-table" style="border: 1px solid #cbd5e1;">
-                    <thead><tr><th>المادة / التصنيف</th><th>عدد الحصص اللازم</th><th>الموجود الفعلي</th><th>العجز</th><th>الزيادة</th><th>عدد المعلمين</th></tr></thead>
+                <table class="modern-budget-table">
+                    <thead>
+                        <tr>
+                            <th>المادة / التصنيف</th>
+                            <th>عدد الحصص اللازم</th>
+                            <th>الموجود الفعلي</th>
+                            <th>العجز</th>
+                            <th>الزيادة</th>
+                            <th>عدد المعلمين</th>
+                        </tr>
+                    </thead>
                     <tbody id="all-budget-body"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <!-- ================= 4. نافذة إعداد الخطة ================= -->
+    <!-- ================= 3. نافذة إعداد الخطة ================= -->
     <div class="modal-overlay" id="planModal">
         <div class="modal-content" id="capture-plan">
             <div class="modal-header">
-                <div class="modal-header-titles">
-                    <h2><i class="fa-solid fa-gear"></i> إعداد فصول وحصص المدرسة</h2>
-                    <div class="watermark-text"><i class="fa-solid fa-laptop-code"></i> إعداد وتصميم / مستر زيزو</div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-yellow-300 text-lg"></i>
+                    <h2 class="text-sm md:text-base font-black text-white">إعداد وتعديل فصول وحصص خطة المدرسة</h2>
                 </div>
-                <div class="hide-in-shot" style="display: flex; gap: 15px; align-items: center;">
-                    <button onclick="takeScreenshot('capture-plan', 'خطة_المدرسة')" class="btn-screenshot"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
-                    <button onclick="toggleModal('planModal', false)" class="btn-close-modal">&times;</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="takeScreenshot('capture-plan', 'خطة_المدرسة')" class="btn-3d px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow cursor-pointer"><i class="fa-solid fa-camera"></i> صورة</button>
+                    <button onclick="toggleModal('planModal', false)" class="text-white text-2xl font-bold cursor-pointer hover:text-rose-300 mr-2">&times;</button>
                 </div>
             </div>
             <div class="modal-body">
                 <table class="plan-table"><thead id="plan-head"></thead><tbody id="plan-rows"></tbody></table>
-                <button class="btn-save-plan hide-in-shot" onclick="saveSchoolPlan()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ واعتماد الخطة</button>
+                <button class="btn-3d w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-sm shadow cursor-pointer mt-4" onclick="saveSchoolPlan()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ واعتماد الخطة الدراسية</button>
             </div>
         </div>
     </div>
 
-    <div class="zizo-signature-bottom">إعداد مستر زيزو</div>
-
     <script>
-        // إعدادات Supabase
-        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        // إعدادات اتصال Supabase
+        const SUPABASE_URL = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const toAr = n => { if(n===0) return "٠"; if(!n) return "-"; return String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]); };
-        const clean = t => t ? t.trim().replace(/[أإآا]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, "") : "";
+        const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
+        const DB_VERSION = 2;
+
+        const TEMPLATE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/TEAMEZAN/agstm.xlsm";
+
+        const toAr = n => { if (n === 0) return "٠"; if (!n && n !== 0) return "-"; return String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]); };
+        const clean = t => (t ? String(t).trim().replace(/[أإآا]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, "") : "");
 
         let TEACHERS = [], PLAN = {}, INFO = {};
         let CURRENT_ANALYSIS_DATA = null;
 
         const budgetModes = [
-            { id: "arabic_religion_lower", name: "لغة عربية ودين صفوف أولى" },
-            { id: "arabic_religion_upper", name: "لغة عربية ودين صفوف عليا" },
-            { id: "arabic_religion_all", name: "لغة عربية ودين مجمع" },
+            { id: "arabic_religion_lower", name: "عربي ودين صفوف أولى" },
+            { id: "arabic_religion_upper", name: "عربي ودين صفوف عليا" },
+            { id: "arabic_religion_all", name: "عربي ودين مجمع" },
             { id: "math_lower", name: "رياضيات صفوف أولى" },
             { id: "math_upper", name: "رياضيات صفوف عليا" },
             { id: "math_all", name: "رياضيات مجمع" },
@@ -342,88 +492,223 @@
             { id: "music", name: "تربية موسيقية" }
         ];
 
+        function safeSetText(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.innerText = text;
+        }
+
         window.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // جلب بيانات المعلمين
-                const { data: tSnap, error: tError } = await supabaseClient.from("teachers").select("*");
-                if (tSnap) TEACHERS = tSnap;
-                
-                // جلب بيانات الخطة
-                const { data: pDoc, error: pError } = await supabaseClient.from("system_capsules").select("data").eq("id", "school_plan").maybeSingle();
-                if (pDoc && pDoc.data) PLAN = pDoc.data;
-                
-                // جلب بيانات معلومات المدرسة (إن وجدت مستقبلاً)
-                const { data: iDoc, error: iError } = await supabaseClient.from("system_capsules").select("data").eq("id", "school_info").maybeSingle();
-                if (iDoc && iDoc.data) INFO = iDoc.data;
-                
-                initPlanTable();
-                calculateDashboardStats(); 
-                renderRetirementList(); 
-            } catch (error) {
-                console.error("Error loading initial data:", error);
-            }
+            updateConnectionBadge();
+            await loadAllDataSafely();
         });
 
-        // ================= دالة التقاط الشاشة الشاملة بصيغة JPEG =================
+        function updateConnectionBadge() {
+            const badge = document.getElementById('mode-badge');
+            if (badge) {
+                const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
+                if (mode === 'offline') {
+                    badge.className = "text-xs px-3.5 py-1.5 bg-amber-100 text-amber-800 border border-amber-300 rounded-full font-black flex items-center gap-1 shadow-sm";
+                    badge.innerHTML = '<i class="fa-solid fa-laptop"></i> وضع محلي (أوفلاين)';
+                } else {
+                    badge.className = "text-xs px-3.5 py-1.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full font-black flex items-center gap-1 shadow-sm";
+                    badge.innerHTML = '<i class="fa-solid fa-globe"></i> متصل بالسحابة (أونلاين)';
+                }
+            }
+        }
+
+        async function loadAllDataSafely() {
+            const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
+
+            try {
+                if (mode === 'offline') {
+                    const req = indexedDB.open(DB_NAME, DB_VERSION);
+                    req.onsuccess = () => {
+                        const db = req.result;
+                        if (db.objectStoreNames.contains('teachers')) {
+                            const tx = db.transaction('teachers', 'readonly');
+                            const getReq = tx.objectStore('teachers').getAll();
+                            getReq.onsuccess = () => {
+                                TEACHERS = getReq.result || [];
+                                renderAllComponents();
+                            };
+                        }
+                    };
+                } else {
+                    const { data, error } = await sbClient.from("teachers").select("*");
+                    if (!error && data) {
+                        TEACHERS = data;
+                        renderAllComponents();
+                    }
+                }
+            } catch (err) {
+                console.error("خطأ في جلب المعلمين:", err);
+            }
+
+            try {
+                if (mode === 'offline') {
+                    const req = indexedDB.open(DB_NAME, DB_VERSION);
+                    req.onsuccess = () => {
+                        const db = req.result;
+                        if (db.objectStoreNames.contains('system_capsules')) {
+                            const tx = db.transaction('system_capsules', 'readonly');
+                            const getReq = tx.objectStore('system_capsules').get('school_plan');
+                            getReq.onsuccess = () => {
+                                if (getReq.result && getReq.result.data) PLAN = getReq.result.data;
+                                initPlanTable();
+                                renderAllComponents();
+                            };
+                        } else {
+                            initPlanTable();
+                        }
+                    };
+                } else {
+                    const { data } = await sbClient.from("system_capsules").select("data").eq("id", "school_plan").maybeSingle();
+                    if (data && data.data) PLAN = data.data;
+                    initPlanTable();
+                    renderAllComponents();
+                }
+            } catch (err) {
+                initPlanTable();
+            }
+
+            try {
+                if (mode === 'offline') {
+                    const req = indexedDB.open(DB_NAME, DB_VERSION);
+                    req.onsuccess = () => {
+                        const db = req.result;
+                        if (db.objectStoreNames.contains('system_capsules')) {
+                            const tx = db.transaction('system_capsules', 'readonly');
+                            const getReq = tx.objectStore('system_capsules').get('school_info');
+                            getReq.onsuccess = () => {
+                                if (getReq.result && getReq.result.data) INFO = getReq.result.data;
+                            };
+                        }
+                    };
+                } else {
+                    const { data } = await sbClient.from("system_capsules").select("data").eq("id", "school_info").maybeSingle();
+                    if (data && data.data) INFO = data.data;
+                }
+            } catch (err) {}
+        }
+
+        function renderAllComponents() {
+            calculateDashboardStats(); 
+            renderRetirementList();
+            renderLiveDeficitTable();
+            calculateKPIPeriodsSummary();
+        }
+
+        function renderLiveDeficitTable() {
+            const tbody = document.getElementById("live-deficit-tbody");
+            if (!tbody) return;
+
+            let html = "";
+            budgetModes.forEach(mode => {
+                const data = calculateBudget(mode.id);
+                const diff = data.avTotal - data.reqTotal;
+                
+                let diffCell = "";
+                if (diff < 0) {
+                    diffCell = `<span class="text-rose-700 font-black text-sm">عجز ${toAr(Math.abs(diff))}</span>`;
+                } else if (diff > 0) {
+                    diffCell = `<span class="text-emerald-700 font-black text-sm">زيادة ${toAr(diff)}</span>`;
+                } else {
+                    diffCell = `<span class="text-slate-400 font-bold">٠</span>`;
+                }
+
+                html += `
+                    <tr>
+                        <td style="text-align: right; padding-right: 10px; font-weight: 900; color: #0f2b48;">${mode.name}</td>
+                        <td style="color: #475569; font-bold;">${toAr(data.reqTotal)}</td>
+                        <td style="color: #0f2b48; font-black;">${toAr(data.avTotal)}</td>
+                        <td>${diffCell}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function calculateKPIPeriodsSummary() {
+            let totalReq = 0;
+            let totalAv = 0;
+
+            const gradeNames = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
+            gradeNames.forEach(g => {
+                if (PLAN[g] && PLAN[g].classes && PLAN[g].subjects) {
+                    const cls = parseInt(PLAN[g].classes) || 0;
+                    let pSum = 0;
+                    Object.values(PLAN[g].subjects).forEach(val => pSum += (parseInt(val) || 0));
+                    totalReq += (cls * pSum);
+                }
+            });
+
+            if (Array.isArray(TEACHERS)) {
+                TEACHERS.forEach(t => {
+                    if ((t.emp_status || "على رأس العمل") === "على رأس العمل") {
+                        totalAv += (parseInt(t.quota) || 0);
+                    }
+                });
+            }
+
+            safeSetText("kpi-req-periods", toAr(totalReq));
+            safeSetText("kpi-av-quota", toAr(totalAv));
+
+            const diff = totalAv - totalReq;
+            const balanceEl = document.getElementById("kpi-net-balance");
+            if (balanceEl) {
+                if (diff < 0) {
+                    balanceEl.innerHTML = `<span style="color:var(--danger); font-weight:900;">عجز ${toAr(Math.abs(diff))}</span>`;
+                } else if (diff > 0) {
+                    balanceEl.innerHTML = `<span style="color:var(--success); font-weight:900;">زيادة ${toAr(diff)}</span>`;
+                } else {
+                    balanceEl.innerHTML = `<span style="color:var(--info); font-weight:900;">متوازن تماماً</span>`;
+                }
+            }
+        }
+
+        function toggleModal(id, show) { document.getElementById(id).classList.toggle("active", show); }
+
         function takeScreenshot(targetId, fileName) {
             const targetEl = document.getElementById(targetId);
-            const hiddenElements = targetEl.querySelectorAll('.hide-in-shot');
-            
-            // إخفاء الأزرار مؤقتاً أثناء التصوير
+            const hiddenElements = targetEl.querySelectorAll('.btn-3d, .btn-op, .btn-action');
             hiddenElements.forEach(el => el.style.display = 'none');
             
-            // إلغاء شريط التمرير (Scroll) من الجسم مؤقتاً لتصوير المحتوى بالكامل
             const modalBody = targetEl.querySelector('.modal-body');
-            const originalMaxHeight = modalBody.style.maxHeight;
-            const originalOverflow = modalBody.style.overflowY;
-            modalBody.style.maxHeight = 'none';
-            modalBody.style.overflowY = 'visible';
+            const origMaxHeight = modalBody ? modalBody.style.maxHeight : "";
+            const origOverflow = modalBody ? modalBody.style.overflowY : "";
+            if (modalBody) { modalBody.style.maxHeight = 'none'; modalBody.style.overflowY = 'visible'; }
 
-            html2canvas(targetEl, {
-                scale: 2, // دقة عالية
-                backgroundColor: "#ffffff", // خلفية بيضاء لضمان عدم وجود مساحات سوداء في JPEG
-                useCORS: true
-            }).then(canvas => {
-                // إرجاع العناصر كما كانت فوراً بعد الالتقاط
-                hiddenElements.forEach(el => el.style.display = 'flex'); // عرض الأزرار مجدداً
-                modalBody.style.maxHeight = originalMaxHeight;
-                modalBody.style.overflowY = originalOverflow;
+            html2canvas(targetEl, { scale: 2, backgroundColor: "#ffffff", useCORS: true }).then(canvas => {
+                hiddenElements.forEach(el => el.style.display = '');
+                if (modalBody) { modalBody.style.maxHeight = origMaxHeight; modalBody.style.overflowY = origOverflow; }
 
-                // تحويل الصورة إلى JPEG وتحميلها
-                let imgData = canvas.toDataURL("image/jpeg", 0.95);
                 let link = document.createElement('a');
                 link.download = fileName + '.jpg';
-                link.href = imgData;
+                link.href = canvas.toDataURL("image/jpeg", 0.95);
                 link.click();
             }).catch(err => {
-                console.error(err);
+                hiddenElements.forEach(el => el.style.display = '');
+                if (modalBody) { modalBody.style.maxHeight = origMaxHeight; modalBody.style.overflowY = origOverflow; }
                 alert("حدث خطأ أثناء التقاط الصورة!");
-                // إرجاع الأزرار في حالة حدوث خطأ
-                hiddenElements.forEach(el => el.style.display = 'flex');
-                modalBody.style.maxHeight = originalMaxHeight;
-                modalBody.style.overflowY = originalOverflow;
             });
         }
-        // =========================================================================
 
-        // ================= دوال حساب الإحالة للمعاش المحدثة =================
         function getDOBFromNID(nid) {
-            if (!nid || nid.length !== 14) return null;
-            let century = parseInt(nid.charAt(0)) === 2 ? 1900 : 2000;
-            let year = century + parseInt(nid.substring(1, 3));
-            let month = parseInt(nid.substring(3, 5)) - 1; 
-            let day = parseInt(nid.substring(5, 7));
-            let dob = new Date(year, month, day);
+            if (!nid) return null;
+            const strNid = String(nid).trim();
+            if (strNid.length !== 14) return null;
             
-            if (dob.getFullYear() === year && dob.getMonth() === month && dob.getDate() === day) {
-                return dob;
-            }
-            return null;
+            let century = parseInt(strNid.charAt(0)) === 2 ? 1900 : 2000;
+            let year = century + parseInt(strNid.substring(1, 3));
+            let month = parseInt(strNid.substring(3, 5)) - 1; 
+            let day = parseInt(strNid.substring(5, 7));
+            let dob = new Date(year, month, day);
+            return (dob.getFullYear() === year && dob.getMonth() === month && dob.getDate() === day) ? dob : null;
         }
 
         function getRetirementInfo(dob) {
             if (!dob) return null;
-            
             let retirementDate = new Date(dob.getFullYear() + 60, dob.getMonth(), dob.getDate());
             retirementDate.setDate(retirementDate.getDate() - 1);
             
@@ -436,67 +721,67 @@
             let dd = String(retirementDate.getDate()).padStart(2, '0');
             let mm = String(retirementDate.getMonth() + 1).padStart(2, '0');
             let yyyy = retirementDate.getFullYear();
-            let dateStrNum = `<bdo dir="ltr">${dd} / ${mm} / ${yyyy}</bdo>`;
             
             return {
-                dateStr: dateStrNum,
+                dateStr: `<bdo dir="ltr">${dd} / ${mm} / ${yyyy}</bdo>`,
                 daysLeft: diffDays
             };
         }
 
         function renderRetirementList() {
             let list = [];
-            
+            if (!Array.isArray(TEACHERS)) return;
+
             TEACHERS.forEach(t => {
                 if((t.emp_status || "على رأس العمل") !== "على رأس العمل") return;
-                
                 let dob = getDOBFromNID(t.nid); 
                 if (dob) {
                     let rInfo = getRetirementInfo(dob);
                     if (rInfo && rInfo.daysLeft >= 0) {
-                        list.push({
-                            name: t.name,
-                            retirementDate: rInfo.dateStr,
-                            daysLeft: rInfo.daysLeft
-                        });
+                        list.push({ name: t.name, retirementDate: rInfo.dateStr, daysLeft: rInfo.daysLeft });
                     }
                 }
             });
 
             list.sort((a, b) => a.daysLeft - b.daysLeft);
-            let top10 = list.slice(0, 10);
             
-            let tbody = document.getElementById("retirement-body");
-            tbody.innerHTML = "";
-            
-            if(top10.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="padding:20px; color:#94a3b8; text-align:center;">لا توجد بيانات متاحة أو لا يوجد الرقم القومي مسجل بشكل صحيح</td></tr>`;
-                return;
-            }
-
-            top10.forEach((item, index) => {
-                let warningStyle = item.daysLeft <= 60 ? 'color: var(--danger); font-size: 16px;' : 'color: var(--primary); font-size: 16px;';
+            const top3Container = document.getElementById("top3-retirees-container");
+            if (top3Container) {
+                let top3Html = "";
+                const top3 = list.slice(0, 3);
                 
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="text-align:center;">${toAr(index + 1)}</td>
-                        <td style="text-align: right;">${item.name}</td>
-                        <td style="text-align:center; color: var(--info); font-weight: 900; font-size:16px;">${item.retirementDate}</td>
-                        <td style="text-align:center; font-weight: 900; ${warningStyle}">${item.daysLeft}</td>
-                    </tr>
-                `;
-            });
+                if (top3.length === 0) {
+                    top3Html = `<div class="text-center py-3 text-slate-400 text-xs font-bold">لا توجد بيانات معاشات مسجلة.</div>`;
+                } else {
+                    top3.forEach((item, idx) => {
+                        top3Html += `
+                            <div class="retire-row">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="w-6 h-6 rounded-full bg-rose-600 text-white flex items-center justify-center text-[11px] font-black">${idx + 1}</span>
+                                    <span class="font-black text-[#0f2b48] text-sm">${item.name}</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-xs">
+                                    <span class="text-slate-600 font-bold">${item.retirementDate}</span>
+                                    <span class="bg-rose-600 text-white px-2.5 py-1 rounded-lg font-black text-xs">${toAr(item.daysLeft)} يوم</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                top3Container.innerHTML = top3Html;
+            }
         }
-        // =========================================================
-
-        function toggleModal(id, show) { document.getElementById(id).classList.toggle("active", show); }
 
         function calculateDashboardStats() {
             let stats = { total:0, teachers:0, admins:0, workers:0, ar_spec:0, ar_class:0, math_spec:0, math_class:0, eng:0, sci:0, soc:0, tech:0, pe:0, art:0, skills:0, music:0, kg:0 };
+            if (!Array.isArray(TEACHERS)) return;
+
             TEACHERS.forEach(t => {
                 if((t.emp_status||"على رأس العمل") !== "على رأس العمل") return;
                 stats.total++;
-                let job = clean(t.cadre_job); let sub = clean(t.subject); let cat = clean(t.teaching_category);
+                let job = clean(t.cadre_job); 
+                let sub = clean(t.subject); 
+                let cat = clean(t.teaching_category);
 
                 if(job.includes("عاملخدمات") || job.includes("عاعاملخدمات") || job === "عامل" || job.includes("حارس")) stats.workers++;
                 else if(job.includes("اداري") || job.includes("اخصائي") || job.includes("مشرف") || job.includes("سكرتير") || job.includes("امين")) stats.admins++;
@@ -510,15 +795,24 @@
                 if(sub.includes("رياضاطفال") || sub.includes("kg")) stats.kg++;
             });
 
-            document.getElementById("st-total").innerText = toAr(stats.total); document.getElementById("st-teachers").innerText = toAr(stats.teachers);
-            document.getElementById("st-admins").innerText = toAr(stats.admins); document.getElementById("st-workers").innerText = toAr(stats.workers);
-            document.getElementById("sub-ar-spec").innerText = toAr(stats.ar_spec); document.getElementById("sub-ar-class").innerText = toAr(stats.ar_class);
-            document.getElementById("sub-math-spec").innerText = toAr(stats.math_spec); document.getElementById("sub-math-class").innerText = toAr(stats.math_class);
-            document.getElementById("sub-eng").innerText = toAr(stats.eng); document.getElementById("sub-sci").innerText = toAr(stats.sci);
-            document.getElementById("sub-soc").innerText = toAr(stats.soc); document.getElementById("sub-tech").innerText = toAr(stats.tech);
-            document.getElementById("sub-pe").innerText = toAr(stats.pe); document.getElementById("sub-art").innerText = toAr(stats.art);
-            document.getElementById("sub-skills").innerText = toAr(stats.skills); document.getElementById("sub-music").innerText = toAr(stats.music);
-            document.getElementById("sub-kg").innerText = toAr(stats.kg);
+            safeSetText("kpi-total-staff", toAr(stats.total));
+            safeSetText("st-teachers", toAr(stats.teachers));
+            safeSetText("st-admins", toAr(stats.admins)); 
+            safeSetText("st-workers", toAr(stats.workers));
+            
+            safeSetText("sub-ar-spec", toAr(stats.ar_spec)); 
+            safeSetText("sub-ar-class", toAr(stats.ar_class)); 
+            safeSetText("sub-math-spec", toAr(stats.math_spec)); 
+            safeSetText("sub-math-class", toAr(stats.math_class)); 
+            safeSetText("sub-eng", toAr(stats.eng)); 
+            safeSetText("sub-sci", toAr(stats.sci)); 
+            safeSetText("sub-soc", toAr(stats.soc)); 
+            safeSetText("sub-tech", toAr(stats.tech)); 
+            safeSetText("sub-pe", toAr(stats.pe)); 
+            safeSetText("sub-art", toAr(stats.art)); 
+            safeSetText("sub-skills", toAr(stats.skills)); 
+            safeSetText("sub-music", toAr(stats.music)); 
+            safeSetText("sub-kg", toAr(stats.kg)); 
         }
 
         function calculateBudget(mode) {
@@ -537,6 +831,7 @@
             };
 
             const filterTeachers = (subKeywords, catKeyword = null) => {
+                if (!Array.isArray(TEACHERS)) return [];
                 return TEACHERS.filter(t => {
                     if((t.emp_status||"على رأس العمل") !== "على رأس العمل") return false;
                     const tSub = clean(t.subject); const tCat = clean(t.teaching_category);
@@ -557,7 +852,7 @@
             else {
                 targetGrades = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
                 const map = { english:["انجل"], science:["علوم"], social:["دراس"], tech:["تكنو","حاسب"], pe:["بدني","العاب","رياضيه","رياضية"], art:["فني","رسم"], skills:["مهار"], music:["موسيقي"] }; 
-                subKeys = [mode]; subKeywords = map[mode];
+                subKeys = [mode]; subKeywords = map[mode] || [];
             }
 
             reqTotal = getReq(targetGrades, subKeys);
@@ -584,9 +879,13 @@
             budgetModes.forEach(mode => {
                 const data = calculateBudget(mode.id);
                 const diff = data.avTotal - data.reqTotal;
-                const deficit = diff < 0 ? Math.abs(diff) : "-"; const surplus = diff > 0 ? diff : "-";
+                
+                let diffText = "-";
+                if (diff < 0) diffText = `عجز ${toAr(Math.abs(diff))}`;
+                else if (diff > 0) diffText = `زيادة ${toAr(diff)}`;
+
                 let tCount = 0; Object.values(data.cadreStats).forEach(c => tCount += c.count);
-                tbody.innerHTML += `<tr><td>${mode.name}</td><td>${toAr(data.reqTotal)}</td><td>${toAr(data.avTotal)}</td><td><span class="${diff < 0 ? 'badge-danger' : ''}">${toAr(deficit)}</span></td><td><span class="${diff > 0 ? 'badge-success' : ''}">${toAr(surplus)}</span></td><td>${toAr(tCount)}</td></tr>`;
+                tbody.innerHTML += `<tr><td style="font-weight:900;">${mode.name}</td><td>${toAr(data.reqTotal)}</td><td>${toAr(data.avTotal)}</td><td style="color:var(--danger); font-weight:900;">${diff < 0 ? diffText : '-'}</td><td style="color:var(--success); font-weight:900;">${diff > 0 ? diffText : '-'}</td><td style="font-weight:900; color:#0f2b48;">${toAr(tCount)}</td></tr>`;
             });
             toggleModal('allBudgetModal', true);
         }
@@ -655,11 +954,11 @@
 
                     let deficitHtml = "";
                     if(i === 0) {
-                        deficitHtml = `<td rowspan="3" class="pt-cell-danger">${deficitVal}</td>`;
+                        deficitHtml = `<td rowspan="3" class="pt-cell-danger" style="font-weight:900;">${deficitVal ? 'عجز ' + deficitVal : ''}</td>`;
                     } else if (i === 3) {
-                        deficitHtml = `<td style="background:#e2e8f0; border-top:2px solid #000; font-size:16px;">الزيادة</td>`;
+                        deficitHtml = `<td style="background:#e2e8f0; border-top:2px solid #000; font-size:14px; font-weight:900;">الزيادة</td>`;
                     } else if (i === 4) {
-                        deficitHtml = `<td rowspan="2" class="pt-cell-success">${surplusVal}</td>`;
+                        deficitHtml = `<td rowspan="2" class="pt-cell-success" style="font-weight:900;">${surplusVal ? 'زيادة ' + surplusVal : ''}</td>`;
                     }
 
                     topBody.innerHTML += `
@@ -691,15 +990,15 @@
                 teachersBody.innerHTML = "";
                 
                 if(!data.teachersList || data.teachersList.length === 0) {
-                    teachersBody.innerHTML = `<tr><td colspan="4" style="padding:20px; color:#94a3b8; border:1px solid #000;">لا يوجد معلمون مسكنون في هذه المادة!</td></tr>`;
+                    teachersBody.innerHTML = `<tr><td colspan="4" style="padding:20px; color:#94a3b8; border:1px solid #000;">لا يوجد معلمون مسكنون في هذه المادة حالياً.</td></tr>`;
                 } else {
                     data.teachersList.sort((a,b)=>a.name.localeCompare(b.name,'ar')).forEach((t, i) => {
                         teachersBody.innerHTML += `
                             <tr>
                                 <td style="border:1px solid #000;">${toAr(i+1)}</td>
-                                <td style="border:1px solid #000; text-align:right;">${t.name}</td>
+                                <td style="border:1px solid #000; text-align:right; font-weight:900;">${t.name}</td>
                                 <td style="border:1px solid #000;">${t.fin_degree || '-'}</td>
-                                <td style="border:1px solid #000; color:var(--primary);">${t.quota ? toAr(t.quota) + ' حصة' : '-'}</td>
+                                <td style="border:1px solid #000; color:#0f2b48; font-weight:900;">${t.quota ? toAr(t.quota) : '-'}</td>
                             </tr>
                         `;
                     });
@@ -709,13 +1008,14 @@
                 toggleModal('previewModal', true);
             } catch (error) {
                 console.error("Error in openQuickPreview:", error);
-                alert("حدث خطأ أثناء معالجة البيانات. يرجى التأكد من إعداد خطة المدرسة بشكل صحيح.");
+                alert("حدث خطأ أثناء معالجة البيانات.");
                 document.getElementById("subject-selector").selectedIndex = 0;
             }
         }
 
-        async function injectAndDownloadExcel() {
-            if(!CURRENT_ANALYSIS_DATA) return;
+        // ================= حقن البيانات في ملف .xlsm مع النطاق الرسمي OpenXML =================
+        async function injectAndDownloadExcelWithMacro() {
+            if (!CURRENT_ANALYSIS_DATA) return;
             const data = CURRENT_ANALYSIS_DATA;
             const subName = document.getElementById("prev-sub-name").innerText;
 
@@ -723,91 +1023,175 @@
             loader.style.display = "flex";
 
             try {
-                // الكود هنا يعمل من خلال Supabase بشكل ممتاز ومباشر
-                const response = await fetch("https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/TEAMEZAN/MEZAN.xlsx");
+                const response = await fetch(`${TEMPLATE_URL}?t=${new Date().getTime()}`);
+                if (!response.ok) throw new Error("تعذر تحميل قالب الإكسيل (.xlsm) من السيرفر.");
                 const arrayBuffer = await response.arrayBuffer();
 
-                const workbook = new ExcelJS.Workbook();
-                await workbook.xlsx.load(arrayBuffer);
-                const worksheet = workbook.worksheets[0]; 
+                const zip = await JSZip.loadAsync(arrayBuffer);
+                
+                // تحديد ملف الشيت الأول
+                let targetSheetPath = "xl/worksheets/sheet1.xml";
+                if (!zip.file(targetSheetPath)) {
+                    const sheetFiles = Object.keys(zip.files).filter(p => p.startsWith("xl/worksheets/sheet") && p.endsWith(".xml"));
+                    if (sheetFiles.length > 0) targetSheetPath = sheetFiles[0];
+                }
 
-                worksheet.getCell('K1').value = subName;
-                worksheet.getCell('B5').value = INFO.manager || "";
+                const sheetXmlStr = await zip.file(targetSheetPath).async("text");
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(sheetXmlStr, "application/xml");
+                
+                // النطاق الرسمي لمايكروسوفت إكسيل
+                const NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+
+                function setCell(cellRef, val, isNum = false) {
+                    const rowNum = parseInt(cellRef.replace(/[^0-9]/g, ''));
+                    let sheetData = xmlDoc.getElementsByTagNameNS(NS, "sheetData")[0] || xmlDoc.getElementsByTagName("sheetData")[0];
+                    if (!sheetData) return;
+
+                    let rows = sheetData.getElementsByTagNameNS(NS, "row");
+                    if (rows.length === 0) rows = sheetData.getElementsByTagName("row");
+                    let targetRow = null;
+
+                    for (let i = 0; i < rows.length; i++) {
+                        if (rows[i].getAttribute("r") == rowNum) {
+                            targetRow = rows[i];
+                            break;
+                        }
+                    }
+
+                    if (!targetRow) {
+                        targetRow = xmlDoc.createElementNS(NS, "row");
+                        targetRow.setAttribute("r", String(rowNum));
+                        sheetData.appendChild(targetRow);
+                    }
+
+                    let cells = targetRow.getElementsByTagNameNS(NS, "c");
+                    if (cells.length === 0) cells = targetRow.getElementsByTagName("c");
+                    let targetCell = null;
+
+                    for (let i = 0; i < cells.length; i++) {
+                        if (cells[i].getAttribute("r") === cellRef) {
+                            targetCell = cells[i];
+                            break;
+                        }
+                    }
+
+                    if (!targetCell) {
+                        targetCell = xmlDoc.createElementNS(NS, "c");
+                        targetCell.setAttribute("r", cellRef);
+                        targetRow.appendChild(targetCell);
+                    }
+
+                    while (targetCell.firstChild) targetCell.removeChild(targetCell.firstChild);
+
+                    if (val === "" || val === null || val === undefined) {
+                        targetCell.removeAttribute("t");
+                        return;
+                    }
+
+                    if (isNum && !isNaN(val)) {
+                        targetCell.removeAttribute("t");
+                        let v = xmlDoc.createElementNS(NS, "v");
+                        v.textContent = String(val);
+                        targetCell.appendChild(v);
+                    } else {
+                        targetCell.setAttribute("t", "inlineStr");
+                        let isElem = xmlDoc.createElementNS(NS, "is");
+                        let tElem = xmlDoc.createElementNS(NS, "t");
+                        tElem.textContent = String(val);
+                        isElem.appendChild(tElem);
+                        targetCell.appendChild(isElem);
+                    }
+                }
+
+                // تعبئة خلايا الاستمارة بالبيانات
+                setCell('K1', subName);
+                setCell('B5', INFO.manager || "");
 
                 const gradeNames = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
                 let tC = 0, tR = 0;
-                let startRowClass = 5; 
+                let startRowClass = 5;
 
                 gradeNames.forEach(g => {
-                    if(data.targetGrades.includes(g) && PLAN[g] && PLAN[g].classes) {
-                        let r = 0; 
-                        if(PLAN[g].subjects) {
+                    if (data.targetGrades.includes(g) && PLAN[g] && PLAN[g].classes) {
+                        let r = 0;
+                        if (PLAN[g].subjects) {
                             data.subKeys.forEach(k => r += (parseInt(PLAN[g].subjects[k]) || 0));
                         }
-                        tC += parseInt(PLAN[g].classes); 
-                        tR += (parseInt(PLAN[g].classes) * r);
-                        worksheet.getCell(`G${startRowClass}`).value = toAr(PLAN[g].classes);
-                        worksheet.getCell(`H${startRowClass}`).value = toAr(parseInt(PLAN[g].classes) * r);
+                        const clsCount = parseInt(PLAN[g].classes) || 0;
+                        const periodsCount = clsCount * r;
+                        tC += clsCount;
+                        tR += periodsCount;
+                        setCell(`G${startRowClass}`, clsCount, true);
+                        setCell(`H${startRowClass}`, periodsCount, true);
                     } else {
-                        worksheet.getCell(`G${startRowClass}`).value = "";
-                        worksheet.getCell(`H${startRowClass}`).value = "";
+                        setCell(`G${startRowClass}`, "");
+                        setCell(`H${startRowClass}`, "");
                     }
                     startRowClass++;
                 });
 
-                worksheet.getCell('G11').value = toAr(tC);
-                worksheet.getCell('H11').value = toAr(tR);
+                setCell('G11', tC, true);
+                setCell('H11', tR, true);
 
                 let tTea = 0, tQuo = 0;
                 const cadreOrder = ["معلم مساعد", "معلم", "معلم أول", "معلم أول أ", "معلم خبير", "كبير معلمين"];
-                let startRowCadre = 5; 
+                let startRowCadre = 5;
 
                 cadreOrder.forEach(c => {
                     const count = data.cadreStats[c] ? data.cadreStats[c].count : 0;
                     const quota = data.cadreStats[c] ? data.cadreStats[c].quota : 0;
                     tTea += count; tQuo += quota;
-                    worksheet.getCell(`J${startRowCadre}`).value = count > 0 ? toAr(count) : "";
-                    worksheet.getCell(`K${startRowCadre}`).value = quota > 0 ? toAr(quota) : "";
+                    setCell(`J${startRowCadre}`, count > 0 ? count : "", true);
+                    setCell(`K${startRowCadre}`, quota > 0 ? quota : "", true);
                     startRowCadre++;
                 });
 
-                worksheet.getCell('J11').value = toAr(tTea);
-                worksheet.getCell('K11').value = toAr(tQuo);
+                setCell('J11', tTea, true);
+                setCell('K11', tQuo, true);
 
                 const diff = tQuo - tR;
-                worksheet.getCell('L5').value = diff < 0 ? toAr(Math.abs(diff)) : "";
-                worksheet.getCell('L9').value = diff > 0 ? toAr(diff) : "";
+                setCell('L5', diff < 0 ? Math.abs(diff) : "", true);
+                setCell('L9', diff > 0 ? diff : "", true);
 
                 let startRowList = 15;
-                data.teachersList.sort((a,b)=>a.name.localeCompare(b.name,'ar')).forEach((t, i) => {
-                    worksheet.getCell(`A${startRowList}`).value = toAr(i+1);
-                    worksheet.getCell(`B${startRowList}`).value = t.name || "";
-                    worksheet.getCell(`C${startRowList}`).value = t.code || "";
-                    worksheet.getCell(`D${startRowList}`).value = t.fin_degree || ""; 
-                    worksheet.getCell(`E${startRowList}`).value = t.sci_lit || "";
-                    worksheet.getCell(`F${startRowList}`).value = t.cadre_job || ""; 
-                    worksheet.getCell(`G${startRowList}`).value = t.hire_date || "";
-                    worksheet.getCell(`H${startRowList}`).value = t.status || "";
-                    worksheet.getCell(`I${startRowList}`).value = t.qualification || "";
-                    worksheet.getCell(`J${startRowList}`).value = t.qual_date || "";
-                    worksheet.getCell(`K${startRowList}`).value = t.nid || "";
-                    worksheet.getCell(`L${startRowList}`).value = t.address || ""; 
+                data.teachersList.sort((a, b) => a.name.localeCompare(b.name, 'ar')).forEach((t, i) => {
+                    setCell(`A${startRowList}`, i + 1, true);
+                    setCell(`B${startRowList}`, t.name || "");
+                    setCell(`C${startRowList}`, t.code || "");
+                    setCell(`D${startRowList}`, t.fin_degree || "");
+                    setCell(`E${startRowList}`, t.sci_lit || "");
+                    setCell(`F${startRowList}`, t.cadre_job || "");
+                    setCell(`G${startRowList}`, t.hire_date || "");
+                    setCell(`H${startRowList}`, t.status || "");
+                    setCell(`I${startRowList}`, t.qualification || "");
+                    setCell(`J${startRowList}`, t.qual_date || "");
+                    setCell(`K${startRowList}`, t.nid || "");
+                    setCell(`L${startRowList}`, t.address || "");
                     startRowList++;
                 });
 
-                for(let r = startRowList; r <= 35; r++) {
-                    ['A','B','C','D','E','F','G','H','I','J','K','L'].forEach(col => {
-                        worksheet.getCell(`${col}${r}`).value = "";
+                for (let r = startRowList; r <= 35; r++) {
+                    ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'].forEach(col => {
+                        setCell(`${col}${r}`, "");
                     });
                 }
 
-                const buffer = await workbook.xlsx.writeBuffer();
-                const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-                saveAs(blob, `استمارة_ميزانية_${subName}.xlsx`);
+                // حفظ الـ XML في الـ ZIP وتوليد الملف
+                const serializer = new XMLSerializer();
+                const newSheetXml = serializer.serializeToString(xmlDoc);
+                zip.file(targetSheetPath, newSheetXml);
 
-            } catch(e) {
+                const finalBlob = await zip.generateAsync({
+                    type: "blob",
+                    mimeType: "application/vnd.ms-excel.sheet.macroEnabled.12"
+                });
+
+                saveAs(finalBlob, `استمارة_ميزانية_${subName}.xlsm`);
+
+            } catch (e) {
                 console.error(e);
-                alert("❌ حدث خطأ أثناء الاتصال وتعبئة قالب الإكسيل: " + e.message);
+                alert("❌ حدث خطأ أثناء تجهيز الملف: " + e.message);
             } finally {
                 loader.style.display = "none";
             }
@@ -816,12 +1200,12 @@
         function initPlanTable() {
             const h = document.getElementById("plan-head"); const b = document.getElementById("plan-rows");
             const subjectsMap = { arabic:"عربي", religion:"دين", math:"رياضة", english:"إنجليزي", science:"علوم", social:"دراسات", tech:"تكنولوجيا", skills:"مهارات", music:"موسيقى", pe:"رياضية", art:"فنية", discover:"متعدد", tokkatsu:"توكاتسو" };
-            h.innerHTML = `<tr><th rowspan="2">الصف</th><th rowspan="2">الفصول</th><th colspan="13">الحصص الأسبوعية</th></tr><tr>${Object.values(subjectsMap).map(s=>`<th>${s}</th>`).join('')}</tr>`;
+            h.innerHTML = `<tr><th rowspan="2">الصف</th><th rowspan="2">الفصول</th><th colspan="13">الحصص الأسبوعية المعتمدة للمواد</th></tr><tr>${Object.values(subjectsMap).map(s=>`<th>${s}</th>`).join('')}</tr>`;
             b.innerHTML = ""; 
             ["الأول","الثاني","الثالث","الرابع","الخامس","السادس"].forEach(g => {
                 const savedClasses = (PLAN[g] && PLAN[g].classes) ? PLAN[g].classes : "";
                 let subsHtml = Object.keys(subjectsMap).map(s => `<td><input type="number" class="inp-sub" data-sub="${s}" value="${(PLAN[g] && PLAN[g].subjects && PLAN[g].subjects[s]) ? PLAN[g].subjects[s] : ""}"></td>`).join('');
-                b.innerHTML += `<tr data-grade="${g}"><td>${g}</td><td><input type="number" class="inp-classes" value="${savedClasses}"></td>${subsHtml}</tr>`;
+                b.innerHTML += `<tr data-grade="${g}"><td style="font-weight:900;">${g}</td><td><input type="number" class="inp-classes" value="${savedClasses}"></td>${subsHtml}</tr>`;
             });
         }
 
@@ -834,15 +1218,20 @@
             });
             
             try {
-                const { error } = await supabaseClient.from("system_capsules").upsert({
-                    id: "school_plan",
-                    data: d,
-                    updatedat: new Date().toLocaleString('ar-EG')
-                });
+                const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
+                if (mode === 'offline') {
+                    const req = indexedDB.open(DB_NAME, DB_VERSION);
+                    req.onsuccess = () => {
+                        const db = req.result;
+                        const tx = db.transaction('system_capsules', 'readwrite');
+                        tx.objectStore('system_capsules').put({ id: "school_plan", data: d });
+                    };
+                } else {
+                    const { error } = await sbClient.from("system_capsules").upsert({ id: "school_plan", data: d }, { onConflict: 'id' });
+                    if (error) throw error;
+                }
                 
-                if (error) throw error;
-                
-                alert("✅ تم حفظ واعتماد الخطة بنجاح!"); 
+                alert("✅ تم حفظ واعتماد خطة المدرسة بنجاح!"); 
                 location.reload();
             } catch (error) {
                 alert("❌ حدث خطأ أثناء الحفظ: " + error.message);
