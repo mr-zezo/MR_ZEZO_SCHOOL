@@ -2,103 +2,199 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إعداد الإشراف اليومي - منظومة زيزو</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>إعداد الإشراف اليومي - منظومة مستر زيزو</title>
+    
+    <!-- الخطوط والأيقونات -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Supabase & SweetAlert -->
+    <!-- مكتبات Supabase و SweetAlert2 و html2canvas -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         :root { 
-            --primary: #1e3a8a; --secondary: #3b82f6; --accent: #f59e0b;
-            --dark: #0f172a; --bg: #f8fafc; --surface: #ffffff;
-            --danger: #e11d48; --success: #10b981; --border: #cbd5e1;
-            --smart: #8b5cf6;
+            --primary: #1e3a8a;          
+            --primary-hover: #172554;
+            --secondary: #3b82f6;        
+            --accent: #f59e0b;           
+            --dark: #0f172a;             
+            --bg: #f8fafc;               
+            --surface: #ffffff;          
+            --danger: #e11d48;           
+            --success: #10b981;          
+            --border: #cbd5e1;           
+            --smart: #8b5cf6;            
         }
 
-        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
-        body { background-color: var(--bg); color: var(--dark); display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: var(--dark); display: flex; flex-direction: column; align-items: center; padding: 12px; min-height: 100vh; }
 
-        /* ================= الشريط العلوي ================= */
-        .top-nav { width: 100%; max-width: 1200px; background: var(--dark); padding: 15px 25px; border-radius: 12px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); flex-wrap: wrap; gap: 15px;}
-        .nav-title { display: flex; align-items: center; gap: 12px; font-size: 18px; font-weight: 900; color: #fcd34d; margin: 0; }
-        .nav-actions { display: flex; gap: 15px; align-items: center;}
-        
-        .quick-nav-select { padding: 8px 15px; border-radius: 8px; border: 1px solid #fcd34d; background: var(--primary); color: white; font-weight: bold; font-family: 'Cairo'; outline: none; cursor: pointer; }
+        /* ================= 1. الشريط العلوي ================= */
+        .top-nav {
+            width: 100%; max-width: 1200px; background: var(--dark); padding: 12px 20px;
+            border-radius: 12px; color: white; display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            flex-wrap: wrap; gap: 12px; border-bottom: 4px solid var(--primary);
+        }
+        .nav-title { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 900; color: #fcd34d; margin: 0; }
+        .nav-title i { font-size: 22px; }
+
+        .mode-badge {
+            padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 900;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .mode-online { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+        .mode-offline { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+
+        .nav-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .quick-nav-select {
+            padding: 6px 12px; border-radius: 8px; border: 1px solid #fcd34d; background: var(--primary);
+            color: white; font-weight: 800; font-family: 'Cairo'; outline: none; cursor: pointer; font-size: 12px;
+        }
         .quick-nav-select option { background: white; color: black; }
 
-        .btn-nav { text-decoration: none; color: white; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 900; transition: 0.2s; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,0.2);}
-        .btn-nav:hover { background: rgba(255,255,255,0.2); }
+        .btn-nav {
+            text-decoration: none; color: white; background: rgba(255,255,255,0.1); padding: 6px 14px;
+            border-radius: 8px; font-size: 12px; font-weight: 800; transition: 0.2s;
+            display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.2); cursor: pointer;
+        }
+        .btn-nav:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+        .btn-shot-nav { background: #475569 !important; border-color: #64748b !important; }
 
-        /* ================= أدوات التحكم والمساعد الذكي ================= */
-        .controls-bar { width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 15px;}
+        /* ================= 2. شريط التحكم والعمليات ================= */
+        .controls-bar {
+            width: 100%; max-width: 1200px; display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 15px; background: white; padding: 12px 18px;
+            border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            flex-wrap: wrap; gap: 12px;
+        }
         
-        .day-group { display: flex; align-items: center; gap: 10px; }
-        .day-group label { font-weight: 900; font-size: 15px; color: var(--primary); }
-        .day-selector { padding: 10px 20px; font-size: 15px; font-weight: 900; border-radius: 8px; border: 2px solid var(--primary); outline: none; background: #eff6ff; color: var(--primary); cursor: pointer;}
+        .day-group { display: flex; align-items: center; gap: 8px; }
+        .day-group label { font-weight: 900; font-size: 14px; color: var(--primary); }
+        .day-selector {
+            padding: 8px 16px; font-size: 14px; font-weight: 900; border-radius: 8px;
+            border: 2px solid var(--primary); outline: none; background: #eff6ff;
+            color: var(--primary); cursor: pointer;
+        }
         
-        .btn-smart { background: linear-gradient(135deg, var(--smart), #6d28d9); color: white; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 900; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); transition: 0.2s; animation: pulseSmart 2s infinite;}
-        .btn-smart:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); }
-        @keyframes pulseSmart { 0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(139, 92, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); } }
+        .btn-smart {
+            background: linear-gradient(135deg, var(--smart), #6d28d9); color: white;
+            border: none; padding: 10px 18px; border-radius: 8px; font-weight: 900;
+            font-size: 13px; cursor: pointer; display: inline-flex; align-items: center;
+            gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); transition: 0.2s;
+            animation: pulseSmart 2s infinite;
+        }
+        .btn-smart:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(139, 92, 246, 0.4); }
+        @keyframes pulseSmart {
+            0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(139, 92, 246, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
+        }
 
-        .btn-save { background: var(--success); color: white; border: none; padding: 12px 30px; border-radius: 10px; font-weight: 900; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition: 0.2s; }
-        .btn-save:hover { transform: translateY(-2px); }
+        .btn-save {
+            background: var(--success); color: white; border: none; padding: 10px 20px;
+            border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transition: 0.2s;
+        }
+        .btn-save:hover { transform: translateY(-2px); background: #059669; }
 
-        /* ================= التبويبات ================= */
-        .tabs { display: flex; width: 100%; max-width: 1200px; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; padding: 15px; background: white; border: 2px solid var(--border); border-radius: 12px; font-size: 16px; font-weight: 900; color: #64748b; cursor: pointer; transition: 0.3s; }
-        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 15px rgba(30,58,138,0.2); }
+        /* ================= 3. التبويبات ================= */
+        .tabs { display: flex; width: 100%; max-width: 1200px; gap: 10px; margin-bottom: 15px; }
+        .tab-btn {
+            flex: 1; padding: 12px; background: white; border: 2px solid var(--border);
+            border-radius: 10px; font-size: 14px; font-weight: 900; color: #64748b;
+            cursor: pointer; transition: 0.25s;
+        }
+        .tab-btn.active {
+            background: var(--primary); color: white; border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(30,58,138,0.2);
+        }
 
-        /* ================= حاويات الإدخال ================= */
-        .tab-content { width: 100%; max-width: 1200px; display: none; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
-        .tab-content.active { display: grid; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        /* ================= 4. كروت المباني وتنسيق الإدخال ================= */
+        .tab-content {
+            width: 100%; max-width: 1200px; display: none;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 15px;
+        }
+        .tab-content.active { display: grid; animation: fadeIn 0.25s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        .building-card { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
-        .building-header { background: #f8fafc; padding: 12px 15px; font-weight: 900; font-size: 15px; color: var(--primary); border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 8px; }
-        .building-body { padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .building-card {
+            background: white; border-radius: 12px; border: 1.5px solid var(--border);
+            overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        .building-header {
+            background: #f1f5f9; padding: 10px 14px; font-weight: 900; font-size: 14px;
+            color: var(--primary); border-bottom: 2px solid var(--border);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .building-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 
-        .input-group { display: flex; flex-direction: column; gap: 5px; }
-        .input-group label { font-size: 13px; font-weight: bold; color: #475569; }
-        .search-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; font-weight: 900; outline: none; transition: 0.3s; background: #f1f5f9; color: var(--primary);}
-        .search-input:focus { border-color: var(--accent); background: white; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1); }
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-group label { font-size: 12px; font-weight: 800; color: #334155; }
+        
+        .search-input {
+            width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1;
+            font-size: 14px; font-weight: 900; outline: none; transition: 0.2s;
+            background: #ffffff; color: #0f172a;
+        }
+        .search-input:focus { border-color: var(--accent); background: white; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15); }
 
         datalist { font-family: 'Cairo'; }
 
-        /* ================= نافذة المساعد الذكي ================= */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        /* ================= 5. نافذة المساعد الذكي ================= */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px;
+        }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: var(--bg); width: 100%; max-width: 800px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-content {
+            background: var(--bg); width: 100%; max-width: 800px; border-radius: 16px;
+            overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
+            display: flex; flex-direction: column; max-height: 90vh;
+        }
         
-        .modal-header { background: linear-gradient(135deg, var(--smart), #6d28d9); color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h2 { font-size: 18px; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 10px;}
-        .btn-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 35px; height: 35px; border-radius: 8px; font-size: 20px; cursor: pointer; display: flex; justify-content: center; align-items: center;}
+        .modal-header {
+            background: linear-gradient(135deg, var(--smart), #6d28d9); color: white;
+            padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-header h2 { font-size: 16px; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 8px; }
+        .btn-close {
+            background: rgba(255,255,255,0.2); border: none; color: white;
+            width: 32px; height: 32px; border-radius: 6px; font-size: 18px;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+        }
         
-        .modal-body { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px;}
+        .modal-body { padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         
-        .smart-controls { display: flex; gap: 15px; background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
-        .smart-controls select { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-weight: 900; outline: none; font-size: 14px;}
-        .btn-generate { background: var(--dark); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; transition: 0.2s;}
-        .btn-generate:hover { background: var(--primary); }
+        .smart-controls { display: flex; gap: 10px; background: white; padding: 12px; border-radius: 10px; border: 1px solid var(--border); }
+        .smart-controls select { flex: 1; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); font-weight: 900; outline: none; font-size: 13px; }
+        
+        .suggestion-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+        .sug-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 12px; border-top: 4px solid var(--smart); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .sug-loc { font-size: 13px; font-weight: 900; color: var(--dark); margin-bottom: 8px; border-bottom: 1px dashed var(--border); padding-bottom: 4px; }
+        
+        .sug-teacher {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f8fafc; padding: 6px 10px; border-radius: 6px;
+            margin-bottom: 6px; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s;
+        }
+        .sug-teacher:hover { background: #dcfce7; border-color: #86efac; transform: translateX(-4px); }
+        .sug-t-name { font-size: 12px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 6px; }
+        .sug-t-score { font-size: 10px; font-weight: bold; background: var(--smart); color: white; padding: 2px 6px; border-radius: 10px; }
 
-        .suggestion-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
-        .sug-card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; border-top: 4px solid var(--smart); box-shadow: 0 4px 6px rgba(0,0,0,0.02);}
-        .sug-loc { font-size: 15px; font-weight: 900; color: var(--dark); margin-bottom: 10px; border-bottom: 1px dashed var(--border); padding-bottom: 5px;}
-        
-        .sug-teacher { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s;}
-        .sug-teacher:hover { background: #dcfce7; border-color: #86efac; transform: translateX(-5px);}
-        .sug-t-name { font-size: 14px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 8px;}
-        .sug-t-score { font-size: 11px; font-weight: bold; background: var(--smart); color: white; padding: 2px 8px; border-radius: 12px; }
+        .sug-teacher.assigned { background: var(--success) !important; border-color: var(--success) !important; color: white !important; pointer-events: none; }
+        .sug-teacher.assigned .sug-t-name { color: white !important; }
+        .sug-teacher.assigned .sug-t-score { background: rgba(255,255,255,0.3) !important; color: white !important; }
 
-        /* ستايل المعلم الذي تم تسكينه بنجاح */
-        .sug-teacher.assigned { background: var(--success); border-color: var(--success); color: white; pointer-events: none; transform: none;}
-        .sug-teacher.assigned .sug-t-name { color: white; }
-        .sug-teacher.assigned .sug-t-score { background: rgba(255,255,255,0.3); color: white; }
-
-        .btn-finish-smart { background: var(--dark); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 16px; cursor: pointer; margin-top: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.2s;}
+        .btn-finish-smart {
+            background: var(--dark); color: white; border: none; padding: 12px;
+            border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer;
+            margin-top: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;
+        }
         .btn-finish-smart:hover { background: var(--primary); }
 
         @media (max-width: 768px) {
@@ -113,43 +209,58 @@
 
     <datalist id="teachers-list"></datalist>
 
+    <!-- 1. شريط التنقل العلوي -->
     <nav class="top-nav">
-        <h1 class="nav-title"><i class="fa-solid fa-clipboard-user"></i> إعداد جداول الإشراف</h1>
+        <h1 class="nav-title"><i class="fa-solid fa-clipboard-user"></i> إعداد جداول الإشراف اليومي</h1>
+        
+        <div id="system-mode-badge" class="mode-badge mode-online">
+            <i class="fa-solid fa-wifi"></i> <span>متصل بالسحابة</span>
+        </div>
+
         <div class="nav-actions">
+            <button onclick="takeSupervisionScreenshot()" class="btn-nav btn-shot-nav" title="التقاط وحفظ صورة عالية الوضوح">
+                <i class="fa-solid fa-camera"></i> لقطة شاشة
+            </button>
+
             <select class="quick-nav-select" onchange="if(this.value) window.location.href=this.value;">
                 <option value="" disabled selected>🚀 انتقال سريع...</option>
                 <option value="index.html">الرئيسية</option>
                 <option value="schedule.html">الجدول المدرسي</option>
+                <option value="general-schedule.html">الجدول العام الشامل</option>
                 <option value="school-map.html">خريطة المبنى</option>
                 <option value="supervisor.html">بوابة المشرف العام</option>
             </select>
+            <a href="index.html" class="btn-nav"><i class="fa-solid fa-house"></i> الرئيسية</a>
         </div>
     </nav>
 
+    <!-- 2. شريط التحكم والعمليات -->
     <div class="controls-bar">
         <div class="day-group">
-            <label>إعداد إشراف يوم:</label>
+            <label><i class="fa-regular fa-calendar-check"></i> إعداد إشراف يوم:</label>
             <select class="day-selector" id="day-select" onchange="loadSupervisionData()">
                 <option value="الاحد">الأحد</option><option value="الاثنين">الإثنين</option>
                 <option value="الثلاثاء">الثلاثاء</option><option value="الاربعاء">الأربعاء</option>
                 <option value="الخميس">الخميس</option>
             </select>
         </div>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button class="btn-smart" onclick="openSmartAssistant()"><i class="fa-solid fa-wand-magic-sparkles"></i> المساعد الذكي للتوزيع</button>
-            <button class="btn-save" onclick="saveSupervisionData()"><i class="fa-solid fa-floppy-disk"></i> حفظ الإشراف بالسحابة</button>
+            <button class="btn-save" onclick="saveSupervisionData()"><i class="fa-solid fa-floppy-disk"></i> حفظ بالسحابة</button>
+            <button onclick="takeSupervisionScreenshot()" class="btn-nav" style="background:#475569;"><i class="fa-solid fa-camera"></i> صورة الجدول</button>
         </div>
     </div>
 
+    <!-- 3. أزرار التبويب بين المرحلتين -->
     <div class="tabs">
         <button class="tab-btn active" id="tab-btn-lower" onclick="switchTab('lower')">إشراف الصفوف الأولى (1 - 3)</button>
         <button class="tab-btn" id="tab-btn-upper" onclick="switchTab('upper')">إشراف الصفوف العليا (4 - 6)</button>
     </div>
 
-    <!-- ================= شاشة الصفوف الأولى ================= -->
+    <!-- ================= 4. شاشة الصفوف الأولى ================= -->
     <div id="tab-lower" class="tab-content active">
         <div class="building-card">
-            <div class="building-header"><i class="fa-solid fa-star"></i> القيادة والفناء</div>
+            <div class="building-header"><i class="fa-solid fa-star" style="color:var(--accent);"></i> القيادة والفناء</div>
             <div class="building-body">
                 <div class="input-group"><label>المشرف العام</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="general" placeholder="ابحث بالاسم..."></div>
                 <div class="input-group"><label>مشرف فناء (1)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="yard_1" placeholder="ابحث بالاسم..."></div>
@@ -185,10 +296,10 @@
         </div>
     </div>
 
-    <!-- ================= شاشة الصفوف العليا ================= -->
+    <!-- ================= 5. شاشة الصفوف العليا ================= -->
     <div id="tab-upper" class="tab-content">
         <div class="building-card">
-            <div class="building-header"><i class="fa-solid fa-star"></i> القيادة والفناء</div>
+            <div class="building-header"><i class="fa-solid fa-star" style="color:var(--accent);"></i> القيادة والفناء</div>
             <div class="building-body">
                 <div class="input-group"><label>المشرف العام</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="general" placeholder="ابحث بالاسم..."></div>
                 <div class="input-group"><label>مشرف فناء (1)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="yard_1" placeholder="ابحث بالاسم..."></div>
@@ -208,7 +319,7 @@
         </div>
     </div>
 
-    <!-- ================= نافذة المساعد الذكي المستمرة ================= -->
+    <!-- ================= 6. نافذة المساعد الذكي ================= -->
     <div class="modal-overlay" id="smartModal" onclick="if(event.target===this) this.classList.remove('active')">
         <div class="modal-content">
             <div class="modal-header">
@@ -216,7 +327,7 @@
                 <button class="btn-close" onclick="document.getElementById('smartModal').classList.remove('active')">&times;</button>
             </div>
             <div class="modal-body">
-                <div style="background:#f0fdf4; color:#166534; padding:10px; border-radius:8px; font-size:13px; font-weight:bold; margin-bottom:15px; border:1px solid #bbf7d0;">
+                <div style="background:#f0fdf4; color:#166534; padding:10px 14px; border-radius:8px; font-size:12px; font-weight:800; border:1px solid #bbf7d0;">
                     <i class="fa-solid fa-circle-info"></i> اضغط على اسم المعلم لتسكينه في الدور فوراً. يمكنك الاستمرار في اختيار المعلمين لباقي الأدوار دون إغلاق النافذة!
                 </div>
                 
@@ -229,17 +340,15 @@
                     </select>
                 </div>
 
-                <div class="suggestion-grid" id="suggestion-container" style="margin-top:20px;">
-                    <!-- تولد برمجياً -->
-                </div>
+                <div class="suggestion-grid" id="suggestion-container"></div>
 
                 <button class="btn-finish-smart" onclick="document.getElementById('smartModal').classList.remove('active')"><i class="fa-solid fa-check-double"></i> تم الانتهاء من التوزيع</button>
             </div>
         </div>
     </div>
 
+    <!-- ================= المحرك البرمجي وتقنية التصوير الفائق (HD Engine) ================= -->
     <script>
-        // ================= إعدادات Supabase =================
         const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -247,7 +356,6 @@
         let ALL_TEACHERS = [];
         let SCHOOL_MAP = [];
 
-        // خريطة لربط أسماء الأدوار في (خريطة المدرسة) مع أكواد الإدخال في (صفحة الإشراف)
         const LOC_MAPPING = {
             "المبنى القديم_الدور الأرضي": "old_ground", "المبنى القديم_الدور الثاني": "old_f2", "المبنى القديم_الدور الثالث": "old_f3",
             "المبنى الشرقي_الدور الأرضي": "east_ground", "المبنى الشرقي_الدور الثاني": "east_f2", "المبنى الشرقي_الدور الثالث": "east_f3", "المبنى الشرقي_الدور الرابع": "east_f4",
@@ -255,78 +363,120 @@
         };
 
         window.addEventListener('DOMContentLoaded', async () => {
+            initSystemModeUI();
             await fetchBaseData();
             loadSupervisionData();
         });
+
+        function initSystemModeUI() {
+            const mode = localStorage.getItem('APP_MODE') || 'ONLINE';
+            const badge = document.getElementById('system-mode-badge');
+            if (mode === 'ONLINE') {
+                badge.className = 'mode-badge mode-online';
+                badge.innerHTML = '<i class="fa-solid fa-wifi"></i> <span>متصل بالسحابة</span>';
+            } else {
+                badge.className = 'mode-badge mode-offline';
+                badge.innerHTML = '<i class="fa-solid fa-plane"></i> <span>يعمل أوفلاين (محلي)</span>';
+            }
+        }
 
         function switchTab(stage) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            // إصلاح الخطأ: تحديد الزر الصحيح الذي تم ضغطه بناءً على المرحلة
             document.getElementById(`tab-btn-${stage}`).classList.add('active');
             document.getElementById(`tab-${stage}`).classList.add('active');
         }
 
-        // ================= جلب البيانات الأساسية =================
         async function fetchBaseData() {
-            try {
-                const [resTea, resCon, resMap] = await Promise.all([
-                    supabaseClient.from("teachers").select("name, cadre_job, schedule").eq("emp_status", "على رأس العمل"),
-                    supabaseClient.from("contract_teachers").select("name, schedule").eq("status", "يعمل"),
-                    supabaseClient.from("school_map").select("map_data").eq("id", "main_layout").maybeSingle()
-                ]);
+            const mode = localStorage.getItem('APP_MODE') || 'ONLINE';
+            let teachersData = [], contractData = [], mapData = [];
 
-                ALL_TEACHERS = [];
-                let datalistHtml = "";
+            if (mode === 'ONLINE' && supabaseClient) {
+                try {
+                    const [resTea, resCon, resMap] = await Promise.all([
+                        supabaseClient.from("teachers").select("name, cadre_job, schedule").eq("emp_status", "على رأس العمل"),
+                        supabaseClient.from("contract_teachers").select("name, schedule").eq("status", "يعمل"),
+                        supabaseClient.from("school_map").select("map_data").eq("id", "main_layout").maybeSingle()
+                    ]);
 
-                const isTeacher = (job) => !(job||"").replace(/\s+/g,"").match(/عامل|اداري|اخصائي|مشرف|سكرتير|فني|خدمات/);
-                
-                (resTea.data || []).forEach(t => {
-                    if(isTeacher(t.cadre_job)) {
-                        ALL_TEACHERS.push({ name: t.name, short_name: t.name.split(' ')[0] + " " + t.name.split(' ')[t.name.split(' ').length-1], schedule: t.schedule||{} });
-                        datalistHtml += `<option value="${t.name}">`;
+                    if (!resTea.error && resTea.data) {
+                        teachersData = resTea.data;
+                        localStorage.setItem('local_teachers', JSON.stringify(teachersData));
                     }
-                });
-                (resCon.data || []).forEach(t => {
-                    ALL_TEACHERS.push({ name: t.name, short_name: t.name.split(' ')[0] + " " + t.name.split(' ')[t.name.split(' ').length-1], schedule: t.schedule||{} });
-                    datalistHtml += `<option value="${t.name}">`;
-                });
-
-                document.getElementById("teachers-list").innerHTML = datalistHtml;
-
-                if(resMap.data && resMap.data.map_data) {
-                    SCHOOL_MAP = resMap.data.map_data;
+                    if (!resCon.error && resCon.data) {
+                        contractData = resCon.data;
+                        localStorage.setItem('local_contract_teachers', JSON.stringify(contractData));
+                    }
+                    if (resMap.data && resMap.data.map_data) {
+                        mapData = resMap.data.map_data;
+                        localStorage.setItem('local_school_map', JSON.stringify(mapData));
+                    }
+                } catch(e) {
+                    console.warn("استخدام التخزين المحلي.");
                 }
-            } catch(e) { console.error("Error fetching base data"); }
+            }
+
+            if (teachersData.length === 0) teachersData = JSON.parse(localStorage.getItem('local_teachers')) || [];
+            if (contractData.length === 0) contractData = JSON.parse(localStorage.getItem('local_contract_teachers')) || [];
+            if (mapData.length === 0) mapData = JSON.parse(localStorage.getItem('local_school_map')) || [];
+
+            ALL_TEACHERS = [];
+            let datalistHtml = "";
+            const isTeacher = (job) => !(job||"").replace(/\s+/g,"").match(/عامل|اداري|اخصائي|مشرف|سكرتير|فني|خدمات/);
+            
+            teachersData.forEach(t => {
+                if(isTeacher(t.cadre_job)) {
+                    ALL_TEACHERS.push({ name: t.name, schedule: t.schedule||{} });
+                    datalistHtml += `<option value="${t.name}">`;
+                }
+            });
+            contractData.forEach(t => {
+                ALL_TEACHERS.push({ name: t.name, schedule: t.schedule||{} });
+                datalistHtml += `<option value="${t.name}">`;
+            });
+
+            document.getElementById("teachers-list").innerHTML = datalistHtml;
+            SCHOOL_MAP = mapData;
         }
 
-        // ================= تحميل وحفظ الإشراف (التقليدي) =================
         async function loadSupervisionData() {
             document.querySelectorAll('.search-input').forEach(inp => inp.value = "");
             const day = document.getElementById("day-select").value;
+            const mode = localStorage.getItem('APP_MODE') || 'ONLINE';
             
-            Swal.fire({ title: 'جاري التحميل...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            let supervisionRecords = [];
 
-            try {
-                const { data } = await supabaseClient.from("supervision").select("*").eq("day", day);
-                if (data && data.length > 0) {
-                    data.forEach(record => {
-                        const stage = record.stage;
-                        const assignments = record.data || {};
-                        for(let loc in assignments) {
-                            let input = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${loc}"]`);
-                            if(input) input.value = assignments[loc];
-                        }
-                    });
-                }
-                Swal.close();
-            } catch(e) { Swal.fire('خطأ', 'فشل التحميل', 'error'); }
+            if (mode === 'ONLINE' && supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient.from("supervision").select("*").eq("day", day);
+                    if (!error && data) {
+                        supervisionRecords = data;
+                        localStorage.setItem(`local_supervision_${day}`, JSON.stringify(data));
+                    }
+                } catch(e) {}
+            }
+
+            if (supervisionRecords.length === 0) {
+                supervisionRecords = JSON.parse(localStorage.getItem(`local_supervision_${day}`)) || [];
+            }
+
+            if (supervisionRecords.length > 0) {
+                supervisionRecords.forEach(record => {
+                    const stage = record.stage;
+                    const assignments = record.data || {};
+                    for(let loc in assignments) {
+                        let input = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${loc}"]`);
+                        if(input) input.value = assignments[loc];
+                    }
+                });
+            }
         }
 
         async function saveSupervisionData() {
             const day = document.getElementById("day-select").value;
-            let lowerData = {}; let upperData = {};
+            let lowerData = {}; 
+            let upperData = {};
 
             document.querySelectorAll('.search-input[data-stage="lower"]').forEach(inp => {
                 if(inp.value.trim() !== "") lowerData[inp.getAttribute("data-loc")] = inp.value.trim();
@@ -340,19 +490,120 @@
                 { id: `${day}_upper`, day: day, stage: 'upper', data: upperData }
             ];
 
-            Swal.fire({ title: 'جاري الحفظ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            localStorage.setItem(`local_supervision_${day}`, JSON.stringify(recordsToUpsert));
 
-            try {
-                await supabaseClient.from("supervision").upsert(recordsToUpsert);
-                Swal.fire({ icon: 'success', title: 'تم الحفظ بنجاح!', timer: 1500, showConfirmButton: false });
-            } catch(e) { Swal.fire('خطأ', 'فشل الحفظ', 'error'); }
+            const mode = localStorage.getItem('APP_MODE') || 'ONLINE';
+            if (mode === 'ONLINE' && supabaseClient) {
+                try {
+                    await supabaseClient.from("supervision").upsert(recordsToUpsert);
+                    Swal.fire({ icon: 'success', title: 'تم الحفظ بالسحابة بنجاح!', timer: 1500, showConfirmButton: false });
+                } catch(e) { 
+                    Swal.fire({ icon: 'warning', title: 'تم الحفظ محلياً على جهازك', text: 'تعذر الاتصال بالسحابة حالياً.' });
+                }
+            } else {
+                Swal.fire({ icon: 'success', title: 'تم الحفظ محلياً بنجاح (أوفلاين)', timer: 1500, showConfirmButton: false });
+            }
         }
 
-        // ================= المساعد الذكي المستمر =================
+        // ================= 🔥 محرك لقطة الشاشة فائق الدقة والوضوح (HD Direct Render) 🔥 =================
+        function takeSupervisionScreenshot() {
+            const daySelect = document.getElementById("day-select");
+            const dayText = daySelect.options[daySelect.selectedIndex].text;
+            const isLower = document.getElementById('tab-btn-lower').classList.contains('active');
+            const stageText = isLower ? "الصفوف الأولى (1 - 3)" : "الصفوف العليا (4 - 6)";
+            const activeTab = isLower ? document.getElementById('tab-lower') : document.getElementById('tab-upper');
+
+            // 1. تجميع البيانات وبناء كارت نقي 100% بألوان صلبة
+            let cardsHtml = "";
+            const cards = activeTab.querySelectorAll('.building-card');
+            
+            cards.forEach(card => {
+                const bldgTitle = card.querySelector('.building-header').innerText.trim();
+                const rows = card.querySelectorAll('.input-group');
+                
+                let rowsHtml = "";
+                rows.forEach(row => {
+                    const label = row.querySelector('label').innerText.trim();
+                    const val = row.querySelector('input').value.trim() || "—";
+                    
+                    rowsHtml += `
+                        <div style="margin-bottom: 8px; text-align: right;">
+                            <div style="color: #000000 !important; font-weight: 900 !important; font-size: 13px !important; margin-bottom: 2px !important;">${label}</div>
+                            <div style="background: #ffffff !important; color: #000000 !important; border: 2px solid #000000 !important; border-radius: 6px !important; padding: 7px 10px !important; font-size: 16px !important; font-weight: 900 !important; text-align: center !important; font-family: 'Cairo', Arial, sans-serif !important; min-height: 38px !important; display: flex !important; align-items: center !important; justify-content: center !important;">
+                                ${val}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                cardsHtml += `
+                    <div style="background: #ffffff !important; border: 2.5px solid #1e3a8a !important; border-radius: 10px !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; box-shadow: none !important;">
+                        <div style="background: #1e3a8a !important; color: #ffffff !important; font-weight: 900 !important; font-size: 16px !important; padding: 9px 12px !important; text-align: center !important; font-family: 'Cairo', Arial, sans-serif !important;">
+                            ${bldgTitle}
+                        </div>
+                        <div style="padding: 12px 10px !important; background: #ffffff !important; display: flex !important; flex-direction: column !important; gap: 4px !important;">
+                            ${rowsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            // 2. إنشاء لوحة تصوير مخصصة ومباشرة (Direct Render Canvas)
+            const printContainer = document.createElement('div');
+            printContainer.style.position = 'fixed';
+            printContainer.style.top = '-9999px';
+            printContainer.style.left = '0';
+            printContainer.style.width = '1200px';
+            printContainer.style.background = '#ffffff';
+            printContainer.style.padding = '20px';
+            printContainer.style.direction = 'rtl';
+            printContainer.style.fontFamily = "'Cairo', Arial, sans-serif";
+
+            printContainer.innerHTML = `
+                <div style="background: #1e3a8a !important; color: #ffffff !important; padding: 15px 25px !important; border-radius: 10px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 15px !important;">
+                    <div style="text-align: right !important;">
+                        <h3 style="margin: 0 !important; font-size: 18px !important; font-weight: 900 !important; color: #ffffff !important;">مدرسة الشهيد أشرف حبيب الابتدائية</h3>
+                        <div style="font-size: 13px !important; font-weight: 700 !important; color: #e2e8f0 !important; margin-top: 3px !important;">العام الدراسي ٢٠٢٦ / ٢٠٢٧</div>
+                    </div>
+                    <div style="text-align: left !important;">
+                        <h2 style="margin: 0 !important; font-size: 19px !important; font-weight: 900 !important; color: #fcd34d !important;">جدول الإشراف اليومي (${stageText})</h2>
+                        <div style="font-size: 14px !important; font-weight: 800 !important; color: #ffffff !important; margin-top: 3px !important;">يوم ${dayText}</div>
+                    </div>
+                </div>
+
+                <div style="display: grid !important; grid-template-columns: repeat(${cards.length}, 1fr) !important; gap: 15px !important;">
+                    ${cardsHtml}
+                </div>
+
+                <div style="background: #ffffff !important; border: 2px solid #000000 !important; border-radius: 8px !important; padding: 10px 20px !important; margin-top: 15px !important; display: flex !important; justify-content: space-between !important; font-weight: 900 !important; font-size: 14px !important; color: #000000 !important;">
+                    <div>تصميم وإعداد: أ. عبدالعزيز لولح (مستر زيزو)</div>
+                    <div>يعتمد / مدير المدرسة: .......................................</div>
+                </div>
+            `;
+
+            document.body.appendChild(printContainer);
+
+            // 3. تصوير اللوحة الصافية
+            html2canvas(printContainer, {
+                scale: 2,
+                backgroundColor: "#ffffff",
+                useCORS: true,
+                logging: false
+            }).then(canvas => {
+                document.body.removeChild(printContainer);
+                let link = document.createElement('a');
+                link.download = `جدول_الإشراف_${dayText}_${isLower ? 'صفوف_أولى' : 'صفوف_عليا'}.jpg`;
+                link.href = canvas.toDataURL("image/jpeg", 1.0);
+                link.click();
+            }).catch(err => {
+                document.body.removeChild(printContainer);
+                Swal.fire('خطأ', 'تعذر التقاط لقطة الشاشة', 'error');
+            });
+        }
+
+        // ================= 5. المساعد الذكي =================
         function openSmartAssistant() {
             document.getElementById("smart-day").value = document.getElementById("day-select").value;
-            
-            // إصلاح الخطأ: قراءة التبويب النشط بشكل صحيح
             const isLowerActive = document.getElementById('tab-btn-lower').classList.contains('active');
             document.getElementById("smart-stage").value = isLowerActive ? 'lower' : 'upper';
             
@@ -361,7 +612,7 @@
         }
 
         function isClassRoom(val) {
-            return /^[0-9٠-٩]+\s*\/\s*[0-9٠-٩]+$/.test(val);
+            return /^[0-9٠-٩]+\s*[\/\-]\s*[0-9٠-٩]+$/.test(val);
         }
 
         function generateSmartSuggestions() {
@@ -370,12 +621,11 @@
             const container = document.getElementById("suggestion-container");
             container.innerHTML = "";
 
-            if(SCHOOL_MAP.length === 0) {
-                container.innerHTML = "<div style='grid-column:1/-1; color:red; text-align:center; font-weight:bold;'>لم يتم إعداد (خريطة المبنى المدرسي) بعد! يرجى إعدادها أولاً ليعمل المساعد الذكي.</div>";
+            if(!SCHOOL_MAP || SCHOOL_MAP.length === 0) {
+                container.innerHTML = "<div style='grid-column:1/-1; color:var(--danger); text-align:center; font-weight:bold; padding:15px;'>لم يتم إعداد (خريطة المبنى المدرسي) بعد! يرجى إعدادها أولاً ليعمل المساعد الذكي.</div>";
                 return;
             }
 
-            // 1. استخراج الأدوار الخاصة بالمرحلة المحددة
             let targetFloors = [];
             SCHOOL_MAP.forEach(bldg => {
                 bldg.floors.forEach(floor => {
@@ -394,14 +644,13 @@
             });
 
             if(targetFloors.length === 0) {
-                container.innerHTML = "<div style='grid-column:1/-1; color:red; text-align:center; font-weight:bold;'>لم يتم العثور على أدوار مخصصة لهذه المرحلة في الخريطة.</div>";
+                container.innerHTML = "<div style='grid-column:1/-1; color:var(--danger); text-align:center; font-weight:bold; padding:15px;'>لم يتم العثور على أدوار مخصصة لهذه المرحلة في خريطة المبنى.</div>";
                 return;
             }
 
-            // 2. حساب النقاط لكل معلم في كل دور
             let html = "";
             targetFloors.forEach(floor => {
-                let scores = {}; // { "اسم المعلم": عدد الحصص }
+                let scores = {};
                 
                 ALL_TEACHERS.forEach(t => {
                     for(let p=1; p<=8; p++) {
@@ -412,7 +661,6 @@
                     }
                 });
 
-                // ترتيب المعلمين لأخذ أفضل 3
                 let topTeachers = Object.keys(scores)
                     .map(name => ({ name: name, score: scores[name] }))
                     .sort((a,b) => b.score - a.score)
@@ -422,7 +670,6 @@
                 if(topTeachers.length > 0) {
                     let medals = ['🥇', '🥈', '🥉'];
                     topTeachers.forEach((t, i) => {
-                        // إعطاء ID فريد للزر لكي نتمكن من تغيير لونه لاحقاً
                         const btnId = `sug_btn_${floor.locKey}_${i}`;
                         teachersHtml += `
                             <div class="sug-teacher" id="${btnId}" onclick="applySuggestion('${stage}', '${floor.locKey}', '${t.name}', '${btnId}')">
@@ -432,12 +679,12 @@
                         `;
                     });
                 } else {
-                    teachersHtml = "<div style='font-size:12px; color:#94a3b8; text-align:center;'>لا يوجد معلمون لديهم حصص بهذا الدور اليوم.</div>";
+                    teachersHtml = "<div style='font-size:11px; color:#94a3b8; text-align:center;'>لا يوجد معلمين لديهم حصص بهذا الدور اليوم.</div>";
                 }
 
                 html += `
                     <div class="sug-card">
-                        <div class="sug-loc">${floor.bldgName} - ${floor.floorName}</div>
+                        <div class="sug-loc"><i class="fa-solid fa-location-dot" style="color:var(--smart);"></i> ${floor.bldgName} - ${floor.floorName}</div>
                         ${teachersHtml}
                     </div>
                 `;
@@ -446,32 +693,24 @@
             container.innerHTML = html;
         }
 
-        // دالة التسكين التلقائي المستمرة
         function applySuggestion(stage, locKey, teacherName, btnId) {
-            // 1. مزامنة الواجهة الخلفية مع اختيارات المساعد
             document.getElementById("day-select").value = document.getElementById("smart-day").value;
             switchTab(stage);
 
-            // 2. إيجاد الحقل وكتابة الاسم في الخلفية
             let input = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${locKey}"]`);
             if(input) {
                 input.value = teacherName;
                 
-                // 3. تغيير لون الزر داخل المساعد ليؤكد أنه تم التسكين
                 const clickedBtn = document.getElementById(btnId);
-                
-                // إزالة التحديد عن أي زر آخر في نفس الكارت (نفس الدور)
                 const parentCard = clickedBtn.closest('.sug-card');
                 parentCard.querySelectorAll('.sug-teacher').forEach(b => {
                     b.classList.remove('assigned');
-                    b.innerHTML = b.innerHTML.replace(' ✔️', ''); // مسح علامة الصح القديمة
+                    b.innerHTML = b.innerHTML.replace(' ✔️', '');
                 });
 
-                // إضافة التحديد للزر المختار
                 clickedBtn.classList.add('assigned');
                 clickedBtn.querySelector('.sug-t-name').innerHTML += ' ✔️';
                 
-                // تأثير بصري في الخلفية
                 input.style.backgroundColor = "#dcfce7";
                 input.style.borderColor = "#16a34a";
                 input.style.color = "#166534";
@@ -480,11 +719,10 @@
                     input.style.backgroundColor = "";
                     input.style.borderColor = "";
                     input.style.color = "";
-                }, 1500);
+                }, 1200);
                 
-                // تنبيه خفيف جداً
-                const Toast = Swal.mixin({ toast: true, position: 'top', showConfirmButton: false, timer: 1000 });
-                Toast.fire({ icon: 'success', title: 'تم التسكين' });
+                const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1000 });
+                Toast.fire({ icon: 'success', title: 'تم تسكين المشرف' });
             }
         }
     </script>
