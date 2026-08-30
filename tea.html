@@ -100,9 +100,12 @@
         .section-title { font-size: 13px; font-weight: 900; color: var(--primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; border-bottom: 2px solid #eff6ff; padding-bottom: 4px; }
         .grid-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
         .field-group { display: flex; flex-direction: column; gap: 2px; }
-        .field-group label { font-size: 11.5px; font-weight: 800; color: #475569; }
         
-        .field-group input, .field-group select { 
+        /* التعديل لمنع قص الحروف في العناوين */
+        .field-group label { font-size: 12px; font-weight: 800; color: #475569; display: block; line-height: 1.6; padding-bottom: 2px; }
+        
+        /* التعديل لتوحيد تصميم الحقول العادية والحقول الوهمية أثناء الطباعة */
+        .field-group input, .field-group select, .print-input { 
             padding: 7px 10px; 
             font-size: 13px; 
             font-weight: 800; 
@@ -114,6 +117,9 @@
             color: var(--dark); 
             width: 100%;
         }
+        /* خصائص إضافية للحقل الوهمي ليطابق شكل الحقل الحقيقي تماماً */
+        .print-input { min-height: 35px; display: flex; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; }
+
         .field-group input:focus, .field-group select:focus { border-color: var(--info); box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15); }
         .readonly-field { background: #f1f5f9 !important; color: var(--primary); font-weight: 900; cursor: not-allowed; }
 
@@ -592,7 +598,6 @@
             window.open(currentTeacherData[fieldName], '_blank');
         }
 
-        // معالجة رفع الملفات والصور (أونلاين سحابي / أوفلاين مشفر Base64)
         async function handleFileUpload(inputElement, fieldName) {
             const nid = document.getElementById("teacher_nid").value.trim();
             const code = document.getElementById("teacher_code").value.trim();
@@ -618,7 +623,6 @@
             const mode = ZezoEngine.getMode();
 
             if (mode === 'offline') {
-                // حفظ أوفلاين عبر Base64
                 const reader = new FileReader();
                 reader.onload = async (e) => {
                     const dataUrl = e.target.result;
@@ -635,7 +639,6 @@
                 };
                 reader.readAsDataURL(file);
             } else {
-                // حفظ سحابي على Supabase Storage
                 try {
                     const fileExt = file.name.split('.').pop();
                     const safeFileName = `${fieldName}_${new Date().getTime()}.${fileExt}`;
@@ -864,12 +867,13 @@
             }
         }
 
-        // ================= دالة التقاط الشاشة =================
+        // ================= دالة التقاط الشاشة (المعالجة النهائية للحقول) =================
         function takeScreenshot(targetId) {
+            const targetEl = document.getElementById(targetId);
             const hiddenElements = document.querySelectorAll('.hide-in-shot');
             const showElements = document.querySelectorAll('.show-in-shot');
-            const targetEl = document.getElementById(targetId);
             
+            // 1. تحديد اسم الملف
             let fileName = "صورة";
             if (targetId === 'capture-card') {
                 let tName = document.getElementById('teacher_name').value.trim();
@@ -884,21 +888,73 @@
             hiddenElements.forEach(el => el.style.display = 'none');
             showElements.forEach(el => el.style.display = 'block');
 
-            html2canvas(targetEl, { scale: 2, backgroundColor: "#ffffff", useCORS: true }).then(canvas => {
-                hiddenElements.forEach(el => el.style.display = ''); 
-                showElements.forEach(el => el.style.display = 'none');
+            // 2. إنشاء النسخة وضبط الأبعاد للموبايل
+            const clone = targetEl.cloneNode(true);
+            clone.style.position = 'absolute';
+            clone.style.top = '0';
+            clone.style.left = '-9999px'; 
+            clone.style.width = '850px'; // إجبار عرض سطح المكتب
+            clone.style.height = 'max-content';
+            clone.style.backgroundColor = '#ffffff';
+            document.body.appendChild(clone);
 
-                let imgData = canvas.toDataURL("image/jpeg", 0.95);
-                let link = document.createElement('a');
-                link.download = fileName + '.jpg';
-                link.href = imgData;
-                link.click();
-            }).catch(err => {
-                console.error(err);
-                alert("حدث خطأ أثناء التقاط الصورة.");
-                hiddenElements.forEach(el => el.style.display = ''); 
-                showElements.forEach(el => el.style.display = 'none');
+            // 3. الحل الجذري: استبدال الـ input بـ div يحمل نفس التصميم لضمان ظهور النص
+            const originalInputs = targetEl.querySelectorAll('input:not([type="file"]), select');
+            const cloneInputs = clone.querySelectorAll('input:not([type="file"]), select');
+            
+            originalInputs.forEach((orig, index) => {
+                const cln = cloneInputs[index];
+                if (!cln || !cln.parentNode) return;
+
+                // استخراج القيمة
+                let val = orig.tagName === 'SELECT' ? (orig.options[orig.selectedIndex]?.text || "") : orig.value;
+
+                // إنشاء عنصر نصي بديل
+                const div = document.createElement('div');
+                div.className = orig.className; // أخذ نفس الكلاسات الأصلية
+                div.classList.add('print-input'); // إضافة كلاس الطباعة الذي أنشأناه
+                div.innerText = val || " "; // مسافة فارغة لمنع انهيار المربع إذا كان فارغاً
+
+                // نقل الألوان والخطوط الجانبية (Inline Styles) إن وجدت
+                if (orig.style.fontFamily) div.style.fontFamily = orig.style.fontFamily;
+                if (orig.style.fontWeight) div.style.fontWeight = orig.style.fontWeight;
+                if (orig.style.color) div.style.color = orig.style.color;
+                if (orig.style.backgroundColor) div.style.backgroundColor = orig.style.backgroundColor;
+                if (orig.style.borderColor) div.style.borderColor = orig.style.borderColor;
+
+                // استبدال الحقل بالعنصر النصي
+                cln.parentNode.replaceChild(div, cln);
             });
+
+            // ضمان نقل صورة البروفايل
+            const origImg = targetEl.querySelector('#profile-img');
+            const cloneImg = clone.querySelector('#profile-img');
+            if (origImg && cloneImg) cloneImg.src = origImg.src;
+
+            // 4. التصوير
+            setTimeout(() => {
+                html2canvas(clone, { 
+                    scale: 2, 
+                    backgroundColor: "#ffffff", 
+                    useCORS: true,
+                    windowWidth: 850
+                }).then(canvas => {
+                    hiddenElements.forEach(el => el.style.display = ''); 
+                    showElements.forEach(el => el.style.display = 'none');
+                    document.body.removeChild(clone);
+
+                    let link = document.createElement('a');
+                    link.download = fileName + '.jpg';
+                    link.href = canvas.toDataURL("image/jpeg", 1.0);
+                    link.click();
+                }).catch(err => {
+                    console.error(err);
+                    alert("حدث خطأ أثناء التقاط الصورة.");
+                    hiddenElements.forEach(el => el.style.display = ''); 
+                    showElements.forEach(el => el.style.display = 'none');
+                    if(document.body.contains(clone)) document.body.removeChild(clone);
+                });
+            }, 200); // 200 ملي ثانية لضمان استقرار الشبكة قبل اللقطة
         }
     </script>
 </body>
