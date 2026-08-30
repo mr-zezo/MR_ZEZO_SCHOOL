@@ -64,12 +64,27 @@
         .header-center h1 { font-size: 17px; font-weight: 900; color: #000; margin: 0; white-space: nowrap; }
         .header-left { width: 220px; }
 
-        .ministry-table { width: 100%; border-collapse: collapse; border: 3.5px solid #000; text-align: center; table-layout: fixed; }
+        /* حاوية التمرير للجدول على الموبايل */
+        .table-responsive-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 15px;
+        }
+
+        /* تنسيق الجدول بعد إزالة الـ fixed وإضافة min-width */
+        .ministry-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            border: 3.5px solid #000; 
+            text-align: center; 
+            min-width: 950px; 
+        }
         
         /* زيادة ارتفاع الصفوف لأقصى وضوح مريح */
         .ministry-table th, .ministry-table td { 
             border: 1px solid #000; 
-            padding: 16px 8px; /* تم رفع الارتفاع */
+            padding: 16px 8px;
             font-size: 13.5px; 
             font-weight: 800; 
             color: #000; 
@@ -104,6 +119,7 @@
             body { padding: 0 !important; background: white !important; width: 100% !important; } 
             .no-print { display: none !important; } 
             #ministry-view { border: none !important; padding: 0 !important; width: 100% !important; box-shadow: none !important; } 
+            #table-scroll-container { overflow: visible !important; } /* مهم للطباعة لعدم قص الجدول */
             .ministry-table { font-size: 11pt !important; width: 100% !important; }
             .ministry-table th, .ministry-table td { padding: 12px 6px !important; }
             .signatures-footer { margin-top: 25px !important; page-break-inside: avoid; }
@@ -187,26 +203,29 @@
                 <div class="header-left"></div>
             </div>
 
-            <table class="ministry-table" id="dom-table">
-                <thead>
-                    <tr>
-                        <th rowspan="2" style="width: 110px;">الصف</th>
-                        <th rowspan="2" style="width: 70px;">عدد الفصول</th>
-                        <th colspan="3">مسلم</th>
-                        <th colspan="3">مسيحي</th>
-                        <th colspan="3">دمج</th>
-                        <th colspan="3">جملة التلاميذ</th>
-                        <th rowspan="2" style="width: 65px;">الكثافة</th>
-                    </tr>
-                    <tr>
-                        <th>بنون</th><th>بنات</th><th class="col-total">جملة</th>
-                        <th>بنون</th><th>بنات</th><th class="col-total">جملة</th>
-                        <th>بنون</th><th>بنات</th><th class="col-total">جملة</th>
-                        <th>بنون</th><th>بنات</th><th class="col-total" style="background:#cbd5e1 !important">جملة</th>
-                    </tr>
-                </thead>
-                <tbody id="ministry-tbody"></tbody>
-            </table>
+            <!-- إضافة حاوية التمرير لحماية الجدول في الموبايل -->
+            <div class="table-responsive-wrapper" id="table-scroll-container">
+                <table class="ministry-table" id="dom-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="width: 110px;">الصف</th>
+                            <th rowspan="2" style="width: 70px;">عدد الفصول</th>
+                            <th colspan="3">مسلم</th>
+                            <th colspan="3">مسيحي</th>
+                            <th colspan="3">دمج</th>
+                            <th colspan="3">جملة التلاميذ</th>
+                            <th rowspan="2" style="width: 65px;">الكثافة</th>
+                        </tr>
+                        <tr>
+                            <th>بنون</th><th>بنات</th><th class="col-total">جملة</th>
+                            <th>بنون</th><th>بنات</th><th class="col-total">جملة</th>
+                            <th>بنون</th><th>بنات</th><th class="col-total">جملة</th>
+                            <th>بنون</th><th>بنات</th><th class="col-total" style="background:#cbd5e1 !important">جملة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ministry-tbody"></tbody>
+                </table>
+            </div>
 
             <div class="signatures-footer">
                 <div>شئون الطلبة / .....................................</div>
@@ -505,14 +524,21 @@
             XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("dom-table")), "ميزانية_المدرسة_المعتمدة.xlsx"); 
         }
 
-        // دالة التقاط صورة عالية الدقة للكشف المعروض
+        // دالة التقاط صورة عالية الدقة للكشف المعروض (متوافقة مع الموبايل والتمرير)
         function takeScreenshot() {
             let targetEl = null;
             let fileName = "ميزانية_المدرسة";
+            let wrapper = document.getElementById('table-scroll-container');
 
             if (document.getElementById("ministry-view").style.display !== "none") {
                 targetEl = document.getElementById("ministry-view");
                 fileName = activeStage === 'primary' ? "ميزانية_المرحلة_الابتدائية" : "ميزانية_رياض_الأطفال";
+                
+                // فك التمرير مؤقتاً لكي تلتقط الكاميرا الجدول بالكامل وليس الجزء الظاهر فقط
+                if(wrapper) wrapper.style.overflow = 'visible';
+                targetEl.style.width = 'max-content'; 
+                targetEl.style.minWidth = '100%';
+
             } else if (document.getElementById("modern-cards-view").style.display !== "none") {
                 targetEl = document.getElementById("modern-cards-view");
                 fileName = `إحصاء_الصف_${activeGrade || 'المحدد'}`;
@@ -523,15 +549,32 @@
                 return;
             }
 
-            html2canvas(targetEl, { scale: 2, backgroundColor: "#ffffff", useCORS: true }).then(canvas => {
-                let link = document.createElement('a');
-                link.download = `${fileName}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg', 0.95);
-                link.click();
-            }).catch(err => {
-                console.error(err);
-                alert("حدث خطأ أثناء التقاط الصورة.");
-            });
+            // إعطاء المتصفح جزء من الثانية لتطبيق التعديلات قبل التصوير
+            setTimeout(() => {
+                html2canvas(targetEl, { scale: 2, backgroundColor: "#ffffff", useCORS: true }).then(canvas => {
+                    
+                    // إرجاع التنسيقات لحالتها الطبيعية بعد التصوير
+                    if (document.getElementById("ministry-view").style.display !== "none") {
+                        if(wrapper) wrapper.style.overflow = 'auto';
+                        targetEl.style.width = '100%';
+                        targetEl.style.minWidth = '0';
+                    }
+
+                    let link = document.createElement('a');
+                    link.download = `${fileName}.jpg`;
+                    link.href = canvas.toDataURL('image/jpeg', 0.95);
+                    link.click();
+                }).catch(err => {
+                    console.error(err);
+                    alert("حدث خطأ أثناء التقاط الصورة.");
+                    // إرجاع التنسيقات في حالة حدوث خطأ
+                    if (document.getElementById("ministry-view").style.display !== "none") {
+                        if(wrapper) wrapper.style.overflow = 'auto';
+                        targetEl.style.width = '100%';
+                        targetEl.style.minWidth = '0';
+                    }
+                });
+            }, 150);
         }
     </script>
 </body>
