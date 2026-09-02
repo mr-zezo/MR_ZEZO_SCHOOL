@@ -355,8 +355,9 @@
                 }
             },
 
+            // ================= دالة البحث المطورة =================
             async searchStudents(val, limit = 10) {
-                const cleanVal = val.trim().toLowerCase();
+                const cleanVal = val.trim();
                 if (!cleanVal) return [];
 
                 if (this.getMode() === 'offline') {
@@ -366,29 +367,59 @@
                         const req = tx.objectStore('students').getAll();
                         req.onsuccess = () => {
                             const all = req.result || [];
-                            // ترتيب النتائج: التي تبدأ بالحروف المكتوبة أولاً ثم التي تحتوي عليها
                             const startsWith = [];
                             const contains = [];
+                            
                             all.forEach(s => {
-                                const name = (s.name || '').toLowerCase();
-                                if (name.startsWith(cleanVal)) startsWith.push(s);
-                                else if (name.includes(cleanVal)) contains.push(s);
+                                const name = (s.name || '');
+                                // فرز الأسماء: التي تبدأ بالحروف المكتوبة لها الأولوية القصوى
+                                if (name.startsWith(cleanVal)) {
+                                    startsWith.push(s);
+                                } else if (name.includes(cleanVal)) {
+                                    contains.push(s);
+                                }
                             });
+                            
+                            // ترتيب النتائج أبجدياً لضمان عرض أدق
+                            startsWith.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+                            contains.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+                            
+                            // دمج المجموعتين واستقطاع العدد المطلوب
                             resolve([...startsWith, ...contains].slice(0, limit));
                         };
                         req.onerror = () => reject(req.error);
                     });
                 } else {
-                    // سحب أقرب 10 نتائج من السحابة
-                    const { data, error } = await sbClient
+                    // وضع الأونلاين: 
+                    // 1- استدعاء النتائج التي "تبدأ بـ" أولاً (الأولوية القصوى)
+                    const { data: startsWithData, error: err1 } = await sbClient
                         .from('students')
                         .select('code, name, grade, class')
-                        .ilike('name', `%${cleanVal}%`)
+                        .ilike('name', `${cleanVal}%`) // البحث عن الكلمات التي تبدأ بالنص
                         .order('name', { ascending: true })
                         .limit(limit);
 
-                    if (error) return [];
-                    return data || [];
+                    if (err1) return [];
+
+                    let results = startsWithData || [];
+
+                    // 2- إذا كانت النتائج التي تبدأ بالنص أقل من العدد المطلوب، نقوم بإكمال الباقي
+                    if (results.length < limit) {
+                        const remainingLimit = limit - results.length;
+                        const { data: containsData, error: err2 } = await sbClient
+                            .from('students')
+                            .select('code, name, grade, class')
+                            .ilike('name', `%${cleanVal}%`) // البحث عن أي اسم يحتوي على النص
+                            .not('name', 'ilike', `${cleanVal}%`) // استبعاد النتائج التي ظهرت بالفعل
+                            .order('name', { ascending: true })
+                            .limit(remainingLimit);
+
+                        if (!err2 && containsData) {
+                            results = [...results, ...containsData];
+                        }
+                    }
+
+                    return results;
                 }
             },
 
@@ -740,7 +771,7 @@
             }
 
             try {
-                // جلب أقرب 10 نتائج سواء محلياً أو سحابياً
+                // جلب أقرب 10 نتائج سواء محلياً أو سحابياً بناءً على الخوارزمية الجديدة
                 const data = await ZezoEngine.searchStudents(cleanVal, 10);
 
                 resBox.innerHTML = "";
