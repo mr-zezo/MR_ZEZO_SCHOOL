@@ -527,6 +527,7 @@
             resBox.style.display = "block";
         }
 
+        // ================= تم تعديل البحث الذكي هنا فقط =================
         function filterTeachers(val) {
             const resBox = document.getElementById("search-results");
             if (!val.trim()) { showAllTeachers(); return; }
@@ -534,12 +535,30 @@
             const normalizedSearch = normalizeArabicSearch(val);
             const spacelessSearch = normalizedSearch.replace(/\s/g, ""); 
 
-            const filtered = allTeachers.filter(t => {
-                if (!t.name) return false;
+            const startsWith = [];
+            const contains = [];
+
+            allTeachers.forEach(t => {
+                if (!t.name) return;
                 const normalizedName = normalizeArabicSearch(t.name);
                 const spacelessName = normalizedName.replace(/\s/g, "");
-                return spacelessName.includes(spacelessSearch);
+                
+                // الأولوية لمن يبدأ بالحرف
+                if (spacelessName.startsWith(spacelessSearch)) {
+                    startsWith.push(t);
+                } 
+                // ثم لمن يحتوي عليه
+                else if (spacelessName.includes(spacelessSearch)) {
+                    contains.push(t);
+                }
             });
+
+            // ترتيب أبجدي دقيق
+            startsWith.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
+            contains.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
+
+            // دمج المجموعتين
+            const filtered = [...startsWith, ...contains];
 
             resBox.innerHTML = "";
             
