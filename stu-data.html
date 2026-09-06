@@ -77,7 +77,7 @@
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 12px; }
         .modal-overlay.active { display: flex; }
         .modal-content { background: var(--bg); width: 100%; max-width: 900px; border-radius: 16px; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-        .modal-header { background: var(--primary); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-b: 2px solid #f59e0b; }
+        .modal-header { background: var(--primary); color: white; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f59e0b; }
         .modal-body { padding: 16px; overflow-y: auto; }
         
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 16px; }
@@ -784,7 +784,7 @@
             });
         }
 
-        // 10. كبسولة الإحصاء الشاملة للمدرسة
+        // 10. كبسولة الإحصاء الشاملة للمدرسة (تم حل مشكلة عمود updated_at)
         async function generateMasterCapsule() {
             const btn = document.querySelector('.btn-golden');
             const oldText = btn.innerHTML;
@@ -845,10 +845,12 @@
                 grand.cCount = grand.cSet.size; delete grand.cSet;
                 capsule.general["إجمالي"] = grand;
 
+                // حفظ وقت التحديث داخل الكبسولة نفسها لتجنب أي أخطاء في أعمدة قاعدة البيانات
+                capsule.last_updated_at = new Date().toLocaleString('ar-EG');
+
                 await ZezoEngine.upsert("system_capsules", [{
                     id: "stats_2026",
-                    data: capsule,
-                    updated_at: new Date().toLocaleString('ar-EG')
+                    data: capsule
                 }], 'id');
                 
                 alert(`🚀 تم ضغط واعتماد إحصاء (${matchedCount}) تلميذ في الكبسولة بنجاح!`);
