@@ -59,7 +59,7 @@
 
         .highlight-box { background: #f8fafc; padding: 12px 14px; border-radius: 12px; border: 2px solid var(--primary); margin-bottom: 14px; }
         
-        /* ================= صندوق نتائج البحث المطور لـ 10 نتائج ================= */
+        /* ================= صندوق نتائج البحث ================= */
         .search-container { position: relative; margin-bottom: 10px; }
         #search-results { 
             position: absolute; top: 100%; left: 0; right: 0; background: white; 
@@ -185,7 +185,11 @@
             
             <div class="grid-2" style="margin-bottom: 0;">
                 <div>
-                    <label>الصف الدراسي</label>
+                    <!-- إضافة شارة عدد تلاميذ الصف بجوار التسمية -->
+                    <label>
+                        الصف الدراسي 
+                        <span id="grade-total-badge" style="float:left; background:#dbeafe; color:#1e40af; padding:1px 6px; border-radius:6px; font-size:11px;">إجمالي: ٠</span>
+                    </label>
                     <select id="grade_level" onchange="onGradeChange()">
                         <option value="KG1">KG1</option><option value="KG2">KG2</option>
                         <option value="الأول">الأول</option><option value="الثاني">الثاني</option>
@@ -246,9 +250,10 @@
             </div>
         </div>
 
+        <!-- ترتيب الأزرار الجديد: تعديل ثم إضافة -->
         <div class="actions-bar hide-in-shot">
-            <button class="btn btn-add" onclick="saveNew()"><i class="fa-solid fa-floppy-disk"></i> حفظ جديد</button>
             <button class="btn btn-edit" onclick="updateExisting()"><i class="fa-solid fa-pen-to-square"></i> تعديل</button>
+            <button class="btn btn-add" onclick="saveNew()"><i class="fa-solid fa-plus"></i> إضافة</button>
             <button class="btn btn-delete" onclick="safeDelete()"><i class="fa-solid fa-trash"></i> حذف</button>
             <button class="btn btn-absence" onclick="showAbsenceRecord()"><i class="fa-solid fa-calendar-xmark"></i> سجل الغياب</button>
             <button class="btn btn-density-main" onclick="showClassDensityModal()"><i class="fa-solid fa-chart-pie"></i> كثافة الصف</button>
@@ -355,7 +360,31 @@
                 }
             },
 
-            // ================= دالة البحث المطورة =================
+            // دالة التحقق من عدم تكرار الرقم القومي
+            async checkNidExists(nid, excludeCode = null) {
+                if (!nid || nid.length !== 14) return false;
+                
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('students', 'readonly');
+                        const req = tx.objectStore('students').getAll();
+                        req.onsuccess = () => {
+                            const all = req.result || [];
+                            const exists = all.some(s => s.nid === nid && s.code !== excludeCode);
+                            resolve(exists);
+                        };
+                        req.onerror = () => reject(tx.error);
+                    });
+                } else {
+                    let query = sbClient.from('students').select('code').eq('nid', nid);
+                    if (excludeCode) query = query.neq('code', excludeCode);
+                    const { data, error } = await query.limit(1);
+                    if (error) throw error;
+                    return data && data.length > 0;
+                }
+            },
+
             async searchStudents(val, limit = 10) {
                 const cleanVal = val.trim();
                 if (!cleanVal) return [];
@@ -372,7 +401,6 @@
                             
                             all.forEach(s => {
                                 const name = (s.name || '');
-                                // فرز الأسماء: التي تبدأ بالحروف المكتوبة لها الأولوية القصوى
                                 if (name.startsWith(cleanVal)) {
                                     startsWith.push(s);
                                 } else if (name.includes(cleanVal)) {
@@ -380,22 +408,18 @@
                                 }
                             });
                             
-                            // ترتيب النتائج أبجدياً لضمان عرض أدق
                             startsWith.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
                             contains.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
                             
-                            // دمج المجموعتين واستقطاع العدد المطلوب
                             resolve([...startsWith, ...contains].slice(0, limit));
                         };
                         req.onerror = () => reject(req.error);
                     });
                 } else {
-                    // وضع الأونلاين: 
-                    // 1- استدعاء النتائج التي "تبدأ بـ" أولاً (الأولوية القصوى)
                     const { data: startsWithData, error: err1 } = await sbClient
                         .from('students')
                         .select('code, name, grade, class')
-                        .ilike('name', `${cleanVal}%`) // البحث عن الكلمات التي تبدأ بالنص
+                        .ilike('name', `${cleanVal}%`) 
                         .order('name', { ascending: true })
                         .limit(limit);
 
@@ -403,14 +427,13 @@
 
                     let results = startsWithData || [];
 
-                    // 2- إذا كانت النتائج التي تبدأ بالنص أقل من العدد المطلوب، نقوم بإكمال الباقي
                     if (results.length < limit) {
                         const remainingLimit = limit - results.length;
                         const { data: containsData, error: err2 } = await sbClient
                             .from('students')
                             .select('code, name, grade, class')
-                            .ilike('name', `%${cleanVal}%`) // البحث عن أي اسم يحتوي على النص
-                            .not('name', 'ilike', `${cleanVal}%`) // استبعاد النتائج التي ظهرت بالفعل
+                            .ilike('name', `%${cleanVal}%`) 
+                            .not('name', 'ilike', `${cleanVal}%`) 
                             .order('name', { ascending: true })
                             .limit(remainingLimit);
 
@@ -564,10 +587,25 @@
 
             await fetchSchoolInfo();
             updateClassDropdown();
+            updateGradeCount(); // جلب عدد تلاميذ الصف عند التحميل
 
             const incomingId = new URLSearchParams(window.location.search).get('id');
             if (incomingId) { fetchStudentByCode(incomingId); }
         });
+
+        // ================= تحديث عدد تلاميذ الصف =================
+        async function updateGradeCount() {
+            const grade = document.getElementById("grade_level").value;
+            const badge = document.getElementById("grade-total-badge");
+            badge.innerText = "جاري الحساب...";
+            try {
+                const students = await ZezoEngine.getStudentsByGrade(grade);
+                badge.innerText = `إجمالي: ${toArabicNum(students.length)}`;
+            } catch(e) {
+                badge.innerText = "";
+                console.error("خطأ في جلب إحصاء الصف:", e);
+            }
+        }
 
         // ================= جلب بيانات فصول المدرسة =================
         async function fetchSchoolInfo() {
@@ -619,6 +657,7 @@
 
         function onGradeChange() {
             updateClassDropdown();
+            updateGradeCount(); // تحديث إحصاء الصف عند التغيير
             if (!isExistingStudent) {
                 calculateNextRegisterNumber();
             }
@@ -771,7 +810,6 @@
             }
 
             try {
-                // جلب أقرب 10 نتائج سواء محلياً أو سحابياً بناءً على الخوارزمية الجديدة
                 const data = await ZezoEngine.searchStudents(cleanVal, 10);
 
                 resBox.innerHTML = "";
@@ -826,6 +864,7 @@
             
             document.getElementById("search-results").style.display = "none";
             extractDataFromNID(false);
+            updateGradeCount();
             showStatus("✅ تم جلب بيانات التلميذ بنجاح", "success");
         }
 
@@ -876,12 +915,48 @@
             document.getElementById("absModal").classList.add("active");
         }
 
-        function saveNew() { 
+        // ================= التعديلات المطلوبة (اضافة، تعديل، تفريغ الخانات) =================
+        async function saveNew() { 
             isExistingStudent = false;
-            processSave("تم الحفظ بنجاح"); 
+            const nid = document.getElementById("national_id").value.trim();
+            
+            // 1. الكشف عن عدم وجود تلميذ آخر يحمل نفس الرقم القومي
+            if (nid) {
+                const exists = await ZezoEngine.checkNidExists(nid);
+                if (exists) {
+                    alert("❌ هذا الرقم القومي مسجل لتلميذ آخر بالفعل في المنظومة!");
+                    return;
+                }
+            }
+
+            // 2. رسالة تأكيد قبل الحفظ
+            if (confirm("هل أنت متأكد من إضافة هذا التلميذ كطالب جديد بالمنظومة؟")) {
+                const success = await processSave("تم الإضافة بنجاح");
+                
+                // 3. تفريغ الخانات بعد نجاح الحفظ
+                if (success) {
+                    resetFormFields();
+                }
+            }
         }
-        function updateExisting() { 
-            if (confirm("تأكيد تعديل بيانات هذا التلميذ؟")) processSave("تم التعديل بنجاح"); 
+
+        async function updateExisting() { 
+            const code = document.getElementById("student_code").value.trim();
+            const nid = document.getElementById("national_id").value.trim();
+            
+            // الكشف عن عدم وجود تلميذ آخر (غير الحالي) يحمل نفس الرقم القومي
+            if (nid && code) {
+                const exists = await ZezoEngine.checkNidExists(nid, code);
+                if (exists) {
+                    alert("❌ هذا الرقم القومي مسجل لتلميذ آخر بالفعل في المنظومة!");
+                    return;
+                }
+            }
+
+            // رسالة تأكيد قبل التعديل
+            if (confirm("هل أنت متأكد من حفظ التعديلات على بيانات هذا التلميذ؟")) {
+                await processSave("تم التعديل بنجاح"); 
+            }
         }
 
         async function processSave(msgText) {
@@ -889,8 +964,8 @@
             const name = document.getElementById("student_name").value.trim();
             const className = document.getElementById("class_name").value;
 
-            if (!code || !name) { alert("الكود واسم التلميذ مطلوبان!"); return; }
-            if (!className) { alert("يرجى اختيار الفصل الدراسي!"); return; }
+            if (!code || !name) { alert("الكود واسم التلميذ مطلوبان!"); return false; }
+            if (!className) { alert("يرجى اختيار الفصل الدراسي!"); return false; }
             
             const dataToSave = {
                 code: code, 
@@ -914,9 +989,32 @@
                 await ZezoEngine.upsertStudent(dataToSave);
                 currentStudentData = {...currentStudentData, ...dataToSave}; 
                 showStatus("✅ " + msgText + ` وفق النمط [${ZezoEngine.getMode()}]`, "success");
+                updateGradeCount(); // تحديث إحصاء الصف بعد الحفظ
+                return true;
             } catch (error) {
                 alert("❌ حدث خطأ أثناء الحفظ: " + error.message);
+                return false;
             }
+        }
+
+        // دالة تفريغ الخانات
+        function resetFormFields() {
+            document.getElementById("student_name").value = "";
+            document.getElementById("student_code").value = "";
+            document.getElementById("national_id").value = "";
+            document.getElementById("register_num").value = "";
+            document.getElementById("dob").value = "";
+            document.getElementById("gender").value = "";
+            document.getElementById("age_october").value = "";
+            document.getElementById("father_mobile").value = "";
+            document.getElementById("dmj").value = "";
+            document.getElementById("social_status").value = "";
+            document.getElementById("transfer_type").value = "أساسي";
+            document.getElementById("status").value = "منقول";
+            document.getElementById("religion").value = "مسلم";
+            
+            currentStudentData = null;
+            isExistingStudent = false;
         }
 
         async function safeDelete() {
