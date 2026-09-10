@@ -323,17 +323,63 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+        // ================= نظام التخزين الآمن والمقاوم للحظر (SafeStorage) =================
+        const SafeStorage = {
+            mem: {},
+            canAccess: function() {
+                try {
+                    const testKey = '__zezo_test__';
+                    window.localStorage.setItem(testKey, '1');
+                    window.localStorage.removeItem(testKey);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            },
+            getItem: function(key) {
+                try {
+                    if (this.canAccess()) return window.localStorage.getItem(key);
+                } catch(e) {}
+                return this.mem[key] || null;
+            },
+            setItem: function(key, val) {
+                try {
+                    if (this.canAccess()) {
+                        window.localStorage.setItem(key, val);
+                        return;
+                    }
+                } catch(e) {}
+                this.mem[key] = val;
+            },
+            removeItem: function(key) {
+                try {
+                    if (this.canAccess()) {
+                        window.localStorage.removeItem(key);
+                        return;
+                    }
+                } catch(e) {}
+                delete this.mem[key];
+            }
+        };
+
         let currentTeacher = null;
         let schoolSupervisionData = [];
         let teacherEvaluations = { week: 0, year: 0 };
         let currentDeviceId = null;
 
-        // ================= بصمة الهاتف الرقمية =================
+        // ================= توليد بصمة الهاتف الذكية الموثوقة =================
         async function getDeviceFingerprint() {
-            let storedId = localStorage.getItem('zezo_dev_uuid');
+            let storedId = SafeStorage.getItem('zezo_dev_uuid');
             if (!storedId) {
-                storedId = 'DEV_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-                localStorage.setItem('zezo_dev_uuid', storedId);
+                // بصمة ثابتة مبنية على هاتف المعلم + معرّف عشوائي للجلسة
+                const hardwareInfo = (navigator.userAgent || '') + (navigator.hardwareConcurrency || '') + (screen.colorDepth || '');
+                let hash = 0;
+                for (let i = 0; i < hardwareInfo.length; i++) {
+                    hash = ((hash << 5) - hash) + hardwareInfo.charCodeAt(i);
+                    hash |= 0;
+                }
+                storedId = 'DEV_' + Math.abs(hash).toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+                SafeStorage.setItem('zezo_dev_uuid', storedId);
             }
             return storedId;
         }
@@ -349,7 +395,7 @@
             currentDeviceId = await getDeviceFingerprint();
 
             const urlParams = new URLSearchParams(window.location.search);
-            const passedNid = urlParams.get('nid') || localStorage.getItem('saved_teacher_nid');
+            const passedNid = urlParams.get('nid') || SafeStorage.getItem('saved_teacher_nid');
 
             if (passedNid && passedNid.trim().length === 14) {
                 showView('loading-view');
@@ -389,10 +435,10 @@
             btn.disabled = false;
         }
 
-        // ================= التحقق الأمني الذكي والمعدل =================
+        // ================= التحقق الأمني =================
         async function authenticateAndLoad(nidInput, isAutoLogin) {
             try {
-                // 1. البحث عن المعلم
+                // 1. البحث عن المعلم في قاعدة البيانات
                 let [resTeacher, resContract] = await Promise.all([
                     supabaseClient.from('teachers').select('*').eq('nid', nidInput).maybeSingle(),
                     supabaseClient.from('contract_teachers').select('*').eq('nid', nidInput).maybeSingle()
@@ -403,19 +449,19 @@
 
                 if (!teacher) {
                     alert("❌ الرقم القومي المدخل غير مسجل في المنظومة!");
-                    localStorage.removeItem('saved_teacher_nid');
+                    SafeStorage.removeItem('saved_teacher_nid');
                     showView('login-section');
                     return;
                 }
 
-                // 2. فحص هل الحساب مجمد
+                // 2. فحص الحساب المجمد
                 if (teacher.is_frozen === true) {
                     document.getElementById('frozen-reason-text').innerText = teacher.freeze_reason || "تم تجميد الحساب لمخالفة أمنية، يرجى مراجعة إدارة المدرسة.";
                     showView('frozen-view');
                     return;
                 }
 
-                // 3. فحص هل هذا الهاتف مسجل لمعلم آخر؟
+                // 3. فحص هل هذا الهاتف مسجل لزميل آخر؟
                 let [chkOtherTeacher, chkOtherContract] = await Promise.all([
                     supabaseClient.from('teachers').select('nid, name').eq('device_id', currentDeviceId).neq('nid', nidInput).maybeSingle(),
                     supabaseClient.from('contract_teachers').select('nid, name').eq('device_id', currentDeviceId).neq('nid', nidInput).maybeSingle()
@@ -424,7 +470,7 @@
                 let boundOtherTeacher = chkOtherTeacher.data || chkOtherContract.data;
 
                 if (boundOtherTeacher) {
-                    // محاولة اختراق: هذا الجهاز مسجل للمعلم boundOtherTeacher والآن يحاول الدخول برقم آخر
+                    // الهاتف مسجل لمعلم آخر ويحاول الدخول برقم جديد
                     const freezeMsg = `محاولة دخول برقم قومي آخر (${nidInput}) من جهاز مسجل للمعلم: ${boundOtherTeacher.name}`;
                     
                     if (chkOtherTeacher.data) {
@@ -438,12 +484,10 @@
                     return;
                 }
 
-                // 4. معالجة ربط الجهاز (مع دعم فك التجميد وتفريغ الجهاز)
+                // 4. ربط الجهاز تلقائياً بعد فك التجميد أو عند أول دخول
                 const savedDev = teacher.device_id ? String(teacher.device_id).trim() : "";
                 
-                // إذا كان الحساب غير مربوط بأي جهاز، أو تم تفريغه بواسطة الإدارة:
                 if (!savedDev || savedDev === "null" || savedDev === "") {
-                    // توثيق هذا الجهاز لأول مرة للمعلم
                     await supabaseClient.from(tableName).update({ 
                         device_id: currentDeviceId,
                         is_frozen: false,
@@ -452,15 +496,14 @@
                     teacher.device_id = currentDeviceId;
                 } 
                 else if (savedDev !== currentDeviceId) {
-                    // الحساب مربوط بجهاز مختلف تماماً
                     alert("⚠️ هذا الحساب مربوط بهاتف شخصي آخر بالفعل!\nلا يمكن فتح الحساب من هاتفين مختلفين حفاظاً على الخصوصية. يرجى مراجعة إدارة المدرسة لفك الارتباط.");
-                    localStorage.removeItem('saved_teacher_nid');
+                    SafeStorage.removeItem('saved_teacher_nid');
                     showView('login-section');
                     return;
                 }
 
-                // 5. تسجيل الدخول بنجاح
-                localStorage.setItem('saved_teacher_nid', nidInput);
+                // 5. تسجيل الدخول وحفظ الجلسة
+                SafeStorage.setItem('saved_teacher_nid', nidInput);
                 currentTeacher = teacher;
 
                 const [resSup, resLogs] = await Promise.all([
@@ -667,7 +710,7 @@
         }
 
         function logout() {
-            localStorage.removeItem('saved_teacher_nid');
+            SafeStorage.removeItem('saved_teacher_nid');
             showView('login-section');
         }
     </script>
