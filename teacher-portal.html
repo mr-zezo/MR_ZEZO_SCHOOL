@@ -33,8 +33,28 @@
         .dev-badge { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); color: #fff; padding: 6px 20px; border-radius: 50px; font-size: 13px; font-weight: 900; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 10px; }
         .dev-badge span { color: #fcd34d; font-size: 14px; }
 
-        /* ================= شاشة التحميل التلقائي اللحظي ================= */
-        #loading-view { width: 100%; max-width: 450px; background: white; padding: 40px 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; border-top: 5px solid var(--secondary-color); margin-top: 50px; }
+        /* ================= نافذة تسجيل الدخول ================= */
+        #login-section { width: 100%; max-width: 480px; background: white; padding: 35px 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border-top: 6px solid var(--primary-color); margin-top: 30px; }
+        .login-icon { width: 80px; height: 80px; background: #eff6ff; color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 15px; border: 2px dashed #93c5fd; }
+        .login-title { font-size: 20px; font-weight: 900; color: var(--primary-color); margin-bottom: 6px; }
+        .login-subtitle { font-size: 13px; color: #64748b; margin-bottom: 25px; font-weight: 700; line-height: 1.6; }
+        
+        .login-input-group { margin-bottom: 20px; text-align: right; }
+        .login-input-group label { display: block; font-size: 13px; font-weight: 900; color: #334155; margin-bottom: 6px; }
+        .login-input-group input { width: 100%; padding: 14px; border: 2px solid #cbd5e1; border-radius: 10px; font-size: 17px; font-weight: 900; text-align: center; outline: none; font-family: Arial, sans-serif; letter-spacing: 2px; transition: 0.2s; }
+        .login-input-group input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); }
+
+        .btn-login-submit { width: 100%; background: var(--primary-color); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
+        .btn-login-submit:hover { background: #172554; }
+
+        .security-note { font-size: 11px; color: #94a3b8; margin-top: 15px; font-weight: 700; line-height: 1.5; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
+
+        /* ================= شاشة الحساب المجمد ================= */
+        #frozen-view { display: none; width: 100%; max-width: 500px; background: white; padding: 35px 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(190, 18, 60, 0.15); text-align: center; border-top: 6px solid var(--danger); margin-top: 30px; }
+        .frozen-icon { width: 80px; height: 80px; background: #fef2f2; color: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 15px; }
+
+        /* ================= شاشة التحميل ================= */
+        #loading-view { display: none; width: 100%; max-width: 450px; background: white; padding: 40px 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; border-top: 5px solid var(--secondary-color); margin-top: 50px; }
         #loading-view i { font-size: 40px; color: var(--primary-color); margin-bottom: 12px; }
         #loading-view h3 { font-size: 18px; font-weight: 900; color: var(--primary-color); }
         #loading-view p { font-size: 13px; color: #64748b; margin-top: 5px; font-weight: bold; }
@@ -127,14 +147,49 @@
         </div>
     </nav>
 
-    <!-- شاشة التحميل اللحظي (تختفي فور تحميل البيانات) -->
+    <!-- 1. نافذة تسجيل الدخول (استعلام بالرقم القومي) -->
+    <div id="login-section">
+        <div class="login-icon"><i class="fa-solid fa-fingerprint"></i></div>
+        <h2 class="login-title">تسجيل دخول المعلم</h2>
+        <p class="login-subtitle">أدخل الرقم القومي الخاص بك لعرض بياناتك والجدول والإشراف.<br><span style="color:var(--danger); font-weight:900;">⚠️ يُربط حساب المعلم تلقائياً بجهازه الشخصي لمنع تداول الحسابات.</span></p>
+        
+        <form onsubmit="handleManualLogin(event)">
+            <div class="login-input-group">
+                <label><i class="fa-solid fa-id-card"></i> الرقم القومي (14 رقم):</label>
+                <input type="text" id="login_nid" maxlength="14" placeholder="••••••••••••••" required autocomplete="off" inputmode="numeric">
+            </div>
+            <button type="submit" class="btn-login-submit" id="btn-login-submit">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> استعلام ودخول
+            </button>
+        </form>
+        <div class="security-note">
+            <i class="fa-solid fa-shield-halved"></i> النظام مزود ببصمة أمنية ذكية. محاولة الدخول برقم قومي آخر من نفس الهاتف تؤدي لتجميد الحساب الأصلي تلقائياً.
+        </div>
+    </div>
+
+    <!-- 2. شاشة الحساب المجمد -->
+    <div id="frozen-view">
+        <div class="frozen-icon"><i class="fa-solid fa-user-lock"></i></div>
+        <h2 style="color:var(--danger); font-weight:900; margin-bottom:10px;">الحساب مجمّد أمنياً!</h2>
+        <p style="font-size:14px; font-weight:bold; color:#475569; line-height:1.7;" id="frozen-reason-text">
+            تم تجميد هذا الحساب بسبب محاولة الدخول بأكثر من رقم قومي من نفس الجهاز أو مخالفة سياسة الأمان.
+        </p>
+        <div style="background:#fee2e2; color:#991b1b; padding:12px; border-radius:8px; font-weight:900; font-size:13px; margin:20px 0;">
+            يرجى مراجعة مسؤول الإحصاء أو مدير المدرسة لفك تجميد الحساب وتوثيق جهازك.
+        </div>
+        <button onclick="logout()" class="btn-logout" style="width:100%; justify-content:center;">
+            <i class="fa-solid fa-arrow-rotate-left"></i> العودة لشاشة الدخول
+        </button>
+    </div>
+
+    <!-- 3. شاشة التحميل اللحظي -->
     <div id="loading-view">
         <i class="fa-solid fa-circle-notch fa-spin"></i>
-        <h3>جاري استرجاع بيانات المعلم...</h3>
+        <h3>جاري التحقق من البصمة الأمنية واسترجاع البيانات...</h3>
         <p>الرجاء الانتظار لحظات</p>
     </div>
 
-    <!-- شاشة عرض بيانات المعلم الكاملة -->
+    <!-- 4. شاشة عرض بيانات المعلم الكاملة -->
     <div id="profile-section">
         
         <div class="profile-header">
@@ -277,6 +332,37 @@
         let currentTeacher = null;
         let schoolSupervisionData = [];
         let teacherEvaluations = { week: 0, year: 0 };
+        let currentDeviceId = null;
+
+        // ================= خوارزمية توليد البصمة الرقمية للهاتف =================
+        async function getDeviceFingerprint() {
+            let storedId = localStorage.getItem('zezo_dev_uuid');
+            if (!storedId) {
+                storedId = 'DEV_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+                localStorage.setItem('zezo_dev_uuid', storedId);
+            }
+
+            // بصمة عتادية مدمجة (Canvas + Screen + Platform)
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                ctx.textBaseline = "top";
+                ctx.font = "14px 'Arial'";
+                ctx.textBaseline = "alphabetic";
+                ctx.fillStyle = "#f60";
+                ctx.fillRect(125, 1, 62, 20);
+                ctx.fillStyle = "#069";
+                ctx.fillText("MR_ZEZO_SECURITY_FP", 2, 15);
+                ctx.fillStyle = "rgba(102, 204, 0, 0.7)";
+                ctx.fillText("MR_ZEZO_SECURITY_FP", 4, 17);
+                
+                const canvasHash = btoa(canvas.toDataURL()).slice(-20);
+                const screenMetrics = `${screen.width}x${screen.height}x${screen.colorDepth}`;
+                return `${storedId}_${canvasHash}_${screenMetrics}`;
+            } catch (e) {
+                return storedId;
+            }
+        }
 
         function getWeekNumber(d) {
             d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -285,51 +371,133 @@
             return Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
         }
 
-        // ================= التحميل التلقائي الفوري =================
+        // ================= بداية التشغيل =================
         window.addEventListener('DOMContentLoaded', async () => {
+            currentDeviceId = await getDeviceFingerprint();
+
             const urlParams = new URLSearchParams(window.location.search);
             const passedNid = urlParams.get('nid') || localStorage.getItem('saved_teacher_nid');
 
-            // إذا لم يتوفر الرقم القومي يرجع فوراً للرئيسية
-            if (!passedNid || passedNid.trim().length !== 14) {
-                alert("⚠️ يرجى إدخال الرقم القومي من شاشة الدخول الرئيسية أولاً.");
-                window.location.href = 'index.html';
+            // إذا كان الرقم مسجلاً مسبقاً في الجهاز، يتم الدخول التلقائي فوراً
+            if (passedNid && passedNid.trim().length === 14) {
+                showView('loading-view');
+                await authenticateAndLoad(passedNid.trim(), true);
+            } else {
+                showView('login-section');
+            }
+        });
+
+        function showView(viewId) {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('loading-view').style.display = 'none';
+            document.getElementById('profile-section').style.display = 'none';
+            document.getElementById('frozen-view').style.display = 'none';
+
+            if (viewId) {
+                document.getElementById(viewId).style.display = 'block';
+            }
+        }
+
+        // ================= تسجيل الدخول اليدوي والتحقق الأمني =================
+        async function handleManualLogin(e) {
+            e.preventDefault();
+            const nidInput = document.getElementById('login_nid').value.trim();
+
+            if (nidInput.length !== 14 || isNaN(nidInput)) {
+                alert("⚠️ يجب إدخال رقم قومي صحيح مكون من 14 رقماً!");
                 return;
             }
 
-            await loadTeacherData(passedNid.trim());
-        });
+            const btn = document.getElementById('btn-login-submit');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
+            btn.disabled = true;
 
-        async function loadTeacherData(nidInput) {
+            await authenticateAndLoad(nidInput, false);
+            
+            btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> استعلام ودخول';
+            btn.disabled = false;
+        }
+
+        // ================= الفحص الأمني المزدوج وجلب البيانات =================
+        async function authenticateAndLoad(nidInput, isAutoLogin) {
             try {
-                const [resTeacher, resContract, resSup, resLogs] = await Promise.all([
+                // 1. البحث عن المعلم في الجداول
+                let [resTeacher, resContract] = await Promise.all([
                     supabaseClient.from('teachers').select('*').eq('nid', nidInput).maybeSingle(),
-                    supabaseClient.from('contract_teachers').select('*').eq('nid', nidInput).maybeSingle(),
+                    supabaseClient.from('contract_teachers').select('*').eq('nid', nidInput).maybeSingle()
+                ]);
+
+                let teacher = resTeacher.data || resContract.data;
+                let tableName = resTeacher.data ? 'teachers' : (resContract.data ? 'contract_teachers' : null);
+
+                if (!teacher) {
+                    alert("❌ الرقم القومي المدخل غير مسجل في منظومة المدرسة!");
+                    showView('login-section');
+                    return;
+                }
+
+                // 2. فحص إذا كان الحساب مجمداً مسبقاً
+                if (teacher.is_frozen) {
+                    document.getElementById('frozen-reason-text').innerText = teacher.freeze_reason || "تم تجميد الحساب بقرار إداري أو لمخالفة قواعد الأمان.";
+                    showView('frozen-view');
+                    return;
+                }
+
+                // 3. التحقق من ربط الجهاز (منع تعدد الحسابات على نفس الهاتف)
+                // فحص هل هذا الجهاز (currentDeviceId) مسجل لمعلم آخر بالفعل؟
+                let [chkOtherTeacher, chkOtherContract] = await Promise.all([
+                    supabaseClient.from('teachers').select('nid, name').eq('device_id', currentDeviceId).neq('nid', nidInput).maybeSingle(),
+                    supabaseClient.from('contract_teachers').select('nid, name').eq('device_id', currentDeviceId).neq('nid', nidInput).maybeSingle()
+                ]);
+
+                let boundOtherTeacher = chkOtherTeacher.data || chkOtherContract.data;
+
+                if (boundOtherTeacher) {
+                    // كارثة أمنية: هذا الموبايل يخص المعلم (boundOtherTeacher)، والآن يحاول الدخول برقم قومي مختلف!
+                    // الإجراء: تجميد حساب صاحب الموبايل الأصلي فوراً وإخطار الإدارة
+                    const freezeMsg = `محاولة دخول برقم قومي آخر (${nidInput}) من جهاز مسجل للمعلم: ${boundOtherTeacher.name}`;
+                    
+                    if (chkOtherTeacher.data) {
+                        await supabaseClient.from('teachers').update({ is_frozen: true, freeze_reason: freezeMsg }).eq('nid', boundOtherTeacher.nid);
+                    } else {
+                        await supabaseClient.from('contract_teachers').update({ is_frozen: true, freeze_reason: freezeMsg }).eq('nid', boundOtherTeacher.nid);
+                    }
+
+                    document.getElementById('frozen-reason-text').innerText = `⚠️ تم تجميد حسابك الأصلي (${boundOtherTeacher.name}) فوراً لاكتشاف محاولة الدخول برقم قومي لزميل آخر من نفس الهاتف!`;
+                    showView('frozen-view');
+                    return;
+                }
+
+                // 4. إذا لم يكن الحساب مربوطاً بأي جهاز، يتم ربطه بهذا الجهاز للمرة الأولى
+                if (!teacher.device_id) {
+                    await supabaseClient.from(tableName).update({ device_id: currentDeviceId }).eq('nid', nidInput);
+                    teacher.device_id = currentDeviceId;
+                } else if (teacher.device_id !== currentDeviceId) {
+                    // الحساب مربوط بجهاز آخر مختلف
+                    alert("⚠️ هذا الحساب مربوط بهاتف شخصي آخر بالفعل!\nلا يمكن فتح الحساب من هاتفين مختلفين حفاظاً على الخصوصية. يرجى مراجعة إدارة المدرسة لفك الارتباط.");
+                    showView('login-section');
+                    return;
+                }
+
+                // 5. بعد اجتياز كل الفحوصات الأمنية بنجاح -> حفظ الجلسة وجلب بقية البيانات
+                localStorage.setItem('saved_teacher_nid', nidInput);
+                currentTeacher = teacher;
+
+                const [resSup, resLogs] = await Promise.all([
                     supabaseClient.from("supervision").select("*"),
                     supabaseClient.from("daily_logs").select("*").eq("log_type", "report")
                 ]);
-
-                currentTeacher = resTeacher.data || resContract.data;
-                
-                if (!currentTeacher) {
-                    alert("❌ الرقم القومي غير مسجل في المنظومة!");
-                    localStorage.removeItem('saved_teacher_nid');
-                    window.location.href = 'index.html';
-                    return;
-                }
 
                 schoolSupervisionData = resSup.data || [];
                 calculateEvaluations(resLogs.data || [], currentTeacher.name);
 
                 populateProfile(currentTeacher);
-                
-                // إخفاء شاشة التحميل وعرض الملف الشخصي فوراً
-                document.getElementById('loading-view').style.display = 'none';
-                document.getElementById('profile-section').style.display = 'block';
+                showView('profile-section');
 
             } catch (err) {
-                alert("حدث خطأ في جلب البيانات: " + err.message);
-                window.location.href = 'index.html';
+                console.error(err);
+                alert("حدث خطأ أثناء فحص البيانات: " + err.message);
+                showView('login-section');
             }
         }
 
@@ -520,7 +688,7 @@
 
         function logout() {
             localStorage.removeItem('saved_teacher_nid');
-            window.location.href = 'index.html';
+            showView('login-section');
         }
     </script>
 </body>
