@@ -94,7 +94,7 @@
             font-size: 11.5px; font-weight: 900; font-family: 'Cairo'; outline: none; color: #0f2b48;
         }
         .period-input:focus { background: #fef08a !important; box-shadow: inset 0 0 0 2px var(--secondary); border-radius: 4px; }
-        .period-input.has-val { font-weight: 900; color: #0f2b48; }
+        .period-input.has-val { font-weight: 900; color: #0f2b48; background: rgba(15, 43, 72, 0.05); }
 
         .total-quota-badge { background: #e0f2fe; color: #0369a1; font-weight: 900; padding: 2px 6px; border-radius: 6px; font-size: 12px; }
 
@@ -254,6 +254,19 @@
         const toAr = n => String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
         const daysList = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس"];
 
+        // دالة توحيد الحروف العربية لإزالة مشاكل الهمزات والمسافات
+        function normalizeArabicText(str) {
+            if (!str) return "";
+            return String(str)
+                .trim()
+                .replace(/[أإآ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[\u064B-\u065F]/g, '') // إزالة التشكيل
+                .replace(/\s+/g, ' ')
+                .toLowerCase();
+        }
+
         let masterTeachersList = [];
 
         function openLocalDB() {
@@ -332,15 +345,12 @@
             const spec = String(t.specialization || "").trim().toLowerCase();
             const finDegree = String(t.fin_degree || "").trim().toLowerCase();
 
-            // فحص شامل لمادة التدريس والكادر والدرجة
             const allTeacherInfo = `${subj} ${teachSubj} ${spec} ${cadre} ${cat} ${finDegree}`;
 
-            // 1. استبعاد فوري إذا كانت مادة التدريس أو الوظيفة "غير مخاطب"
             if (allTeacherInfo.includes("غير مخاطب") || allTeacherInfo.includes("غيرمخاطب") || allTeacherInfo.includes("قانون 81") || allTeacherInfo.includes("قانون81")) {
                 return false;
             }
 
-            // 2. استبعاد باقي الوظائف غير التدريسية
             const nonTeachingKeywords = [
                 "إداري", "اداري", "فني", "سكرتير", "عامل", "خدمات", "أمن", 
                 "امين", "أمين", "توريدات", "مخزن", "مخازن", "شئون", "شؤون", 
@@ -350,7 +360,7 @@
             const isExcluded = nonTeachingKeywords.some(kw => allTeacherInfo.includes(kw));
             if (isExcluded) return false;
 
-            return true; // المعلمون الفعليون فقط
+            return true;
         }
 
         // ================= 1. جلب المعلمين المخاطبين بالتدريس فقط =================
@@ -363,14 +373,12 @@
 
                 let combined = [];
 
-                // 1. المعلمون الأساسيون المخاطبون فقط
                 (basicTeachers || []).forEach(t => {
                     if ((t.emp_status || "على رأس العمل") === "على رأس العمل" && isTeacherRole(t)) {
                         combined.push(formatTeacherObject(t, false));
                     }
                 });
 
-                // 2. معلّمو الأجر
                 (contractTeachers || []).forEach(t => {
                     if ((t.emp_status || "على رأس العمل") === "على رأس العمل" && isTeacherRole(t)) {
                         combined.push(formatTeacherObject(t, true));
@@ -476,7 +484,6 @@
                     <td style="background:#fff;"><input type="text" class="period-input" data-field="subject" value="${t.subject}" style="color:#0f2b48; font-weight:900;" placeholder="-"></td>
                 `;
 
-                // بناء خانات الحصص للأيام الـ 5
                 const buildDayInputs = (daySlots, dayName, dayClass) => {
                     let dHtml = "";
                     daySlots.forEach((val, pIndex) => {
@@ -549,8 +556,7 @@
             document.getElementById("stat-total-lessons").innerText = toAr(total);
         }
 
-        // ================= 4. حفظ كافة التعديلات في قاعدة البيانات (مصححة) =================
-        // ================= 4. حفظ الحصص والجدول فقط بأمان تام =================
+        // ================= 4. حفظ الحصص والجدول في قاعدة البيانات =================
         async function saveAllScheduleChanges() {
             const btn = document.getElementById("btnSaveSchedule");
             const oldText = btn.innerHTML;
@@ -577,7 +583,6 @@
                     }
                 });
 
-                // إرسال المفتاح الأساسي + الحصص + المادة فقط (بدون أي حقول إضافية)
                 const schedulePayload = {
                     nid: nid,
                     schedule: newSchedule,
@@ -611,7 +616,7 @@
             }
         }
 
-        // ================= 5. تصدير إكسيل عام للجدول الشامل =================
+        // ================= 5. تصدير إكسيل عام (مع الرقم القومي لضمان المطابقة 100%) =================
         function exportGeneralScheduleToExcel() {
             if (masterTeachersList.length === 0) {
                 alert("لا توجد بيانات لتصديرها!");
@@ -627,6 +632,7 @@
 
                 let rowObj = {
                     "م": idx + 1,
+                    "الرقم القومي": teacherObj.nid,
                     "النوع": teacherObj.isContract ? "معلم أجر" : "أساسي",
                     "الاسم": teacherObj.fullName,
                     "المادة": tr.querySelector('[data-field="subject"]')?.value || teacherObj.subject
@@ -654,7 +660,7 @@
             XLSX.writeFile(wb, `الجدول_المدرسي_العام_${new Date().toLocaleDateString('ar-EG')}.xlsx`);
         }
 
-        // ================= 6. استيراد إكسيل عام للجدول =================
+        // ================= 6. استيراد إكسيل المطور والمصحح بالكامل =================
         function importScheduleFromExcel(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -663,43 +669,109 @@
             reader.onload = function(e) {
                 try {
                     const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                    // defval: "" تضمن عدم تجاهل الخانات الفارغة أو الممسوحة
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
                     
                     let matchedCount = 0;
+                    const allTableRows = Array.from(document.querySelectorAll("#scheduleTableBody tr"));
 
                     jsonData.forEach(row => {
-                        const name = (row["الاسم"] || row["name"] || "").trim();
-                        if (!name) return;
+                        const rowNid = String(row["الرقم القومي"] || row["nid"] || "").trim();
+                        const rawName = String(row["الاسم"] || row["اسم المعلم"] || row["name"] || "").trim();
+                        const normRowName = normalizeArabicText(rawName);
 
-                        const tr = Array.from(document.querySelectorAll("#scheduleTableBody tr")).find(r => {
-                            const tName = r.querySelector(".col-sticky-name")?.innerText.trim();
-                            const tFullName = r.querySelector(".col-sticky-name")?.getAttribute("title")?.trim();
-                            return tName === name || tFullName === name || (tFullName && tFullName.includes(name));
+                        if (!rowNid && !normRowName) return;
+
+                        // البحث أولاً بالرقم القومي، وإذا لم يوجد فبالاسم مع إزالة الهمزات
+                        const tr = allTableRows.find(r => {
+                            const tNid = r.getAttribute("data-teacher-nid");
+                            if (rowNid && tNid === rowNid) return true;
+
+                            const tName = normalizeArabicText(r.querySelector(".col-sticky-name")?.innerText || "");
+                            const tFullName = normalizeArabicText(r.querySelector(".col-sticky-name")?.getAttribute("title") || "");
+                            return tName === normRowName || tFullName === normRowName || (tFullName && tFullName.includes(normRowName));
                         });
 
                         if (tr) {
                             matchedCount++;
+
+                            // تحديث المادة إذا كانت موجودة بالإكسيل
+                            const subjVal = row["المادة"] || row["مادة"] || row["subject"];
+                            if (subjVal !== undefined) {
+                                const subjInp = tr.querySelector('[data-field="subject"]');
+                                if (subjInp) subjInp.value = String(subjVal).trim();
+                            }
+
+                            // استخراج وتعبئة الحصص لجميع الأيام الـ 5 بذكاء
                             daysList.forEach(d => {
                                 for (let p = 1; p <= 8; p++) {
-                                    const val = row[`${d} ح${p}`] || row[`${d}_${p}`] || "";
+                                    // البحث عن مفتاح العمود بكل صيغ الهمزات المحتملة
+                                    let cellVal = undefined;
+                                    const possibleKeys = [
+                                        `${d} ح${p}`, `${d}_${p}`, `${d} ${p}`,
+                                        `${d.replace('ا','أ')} ح${p}`, `${d.replace('ا','إ')} ح${p}`
+                                    ];
+
+                                    for (let k of possibleKeys) {
+                                        if (row[k] !== undefined) {
+                                            cellVal = row[k];
+                                            break;
+                                        }
+                                    }
+
+                                    // إذا لم نجد بالمطابقة السريعة، نبحث بتوحيد حروف المفاتيح
+                                    if (cellVal === undefined) {
+                                        const normTargetKey = normalizeArabicText(d) + " ح" + p;
+                                        for (let rk in row) {
+                                            if (normalizeArabicText(rk).replace(/\s+/g, '') === normTargetKey.replace(/\s+/g, '')) {
+                                                cellVal = row[rk];
+                                                break;
+                                            }
+                                        }
+                                    }
+
                                     const inp = tr.querySelector(`.period-input[data-day="${d}"][data-period="${p}"]`);
-                                    if (inp && val) {
-                                        inp.value = String(val).trim();
-                                        inp.classList.add("has-val");
+                                    if (inp && cellVal !== undefined) {
+                                        const cleanVal = String(cellVal).trim();
+                                        inp.value = cleanVal;
+                                        if (cleanVal !== "") {
+                                            inp.classList.add("has-val");
+                                        } else {
+                                            inp.classList.remove("has-val");
+                                        }
                                     }
                                 }
                             });
+
+                            // تحديث نصاب ومرحلة هذا المعلم فوراً
                             const inputs = tr.querySelectorAll(".period-input[data-day]");
-                            let activeCount = Array.from(inputs).filter(i => i.value.trim() !== "").length;
+                            let activeCount = 0;
+                            let currentPeriods = [];
+                            inputs.forEach(i => {
+                                const val = i.value.trim();
+                                currentPeriods.push(val);
+                                if (val !== "") activeCount++;
+                            });
+
                             tr.querySelector(".row-quota").innerText = toAr(activeCount);
+                            const stageInfo = determineTeacherStage(currentPeriods);
+                            const stageBadge = tr.querySelector(".row-stage");
+                            stageBadge.className = `stage-badge ${stageInfo.cls} row-stage`;
+                            stageBadge.innerText = stageInfo.text;
                         }
                     });
 
                     updateOverallLessonStats();
-                    alert(`✅ تم استيراد وتعبئة حصص (${matchedCount}) معلماً بنجاح!\nيرجى مراجعة الجدول والضغط على (حفظ التعديلات) لاعتمادها.`);
+
+                    if (matchedCount > 0) {
+                        alert(`✅ تم بنجاح استيراد وتطبيق جدول (${matchedCount}) معلماً من ملف الإكسيل!\n\n⚠️ يرجى الضغط على زر (حفظ التعديلات) بالأعلى لتثبيتها في قاعدة البيانات.`);
+                    } else {
+                        alert("⚠️ لم يتم العثور على أي أسماء معلمين متطابقة بين ملف الإكسيل والجدول الحالي! يرجى التأكد من استيراد الملف الأصلي.");
+                    }
 
                 } catch (err) {
-                    alert("❌ فشل قراءة ملف الإكسيل: " + err.message);
+                    console.error(err);
+                    alert("❌ فشل قراءة وتطبيق ملف الإكسيل: " + err.message);
                 } finally {
                     event.target.value = '';
                 }
