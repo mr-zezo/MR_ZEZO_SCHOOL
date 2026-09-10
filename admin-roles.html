@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>منظومة مستر زيزو لادارة بيانات المدرسة</title>
+    <title>منظومة مستر زيزو لادارة بيانات المدرسة - لوحة التحكم</title>
     
     <!-- خط Cairo والأيقونات الرسمية -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -105,7 +105,50 @@
             </div>
         </div>
 
-        <!-- 3. عمليات النسخ الاحتياطي والاستعادة -->
+        <!-- 3. [قسم جديد] رادار الأمان وإدارة حسابات المعلمين المجمدة -->
+        <div class="card-3d p-3.5 sm:p-5 md:p-6 border-rose-200">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-200 pb-3 mb-3.5">
+                <div class="flex items-center gap-2">
+                    <div class="p-2 bg-rose-100 text-rose-700 rounded-xl text-lg">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm sm:text-base md:text-lg font-black text-slate-800 flex items-center gap-2">
+                            سجل الحسابات المجمدة أمنياً (محاولات الدخول غير المصرح بها)
+                            <span id="frozenBadgeCount" class="bg-rose-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                        </h2>
+                        <p class="text-[11px] sm:text-xs text-slate-500 font-semibold">المعلمون الذين حاولوا الدخول بأرقام قومية لزملائهم من هواتفهم الشخصية</p>
+                    </div>
+                </div>
+                <button type="button" onclick="loadFrozenTeachers()" class="text-xs text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1 self-end sm:self-center">
+                    <i class="fa-solid fa-arrows-rotate"></i> تحديث السجل
+                </button>
+            </div>
+
+            <!-- جدول المعلمين المجمدين -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-right text-xs border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700 border-b border-slate-200 font-black">
+                            <th class="p-2.5">المعلم المجمد</th>
+                            <th class="p-2.5">الرقم القومي</th>
+                            <th class="p-2.5">فئة التعاقد</th>
+                            <th class="p-2.5">تفاصيل الواقعة</th>
+                            <th class="p-2.5 text-center">إجراء الإدارة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="frozenTeachersTable">
+                        <tr>
+                            <td colspan="5" class="p-6 text-center text-slate-400 font-bold">
+                                <i class="fa-solid fa-circle-notch fa-spin ml-2"></i> جاري فحص الحسابات المجمدة...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. عمليات النسخ الاحتياطي والاستعادة -->
         <div class="card-3d p-3.5 sm:p-5 md:p-6 bg-gradient-to-br from-white via-slate-50 to-blue-50/40">
             <div class="flex items-center gap-2.5 mb-3.5">
                 <div class="p-2 sm:p-2.5 bg-indigo-100 text-indigo-700 rounded-xl text-lg sm:text-xl">
@@ -159,7 +202,7 @@
             </div>
         </div>
 
-        <!-- 4. جدول إدارة وتشفير الصلاحيات وكلمات المرور -->
+        <!-- 5. جدول إدارة وتشفير الصلاحيات وكلمات المرور -->
         <div class="card-3d p-3.5 sm:p-5 md:p-6">
             <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-3 mb-3.5 gap-2">
                 <div class="flex items-center gap-2 font-black text-slate-800 text-xs sm:text-base">
@@ -213,7 +256,7 @@
                     </div>
                     <div class="sm:col-span-5">
                         <div class="w-full bg-white border border-emerald-300 rounded-lg px-3 py-2 text-[11px] sm:text-xs text-emerald-800 font-bold flex items-center gap-2">
-                            <i class="fa-solid fa-id-card text-emerald-600"></i> دخول بالرقم القومي (بدون باسورد)
+                            <i class="fa-solid fa-id-card text-emerald-600"></i> دخول بالرقم القومي (وتوثيق الجهاز)
                         </div>
                     </div>
                     <div class="sm:col-span-3 text-[11px] sm:text-xs text-center font-bold text-emerald-800 bg-emerald-100/70 py-1.5 rounded-lg">
@@ -309,6 +352,49 @@
 
     </div>
 
+    <!-- نافذة تفاصيل واقعة التجميد الذكية -->
+    <div id="freezeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden justify-center items-center z-50 p-3 sm:p-4">
+        <div class="bg-white border border-rose-300 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl animate-fade-in">
+            <div class="bg-gradient-to-r from-rose-700 to-red-800 p-4 text-white flex justify-between items-center">
+                <h3 class="font-extrabold text-sm sm:text-base flex items-center gap-2">
+                    <i class="fa-solid fa-shield-cat text-yellow-300 text-lg"></i> كشف تفاصيل محاولة الدخول غير المصرح به
+                </h3>
+                <button onclick="closeFreezeModal()" class="text-white text-xl hover:text-rose-200 cursor-pointer">&times;</button>
+            </div>
+            <div class="p-5 space-y-3.5">
+                
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <div class="text-[11px] text-slate-500 font-bold mb-0.5">المعلم صاحب الهاتف الشخصي (المجمد حالياً):</div>
+                    <div class="text-sm font-black text-rose-800 flex items-center gap-1.5" id="mdlTeacherName">...</div>
+                    <div class="text-xs text-slate-600 font-bold font-mono mt-0.5" id="mdlTeacherNid">...</div>
+                </div>
+
+                <div class="p-3.5 bg-rose-50/80 rounded-xl border border-rose-200">
+                    <div class="text-[11px] text-rose-700 font-bold mb-1 flex items-center gap-1">
+                        <i class="fa-solid fa-triangle-exclamation"></i> الزميل الذي حاول الدخول بحسابه:
+                    </div>
+                    <div class="text-base font-black text-rose-950" id="mdlTargetName">جاري التعرف على الزميل...</div>
+                    <div class="text-xs font-bold text-rose-800 mt-1 flex flex-wrap gap-2">
+                        <span>الرقم القومي المستخدم: <b class="font-mono bg-white px-1.5 py-0.5 rounded border border-rose-200" id="mdlTargetNid">...</b></span>
+                        <span id="mdlTargetRole" class="text-slate-600"></span>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs font-bold text-amber-900 leading-relaxed">
+                    <i class="fa-solid fa-circle-info text-amber-600 ml-1"></i>
+                    <b>ملاحظة إدارية:</b> يتم تجميد الحساب الأصلي تلقائياً لحماية خصوصية بيانات الزملاء، وفك التجميد يعيد الحساب للعمل مع السماح بإعادة توثيق الهاتف الشخصي.
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-200">
+                    <button onclick="closeFreezeModal()" class="px-4 py-2 bg-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-300">إغلاق</button>
+                    <button onclick="executeUnfreezeFromModal()" id="btnModalUnfreeze" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl shadow flex items-center gap-1.5">
+                        <i class="fa-solid fa-lock-open"></i> فك تجميد الحساب الآن
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- نافذة التحقق الأمني لكشف كلمات المرور -->
     <div id="verifyModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden justify-center items-center z-50 p-3 sm:p-4">
         <div class="bg-white border border-slate-300 rounded-2xl max-w-md w-full overflow-hidden shadow-2xl">
@@ -350,6 +436,8 @@
 
         const DEFAULT_BACKUP_PATH = "D:\\MR_ZEZO_SCHOOL\\Backup";
         let directoryHandle = null;
+        let globalFrozenList = [];
+        let currentModalItem = null;
 
         const SYSTEM_TABLES = [
             { id: 'students', label: 'التلاميذ', conflict: 'code', keyField: 'code' },
@@ -427,6 +515,7 @@
         async function setAppMode(mode) {
             localStorage.setItem('ZEZO_APP_MODE', mode);
             await refreshLiveStats();
+            await loadFrozenTeachers();
             if (mode === 'online') {
                 showAlert(`🌐 تم تفعيل وضع أونلاين بنجاح! المنظومة تعتمد الآن كلياً على سوبابيز.`);
             } else {
@@ -436,6 +525,7 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             await refreshLiveStats();
+            await loadFrozenTeachers();
         });
 
         async function refreshLiveStats() {
@@ -491,6 +581,188 @@
             box.innerHTML = msg;
             box.classList.remove('hidden');
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ================= [جديد] كشف وإدارة الحسابات المجمدة =================
+        async function loadFrozenTeachers() {
+            const tbody = document.getElementById('frozenTeachersTable');
+            const badge = document.getElementById('frozenBadgeCount');
+            const mode = getAppMode();
+
+            try {
+                let frozenList = [];
+                if (mode === 'offline') {
+                    const [t1, t2] = await Promise.all([
+                        getTableFromIndexedDB('teachers'),
+                        getTableFromIndexedDB('contract_teachers')
+                    ]);
+                    (t1 || []).filter(t => t.is_frozen).forEach(t => frozenList.push({ ...t, table: 'teachers', category: 'معلم أساسي' }));
+                    (t2 || []).filter(t => t.is_frozen).forEach(t => frozenList.push({ ...t, table: 'contract_teachers', category: 'معلم أجر / عقد' }));
+                } else {
+                    const [res1, res2] = await Promise.all([
+                        sbClient.from('teachers').select('*').eq('is_frozen', true),
+                        sbClient.from('contract_teachers').select('*').eq('is_frozen', true)
+                    ]);
+                    (res1.data || []).forEach(t => frozenList.push({ ...t, table: 'teachers', category: 'معلم أساسي' }));
+                    (res2.data || []).forEach(t => frozenList.push({ ...t, table: 'contract_teachers', category: 'معلم أجر / عقد' }));
+                }
+
+                globalFrozenList = frozenList;
+                badge.innerText = frozenList.length;
+
+                if (frozenList.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="p-6 text-center text-emerald-700 bg-emerald-50/50 font-black rounded-xl">
+                                <i class="fa-solid fa-circle-check text-emerald-600 text-lg ml-1"></i> لا توجد حسابات معلمين مجمدة حالياً، جميع الحسابات تعمل بأمان تام!
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                frozenList.forEach((t, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b border-slate-200 hover:bg-rose-50/40 font-bold transition";
+                    tr.innerHTML = `
+                        <td class="p-2.5 font-black text-slate-800 flex items-center gap-1.5">
+                            <i class="fa-solid fa-user-xmark text-rose-600"></i> ${t.name}
+                        </td>
+                        <td class="p-2.5 font-mono text-slate-700 text-xs">${t.nid}</td>
+                        <td class="p-2.5 text-xs text-slate-600">${t.category}</td>
+                        <td class="p-2.5 text-xs">
+                            <button onclick="openFreezeModal(${idx})" class="px-2.5 py-1 bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-lg font-black flex items-center gap-1 border border-rose-300">
+                                <i class="fa-solid fa-magnifying-glass"></i> كشف من حاول الدخول باسمه
+                            </button>
+                        </td>
+                        <td class="p-2.5 text-center">
+                            <button onclick="unfreezeTeacherDirect('${t.nid}', '${t.table}', '${t.name}')" 
+                                    class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-black text-xs shadow flex items-center gap-1 mx-auto cursor-pointer">
+                                <i class="fa-solid fa-lock-open"></i> فك التجميد
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-rose-600 font-bold">خطأ في جلب الحسابات المجمدة: ${err.message}</td></tr>`;
+            }
+        }
+
+        // كشف تفاصيل الزميل المستهدف
+        async function openFreezeModal(index) {
+            const item = globalFrozenList[index];
+            if (!item) return;
+            currentModalItem = item;
+
+            document.getElementById('mdlTeacherName').innerText = item.name;
+            document.getElementById('mdlTeacherNid').innerText = item.nid;
+
+            const targetNameEl = document.getElementById('mdlTargetName');
+            const targetNidEl = document.getElementById('mdlTargetNid');
+            const targetRoleEl = document.getElementById('mdlTargetRole');
+
+            targetNameEl.innerText = "جاري البحث في قاعدة البيانات...";
+            targetNidEl.innerText = "غير محدد";
+            targetRoleEl.innerText = "";
+
+            // استخراج الرقم القومي المحاول من نص السبب
+            const reason = item.freeze_reason || "";
+            const matchNid = reason.match(/\b\d{14}\b/);
+
+            if (matchNid && matchNid[0]) {
+                const targetNid = matchNid[0];
+                targetNidEl.innerText = targetNid;
+
+                try {
+                    // البحث عن اسم صاحب هذا الرقم القومي
+                    let targetTeacher = null;
+                    const mode = getAppMode();
+
+                    if (mode === 'offline') {
+                        const [allT1, allT2] = await Promise.all([
+                            getTableFromIndexedDB('teachers'),
+                            getTableFromIndexedDB('contract_teachers')
+                        ]);
+                        targetTeacher = (allT1 || []).find(t => t.nid === targetNid) || (allT2 || []).find(t => t.nid === targetNid);
+                    } else {
+                        const [q1, q2] = await Promise.all([
+                            sbClient.from('teachers').select('name, subject, cadre_job').eq('nid', targetNid).maybeSingle(),
+                            sbClient.from('contract_teachers').select('name, subject').eq('nid', targetNid).maybeSingle()
+                        ]);
+                        targetTeacher = q1.data || q2.data;
+                    }
+
+                    if (targetTeacher) {
+                        targetNameEl.innerHTML = `<span class="text-rose-700 font-black">أ/ ${targetTeacher.name}</span>`;
+                        targetRoleEl.innerText = `(${targetTeacher.cadre_job || 'معلم'} - مادة ${targetTeacher.subject || 'غير محددة'})`;
+                    } else {
+                        targetNameEl.innerText = "رقم قومي غير مسجل بالمنظومة (أو كتبه المعلم بالخطأ)";
+                    }
+                } catch(e) {
+                    targetNameEl.innerText = "تعذر مطابقة الاسم، الرقم المحاول: " + targetNid;
+                }
+            } else {
+                targetNameEl.innerText = item.freeze_reason || "تم التجميد بقرار إداري مباشر.";
+            }
+
+            document.getElementById('freezeModal').classList.remove('hidden');
+            document.getElementById('freezeModal').classList.add('flex');
+        }
+
+        function closeFreezeModal() {
+            document.getElementById('freezeModal').classList.add('hidden');
+            document.getElementById('freezeModal').classList.remove('flex');
+            currentModalItem = null;
+        }
+
+        async function executeUnfreezeFromModal() {
+            if (!currentModalItem) return;
+            await unfreezeTeacherDirect(currentModalItem.nid, currentModalItem.table, currentModalItem.name);
+            closeFreezeModal();
+        }
+
+        // تنفيذ عملية فك التجميد ومسح ارتباط الجهاز
+        async function unfreezeTeacherDirect(nid, table, teacherName) {
+            if (!confirm(`هل أنت متأكد من فك تجميد حساب المعلم:\n(${teacherName})\n\n- سيتم إتاحة الدخول له فوراً.\n- سيتم تصفير ربط الجهاز ليتمكن من ربط هاتفه الجديد تلقائياً عند أول دخول.`)) {
+                return;
+            }
+
+            const mode = getAppMode();
+            try {
+                if (mode === 'offline') {
+                    const db = await openIndexedDB();
+                    const tx = db.transaction(table, 'readwrite');
+                    const store = tx.objectStore(table);
+                    const req = store.get(nid);
+                    req.onsuccess = () => {
+                        let record = req.result;
+                        if (record) {
+                            record.is_frozen = false;
+                            record.freeze_reason = null;
+                            record.device_id = null; // تصفير الجهاز للسماح بربط هاتف جديد
+                            store.put(record);
+                        }
+                    };
+                } else {
+                    const { error } = await sbClient.from(table).update({
+                        is_frozen: false,
+                        freeze_reason: null,
+                        device_id: null // مسح البصمة السابقة لتوثيق جهازه من جديد
+                    }).eq('nid', nid);
+
+                    if (error) throw error;
+                }
+
+                showAlert(`🔓 تم بنجاح فك تجميد حساب المعلم (${teacherName}) وتصفير بصمة جهازه.`);
+                await loadFrozenTeachers();
+
+            } catch (err) {
+                showAlert(`❌ فشل فك التجميد: ${err.message}`, false);
+            }
         }
 
         // ================= 1. تنزيل نسخة احتياطية على الجهاز =================
@@ -661,6 +933,7 @@
                     localStorage.setItem('ZEZO_LAST_SYNC_DATE', nowStr + ' (تحديث سحابي)');
 
                     await refreshLiveStats();
+                    await loadFrozenTeachers();
                     showAlert(`🚀 تم تحديث قاعدة بيانات سوبابيز السحابية بنجاح (${totalPushed} سجل).`);
 
                 } catch (err) {
@@ -715,6 +988,7 @@
                     localStorage.setItem('ZEZO_LAST_SYNC_DATE', syncDate + ' (محلي)');
 
                     await refreshLiveStats();
+                    await loadFrozenTeachers();
                     showAlert(`✅ تم استيراد (${importedCount}) سجل بنجاح! تم تفعيل وضع الأوفلاين.`);
 
                 } catch (err) {
@@ -727,7 +1001,7 @@
             reader.readAsText(file);
         }
 
-        // ================= 4. إدارة وحفظ الصلاحيات (مع معالجة role_name الإلزامية) =================
+        // ================= 4. إدارة وحفظ الصلاحيات =================
         function togglePass(inputId, btn) {
             const input = document.getElementById(inputId);
             const icon = btn.querySelector('i');
@@ -853,7 +1127,6 @@
             btn.disabled = true;
             btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin ml-2"></i> جاري الحفظ...`;
 
-            // تعريف الصلاحيات مع أسمائها وروابطها لتفادي خطأ NOT NULL
             const rolesConfig = [
                 { key: 'super_admin', inputId: 'pass_super_admin', label: 'مستر زيزو (المدير العام)', url: 'index.html' },
                 { key: 'student_affairs', inputId: 'pass_student_affairs', label: 'شؤون الطلبة والإحصاء', url: 'stu-absence.html' },
@@ -895,13 +1168,11 @@
                 }
 
                 if (savedRecords.length > 0) {
-                    // 1. حفظ سحابي في سوبابيز
                     if (mode === 'online') {
                         const { error } = await sbClient.from('system_roles').upsert(savedRecords, { onConflict: 'role_key' });
                         if (error) throw error;
                     }
 
-                    // 2. حفظ في IndexedDB المحلي
                     const db = await openIndexedDB();
                     const tx = db.transaction('system_roles', 'readwrite');
                     savedRecords.forEach(r => tx.objectStore('system_roles').put(r));
