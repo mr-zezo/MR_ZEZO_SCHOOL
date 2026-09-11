@@ -720,11 +720,13 @@
         }
 
         // ================= جلب جميع المعلمين (معينين + أجر) =================
+        // ================= جلب جميع المعلمين (معينين + أجر) بدون أي استبعاد =================
         async function loadAllTeachersComprehensive() {
             const select = document.getElementById("teacher-select");
             select.innerHTML = '<option value="" disabled selected>⏳ جاري جلب جميع المعلمين (أساسيين وأجر)...</option>';
 
             try {
+                // جلب جدولين المعينين والأجر معاً بالتوازي من السحابة
                 const [resPerm, resContract] = await Promise.all([
                     supabaseClient.from("teachers").select("*"),
                     supabaseClient.from("contract_teachers").select("*")
@@ -732,6 +734,7 @@
 
                 TEACHERS = [];
 
+                // 1. المعلمون المعينون والأساسيون
                 (resPerm.data || []).forEach(t => {
                     const job = (t.cadre_job || "");
                     const isWorker = job.includes("عامل خدمات") || job.includes("حارس");
@@ -741,29 +744,31 @@
                         TEACHERS.push({
                             ...t,
                             is_contract: false,
-                            unique_id: String(t.code || t.id),
-                            display_title: t.name
+                            unique_id: "PERM_" + (t.code || t.id),
+                            display_title: `أ/ ${t.name} (أساسي)`
                         });
                     }
                 });
 
+                // 2. معلمو الأجر والحصة (جلب مباشر بدون شروط معقدة لضمان ظهور الجميع)
                 (resContract.data || []).forEach(t => {
-                    if (t.status !== "منتهي" && t.status !== "متوقف") {
+                    if (t.name && t.name.trim() !== "") {
                         TEACHERS.push({
                             ...t,
-                            code: t.code || `CON_${t.id}`,
                             is_contract: true,
-                            unique_id: String(t.code || t.id),
-                            display_title: `${t.name} (معلم أجر/حصة)`
+                            unique_id: "CON_" + (t.id || t.code || Math.random()),
+                            display_title: `أ/ ${t.name} ⭐ (معلم أجر/حصة)`
                         });
                     }
                 });
 
+                // ترتيب الجميع أبجدياً
                 TEACHERS.sort((a, b) => (a.name || "").localeCompare(b.name || "", 'ar'));
+
                 renderTeachersDropdown(TEACHERS);
 
             } catch(e) { 
-                console.error(e);
+                console.error("خطأ جلب المعلمين:", e);
                 select.innerHTML = '<option value="" disabled selected>❌ خطأ في الاتصال بقاعدة البيانات</option>'; 
             }
         }
@@ -868,6 +873,7 @@
         }
 
         // ================= ☁️ حفظ الجدول مع التجاوز الذكي لحصص الدين D =================
+       // ================= حفظ الجدول وتوجيهه تلقائياً للجدول الصحيح =================
         async function saveTeacherSchedule() {
             if(!CURRENT_TEACHER) { Swal.fire('تنبيه', 'يرجى اختيار المعلم أولاً!', 'warning'); return; }
 
@@ -889,13 +895,12 @@
                         if(String(t.unique_id) !== String(CURRENT_TEACHER.unique_id) && t.schedule && t.schedule[key]) {
                             const otherVal = String(t.schedule[key]).trim().toUpperCase();
 
-                            // 🌟 استثناء ذكي: إذا كان كلاهما يحمل حرف D للدين لنفس الفصل فلا يعتبر تعارضاً
+                            // استثناء حصص الدين D
                             const isBothReligionD = valUpper.endsWith('D') && otherVal.endsWith('D') && valUpper === otherVal;
 
                             if (!isBothReligionD) {
-                                // فحص التعارض العادي (سواء كلاهما عادي أو أحدهما دين والآخر عادي لنفس الفصل)
                                 if (valUpper === otherVal || valUpper.replace('D', '') === otherVal.replace('D', '')) {
-                                    clashes.push(`• فصل (${val}) في ${dayNamesAr[key.split('_')[0]]} الحصة ${key.split('_')[1]} مسند أيضاً لـ (أ. ${t.short_name || t.name})`);
+                                    clashes.push(`• فصل (${val}) في ${dayNamesAr[key.split('_')[0]]} الحصة ${key.split('_')[1]} مسند أيضاً لـ (${t.short_name || t.name})`);
                                 }
                             }
                         }
@@ -917,22 +922,25 @@
 
             const btn = document.querySelector('.btn-save');
             const oldHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ في السحابة...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
             btn.disabled = true;
 
             try {
-                const targetTable = CURRENT_TEACHER.is_contract ? "contract_teachers" : "teachers";
-                const targetIdCol = CURRENT_TEACHER.is_contract ? (CURRENT_TEACHER.id ? "id" : "code") : "code";
-                const targetIdVal = CURRENT_TEACHER.is_contract ? (CURRENT_TEACHER.id || CURRENT_TEACHER.code) : CURRENT_TEACHER.code;
+                // توجيه الحفظ: إذا كان معلم أجر يحفظ في contract_teachers، وإذا كان أساسياً يحفظ في teachers
+                let saveQuery;
+                if (CURRENT_TEACHER.is_contract) {
+                    saveQuery = supabaseClient
+                        .from("contract_teachers")
+                        .update({ short_name: shortName, schedule: scheduleData })
+                        .eq("id", CURRENT_TEACHER.id);
+                } else {
+                    saveQuery = supabaseClient
+                        .from("teachers")
+                        .update({ short_name: shortName, schedule: scheduleData })
+                        .eq("code", CURRENT_TEACHER.code);
+                }
 
-                const { error } = await supabaseClient
-                    .from(targetTable)
-                    .update({ 
-                        short_name: shortName, 
-                        schedule: scheduleData 
-                    })
-                    .eq(targetIdCol, targetIdVal);
-
+                const { error } = await saveQuery;
                 if (error) throw error;
 
                 CURRENT_TEACHER.short_name = shortName;
@@ -941,6 +949,7 @@
                 Swal.fire({
                     icon: 'success',
                     title: 'تم الحفظ في السحابة بنجاح!',
+                    text: CURRENT_TEACHER.is_contract ? 'تم حفظ جدول معلم الأجر بنجاح.' : 'تم حفظ جدول المعلم الأساسي بنجاح.',
                     timer: 1500,
                     showConfirmButton: false
                 });
