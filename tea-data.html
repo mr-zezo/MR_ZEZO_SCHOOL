@@ -468,33 +468,59 @@
         }
 
         // ================= 3. حفظ بيانات المعلمين =================
+       // ================= 3. حفظ بيانات المعلمين الذكي وتفادي تكرار الأكواد =================
         async function saveAllTeachers() {
             const btn = document.querySelector('.btn-save');
             const oldText = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
 
             let teachersToSave = [];
+            let codesMap = {};
+            let duplicateCodeError = null;
 
-            document.querySelectorAll("#table-body tr").forEach(row => {
+            document.querySelectorAll("#table-body tr").forEach((row, idx) => {
                 const ins = row.querySelectorAll("input, select");
                 if (ins.length > 0) {
                     let t = {};
-                    ins.forEach(i => { if(i.getAttribute("data-field")) t[i.getAttribute("data-field")] = i.value; });
+                    ins.forEach(i => { 
+                        if(i.getAttribute("data-field")) t[i.getAttribute("data-field")] = i.value.trim(); 
+                    });
                     
                     if (t.name && t.name.trim() !== "") { 
+                        // معالجة الرقم القومي إن كان فارغاً
                         if (!t.nid || t.nid.trim() === "") {
                             const existingFakeNid = row.getAttribute("data-orig-nid");
-                            t.nid = (existingFakeNid && existingFakeNid !== "null") ? existingFakeNid : "TEMP_" + Math.random().toString(36).substr(2, 9);
+                            t.nid = (existingFakeNid && existingFakeNid !== "null") ? existingFakeNid : "TEMP_NID_" + Math.random().toString(36).substr(2, 9);
                         }
+
+                        // معالجة كود المعلم إن كان فارغاً لمنع خطأ قاعدة البيانات
+                        if (!t.code || t.code.trim() === "") {
+                            t.code = "TEA_" + Math.random().toString(36).substr(2, 8);
+                        } else {
+                            // فحص إذا كان الكود مكرراً بين معلمين مختلفين
+                            if (codesMap[t.code]) {
+                                duplicateCodeError = `كود المعلم (${t.code}) مكرر لكل من:\n1. ${codesMap[t.code]}\n2. ${t.name}`;
+                            } else {
+                                codesMap[t.code] = t.name;
+                            }
+                        }
+
                         teachersToSave.push(t);
                     }
                 }
             });
 
+            // لو وجد كود مكرر ينبهك باسم المعلمين فوراً
+            if (duplicateCodeError) {
+                alert("⚠️ تنبيه بوجود كود مكرر:\n\n" + duplicateCodeError + "\n\nيرجى تعديل الكود ليكون فريداً لكل معلم.");
+                btn.innerHTML = oldText;
+                return;
+            }
+
             if (teachersToSave.length > 0) {
                 try {
                     await ZezoEngine.upsert('teachers', teachersToSave, 'nid');
-                    alert(`✅ تم حفظ وتحديث بيانات (${teachersToSave.length}) موظف بنجاح وفق النمط [${ZezoEngine.getMode()}].`);
+                    alert(`✅ تم حفظ وتحديث بيانات (${teachersToSave.length}) موظف بنجاح في السحابة!`);
                     loadTeachersData(); 
                 } catch(err) { 
                     alert("❌ خطأ أثناء الحفظ: " + err.message); 
