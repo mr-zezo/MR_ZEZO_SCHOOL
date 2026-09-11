@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>منظومة الجدول المدرسي المتكاملة - مستر زيزو</title>
+    <title>منظومة الجدول المدرسي الذكية - مستر زيزو</title>
     
     <!-- الخطوط والأيقونات -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- مكتبة Supabase -->
+    <!-- مكتبات Supabase و SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        /* ================= المتغيرات الديناميكية والتنسيق العام ================= */
         :root { 
             --primary: #1e3a8a;          
             --primary-hover: #172554;
@@ -28,144 +28,180 @@
             --border-color: #cbd5e1;     
             
             /* أبعاد جدول المعلم (A5) */
-            --row-title-h: 48px; 
+            --row-title-h: 46px; 
             --row-period-h: 28px; 
             --row-session-h: 28px; 
-            --row-data-h: 52px;
+            --row-data-h: 50px;
             --col-day-w: 95px; 
             --col-session-w: auto;
-            --space-top: 15px; 
-            --space-bottom: 18px;
-            --border-thick: 3px; 
+            --space-top: 12px; 
+            --space-bottom: 15px;
+            --border-thick: 2.5px; 
             --border-thin: 1px;
-            --font-title: 20px; 
-            --font-header: 14px; 
-            --font-cell: 17px; 
-            --font-footer: 15px;
-
-            /* أبعاد جدول اللفاف (A4) */
-            --master-row-h: 30px;
-            --master-col-w: auto;
+            --font-title: 19px; 
+            --font-header: 13.5px; 
+            --font-cell: 16px; 
+            --font-footer: 14px;
         }
 
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-color); color: var(--text-dark); padding: 12px; display: flex; flex-direction: column; align-items: center; padding-bottom: 60px; }
+        body { background-color: var(--bg-color); color: var(--text-dark); padding: 8px; display: flex; flex-direction: column; align-items: center; padding-bottom: 60px; }
 
-        /* ================= 1. شريط التنقل العلوي وشارة الاتصال ================= */
+        /* ================= 1. الشريط العلوي ================= */
         .top-navigation {
-            width: 100%; max-width: 1180px; background: var(--primary); padding: 12px 20px;
+            width: 100%; max-width: 1180px; background: var(--primary); padding: 10px 14px;
             border-radius: 12px; color: white; display: flex; justify-content: space-between;
-            align-items: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            flex-wrap: wrap; gap: 12px; border-bottom: 4px solid #38bdf8;
+            align-items: center; margin-bottom: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            flex-wrap: wrap; gap: 8px; border-bottom: 4px solid #38bdf8;
         }
-        .nav-title { font-size: 16px; font-weight: 900; color: #e2e8f0; display: flex; align-items: center; gap: 10px; }
-        .nav-title i { color: #fcd34d; font-size: 20px; }
+        .nav-title { font-size: 15px; font-weight: 900; color: #f8fafc; display: flex; align-items: center; gap: 8px; }
+        .nav-title i { color: #fcd34d; font-size: 18px; }
 
         .dev-badge {
             background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); color: #fff;
-            padding: 6px 18px; border-radius: 50px; font-size: 12px; font-weight: 800;
-            border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; gap: 8px;
+            padding: 4px 14px; border-radius: 50px; font-size: 11.5px; font-weight: 800;
+            border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; gap: 6px;
         }
         .dev-badge span { color: #fcd34d; font-weight: 900; }
 
-        /* شارات وضع النظام أونلاين / أوفلاين */
-        .mode-badge {
-            padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 900;
-            display: inline-flex; align-items: center; gap: 6px;
+        .mode-badge-online {
+            padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 900;
+            background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981;
+            display: inline-flex; align-items: center; gap: 5px;
         }
-        .mode-online { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
-        .mode-offline { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
 
-        .nav-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .nav-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
         .quick-nav-select {
-            padding: 6px 12px; border-radius: 8px; border: 1px solid #fcd34d; background: #172554;
-            color: white; font-weight: 800; font-family: 'Cairo'; outline: none; cursor: pointer; font-size: 12px;
+            padding: 5px 8px; border-radius: 6px; border: 1px solid #fcd34d; background: #172554;
+            color: white; font-weight: 800; font-family: 'Cairo'; outline: none; cursor: pointer; font-size: 11.5px;
         }
         .quick-nav-select option { background: white; color: black; }
 
         .btn-nav {
-            text-decoration: none; color: white; background: #334155; padding: 6px 14px;
-            border-radius: 8px; font-size: 12px; font-weight: 800; display: inline-flex;
-            align-items: center; gap: 6px; transition: all 0.2s; border: none; cursor: pointer;
+            text-decoration: none; color: white; background: #334155; padding: 5px 12px;
+            border-radius: 6px; font-size: 11.5px; font-weight: 800; display: inline-flex;
+            align-items: center; gap: 4px; transition: all 0.2s; border: none; cursor: pointer;
         }
-        .btn-nav:hover { transform: translateY(-2px); opacity: 0.95; }
-        .btn-nav-general { background: #0284c7 !important; border: 1px solid #38bdf8; box-shadow: 0 0 10px rgba(56,189,248,0.25); }
+        .btn-nav:hover { transform: translateY(-1px); }
+        .btn-nav-general { background: #0284c7 !important; border: 1px solid #38bdf8; }
+        .btn-nav-reda { background: #dc2626 !important; border: 1px solid #f87171; }
 
-        /* ================= 2. لوحة التحكم والإعدادات ================= */
+        /* ================= 2. كارت الإدخال الصوتي الذكي ================= */
+        .voice-card {
+            width: 100%; max-width: 1180px; background: linear-gradient(135deg, #0f172a, #1e1b4b, #2e1065);
+            border: 2px solid #a855f7; border-radius: 14px; padding: 14px 18px;
+            margin-bottom: 12px; box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
+            color: white; display: flex; flex-direction: column; gap: 8px;
+        }
+
+        .voice-header {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
+            border-bottom: 1px dashed rgba(255,255,255,0.2); padding-bottom: 8px;
+        }
+        .voice-title { font-size: 13.5px; font-weight: 900; color: #fcd34d; display: flex; align-items: center; gap: 8px; }
+
+        .voice-controls {
+            display: flex; gap: 8px; flex-wrap: wrap; width: 100%; align-items: stretch;
+        }
+
+        .voice-text-input {
+            flex-grow: 1; padding: 10px 14px; border-radius: 10px; border: 2px solid #c084fc;
+            background: rgba(15, 23, 42, 0.9); color: #f8fafc; font-size: 14px; font-weight: 800; outline: none;
+            min-height: 48px;
+        }
+        .voice-text-input:focus { border-color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+
+        .btn-apply-voice {
+            background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 10px 22px;
+            border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer; white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); transition: all 0.2s;
+        }
+        .btn-apply-voice:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6); }
+
+        /* ================= 3. لوحة التحكم والبحث الذكي ================= */
         .controls-wrapper {
-            width: 100%; max-width: 1180px; background: var(--surface); padding: 20px;
+            width: 100%; max-width: 1180px; background: var(--surface); padding: 15px;
             border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-            border-top: 4px solid var(--primary); margin-bottom: 20px;
-            display: flex; flex-direction: column; gap: 15px;
+            border-top: 4px solid var(--primary); margin-bottom: 12px;
+            display: flex; flex-direction: column; gap: 12px;
         }
 
         .controls-row-inputs {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-            gap: 15px; width: 100%; align-items: flex-end;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px; width: 100%; align-items: flex-end;
         }
 
-        .input-group { display: flex; flex-direction: column; gap: 6px; }
-        .input-group label { font-size: 13px; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; gap: 6px; }
+        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-group label { font-size: 12px; font-weight: 800; color: var(--text-dark); display: flex; align-items: center; gap: 5px; }
         
         .input-group select, .input-group input {
-            padding: 9px 12px; border-radius: 8px; border: 2px solid var(--border-color);
+            padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--border-color);
             font-weight: 800; font-size: 13px; outline: none; background: #f8fafc;
-            color: var(--text-dark); transition: all 0.2s;
+            color: var(--text-dark); width: 100%;
         }
         .input-group select:focus, .input-group input:focus {
             border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
         }
 
+        .teacher-search-field {
+            border-color: #3b82f6 !important; background: #eff6ff !important;
+            font-size: 12px !important; margin-bottom: 4px;
+        }
+
         .controls-row-buttons {
-            display: flex; flex-wrap: wrap; gap: 8px; padding-top: 10px;
+            display: flex; flex-wrap: wrap; gap: 6px; padding-top: 8px;
             border-top: 1px dashed var(--border-color); align-items: center;
         }
 
         .btn-action {
-            border: none; padding: 8px 16px; border-radius: 8px; font-weight: 800;
+            border: none; padding: 7px 12px; border-radius: 6px; font-weight: 800;
             cursor: pointer; color: white; display: inline-flex; align-items: center;
-            justify-content: center; gap: 6px; font-size: 12px; height: 38px;
+            justify-content: center; gap: 5px; font-size: 11.5px; height: 36px;
             transition: all 0.2s; text-decoration: none;
         }
-        .btn-action:hover { transform: translateY(-2px); opacity: 0.95; }
-        .btn-save { background: var(--success); box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2); }
+        .btn-action:hover { opacity: 0.95; transform: translateY(-1px); }
+        .btn-save { background: var(--success); }
         .btn-print { background: var(--primary); }
-        .btn-settings { background: #475569; }
         .btn-missing { background: #7c3aed; }
         .btn-master { background: var(--info); }
-        .btn-add-tea { background: var(--secondary); color: white; text-decoration: none; }
+        .btn-add-tea { background: var(--secondary); color: white; }
 
-        /* ================= 3. شريط المراقبة الحية للنصاب ================= */
+        /* ================= 4. شريط المراقبة الحية ================= */
         .live-tracker {
-            width: 100%; max-width: 1000px; background: #f0fdf4; border: 2px solid #bbf7d0;
-            padding: 10px 20px; border-radius: 12px; display: none; justify-content: space-between;
-            align-items: center; margin-bottom: 18px; font-weight: 800; font-size: 13px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03); flex-wrap: wrap; gap: 10px;
+            width: 100%; max-width: 1000px; background: #f0fdf4; border: 1.5px solid #bbf7d0;
+            padding: 8px 15px; border-radius: 10px; display: none; justify-content: space-between;
+            align-items: center; margin-bottom: 12px; font-weight: 800; font-size: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 8px;
         }
-        .tracker-item { display: flex; align-items: center; gap: 8px; }
-        .tracker-val { font-size: 16px; font-weight: 900; color: var(--primary); background: white; padding: 2px 10px; border-radius: 6px; border: 1px solid #bbf7d0; }
-        .tracker-status { padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 900; color: white; }
+        .tracker-item { display: flex; align-items: center; gap: 6px; }
+        .tracker-val { font-size: 15px; font-weight: 900; color: var(--primary); background: white; padding: 1px 8px; border-radius: 6px; border: 1px solid #bbf7d0; }
+        .tracker-status { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 900; color: white; }
 
-        /* ================= 4. جدول المعلم الفردي (A5) ================= */
+        /* ================= 5. ورقة الطباعة والجدول الفردي (A5) ================= */
+        .paper-scroll-wrapper {
+            width: 100%; max-width: 1000px; overflow-x: auto;
+            -webkit-overflow-scrolling: touch; padding-bottom: 8px;
+        }
+
         #print-area {
-            width: 100%; max-width: 1000px; background: white; padding: 25px 30px;
-            border: 1px solid #cbd5e1; box-shadow: 0 0 25px rgba(0,0,0,0.06);
-            margin: 0 auto; color: #000; border-radius: 6px;
+            background: white; padding: 20px 25px; border: 1px solid #cbd5e1;
+            box-shadow: 0 0 20px rgba(0,0,0,0.06); margin: 0 auto; color: #000;
+            border-radius: 8px; min-width: 680px;
         }
         
         .print-header {
             display: flex; justify-content: space-between; align-items: center;
-            padding-bottom: 8px; margin-bottom: var(--space-top); font-weight: 900;
-            font-size: 15px; line-height: 1.5; border-bottom: 2px solid #0f172a;
+            padding-bottom: 6px; margin-bottom: var(--space-top); font-weight: 900;
+            font-size: 14px; line-height: 1.4; border-bottom: 2px solid #0f172a;
         }
         .ph-right { text-align: right; }
-        .ph-left { text-align: center; border-right: 2px solid #000; padding-right: 18px; }
+        .ph-left { text-align: center; border-right: 2px solid #000; padding-right: 14px; }
 
         .main-table {
             width: 100%; border-collapse: collapse; text-align: center;
             border: var(--border-thick) solid #000; table-layout: fixed;
         }
-        .main-table th, .main-table td { border: var(--border-thin) solid #000; padding: 2px; font-weight: 900; }
+        .main-table th, .main-table td { border: var(--border-thin) solid #000; padding: 1px; font-weight: 900; }
         
         .table-title {
             font-size: var(--font-title); height: var(--row-title-h);
@@ -190,66 +226,52 @@
 
         .print-footer {
             display: flex; justify-content: space-between; margin-top: var(--space-bottom);
-            padding: 8px 15px; font-weight: 900; font-size: var(--font-footer);
+            padding: 6px 10px; font-weight: 900; font-size: var(--font-footer);
             border-top: 2px solid #000; color: #000;
         }
 
-        /* ================= 5. جدول اللفاف اليومي (A4) ================= */
+        /* ================= 6. جدول اللفاف اليومي (A4) ================= */
         #master-print-area {
-            display: none; background: white; padding: 20px; color: #000;
+            display: none; background: white; padding: 15px; color: #000;
             width: 100%; max-width: 1000px; margin: 0 auto; border: 1px solid #ccc;
-            box-shadow: 0 0 25px rgba(0,0,0,0.08); position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.08); position: relative; min-width: 680px;
         }
         .master-table { width: 100%; border-collapse: collapse; text-align: center; border: var(--border-thick) solid #000; table-layout: fixed; }
-        .master-table th, .master-table td { border: var(--border-thin) solid #000; padding: 2px; font-weight: 900; font-size: 13px; }
-        .master-table thead th { background: #f1f5f9; height: 30px; }
-        .master-table tbody td { height: var(--master-row-h); overflow: hidden; white-space: nowrap; }
-        .master-table th:first-child, .master-table td:first-child { width: 80px; font-size: 14px; border-left: var(--border-thick) solid #000 !important; background: #f8fafc; }
-        .master-table th:not(:first-child), .master-table td:not(:first-child) { width: var(--master-col-w); }
-        .master-table th:nth-child(2n+1):not(:first-child), .master-table td:nth-child(2n+1):not(:first-child) { border-left: var(--border-thick) solid #000 !important; }
+        .master-table th, .master-table td { border: var(--border-thin) solid #000; padding: 2px; font-weight: 900; font-size: 12.5px; }
+        .master-table thead th { background: #f1f5f9; height: 28px; }
+        .master-table tbody td { height: 28px; overflow: hidden; white-space: nowrap; }
+        .master-table th:first-child, .master-table td:first-child { width: 80px; font-size: 13px; border-left: var(--border-thick) solid #000 !important; background: #f8fafc; }
 
-        .btn-close-master { position: absolute; top: 15px; left: 15px; background: var(--danger); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 800; cursor: pointer; }
+        .btn-close-master { position: absolute; top: 12px; left: 12px; background: var(--danger); color: white; border: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; cursor: pointer; }
 
-        /* ================= 6. النوافذ المنبثقة ================= */
+        /* ================= 7. النوافذ المنبثقة ================= */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(5px);
-            display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px;
+            position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center; z-index: 2000; padding: 12px;
         }
         .modal-overlay.active { display: flex; }
         .modal-content {
-            background: var(--bg-color); width: 100%; max-width: 850px; border-radius: 16px;
+            background: var(--bg-color); width: 100%; max-width: 800px; border-radius: 14px;
             overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
             display: flex; flex-direction: column; max-height: 90vh;
         }
-        .modal-header { background: var(--primary); color: white; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 20px; overflow-y: auto; }
-        
-        .settings-section { background: white; padding: 14px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 12px; }
-        .settings-section h3 { font-size: 13px; color: var(--primary); margin-bottom: 8px; border-bottom: 1px dashed var(--border-color); padding-bottom: 4px; display: flex; align-items: center; gap: 6px; }
-        .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
-        .set-group { display: flex; flex-direction: column; gap: 4px; }
-        .set-group label { font-size: 11px; font-weight: 800; color: var(--text-muted); }
-        .set-group input, .set-group select { padding: 7px; border-radius: 6px; border: 1px solid var(--border-color); font-weight: bold; text-align: center; outline: none; }
+        .modal-header { background: var(--primary); color: white; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 16px; overflow-y: auto; }
         
         .missing-table { width: 100%; border-collapse: collapse; text-align: center; background: white; border: 2px solid var(--primary); }
-        .missing-table th, .missing-table td { border: 1px solid var(--border-color); padding: 8px; font-weight: 800; font-size: 13px; }
+        .missing-table th, .missing-table td { border: 1px solid var(--border-color); padding: 7px; font-weight: 800; font-size: 12.5px; }
         .missing-table thead th { background: var(--primary); color: white; }
-        .missing-table td:nth-child(3) { text-align: right; color: var(--danger); line-height: 1.5; font-weight: 900; }
+        .missing-table td:nth-child(3) { text-align: right; color: var(--danger); line-height: 1.4; font-weight: 900; }
 
-        /* ================= 7. قواعد الطباعة المتقدمة ================= */
         @media print {
             body { background: white !important; padding: 0 !important; direction: rtl !important; }
-            .top-navigation, .controls-wrapper, .live-tracker, .modal-overlay, .btn-close-master { display: none !important; }
-            
-            body:not(.print-master-mode) #print-area { display: block !important; border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; margin: 0 !important; }
-            body:not(.print-master-mode) .cell-input { background: transparent !important; border: none !important; }
-            
-            body.print-master-mode #master-print-area { display: block !important; border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; margin: 0 !important; }
+            .top-navigation, .controls-wrapper, .voice-card, .live-tracker, .modal-overlay, .btn-close-master { display: none !important; }
+            .paper-scroll-wrapper { overflow: visible !important; width: 100% !important; max-width: 100% !important; }
+            #print-area { min-width: 100% !important; border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
+            body.print-master-mode #master-print-area { display: block !important; border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; min-width: 100% !important; margin: 0 !important; }
             body.print-master-mode #print-area { display: none !important; }
         }
     </style>
-    
-    <style id="dynamic-print-style"></style>
 </head>
 <body>
 
@@ -261,18 +283,22 @@
         </div>
         
         <div class="dev-badge">
-            <i class="fa-solid fa-medal" style="color:#fcd34d;"></i> 
-            إعداد وتطوير &nbsp;|&nbsp; <span>أ/ عبدالعزيز لولح</span> &nbsp;|&nbsp; (مستر زيزو)
+            <i class="fa-solid fa-medal"></i> 
+            إعداد وتطوير: <span>أ/ عبدالعزيز لولح</span> (مستر زيزو)
         </div>
 
-        <!-- شارة حالة الاتصال (أونلاين / أوفلاين) -->
-        <div id="system-mode-badge" class="mode-badge mode-online">
-            <i class="fa-solid fa-wifi"></i> <span>متصل بالسحابة</span>
+        <div class="mode-badge-online">
+            <i class="fa-solid fa-wifi"></i> أونلاين (Supabase)
         </div>
 
         <div class="nav-actions">
             <a href="general-schedule.html" class="btn-nav btn-nav-general">
                 <i class="fa-solid fa-table-list"></i> الجدول العام (١٢٠)
+            </a>
+
+            <!-- زر مدير الجدول أ/ رضا -->
+            <a href="REDA.html" class="btn-nav btn-nav-reda">
+                <i class="fa-solid fa-mobile-screen"></i> مدير الجدول (رضا)
             </a>
 
             <select class="quick-nav-select" onchange="if(this.value) window.location.href=this.value;">
@@ -281,25 +307,50 @@
                 <option value="stu-data.html">بيانات التلاميذ</option>
                 <option value="stu-absence.html">منظومة الغياب</option>
                 <option value="tea-data.html">بيانات المعلمين</option>
-                <option value="tea-contract.html">معلمي الأجر</option>
                 <option value="stu-print.html">مركز الطباعة</option>
             </select>
-
-            <a href="REDA.html" class="btn-nav" style="background: var(--danger);"><i class="fa-solid fa-mobile-screen"></i> مدير الجدول (رضا)</a>
             <a href="index.html" class="btn-nav"><i class="fa-solid fa-house"></i> الرئيسية</a>
         </div>
     </nav>
 
-    <!-- 2. لوحة التحكم الشاملة -->
+    <!-- ================= 2. كارت الإدخال الصوتي الذكي باليوم ================= -->
+    <div class="voice-card">
+        <div class="voice-header">
+            <div class="voice-title">
+                <i class="fa-solid fa-microphone-lines"></i> الإدخال الصوتي السريع (انطق اليوم ثم الـ 8 حصص - لحصص الدين المشتركة انطق "دين" بجانب الفصل):
+            </div>
+            <div style="font-size:12px; color:#fcd34d; font-weight:bold;">
+                مثال: الأحد فاضي فاضي 34 دين 34 دين 16 فاضي 12 12
+            </div>
+        </div>
+        
+        <div class="voice-controls">
+            <input type="text" id="voice-text-input" class="voice-text-input" 
+                   placeholder="انطق أو اكتب هنا: الأحد فاضي فاضي 34 دين 34 دين 16 فاضي 12 12 الإثنين 16 16..." 
+                   onkeydown="if(event.key === 'Enter') applySmartVoiceSchedule()">
+            
+            <button type="button" class="btn-apply-voice" onclick="applySmartVoiceSchedule()">
+                <i class="fa-solid fa-bolt"></i> تسكين فوري ⚡
+            </button>
+        </div>
+    </div>
+
+    <!-- 3. لوحة التحكم -->
     <div class="controls-wrapper">
         <div class="controls-row-inputs">
+            
+            <!-- حقل اختيار المعلم الشامل مع ميزة البحث الذكي -->
             <div class="input-group">
-                <label><i class="fa-solid fa-chalkboard-user"></i> 1. جدول معلم (المسجلين):</label>
-                <div style="display:flex; gap:6px;">
-                    <select id="teacher-select" onchange="loadTeacherSchedule()" style="flex-grow:1;">
-                        <option value="" disabled selected>جاري تحميل المعلمين...</option>
-                    </select>
-                    <a href="tea-data.html" target="_blank" class="btn-action btn-add-tea" title="إضافة معلم جديد"><i class="fa-solid fa-user-plus"></i></a>
+                <label><i class="fa-solid fa-chalkboard-user"></i> جدول معلم (جميع المعلمين: معينين وأجر):</label>
+                <div style="display:flex; flex-direction:column; gap:4px;">
+                    <input type="text" id="teacher-quick-filter" class="teacher-search-field" placeholder="🔍 اكتب أول حروف لفلترة الاسم..." oninput="filterTeachersDropdown(this.value)">
+                    
+                    <div style="display:flex; gap:5px;">
+                        <select id="teacher-select" onchange="loadTeacherSchedule()" style="flex-grow:1;">
+                            <option value="" disabled selected>جاري جلب جميع المعلمين...</option>
+                        </select>
+                        <a href="tea-data.html" target="_blank" class="btn-action btn-add-tea" title="إضافة معلم جديد"><i class="fa-solid fa-user-plus"></i></a>
+                    </div>
                 </div>
             </div>
             
@@ -309,13 +360,13 @@
             </div>
 
             <div class="input-group">
-                <label><i class="fa-solid fa-users-rectangle"></i> 2. عرض جدول فصل:</label>
+                <label><i class="fa-solid fa-users-rectangle"></i> عرض جدول فصل:</label>
                 <select id="class-select" onchange="loadClassSchedule()">
                     <option value="" disabled selected>اختر الفصل...</option>
                 </select>
             </div>
 
-            <div class="input-group" style="max-width: 180px;">
+            <div class="input-group" style="max-width: 160px;">
                 <label><i class="fa-solid fa-calendar-day"></i> بدء العمل به من:</label>
                 <input type="date" id="start-date" onchange="saveStartDate(this.value)">
             </div>
@@ -327,13 +378,12 @@
             
             <div style="flex-grow:1"></div>
 
-            <button class="btn-action btn-settings" onclick="openSettingsModal()"><i class="fa-solid fa-sliders"></i> التنسيق</button>
-            <button class="btn-action btn-save" onclick="saveTeacherSchedule()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ السحابة</button>
+            <button class="btn-action btn-save" onclick="saveTeacherSchedule()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ في السحابة</button>
             <button class="btn-action btn-print" onclick="printNormalSchedule()"><i class="fa-solid fa-print"></i> طباعة (A5)</button>
         </div>
     </div>
 
-    <!-- 3. شريط المراقبة الحية للنصاب -->
+    <!-- 4. شريط المراقبة الحية -->
     <div class="live-tracker" id="live-tracker">
         <div class="tracker-item"><i class="fa-solid fa-medal"></i> الدرجة: <span class="tracker-val" id="tk-degree">-</span></div>
         <div class="tracker-item"><i class="fa-solid fa-scale-balanced"></i> النصاب الرسمي: <span class="tracker-val" id="tk-quota">0</span></div>
@@ -341,178 +391,109 @@
         <div class="tracker-status" id="tk-status"></div>
     </div>
 
-    <!-- 4. منطقة طباعة جدول المعلم / الفصل الفردي (A5) -->
-    <div id="print-area">
-        <div class="print-header">
-            <div class="ph-right">
-                <div>إدارة الشهداء التعليمية</div>
-                <div>مدرسة الشهيد أشرف حبيب</div>
+    <!-- 5. حاوية التمرير والجدول الفردي (A5) -->
+    <div class="paper-scroll-wrapper">
+        <div id="print-area">
+            <div class="print-header">
+                <div class="ph-right">
+                    <div>إدارة الشهداء التعليمية</div>
+                    <div>مدرسة الشهيد أشرف حبيب</div>
+                </div>
+                <div class="ph-left">
+                    <div>يعمل بهذا الجدول بدء من</div>
+                    <div id="p-date" style="letter-spacing: 1px;">.... / .... / ٢٠٢</div>
+                </div>
             </div>
-            <div class="ph-left">
-                <div>يعمل بهذا الجدول بدء من</div>
-                <div id="p-date" style="letter-spacing: 1px;">.... / .... / ٢٠٢</div>
+
+            <table class="main-table">
+                <thead>
+                    <tr>
+                        <td colspan="9" class="table-title" id="table-main-title">جدول حصص ........................................</td>
+                    </tr>
+                    <tr>
+                        <th rowspan="2">اليوم</th>
+                        <th colspan="2" class="period-header">الفترة الأولى</th>
+                        <th colspan="2" class="period-header">الفترة الثانية</th>
+                        <th colspan="2" class="period-header">الفترة الثالثة</th>
+                        <th colspan="2" class="period-header">الفترة الرابعة</th>
+                    </tr>
+                    <tr>
+                        <th id="th-s-1">١</th><th id="th-s-2">٢</th><th id="th-s-3">٣</th><th id="th-s-4">٤</th>
+                        <th id="th-s-5">٥</th><th id="th-s-6">٦</th><th id="th-s-7">٧</th><th id="th-s-8">٨</th>
+                    </tr>
+                </thead>
+                <tbody id="schedule-body"></tbody>
+            </table>
+
+            <div class="print-footer">
+                <div>مسئول الجدول : أ / رضا زغلول</div>
+                <div>مدير المدرسة : أ / أشرف عبدالستار</div>
             </div>
-        </div>
-
-        <table class="main-table">
-            <thead>
-                <tr>
-                    <td colspan="9" class="table-title" id="table-main-title">جدول حصص ........................................</td>
-                </tr>
-                <tr>
-                    <th rowspan="2">اليوم</th>
-                    <th colspan="2" class="period-header">الفترة الأولى</th>
-                    <th colspan="2" class="period-header">الفترة الثانية</th>
-                    <th colspan="2" class="period-header">الفترة الثالثة</th>
-                    <th colspan="2" class="period-header">الفترة الرابعة</th>
-                </tr>
-                <tr>
-                    <th id="th-s-1">١</th><th id="th-s-2">٢</th><th id="th-s-3">٣</th><th id="th-s-4">٤</th>
-                    <th id="th-s-5">٥</th><th id="th-s-6">٦</th><th id="th-s-7">٧</th><th id="th-s-8">٨</th>
-                </tr>
-            </thead>
-            <tbody id="schedule-body"></tbody>
-        </table>
-
-        <div class="print-footer">
-            <div>مسئول الجدول : أ / رضا زغلول</div>
-            <div>مدير المدرسة أ / أشرف عبدالستار</div>
         </div>
     </div>
 
-    <!-- 5. منطقة طباعة جدول اللفاف اليومي (A4) -->
-    <div id="master-print-area">
-        <button class="btn-close-master" onclick="hideMasterOnScreen()"><i class="fa-solid fa-arrow-right"></i> عودة للجدول الفردي</button>
-        <div class="print-header">
-            <div class="ph-right">
-                <div>إدارة الشهداء التعليمية</div>
-                <div>مدرسة الشهيد أشرف حبيب</div>
+    <!-- 6. منطقة طباعة جدول اللفاف اليومي (A4) -->
+    <div class="paper-scroll-wrapper" id="master-wrapper" style="display:none;">
+        <div id="master-print-area">
+            <button class="btn-close-master" onclick="hideMasterOnScreen()"><i class="fa-solid fa-arrow-right"></i> عودة للجدول الفردي</button>
+            <div class="print-header">
+                <div class="ph-right">
+                    <div>إدارة الشهداء التعليمية</div>
+                    <div>مدرسة الشهيد أشرف حبيب</div>
+                </div>
+                <div class="ph-left">
+                    <div style="font-size:17px; font-weight:900; border-bottom:2px solid #000;" id="master-title">الجدول اليومي</div>
+                </div>
             </div>
-            <div class="ph-left">
-                <div style="font-size:18px; font-weight:900; border-bottom:2px solid #000;" id="master-title">الجدول اليومي</div>
-            </div>
+            <div id="master-table-container"></div>
         </div>
-        <div id="master-table-container"></div>
     </div>
 
-    <!-- 6. نافذة تقرير الحصص غير المسندة -->
+    <!-- 7. نافذة تقرير الحصص الفارغة -->
     <div class="modal-overlay" id="missingModal">
-        <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-content">
             <div class="modal-header">
                 <h2 style="font-size:15px; margin:0;"><i class="fa-solid fa-triangle-exclamation"></i> تقرير الحصص الفارغة (غير المسندة)</h2>
-                <button onclick="document.getElementById('missingModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:22px; cursor:pointer;">&times;</button>
+                <button onclick="document.getElementById('missingModal').classList.remove('active')">&times;</button>
             </div>
             <div class="modal-body" id="missing-body"></div>
         </div>
     </div>
 
-    <!-- 7. نافذة إعداد جدول اللفاف -->
+    <!-- 8. نافذة إعداد جدول اللفاف -->
     <div class="modal-overlay" id="masterModal">
-        <div class="modal-content" style="max-width: 550px;">
+        <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
                 <h2 style="font-size:15px; margin:0;"><i class="fa-solid fa-table-list"></i> إعداد جدول اللفاف اليومي (A4)</h2>
-                <button onclick="document.getElementById('masterModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:22px; cursor:pointer;">&times;</button>
+                <button onclick="document.getElementById('masterModal').classList.remove('active')">&times;</button>
             </div>
             <div class="modal-body">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom: 18px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom: 15px;">
                     <div class="input-group">
                         <label>اختر اليوم:</label>
                         <select id="master-day-select">
-                            <option value="الاحد">الأحد</option>
-                            <option value="الاثنين">الإثنين</option>
-                            <option value="الثلاثاء">الثلاثاء</option>
-                            <option value="الاربعاء">الأربعاء</option>
+                            <option value="الاحد">الأحد</option><option value="الاثنين">الإثنين</option>
+                            <option value="الثلاثاء">الثلاثاء</option><option value="الاربعاء">الأربعاء</option>
                             <option value="الخميس">الخميس</option>
                         </select>
                     </div>
                     <div class="input-group">
                         <label>اختر المرحلة:</label>
                         <select id="master-stage-select">
-                            <option value="lower">الصفوف الأولى (1 إلى 3)</option>
-                            <option value="upper">الصفوف العليا (4 إلى 6)</option>
+                            <option value="lower">الصفوف الأولى (1 - 3)</option>
+                            <option value="upper">الصفوف العليا (4 - 6)</option>
                         </select>
                     </div>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn-action btn-save" style="flex:1" onclick="showMasterOnScreen()"><i class="fa-solid fa-eye"></i> عرض على الشاشة</button>
-                    <button class="btn-action btn-print" style="flex:1" onclick="printMasterSchedule()"><i class="fa-solid fa-print"></i> طباعة (A4 عمودي)</button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-action btn-save" style="flex:1" onclick="showMasterOnScreen()"><i class="fa-solid fa-eye"></i> عرض</button>
+                    <button class="btn-action btn-print" style="flex:1" onclick="printMasterSchedule()"><i class="fa-solid fa-print"></i> طباعة (A4)</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 8. نافذة إعدادات التنسيق والهوامش -->
-    <div class="modal-overlay" id="settingsModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 style="font-size:15px; margin:0;"><i class="fa-solid fa-sliders"></i> إعدادات التنسيق والطباعة المتقدمة</h2>
-                <button onclick="document.getElementById('settingsModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:22px; cursor:pointer;">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="settings-section">
-                    <h3><i class="fa-solid fa-language"></i> تنسيق الأرقام</h3>
-                    <div class="settings-grid">
-                        <div class="set-group">
-                            <label>تنسيق الأرقام في الجدول</label>
-                            <select id="set-num-format">
-                                <option value="ar">أرقام عربية مشرقية (٠١٢٣)</option>
-                                <option value="en">أرقام إنجليزية (0123)</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h3><i class="fa-solid fa-text-height"></i> أحجام الخطوط (px)</h3>
-                    <div class="settings-grid">
-                        <div class="set-group"><label>عنوان الجدول</label><input type="number" id="set-font-title"></div>
-                        <div class="set-group"><label>رؤوس الأعمدة</label><input type="number" id="set-font-header"></div>
-                        <div class="set-group"><label>بيانات الخلايا</label><input type="number" id="set-font-cell"></div>
-                        <div class="set-group"><label>التذييل</label><input type="number" id="set-font-footer"></div>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h3><i class="fa-solid fa-arrows-up-down"></i> ارتفاعات الصفوف (px)</h3>
-                    <div class="settings-grid">
-                        <div class="set-group"><label>صف اسم المعلم</label><input type="number" id="set-row-title"></div>
-                        <div class="set-group"><label>صف الفترات</label><input type="number" id="set-row-period"></div>
-                        <div class="set-group"><label>صف أرقام الحصص</label><input type="number" id="set-row-session"></div>
-                        <div class="set-group"><label>صفوف الأيام (A5)</label><input type="number" id="set-row-data"></div>
-                        <div class="set-group"><label style="color:var(--danger)">صفوف اللفاف (A4)</label><input type="number" id="set-master-row"></div>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h3><i class="fa-solid fa-arrows-left-right"></i> عرض الأعمدة والمسافات (px)</h3>
-                    <div class="settings-grid">
-                        <div class="set-group"><label>عرض عمود اليوم/الفصل</label><input type="number" id="set-col-day"></div>
-                        <div class="set-group"><label>عرض حصص المعلم (0=تلقائي)</label><input type="number" id="set-col-session"></div>
-                        <div class="set-group"><label style="color:var(--danger)">عرض حصص اللفاف (0=تلقائي)</label><input type="number" id="set-master-col"></div>
-                        <div class="set-group"><label>الهامش أعلى الجدول</label><input type="number" id="set-space-top"></div>
-                        <div class="set-group"><label>الهامش أسفل الجدول</label><input type="number" id="set-space-bottom"></div>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h3><i class="fa-solid fa-border-all"></i> الحدود وهوامش الطباعة (mm)</h3>
-                    <div class="settings-grid">
-                        <div class="set-group"><label>الحد السميك (px)</label><input type="number" id="set-border-thick"></div>
-                        <div class="set-group"><label>الحد الرفيع (px)</label><input type="number" id="set-border-thin"></div>
-                        <div class="set-group"><label>الهامش الرأسي (mm)</label><input type="number" id="set-margin-v"></div>
-                        <div class="set-group"><label>الهامش الأفقي (mm)</label><input type="number" id="set-margin-h"></div>
-                    </div>
-                </div>
-
-                <div style="display:flex; gap:10px; margin-top:15px;">
-                    <button class="btn-action btn-save" style="flex:1" onclick="saveAndApplySettings()"><i class="fa-solid fa-check"></i> تطبيق وحفظ الإعدادات</button>
-                    <button class="btn-action" style="background:#64748b;" onclick="resetSettings()"><i class="fa-solid fa-rotate-left"></i> استعادة الافتراضي</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ================= المحرك البرمجي الهجين (أونلاين / أوفلاين) ================= -->
+    <!-- ================= المحرك البرمجي المعالج للأيام وحصص الدين D ================= -->
     <script>
         const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
@@ -520,6 +501,7 @@
 
         let TEACHERS = [];
         let CURRENT_TEACHER = null;
+
         const days = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس"];
         const dayNamesAr = {"الاحد":"الأحد", "الاثنين":"الإثنين", "الثلاثاء":"الثلاثاء", "الاربعاء":"الأربعاء", "الخميس":"الخميس"};
         
@@ -533,156 +515,13 @@
         ];
 
         window.addEventListener('DOMContentLoaded', async () => {
-            initSystemModeUI();
-            loadSettings(); 
             initEmptyTable();
             loadClassesList();
             loadSavedDate();
-            await loadTeachers();
-            setupEnterKeyNavigation();
+            await loadAllTeachersComprehensive();
         });
 
-        // 1. تهيئة واجهة وضع النظام (أونلاين / أوفلاين)
-        function initSystemModeUI() {
-            const mode = localStorage.getItem('APP_MODE') || 'ONLINE';
-            const badge = document.getElementById('system-mode-badge');
-            if (mode === 'ONLINE') {
-                badge.className = 'mode-badge mode-online';
-                badge.innerHTML = '<i class="fa-solid fa-wifi"></i> <span>متصل بالسحابة</span>';
-            } else {
-                badge.className = 'mode-badge mode-offline';
-                badge.innerHTML = '<i class="fa-solid fa-plane"></i> <span>يعمل أوفلاين (محلي)</span>';
-            }
-        }
-
         const clean = t => t ? t.trim().replace(/[أإآا]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, "") : "";
-
-        function formatNum(str) {
-            const format = JSON.parse(localStorage.getItem("schedule_settings"))?.numFormat || 'ar';
-            if (!str && str !== 0) return "";
-            str = String(str);
-            if (format === 'en') return str.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
-            else return str.replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
-        }
-
-        const defaultSettings = {
-            rowTitle: 48, rowPeriod: 28, rowSession: 28, rowData: 52,
-            colDay: 95, colSession: 0, spaceTop: 15, spaceBottom: 18,
-            borderThick: 3, borderThin: 1, marginV: 5, marginH: 5,
-            fontTitle: 20, fontHeader: 14, fontCell: 17, fontFooter: 15,
-            numFormat: 'ar', masterRow: 30, masterCol: 0
-        };
-
-        function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); }
-
-        function loadSettings() {
-            const saved = JSON.parse(localStorage.getItem("schedule_settings")) || defaultSettings;
-            
-            document.getElementById("set-row-title").value = saved.rowTitle;
-            document.getElementById("set-row-period").value = saved.rowPeriod;
-            document.getElementById("set-row-session").value = saved.rowSession;
-            document.getElementById("set-row-data").value = saved.rowData;
-            document.getElementById("set-col-day").value = saved.colDay;
-            document.getElementById("set-col-session").value = saved.colSession;
-            document.getElementById("set-space-top").value = saved.spaceTop;
-            document.getElementById("set-space-bottom").value = saved.spaceBottom;
-            document.getElementById("set-border-thick").value = saved.borderThick;
-            document.getElementById("set-border-thin").value = saved.borderThin;
-            document.getElementById("set-margin-v").value = saved.marginV;
-            document.getElementById("set-margin-h").value = saved.marginH;
-            document.getElementById("set-font-title").value = saved.fontTitle;
-            document.getElementById("set-font-header").value = saved.fontHeader;
-            document.getElementById("set-font-cell").value = saved.fontCell;
-            document.getElementById("set-font-footer").value = saved.fontFooter;
-            document.getElementById("set-num-format").value = saved.numFormat;
-            document.getElementById("set-master-row").value = saved.masterRow || 30;
-            document.getElementById("set-master-col").value = saved.masterCol || 0;
-
-            applyCSSVariables(saved);
-            updateStaticNumbers();
-        }
-
-        function saveAndApplySettings() {
-            const settings = {
-                rowTitle: document.getElementById("set-row-title").value || defaultSettings.rowTitle,
-                rowPeriod: document.getElementById("set-row-period").value || defaultSettings.rowPeriod,
-                rowSession: document.getElementById("set-row-session").value || defaultSettings.rowSession,
-                rowData: document.getElementById("set-row-data").value || defaultSettings.rowData,
-                colDay: document.getElementById("set-col-day").value || defaultSettings.colDay,
-                colSession: document.getElementById("set-col-session").value || defaultSettings.colSession,
-                spaceTop: document.getElementById("set-space-top").value || defaultSettings.spaceTop,
-                spaceBottom: document.getElementById("set-space-bottom").value || defaultSettings.spaceBottom,
-                borderThick: document.getElementById("set-border-thick").value || defaultSettings.borderThick,
-                borderThin: document.getElementById("set-border-thin").value || defaultSettings.borderThin,
-                marginV: document.getElementById("set-margin-v").value || defaultSettings.marginV,
-                marginH: document.getElementById("set-margin-h").value || defaultSettings.marginH,
-                fontTitle: document.getElementById("set-font-title").value || defaultSettings.fontTitle,
-                fontHeader: document.getElementById("set-font-header").value || defaultSettings.fontHeader,
-                fontCell: document.getElementById("set-font-cell").value || defaultSettings.fontCell,
-                fontFooter: document.getElementById("set-font-footer").value || defaultSettings.fontFooter,
-                numFormat: document.getElementById("set-num-format").value || defaultSettings.numFormat,
-                masterRow: document.getElementById("set-master-row").value || defaultSettings.masterRow,
-                masterCol: document.getElementById("set-master-col").value || defaultSettings.masterCol
-            };
-
-            localStorage.setItem("schedule_settings", JSON.stringify(settings));
-            applyCSSVariables(settings);
-            updateStaticNumbers();
-            
-            document.querySelectorAll('.cell-input').forEach(inp => { if(inp.value) inp.value = formatNum(inp.value); });
-            document.getElementById('settingsModal').classList.remove('active');
-        }
-
-        function resetSettings() { 
-            localStorage.removeItem("schedule_settings"); 
-            loadSettings(); 
-        }
-
-        function applyCSSVariables(s) {
-            const root = document.documentElement;
-            root.style.setProperty('--row-title-h', s.rowTitle + 'px');
-            root.style.setProperty('--row-period-h', s.rowPeriod + 'px');
-            root.style.setProperty('--row-session-h', s.rowSession + 'px');
-            root.style.setProperty('--row-data-h', s.rowData + 'px');
-            root.style.setProperty('--col-day-w', s.colDay + 'px');
-            root.style.setProperty('--col-session-w', s.colSession == 0 ? 'auto' : s.colSession + 'px');
-            root.style.setProperty('--space-top', s.spaceTop + 'px');
-            root.style.setProperty('--space-bottom', s.spaceBottom + 'px');
-            root.style.setProperty('--border-thick', s.borderThick + 'px');
-            root.style.setProperty('--border-thin', s.borderThin + 'px');
-            root.style.setProperty('--font-title', s.fontTitle + 'px');
-            root.style.setProperty('--font-header', s.fontHeader + 'px');
-            root.style.setProperty('--font-cell', s.fontCell + 'px');
-            root.style.setProperty('--font-footer', s.fontFooter + 'px');
-            root.style.setProperty('--master-row-h', s.masterRow + 'px');
-            root.style.setProperty('--master-col-w', s.masterCol == 0 ? 'auto' : s.masterCol + 'px');
-
-            document.getElementById("dynamic-print-style").innerHTML = `
-                @media print { 
-                    body:not(.print-master-mode) @page { size: A5 landscape; margin: ${s.marginV}mm ${s.marginH}mm; } 
-                    body.print-master-mode @page { size: A4 portrait; margin: ${s.marginV}mm ${s.marginH}mm; }
-                }
-            `;
-        }
-
-        function updateStaticNumbers() {
-            for(let i=1; i<=8; i++) { document.getElementById(`th-s-${i}`).innerText = formatNum(i); }
-            const dateVal = document.getElementById("start-date").value;
-            if(dateVal) document.getElementById('p-date').innerText = formatNum(dateVal.split('-').reverse().join(' / '));
-        }
-
-        function loadSavedDate() {
-            const savedDate = localStorage.getItem("schedule_start_date");
-            if(savedDate) {
-                document.getElementById("start-date").value = savedDate;
-                document.getElementById('p-date').innerText = formatNum(savedDate.split('-').reverse().join(' / '));
-            }
-        }
-
-        function saveStartDate(val) {
-            localStorage.setItem("schedule_start_date", val);
-            document.getElementById('p-date').innerText = formatNum(val.split('-').reverse().join(' / '));
-        }
 
         function initEmptyTable() {
             const tbody = document.getElementById("schedule-body");
@@ -690,97 +529,292 @@
             days.forEach(day => {
                 let tr = `<tr><td>${dayNamesAr[day]}</td>`;
                 for(let i=1; i<=8; i++) {
-                    tr += `<td><input type="text" class="cell-input" data-day="${day}" data-session="${i}" onblur="smartFormat(this)" oninput="updateLiveStats()"></td>`;
+                    tr += `<td><input type="text" class="cell-input" data-day="${day}" data-session="${i}" oninput="handleCellKeyboardInput(this)" onkeydown="handleCellEnterNav(event, this)"></td>`;
                 }
                 tr += `</tr>`;
                 tbody.innerHTML += tr;
             });
         }
 
-        function setupEnterKeyNavigation() {
-            const inputs = document.querySelectorAll('.cell-input');
-            inputs.forEach((inp, index) => {
-                inp.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        smartFormat(inp); 
-                        if (index + 1 < inputs.length) inputs[index + 1].focus();
-                    }
-                });
-            });
-        }
-
-        function smartFormat(input) {
-            if(input.readOnly) return;
-            let val = input.value.trim();
+        // ================= ⚡ إدخال الكيبورد الذكي مع دعم حرف D للدين =================
+        function handleCellKeyboardInput(inputEl) {
+            let val = inputEl.value.trim();
             let enVal = val.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
-            
-            if(/^[0-9]{2}$/.test(enVal)) {
-                let formatted = enVal[0] + "/" + enVal[1];
-                input.value = formatNum(formatted);
-            } else if (val !== "") {
-                input.value = formatNum(val);
+
+            // كشف إذا كان المعلم كتب حرف D أو d أو د للدين
+            const hasD = /[dDد]/.test(enVal);
+            const digitsOnly = enVal.replace(/[^0-9]/g, '');
+
+            // عند كتابة رقمين مثل (24 أو 24d أو 24د)
+            if (digitsOnly.length === 2) {
+                inputEl.value = digitsOnly[0] + "/" + digitsOnly[1] + (hasD ? "D" : "");
+                updateLiveStats();
+
+                // قفز تلقائي للحصة التالية
+                const allInputs = Array.from(document.querySelectorAll('.cell-input'));
+                const currentIndex = allInputs.indexOf(inputEl);
+                if (currentIndex > -1 && currentIndex + 1 < allInputs.length) {
+                    allInputs[currentIndex + 1].focus();
+                    allInputs[currentIndex + 1].select();
+                }
+            } else {
+                updateLiveStats();
             }
-            updateLiveStats();
         }
 
-        // ================= 2. جلب المعلمين (أونلاين مع بديل أوفلاين) =================
-        async function loadTeachers() {
-            const select = document.getElementById("teacher-select");
-            const mode = localStorage.getItem('APP_MODE') || 'ONLINE';
-            let teachersData = [];
-
-            // محاولة الجلب من السحابة إذا كان أونلاين
-            if (mode === 'ONLINE' && supabaseClient) {
-                try {
-                    const { data, error } = await supabaseClient
-                        .from("teachers")
-                        .select("*")
-                        .eq("emp_status", "على رأس العمل");
-
-                    if (!error && data) {
-                        teachersData = data;
-                        localStorage.setItem('local_teachers', JSON.stringify(data)); // تحديث النسخة المحلية
-                    }
-                } catch(e) {
-                    console.warn("تعذر الاتصال بالسحابة، سيتم استخدام التخزين المحلي.");
+        function handleCellEnterNav(e, inputEl) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const allInputs = Array.from(document.querySelectorAll('.cell-input'));
+                const currentIndex = allInputs.indexOf(inputEl);
+                if (currentIndex > -1 && currentIndex + 1 < allInputs.length) {
+                    allInputs[currentIndex + 1].focus();
                 }
             }
+        }
 
-            // إذا كنا في وضع أوفلاين أو تعذر الاتصال
-            if (!teachersData || teachersData.length === 0) {
-                teachersData = JSON.parse(localStorage.getItem('local_teachers')) || [];
-            }
-
-            TEACHERS = [];
-            teachersData.forEach(t => {
-                const job = clean(t.cadre_job);
-                const isNonTeacher = job.includes("عامل") || job.includes("اداري") || job.includes("اخصائي") || job.includes("مشرف") || job.includes("سكرتير") || job.includes("امين") || job.includes("حارس") || job.includes("فني") || job.includes("فنى");
-                if(!isNonTeacher) { TEACHERS.push(t); }
-            });
-            
-            TEACHERS.sort((a,b) => (a.name || "").localeCompare(b.name, 'ar'));
-            
-            if (TEACHERS.length === 0) {
-                select.innerHTML = '<option value="" disabled selected>لا يوجد معلمين مسجلين (أضف معلمين أولاً)</option>';
+        // ================= 🧠 المحرك الصوتي الذكي مع دعم الدين D =================
+        function applySmartVoiceSchedule() {
+            if (!CURRENT_TEACHER) {
+                Swal.fire('تنبيه', 'يرجى اختيار المعلم أولاً قبل تسكين الجدول!', 'warning');
                 return;
             }
 
-            select.innerHTML = '<option value="" disabled selected>اختر المعلم...</option>';
-            TEACHERS.forEach(t => { select.innerHTML += `<option value="${t.code}">${t.name}</option>`; });
+            const inputEl = document.getElementById('voice-text-input');
+            let rawText = inputEl.value.trim();
+
+            if (!rawText) {
+                Swal.fire('تنبيه', 'يرجى نطق أو كتابة الحصص أولاً!', 'warning');
+                return;
+            }
+
+            let text = rawText.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+            text = text.replace(/(\s|^)و([0-9]|فاضي|فراغ|أحد|احد|اثنين|ثلاثاء|اربعاء|خميس)/g, "$1 $2");
+
+            // علامات الأيام
+            text = text
+                .replace(/يوم الأحد|يوم الاحد|الأحد|الاحد/g, " __DAY_الاحد__ ")
+                .replace(/يوم الإثنين|يوم الاثنين|الإثنين|الاثنين/g, " __DAY_الاثنين__ ")
+                .replace(/يوم الثلاثاء|الثلاثاء/g, " __DAY_الثلاثاء__ ")
+                .replace(/يوم الأربعاء|يوم الاربعاء|الأربعاء|الاربعاء/g, " __DAY_الاربعاء__ ")
+                .replace(/يوم الخميس|الخميس/g, " __DAY_الخميس__ ");
+
+            // تحويل الأرقام المنطوقة
+            text = text
+                .replace(/أربعة وتلاتين|اربعة وتلاتين|اربعه وتلاتين|أربعة وثلاثين|اربعة وثلاثين/g, "34")
+                .replace(/ستاشر|ستة عشر|سته عشر/g, "16")
+                .replace(/اتناشر|اثنا عشر|اثناعشر/g, "12")
+                .replace(/تلاتاشر|ثلاثة عشر/g, "13")
+                .replace(/اربعتاشر|أربعة عشر/g, "14")
+                .replace(/خمستاشر|خمسة عشر/g, "15")
+                .replace(/سبعتاشر|سبعة عشر/g, "17")
+                .replace(/تمنتاشر|ثمانية عشر/g, "18")
+                .replace(/تسعتاشر|تسعة عشر/g, "19")
+                .replace(/واحد وعشرين|واحد وعشرون/g, "21")
+                .replace(/اتنين وعشرين|اثنان وعشرون/g, "22")
+                .replace(/تلاتة وعشرين|ثلاثة وعشرون/g, "23")
+                .replace(/اربعة وعشرين|أربعة وعشرون/g, "24")
+                .replace(/خمسة وعشرين|خمسة وعشرون/g, "25")
+                .replace(/ستة وعشرين|ستة وعشرون/g, "26")
+                .replace(/واحد وتلاتين|واحد وثلاثين/g, "31")
+                .replace(/اتنين وتلاتين|اثنان وثلاثين/g, "32")
+                .replace(/تلاتة وتلاتين|ثلاثة وثلاثين/g, "33")
+                .replace(/خمسة وتلاتين|خمسة وثلاثين/g, "35")
+                .replace(/ستة وتلاتين|ستة وثلاثين/g, "36")
+                .replace(/واحد واربعين|واحد واربعون/g, "41")
+                .replace(/اتنين واربعين|اثنان واربعون/g, "42")
+                .replace(/تلاتة واربعين|ثلاثة واربعون/g, "43")
+                .replace(/اربعة واربعين|أربعة واربعون/g, "44")
+                .replace(/خمسة واربعين|خمسة واربعون/g, "45")
+                .replace(/ستة واربعين|ستة واربعون/g, "46")
+                .replace(/واحد وخمسين|واحد وخمسون/g, "51")
+                .replace(/اتنين وخمسين|اثنان وخمسون/g, "52")
+                .replace(/تلاتة وخمسين|ثلاثة وخمسون/g, "53")
+                .replace(/اربعة وخمسين|أربعة وخمسون/g, "54")
+                .replace(/خمسة وخمسين|خمسة وخمسون/g, "55")
+                .replace(/ستة وخمسين|ستة وخمسون/g, "56")
+                .replace(/واحد وستين|واحد وستون/g, "61")
+                .replace(/اتنين وستين|اثنان وستون/g, "62")
+                .replace(/تلاتة وستين|ثلاثة وستون/g, "63")
+                .replace(/اربعة وستين|أربعة وستون/g, "64")
+                .replace(/خمسة وستين|خمسة وستون/g, "65")
+                .replace(/ستة وستين|ستة وستون/g, "66")
+                .replace(/فاضي|فاضية|فراغ|سبيس|مسافة|صفر|فارغ|لاشيء|لاشئ|عدي|تخطي|بلاش|نقطة|معندوش|مفيش/g, "EMPTY");
+
+            // دمج علامة الدين مع الرقم السابق (مثال: 34 دين -> 34D)
+            text = text.replace(/([0-9]{2})\s*(دين|د|دي)/g, "$1D");
+            text = text.replace(/(دين|د|دي)\s*([0-9]{2})/g, "$2D");
+
+            const dayParts = text.split("__DAY_");
+            let totalDaysUpdated = 0;
+            let reportMsg = [];
+
+            dayParts.forEach(part => {
+                let p = part.trim();
+                if (!p) return;
+
+                let dayKey = null;
+                for (let d of days) {
+                    if (p.startsWith(d + "__")) {
+                        dayKey = d;
+                        p = p.replace(d + "__", "").trim();
+                        break;
+                    }
+                }
+
+                if (!dayKey) return;
+
+                const tokens = p.split(/[\s,،-]+/).filter(Boolean);
+                const daySessions = [];
+
+                tokens.forEach(tok => {
+                    if (daySessions.length >= 8) return;
+                    if (tok === "EMPTY") {
+                        daySessions.push("");
+                    } else if (/^[0-9]{2}D$/i.test(tok)) {
+                        // حالة الدين المشترك 34D -> 3/4D
+                        daySessions.push(tok[0] + "/" + tok[1] + "D");
+                    } else if (/^[0-9]{2}$/.test(tok)) {
+                        daySessions.push(tok[0] + "/" + tok[1]);
+                    } else if (tok.includes("/")) {
+                        daySessions.push(tok);
+                    } else if (["إشراف", "اشراف", "احتياطي", "نشاط", "مكتبة"].includes(tok)) {
+                        daySessions.push(tok);
+                    }
+                });
+
+                for (let s = 1; s <= 8; s++) {
+                    const cell = document.querySelector(`.cell-input[data-day="${dayKey}"][data-session="${s}"]`);
+                    if (cell) {
+                        if (s <= daySessions.length) {
+                            cell.value = daySessions[s - 1];
+                            cell.style.backgroundColor = "#dcfce7";
+                            setTimeout(() => { cell.style.backgroundColor = ""; }, 1200);
+                        }
+                    }
+                }
+
+                totalDaysUpdated++;
+                reportMsg.push(`• يوم ${dayNamesAr[dayKey]}: تسكين ${daySessions.length} حصة`);
+            });
+
+            if (totalDaysUpdated === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'لم يتم التعرف على اليوم!',
+                    text: 'يرجى ذكر اسم اليوم أولاً قبل الحصص (مثال: الأحد فاضي فاضي 34 دين 34 دين...)'
+                });
+                return;
+            }
+
+            inputEl.value = "";
+            updateLiveStats();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'تم التسكين الفوري بنجاح!',
+                html: `<div style="text-align:right; font-size:13px; font-weight:bold;">${reportMsg.join('<br>')}</div>`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }
+
+        // ================= جلب جميع المعلمين (معينين + أجر) =================
+        async function loadAllTeachersComprehensive() {
+            const select = document.getElementById("teacher-select");
+            select.innerHTML = '<option value="" disabled selected>⏳ جاري جلب جميع المعلمين (أساسيين وأجر)...</option>';
+
+            try {
+                const [resPerm, resContract] = await Promise.all([
+                    supabaseClient.from("teachers").select("*"),
+                    supabaseClient.from("contract_teachers").select("*")
+                ]);
+
+                TEACHERS = [];
+
+                (resPerm.data || []).forEach(t => {
+                    const job = (t.cadre_job || "");
+                    const isWorker = job.includes("عامل خدمات") || job.includes("حارس");
+                    const isOut = (t.emp_status === "معاش" || t.emp_status === "منهي خدمته");
+
+                    if (!isWorker && !isOut) {
+                        TEACHERS.push({
+                            ...t,
+                            is_contract: false,
+                            unique_id: String(t.code || t.id),
+                            display_title: t.name
+                        });
+                    }
+                });
+
+                (resContract.data || []).forEach(t => {
+                    if (t.status !== "منتهي" && t.status !== "متوقف") {
+                        TEACHERS.push({
+                            ...t,
+                            code: t.code || `CON_${t.id}`,
+                            is_contract: true,
+                            unique_id: String(t.code || t.id),
+                            display_title: `${t.name} (معلم أجر/حصة)`
+                        });
+                    }
+                });
+
+                TEACHERS.sort((a, b) => (a.name || "").localeCompare(b.name || "", 'ar'));
+                renderTeachersDropdown(TEACHERS);
+
+            } catch(e) { 
+                console.error(e);
+                select.innerHTML = '<option value="" disabled selected>❌ خطأ في الاتصال بقاعدة البيانات</option>'; 
+            }
+        }
+
+        function renderTeachersDropdown(list) {
+            const select = document.getElementById("teacher-select");
+            select.innerHTML = `<option value="" disabled selected>اختر المعلم للبدء (${list.length} معلماً)...</option>`;
+            
+            list.forEach(t => { 
+                select.innerHTML += `<option value="${t.unique_id}">${t.display_title}</option>`; 
+            });
+        }
+
+        function filterTeachersDropdown(query) {
+            const cleanQ = clean(query.toLowerCase());
+            if (!cleanQ) {
+                renderTeachersDropdown(TEACHERS);
+                return;
+            }
+
+            const filtered = TEACHERS.filter(t => clean(t.name.toLowerCase()).includes(cleanQ));
+            renderTeachersDropdown(filtered);
+
+            if (filtered.length === 1) {
+                document.getElementById("teacher-select").value = filtered[0].unique_id;
+                loadTeacherSchedule();
+            }
         }
 
         function loadClassesList() {
             const select = document.getElementById("class-select");
             select.innerHTML = '<option value="" disabled selected>اختر الفصل...</option>';
-            predefinedClasses.forEach(c => { select.innerHTML += `<option value="${c}">${formatNum(c)}</option>`; });
+            predefinedClasses.forEach(c => { select.innerHTML += `<option value="${c}">${c}</option>`; });
+        }
+
+        function loadSavedDate() {
+            const savedDate = localStorage.getItem("schedule_start_date");
+            if(savedDate) {
+                document.getElementById("start-date").value = savedDate;
+                document.getElementById('p-date').innerText = savedDate.split('-').reverse().join(' / ');
+            }
+        }
+        function saveStartDate(val) {
+            localStorage.setItem("schedule_start_date", val);
+            document.getElementById('p-date').innerText = val.split('-').reverse().join(' / ');
         }
 
         function loadTeacherSchedule() {
             document.getElementById("class-select").selectedIndex = 0; 
-            
-            const code = document.getElementById("teacher-select").value;
-            CURRENT_TEACHER = TEACHERS.find(x => x.code === code);
+            const selectedVal = document.getElementById("teacher-select").value;
+            CURRENT_TEACHER = TEACHERS.find(x => String(x.unique_id) === String(selectedVal));
             if(!CURRENT_TEACHER) return;
 
             let sName = CURRENT_TEACHER.short_name;
@@ -795,8 +829,8 @@
             document.getElementById("table-main-title").innerHTML = `جدول حصص أ / <span style="color:var(--primary)">${sName}</span>`;
 
             document.getElementById("live-tracker").style.display = "flex";
-            document.getElementById("tk-degree").innerText = CURRENT_TEACHER.fin_degree || "غير مسجل";
-            document.getElementById("tk-quota").innerText = formatNum(CURRENT_TEACHER.quota || "0");
+            document.getElementById("tk-degree").innerText = CURRENT_TEACHER.fin_degree || (CURRENT_TEACHER.is_contract ? "معلم أجر" : "غير مسجل");
+            document.getElementById("tk-quota").innerText = CURRENT_TEACHER.quota || "0";
 
             const savedSchedule = CURRENT_TEACHER.schedule || {};
             document.querySelectorAll('.cell-input').forEach(inp => {
@@ -805,7 +839,7 @@
                 inp.classList.remove("cell-clash");
                 
                 const key = `${inp.getAttribute("data-day")}_${inp.getAttribute("data-session")}`;
-                inp.value = formatNum(savedSchedule[key] || "");
+                inp.value = savedSchedule[key] || "";
             });
 
             updateLiveStats();
@@ -816,7 +850,7 @@
             let count = 0;
             document.querySelectorAll('.cell-input').forEach(inp => { if(inp.value.trim() !== "") count++; });
             
-            document.getElementById("tk-assigned").innerText = formatNum(count);
+            document.getElementById("tk-assigned").innerText = count;
             
             let quota = parseInt(CURRENT_TEACHER.quota) || 0;
             let statusEl = document.getElementById("tk-status");
@@ -833,13 +867,12 @@
             }
         }
 
-        // ================= 3. حفظ جدول المعلم (سحابي + محلي) =================
+        // ================= ☁️ حفظ الجدول مع التجاوز الذكي لحصص الدين D =================
         async function saveTeacherSchedule() {
-            const code = document.getElementById("teacher-select").value;
-            if(!code) { alert("⚠️ يرجى اختيار المعلم أولاً!"); return; }
+            if(!CURRENT_TEACHER) { Swal.fire('تنبيه', 'يرجى اختيار المعلم أولاً!', 'warning'); return; }
 
             const shortName = document.getElementById("short-name").value.trim();
-            if(!shortName) { alert("⚠️ الاسم المختصر مطلوب!"); return; }
+            if(!shortName) { Swal.fire('تنبيه', 'الاسم المختصر مطلوب!', 'warning'); return; }
 
             let scheduleData = {};
             let clashes = [];
@@ -848,64 +881,76 @@
                 const val = inp.value.trim();
                 if(val) {
                     const key = `${inp.getAttribute("data-day")}_${inp.getAttribute("data-session")}`;
-                    const enVal = val.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
-                    scheduleData[key] = enVal;
+                    scheduleData[key] = val;
+
+                    const valUpper = val.toUpperCase();
 
                     TEACHERS.forEach(t => {
-                        if(t.code !== code && t.schedule && t.schedule[key] === enVal) {
-                            clashes.push(`• فصل (${formatNum(enVal)}) في ${dayNamesAr[key.split('_')[0]]} الحصة ${formatNum(key.split('_')[1])} مسند أيضاً لـ (أ. ${t.short_name || t.name})`);
+                        if(String(t.unique_id) !== String(CURRENT_TEACHER.unique_id) && t.schedule && t.schedule[key]) {
+                            const otherVal = String(t.schedule[key]).trim().toUpperCase();
+
+                            // 🌟 استثناء ذكي: إذا كان كلاهما يحمل حرف D للدين لنفس الفصل فلا يعتبر تعارضاً
+                            const isBothReligionD = valUpper.endsWith('D') && otherVal.endsWith('D') && valUpper === otherVal;
+
+                            if (!isBothReligionD) {
+                                // فحص التعارض العادي (سواء كلاهما عادي أو أحدهما دين والآخر عادي لنفس الفصل)
+                                if (valUpper === otherVal || valUpper.replace('D', '') === otherVal.replace('D', '')) {
+                                    clashes.push(`• فصل (${val}) في ${dayNamesAr[key.split('_')[0]]} الحصة ${key.split('_')[1]} مسند أيضاً لـ (أ. ${t.short_name || t.name})`);
+                                }
+                            }
                         }
                     });
                 }
             });
 
             if(clashes.length > 0) {
-                const msg = "⚠️ تحذير: يوجد تعارض في الجدول مع معلمين آخرين!\n\n" + clashes.join("\n") + "\n\nهل تريد الحفظ على أي حال؟";
-                if(!confirm(msg)) return; 
+                const res = await Swal.fire({
+                    title: 'تنبيه تعارض في الجدول!',
+                    html: `<div style="text-align:right; font-size:13px; color:#b91c1c;">${clashes.join('<br>')}</div><br>هل تريد الحفظ على أي حال؟`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'نعم، احفظ',
+                    cancelButtonText: 'إلغاء'
+                });
+                if(!res.isConfirmed) return;
             }
 
-            // 1. تحديث الذاكرة المحلية أولاً
-            const tIndex = TEACHERS.findIndex(t => t.code === code);
-            if(tIndex > -1) { 
-                TEACHERS[tIndex].short_name = shortName; 
-                TEACHERS[tIndex].schedule = scheduleData; 
-            }
-            
-            // حفظ النسخة المحلية
-            let fullLocal = JSON.parse(localStorage.getItem('local_teachers')) || [];
-            const localIdx = fullLocal.findIndex(t => t.code === code);
-            if(localIdx > -1) {
-                fullLocal[localIdx].short_name = shortName;
-                fullLocal[localIdx].schedule = scheduleData;
-                localStorage.setItem('local_teachers', JSON.stringify(fullLocal));
-            }
-
-            // 2. الحفظ في Supabase إذا كان أونلاين
-            const mode = localStorage.getItem('APP_MODE') || 'ONLINE';
-            const btn = document.querySelector('.btn-save'); 
+            const btn = document.querySelector('.btn-save');
             const oldHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ في السحابة...';
+            btn.disabled = true;
 
-            if (mode === 'ONLINE' && supabaseClient) {
-                try {
-                    const { error } = await supabaseClient.from("teachers").update({ 
+            try {
+                const targetTable = CURRENT_TEACHER.is_contract ? "contract_teachers" : "teachers";
+                const targetIdCol = CURRENT_TEACHER.is_contract ? (CURRENT_TEACHER.id ? "id" : "code") : "code";
+                const targetIdVal = CURRENT_TEACHER.is_contract ? (CURRENT_TEACHER.id || CURRENT_TEACHER.code) : CURRENT_TEACHER.code;
+
+                const { error } = await supabaseClient
+                    .from(targetTable)
+                    .update({ 
                         short_name: shortName, 
                         schedule: scheduleData 
-                    }).eq("code", code);
-                    
-                    if (error) throw error;
-                    alert("✅ تم الحفظ بنجاح في السحابة!");
-                } catch(e) { 
-                    alert("⚠️ تم الحفظ محلياً على جهازك (تعذر الاتصال بالسحابة)."); 
-                } finally { 
-                    btn.innerHTML = oldHtml; 
-                }
-            } else {
-                btn.innerHTML = oldHtml;
-                alert("✅ تم الحفظ محلياً بنجاح (وضع الأوفلاين)!");
-            }
+                    })
+                    .eq(targetIdCol, targetIdVal);
 
-            document.getElementById("table-main-title").innerHTML = `جدول حصص أ / <span style="color:var(--primary)">${shortName}</span>`;
+                if (error) throw error;
+
+                CURRENT_TEACHER.short_name = shortName;
+                CURRENT_TEACHER.schedule = scheduleData;
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم الحفظ في السحابة بنجاح!',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+            } catch (err) {
+                Swal.fire('خطأ في الحفظ', err.message, 'error');
+            } finally {
+                btn.innerHTML = oldHtml;
+                btn.disabled = false;
+            }
         }
 
         function loadClassSchedule() {
@@ -917,7 +962,7 @@
             const className = document.getElementById("class-select").value; 
             if(!className) return;
 
-            document.getElementById("table-main-title").innerHTML = `جدول حصص فصل / <span style="color:var(--danger)">${formatNum(className)}</span>`;
+            document.getElementById("table-main-title").innerHTML = `جدول حصص فصل / <span style="color:var(--danger)">${className}</span>`;
 
             document.querySelectorAll('.cell-input').forEach(inp => {
                 inp.value = "";
@@ -927,15 +972,24 @@
 
                 const key = `${inp.getAttribute("data-day")}_${inp.getAttribute("data-session")}`;
                 let teachersInThisSlot = [];
+                let isReligionSlot = false;
                 
                 TEACHERS.forEach(t => {
-                    if(t.schedule && t.schedule[key] === className) {
-                        teachersInThisSlot.push(t.short_name || t.name.split(' ')[0]);
+                    if(t.schedule && t.schedule[key]) {
+                        const cellVal = String(t.schedule[key]).trim().toUpperCase();
+                        if(cellVal === className.toUpperCase() || cellVal === `${className.toUpperCase()}D`) {
+                            teachersInThisSlot.push(t.short_name || t.name.split(' ')[0]);
+                            if(cellVal.endsWith('D')) isReligionSlot = true;
+                        }
                     }
                 });
 
                 if(teachersInThisSlot.length === 1) {
                     inp.value = teachersInThisSlot[0];
+                } else if (teachersInThisSlot.length === 2 && isReligionSlot) {
+                    // حصة دين مشتركة (مسلم + مسيحي) تعرض معاً دون تعارض
+                    inp.value = teachersInThisSlot.join(" + ");
+                    inp.style.color = "#047857"; // أخضر هادئ للحصص المشتركة
                 } else if (teachersInThisSlot.length > 1) {
                     inp.value = "تعارض!";
                     inp.classList.add("cell-clash");
@@ -943,57 +997,52 @@
             });
         }
 
-        // ================= 4. التقارير وجدول اللفاف اليومي =================
         function openMissingPeriodsModal() {
             const body = document.getElementById("missing-body");
-            body.innerHTML = "<div style='text-align:center; padding:20px;'><i class='fa-solid fa-spinner fa-spin'></i> جاري فحص الحصص غير المسندة...</div>";
             document.getElementById("missingModal").classList.add("active");
 
-            setTimeout(() => {
-                let html = `<table class="missing-table">
-                    <thead><tr><th style="width:80px">اليوم</th><th style="width:80px">الحصة</th><th>الفصول التي بدون معلم</th></tr></thead>
-                    <tbody>`;
+            let html = `<table class="missing-table">
+                <thead><tr><th style="width:70px">اليوم</th><th style="width:70px">الحصة</th><th>الفصول التي بدون معلم</th></tr></thead>
+                <tbody>`;
+            
+            let totalMissing = 0;
+
+            days.forEach(day => {
+                let dayHasMissing = false;
+                let dayHtml = "";
                 
-                let totalMissing = 0;
-
-                days.forEach(day => {
-                    let dayHasMissing = false;
-                    let dayHtml = "";
-                    
-                    for(let i=1; i<=8; i++) {
-                        let missingClasses = [];
-                        predefinedClasses.forEach(cls => {
-                            const key = `${day}_${i}`;
-                            const isAssigned = TEACHERS.some(t => t.schedule && t.schedule[key] === cls);
-                            if(!isAssigned) missingClasses.push(formatNum(cls));
+                for(let i=1; i<=8; i++) {
+                    let missingClasses = [];
+                    predefinedClasses.forEach(cls => {
+                        const key = `${day}_${i}`;
+                        const isAssigned = TEACHERS.some(t => {
+                            if (!t.schedule || !t.schedule[key]) return false;
+                            const val = String(t.schedule[key]).trim().toUpperCase();
+                            return val === cls.toUpperCase() || val === `${cls.toUpperCase()}D`;
                         });
-                        
-                        if(missingClasses.length > 0) {
-                            dayHtml += `<tr>
-                                ${!dayHasMissing ? `<td rowspan="ROWSPAN_PLACEHOLDER" style="background:#f8fafc; color:var(--primary); font-weight:900;">${dayNamesAr[day]}</td>` : ''}
-                                <td style="font-weight:900;">${formatNum(i)}</td>
-                                <td>${missingClasses.join(' ، ')}</td>
-                            </tr>`;
-                            dayHasMissing = true;
-                            totalMissing += missingClasses.length;
-                        }
-                    }
+                        if(!isAssigned) missingClasses.push(cls);
+                    });
                     
-                    if(dayHasMissing) {
-                        const rowCount = (dayHtml.match(/<tr>/g) || []).length;
-                        dayHtml = dayHtml.replace("ROWSPAN_PLACEHOLDER", rowCount);
-                        html += dayHtml;
+                    if(missingClasses.length > 0) {
+                        dayHtml += `<tr>
+                            ${!dayHasMissing ? `<td rowspan="ROWSPAN_PLACEHOLDER" style="background:#f8fafc; color:var(--primary); font-weight:900;">${dayNamesAr[day]}</td>` : ''}
+                            <td style="font-weight:900;">${i}</td>
+                            <td>${missingClasses.join(' ، ')}</td>
+                        </tr>`;
+                        dayHasMissing = true;
+                        totalMissing += missingClasses.length;
                     }
-                });
-
-                html += `</tbody></table>`;
-
-                if(totalMissing === 0) {
-                    body.innerHTML = `<div style="text-align:center; color:var(--success); font-size:16px; padding:20px; font-weight:900;"><i class="fa-solid fa-circle-check"></i> ممتاز! جميع حصص وفصول المدرسة مسندة بالكامل.</div>`;
-                } else {
-                    body.innerHTML = `<div style="margin-bottom:12px; background:#fef2f2; padding:10px; border-radius:8px; color:var(--danger); text-align:center; font-weight:900;">إجمالي الحصص الشاغرة: ${formatNum(totalMissing)} حصة</div>` + html;
                 }
-            }, 300);
+                
+                if(dayHasMissing) {
+                    const rowCount = (dayHtml.match(/<tr>/g) || []).length;
+                    dayHtml = dayHtml.replace("ROWSPAN_PLACEHOLDER", rowCount);
+                    html += dayHtml;
+                }
+            });
+
+            html += `</tbody></table>`;
+            body.innerHTML = `<div style="margin-bottom:10px; background:#fef2f2; padding:8px; border-radius:6px; color:var(--danger); text-align:center; font-weight:900;">إجمالي الحصص الشاغرة: ${totalMissing} حصة</div>` + html;
         }
 
         function openMasterScheduleModal() {
@@ -1023,24 +1072,34 @@
                             <th colspan="2">الفترة الثالثة</th><th colspan="2">الفترة الرابعة</th>
                         </tr>
                         <tr>
-                            <th>${formatNum(1)}</th><th>${formatNum(2)}</th><th>${formatNum(3)}</th><th>${formatNum(4)}</th>
-                            <th>${formatNum(5)}</th><th>${formatNum(6)}</th><th>${formatNum(7)}</th><th>${formatNum(8)}</th>
+                            <th>1</th><th>2</th><th>3</th><th>4</th>
+                            <th>5</th><th>6</th><th>7</th><th>8</th>
                         </tr>
                     </thead>
                     <tbody>
             `;
 
             targetClasses.forEach(cls => {
-                html += `<tr><td style="font-weight:900; background:#f8fafc;">${formatNum(cls)}</td>`;
+                html += `<tr><td style="font-weight:900; background:#f8fafc;">${cls}</td>`;
                 for(let i=1; i<=8; i++) {
                     const key = `${day}_${i}`;
                     let assignedTeachers = [];
+                    let isReligion = false;
+
                     TEACHERS.forEach(t => {
-                        if(t.schedule && t.schedule[key] === cls) assignedTeachers.push(t.short_name || t.name.split(' ')[0]);
+                        if(t.schedule && t.schedule[key]) {
+                            const val = String(t.schedule[key]).trim().toUpperCase();
+                            if(val === cls.toUpperCase() || val === `${cls.toUpperCase()}D`) {
+                                assignedTeachers.push(t.short_name || t.name.split(' ')[0]);
+                                if(val.endsWith('D')) isReligion = true;
+                            }
+                        }
                     });
 
                     if(assignedTeachers.length === 1) {
                         html += `<td>${assignedTeachers[0]}</td>`;
+                    } else if (assignedTeachers.length === 2 && isReligion) {
+                        html += `<td style="color:#047857; font-size:11px;">${assignedTeachers.join("+")}</td>`;
                     } else if(assignedTeachers.length > 1) {
                         html += `<td style="color:red; font-weight:900;">تعارض</td>`;
                     } else {
@@ -1056,14 +1115,15 @@
 
         function showMasterOnScreen() {
             generateMasterSchedule();
-            document.getElementById("print-area").style.display = "none";
+            document.getElementById("print-area").parentElement.style.display = "none";
+            document.getElementById("master-wrapper").style.display = "block";
             document.getElementById("master-print-area").style.display = "block";
             document.getElementById("masterModal").classList.remove("active");
         }
 
         function hideMasterOnScreen() {
-            document.getElementById("print-area").style.display = "block";
-            document.getElementById("master-print-area").style.display = "none";
+            document.getElementById("print-area").parentElement.style.display = "block";
+            document.getElementById("master-wrapper").style.display = "none";
         }
 
         function printNormalSchedule() {
