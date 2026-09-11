@@ -39,9 +39,15 @@
             --border-thick: 2.5px; 
             --border-thin: 1px;
             --font-title: 19px; 
-            --font-header: 13.5px; 
-            --font-cell: 16px; 
+            --font-header: 13px; 
             --font-footer: 14px;
+
+            /* ═════════════════════════════════════════════════════════════════════ */
+            /* 🌟 [هنا يمكنك تعديل ارتفاع صفوف جدول اللفاف A4 بكل سهولة] 🌟          */
+            /* كبّر الرقم (مثلاً 40px أو 45px) أو صغّره حسب الرغبة                    */
+            --master-row-h: 36px; 
+            /* ═════════════════════════════════════════════════════════════════════ */
+            --master-col-w: auto;
         }
 
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -86,11 +92,11 @@
         .btn-nav-general { background: #0284c7 !important; border: 1px solid #38bdf8; }
         .btn-nav-reda { background: #dc2626 !important; border: 1px solid #f87171; }
 
-        /* ================= 2. كارت الإدخال الصوتي الذكي ================= */
+        /* ================= 2. كارت الإدخال الصوتي ================= */
         .voice-card {
             width: 100%; max-width: 1180px; background: linear-gradient(135deg, #0f172a, #1e1b4b, #2e1065);
             border: 2px solid #a855f7; border-radius: 14px; padding: 14px 18px;
-            margin-bottom: 12px; box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
+            margin-bottom: 10px; box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
             color: white; display: flex; flex-direction: column; gap: 8px;
         }
 
@@ -118,11 +124,11 @@
         }
         .btn-apply-voice:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6); }
 
-        /* ================= 3. لوحة التحكم والبحث الذكي ================= */
+        /* ================= 3. لوحة التحكم ================= */
         .controls-wrapper {
             width: 100%; max-width: 1180px; background: var(--surface); padding: 15px;
             border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-            border-top: 4px solid var(--primary); margin-bottom: 12px;
+            border-top: 4px solid var(--primary); margin-bottom: 10px;
             display: flex; flex-direction: column; gap: 12px;
         }
 
@@ -166,18 +172,46 @@
         .btn-master { background: var(--info); }
         .btn-add-tea { background: var(--secondary); color: white; }
 
-        /* ================= 4. شريط المراقبة الحية ================= */
+        /* ================= 📊 4. كارت الإحصاء والتحليل الذكي (خارج الجدول) ================= */
+        .breakdown-card {
+            width: 100%; max-width: 1000px; background: white; border: 1.5px solid #cbd5e1;
+            border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03); display: none; flex-direction: column; gap: 8px;
+        }
+        .breakdown-header {
+            font-size: 13.5px; font-weight: 900; color: var(--primary);
+            display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #cbd5e1; padding-bottom: 6px;
+        }
+        .breakdown-chips-grid {
+            display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+        }
+        .breakdown-badge {
+            background: #f1f5f9; border: 1.5px solid #cbd5e1; border-radius: 8px;
+            padding: 5px 12px; font-size: 12px; font-weight: 800; color: var(--text-dark);
+            display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .breakdown-badge b {
+            background: var(--primary); color: white; padding: 1px 7px; border-radius: 6px; font-size: 11.5px;
+        }
+        .breakdown-badge.total-badge {
+            background: #ecfdf5; border-color: #10b981; color: #047857; font-weight: 900;
+        }
+        .breakdown-badge.total-badge b {
+            background: #10b981;
+        }
+
+        /* ================= 5. شريط المراقبة الحية ================= */
         .live-tracker {
             width: 100%; max-width: 1000px; background: #f0fdf4; border: 1.5px solid #bbf7d0;
             padding: 8px 15px; border-radius: 10px; display: none; justify-content: space-between;
-            align-items: center; margin-bottom: 12px; font-weight: 800; font-size: 12px;
+            align-items: center; margin-bottom: 10px; font-weight: 800; font-size: 12px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.02); flex-wrap: wrap; gap: 8px;
         }
         .tracker-item { display: flex; align-items: center; gap: 6px; }
         .tracker-val { font-size: 15px; font-weight: 900; color: var(--primary); background: white; padding: 1px 8px; border-radius: 6px; border: 1px solid #bbf7d0; }
         .tracker-status { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 900; color: white; }
 
-        /* ================= 5. ورقة الطباعة والجدول الفردي (A5) ================= */
+        /* ================= 6. ورقة الطباعة والجدول الفردي (A5) ================= */
         .paper-scroll-wrapper {
             width: 100%; max-width: 1000px; overflow-x: auto;
             -webkit-overflow-scrolling: touch; padding-bottom: 8px;
@@ -201,7 +235,10 @@
             width: 100%; border-collapse: collapse; text-align: center;
             border: var(--border-thick) solid #000; table-layout: fixed;
         }
-        .main-table th, .main-table td { border: var(--border-thin) solid #000; padding: 1px; font-weight: 900; }
+        .main-table th, .main-table td { 
+            border: var(--border-thin) solid #000; padding: 1px; font-weight: 900; 
+            overflow: hidden; text-overflow: ellipsis; vertical-align: middle;
+        }
         
         .table-title {
             font-size: var(--font-title); height: var(--row-title-h);
@@ -216,10 +253,12 @@
         .main-table th:not(:first-child), .main-table td:not(:first-child) { width: var(--col-session-w); }
         .main-table th:nth-child(2n+1):not(:first-child), .main-table td:nth-child(2n+1):not(:first-child) { border-left: var(--border-thick) solid #000 !important; }
 
+        /* تصغير واحتواء النص تلقائياً لجدول المعلم */
         .cell-input {
             width: 100%; height: 100%; text-align: center; border: none; background: transparent;
-            font-weight: 900; font-size: var(--font-cell); font-family: 'Cairo', 'Arial', sans-serif;
-            outline: none; color: #000; transition: all 0.15s;
+            font-weight: 900; font-size: clamp(10px, 1.15vw, 15px); font-family: 'Cairo', 'Arial', sans-serif;
+            outline: none; color: #000; transition: all 0.15s; padding: 1px 2px;
+            word-break: break-word; line-height: 1.2;
         }
         .cell-input:focus { background: #fef08a; box-shadow: inset 0 0 0 2px var(--secondary); }
         .cell-clash { color: #dc2626 !important; background: #fee2e2 !important; font-weight: 900; }
@@ -230,21 +269,38 @@
             border-top: 2px solid #000; color: #000;
         }
 
-        /* ================= 6. جدول اللفاف اليومي (A4) ================= */
+        /* ================= 7. جدول اللفاف اليومي (A4) واحتواء النص المطور ================= */
         #master-print-area {
             display: none; background: white; padding: 15px; color: #000;
             width: 100%; max-width: 1000px; margin: 0 auto; border: 1px solid #ccc;
             box-shadow: 0 0 20px rgba(0,0,0,0.08); position: relative; min-width: 680px;
         }
         .master-table { width: 100%; border-collapse: collapse; text-align: center; border: var(--border-thick) solid #000; table-layout: fixed; }
-        .master-table th, .master-table td { border: var(--border-thin) solid #000; padding: 2px; font-weight: 900; font-size: 12.5px; }
-        .master-table thead th { background: #f1f5f9; height: 28px; }
-        .master-table tbody td { height: 28px; overflow: hidden; white-space: nowrap; }
-        .master-table th:first-child, .master-table td:first-child { width: 80px; font-size: 13px; border-left: var(--border-thick) solid #000 !important; background: #f8fafc; }
+        
+        .master-table thead th { background: #f1f5f9; height: 30px; font-weight: 900; font-size: 12.5px; border: var(--border-thin) solid #000; }
+        
+        /* 🌟 خلايا جدول اللفاف واحتواء النص التام مع الارتفاع الجديد 🌟 */
+        .master-table tbody td { 
+            height: var(--master-row-h); 
+            min-height: var(--master-row-h);
+            border: var(--border-thin) solid #000;
+            padding: 2px 4px; 
+            font-weight: 800; 
+            font-size: clamp(9.5px, 0.9vw, 12px); 
+            line-height: 1.2; 
+            vertical-align: middle;
+            word-break: break-word;
+            white-space: normal; /* يسمح بنزول الاسم على سطرين لاحتواء تام */
+            overflow: hidden;
+        }
+        
+        .master-table th:first-child, .master-table td:first-child { 
+            width: 80px; font-size: 13px; border-left: var(--border-thick) solid #000 !important; background: #f8fafc; 
+        }
 
         .btn-close-master { position: absolute; top: 12px; left: 12px; background: var(--danger); color: white; border: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; cursor: pointer; }
 
-        /* ================= 7. النوافذ المنبثقة ================= */
+        /* ================= 8. النوافذ المنبثقة ================= */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(4px);
             display: none; justify-content: center; align-items: center; z-index: 2000; padding: 12px;
@@ -265,7 +321,7 @@
 
         @media print {
             body { background: white !important; padding: 0 !important; direction: rtl !important; }
-            .top-navigation, .controls-wrapper, .voice-card, .live-tracker, .modal-overlay, .btn-close-master { display: none !important; }
+            .top-navigation, .controls-wrapper, .voice-card, .breakdown-card, .live-tracker, .modal-overlay, .btn-close-master { display: none !important; }
             .paper-scroll-wrapper { overflow: visible !important; width: 100% !important; max-width: 100% !important; }
             #print-area { min-width: 100% !important; border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
             body.print-master-mode #master-print-area { display: block !important; border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; min-width: 100% !important; margin: 0 !important; }
@@ -313,11 +369,11 @@
         </div>
     </nav>
 
-    <!-- ================= 2. كارت الإدخال الصوتي الذكي باليوم ================= -->
+    <!-- ================= 2. كارت الإدخال الصوتي الذكي ================= -->
     <div class="voice-card">
         <div class="voice-header">
             <div class="voice-title">
-                <i class="fa-solid fa-microphone-lines"></i> الإدخال الصوتي السريع (انطق اليوم ثم الـ 8 حصص - لحصص الدين المشتركة انطق "دين" بجانب الفصل):
+                <i class="fa-solid fa-microphone-lines"></i> الإدخال الصوتي السريع (انطق اليوم ثم الـ 8 حصص - لحصص الدين انطق "دين" بجانب الفصل):
             </div>
             <div style="font-size:12px; color:#fcd34d; font-weight:bold;">
                 مثال: الأحد فاضي فاضي 34 دين 34 دين 16 فاضي 12 12
@@ -383,7 +439,7 @@
         </div>
     </div>
 
-    <!-- 4. شريط المراقبة الحية -->
+    <!-- 4. شريط المراقبة الحية للنصاب -->
     <div class="live-tracker" id="live-tracker">
         <div class="tracker-item"><i class="fa-solid fa-medal"></i> الدرجة: <span class="tracker-val" id="tk-degree">-</span></div>
         <div class="tracker-item"><i class="fa-solid fa-scale-balanced"></i> النصاب الرسمي: <span class="tracker-val" id="tk-quota">0</span></div>
@@ -391,7 +447,18 @@
         <div class="tracker-status" id="tk-status"></div>
     </div>
 
-    <!-- 5. حاوية التمرير والجدول الفردي (A5) -->
+    <!-- ================= 📊 5. كارت الإحصاء والتحليل الذكي (خارج الجدول) ================= -->
+    <div class="breakdown-card" id="breakdown-card">
+        <div class="breakdown-header">
+            <span id="breakdown-title"><i class="fa-solid fa-chart-pie text-blue-600"></i> تفاصيل الحصص والأنصبة:</span>
+            <span id="breakdown-subtitle" style="font-size:12px; color:#64748b;"></span>
+        </div>
+        <div class="breakdown-chips-grid" id="breakdown-chips-container">
+            <!-- يتم رسم الحصص أو المعلمين ديناميكياً هنا -->
+        </div>
+    </div>
+
+    <!-- 6. حاوية التمرير والجدول الفردي (A5) -->
     <div class="paper-scroll-wrapper">
         <div id="print-area">
             <div class="print-header">
@@ -432,7 +499,7 @@
         </div>
     </div>
 
-    <!-- 6. منطقة طباعة جدول اللفاف اليومي (A4) -->
+    <!-- 7. منطقة طباعة جدول اللفاف اليومي (A4) -->
     <div class="paper-scroll-wrapper" id="master-wrapper" style="display:none;">
         <div id="master-print-area">
             <button class="btn-close-master" onclick="hideMasterOnScreen()"><i class="fa-solid fa-arrow-right"></i> عودة للجدول الفردي</button>
@@ -449,7 +516,7 @@
         </div>
     </div>
 
-    <!-- 7. نافذة تقرير الحصص الفارغة -->
+    <!-- 8. نافذة تقرير الحصص الفارغة -->
     <div class="modal-overlay" id="missingModal">
         <div class="modal-content">
             <div class="modal-header">
@@ -460,7 +527,7 @@
         </div>
     </div>
 
-    <!-- 8. نافذة إعداد جدول اللفاف -->
+    <!-- 9. نافذة إعداد جدول اللفاف -->
     <div class="modal-overlay" id="masterModal">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
@@ -493,7 +560,7 @@
         </div>
     </div>
 
-    <!-- ================= المحرك البرمجي المعالج للأيام وحصص الدين D ================= -->
+    <!-- ================= المحرك البرمجي ================= -->
     <script>
         const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
@@ -541,16 +608,13 @@
             let val = inputEl.value.trim();
             let enVal = val.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
 
-            // كشف إذا كان المعلم كتب حرف D أو d أو د للدين
             const hasD = /[dDد]/.test(enVal);
             const digitsOnly = enVal.replace(/[^0-9]/g, '');
 
-            // عند كتابة رقمين مثل (24 أو 24d أو 24د)
             if (digitsOnly.length === 2) {
                 inputEl.value = digitsOnly[0] + "/" + digitsOnly[1] + (hasD ? "D" : "");
                 updateLiveStats();
 
-                // قفز تلقائي للحصة التالية
                 const allInputs = Array.from(document.querySelectorAll('.cell-input'));
                 const currentIndex = allInputs.indexOf(inputEl);
                 if (currentIndex > -1 && currentIndex + 1 < allInputs.length) {
@@ -573,7 +637,7 @@
             }
         }
 
-        // ================= 🧠 المحرك الصوتي الذكي مع دعم الدين D =================
+        // ================= 🧠 المحرك الصوتي الذكي =================
         function applySmartVoiceSchedule() {
             if (!CURRENT_TEACHER) {
                 Swal.fire('تنبيه', 'يرجى اختيار المعلم أولاً قبل تسكين الجدول!', 'warning');
@@ -591,7 +655,6 @@
             let text = rawText.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
             text = text.replace(/(\s|^)و([0-9]|فاضي|فراغ|أحد|احد|اثنين|ثلاثاء|اربعاء|خميس)/g, "$1 $2");
 
-            // علامات الأيام
             text = text
                 .replace(/يوم الأحد|يوم الاحد|الأحد|الاحد/g, " __DAY_الاحد__ ")
                 .replace(/يوم الإثنين|يوم الاثنين|الإثنين|الاثنين/g, " __DAY_الاثنين__ ")
@@ -599,7 +662,6 @@
                 .replace(/يوم الأربعاء|يوم الاربعاء|الأربعاء|الاربعاء/g, " __DAY_الاربعاء__ ")
                 .replace(/يوم الخميس|الخميس/g, " __DAY_الخميس__ ");
 
-            // تحويل الأرقام المنطوقة
             text = text
                 .replace(/أربعة وتلاتين|اربعة وتلاتين|اربعه وتلاتين|أربعة وثلاثين|اربعة وثلاثين/g, "34")
                 .replace(/ستاشر|ستة عشر|سته عشر/g, "16")
@@ -641,7 +703,6 @@
                 .replace(/ستة وستين|ستة وستون/g, "66")
                 .replace(/فاضي|فاضية|فراغ|سبيس|مسافة|صفر|فارغ|لاشيء|لاشئ|عدي|تخطي|بلاش|نقطة|معندوش|مفيش/g, "EMPTY");
 
-            // دمج علامة الدين مع الرقم السابق (مثال: 34 دين -> 34D)
             text = text.replace(/([0-9]{2})\s*(دين|د|دي)/g, "$1D");
             text = text.replace(/(دين|د|دي)\s*([0-9]{2})/g, "$2D");
 
@@ -672,7 +733,6 @@
                     if (tok === "EMPTY") {
                         daySessions.push("");
                     } else if (/^[0-9]{2}D$/i.test(tok)) {
-                        // حالة الدين المشترك 34D -> 3/4D
                         daySessions.push(tok[0] + "/" + tok[1] + "D");
                     } else if (/^[0-9]{2}$/.test(tok)) {
                         daySessions.push(tok[0] + "/" + tok[1]);
@@ -719,14 +779,12 @@
             });
         }
 
-        // ================= جلب جميع المعلمين (معينين + أجر) =================
-        // ================= جلب جميع المعلمين (معينين + أجر) بدون أي استبعاد =================
+        // ================= جلب جميع المعلمين =================
         async function loadAllTeachersComprehensive() {
             const select = document.getElementById("teacher-select");
             select.innerHTML = '<option value="" disabled selected>⏳ جاري جلب جميع المعلمين (أساسيين وأجر)...</option>';
 
             try {
-                // جلب جدولين المعينين والأجر معاً بالتوازي من السحابة
                 const [resPerm, resContract] = await Promise.all([
                     supabaseClient.from("teachers").select("*"),
                     supabaseClient.from("contract_teachers").select("*")
@@ -734,7 +792,6 @@
 
                 TEACHERS = [];
 
-                // 1. المعلمون المعينون والأساسيون
                 (resPerm.data || []).forEach(t => {
                     const job = (t.cadre_job || "");
                     const isWorker = job.includes("عامل خدمات") || job.includes("حارس");
@@ -744,31 +801,29 @@
                         TEACHERS.push({
                             ...t,
                             is_contract: false,
-                            unique_id: "PERM_" + (t.code || t.id),
-                            display_title: `أ/ ${t.name} (أساسي)`
+                            unique_id: String(t.code || t.id),
+                            display_title: t.name
                         });
                     }
                 });
 
-                // 2. معلمو الأجر والحصة (جلب مباشر بدون شروط معقدة لضمان ظهور الجميع)
                 (resContract.data || []).forEach(t => {
                     if (t.name && t.name.trim() !== "") {
                         TEACHERS.push({
                             ...t,
+                            code: t.code || `CON_${t.id}`,
                             is_contract: true,
-                            unique_id: "CON_" + (t.id || t.code || Math.random()),
-                            display_title: `أ/ ${t.name} ⭐ (معلم أجر/حصة)`
+                            unique_id: String(t.code || t.id),
+                            display_title: `${t.name} (معلم أجر/حصة)`
                         });
                     }
                 });
 
-                // ترتيب الجميع أبجدياً
                 TEACHERS.sort((a, b) => (a.name || "").localeCompare(b.name || "", 'ar'));
-
                 renderTeachersDropdown(TEACHERS);
 
             } catch(e) { 
-                console.error("خطأ جلب المعلمين:", e);
+                console.error(e);
                 select.innerHTML = '<option value="" disabled selected>❌ خطأ في الاتصال بقاعدة البيانات</option>'; 
             }
         }
@@ -816,6 +871,7 @@
             document.getElementById('p-date').innerText = val.split('-').reverse().join(' / ');
         }
 
+        // ================= تحميل جدول المعلم + عرض تفاصيل فصوله خارج الجدول =================
         function loadTeacherSchedule() {
             document.getElementById("class-select").selectedIndex = 0; 
             const selectedVal = document.getElementById("teacher-select").value;
@@ -848,6 +904,49 @@
             });
 
             updateLiveStats();
+
+            renderTeacherClassesBreakdown(savedSchedule, sName);
+        }
+
+        function renderTeacherClassesBreakdown(schedule, teacherName) {
+            const card = document.getElementById("breakdown-card");
+            const container = document.getElementById("breakdown-chips-container");
+            const title = document.getElementById("breakdown-title");
+            const sub = document.getElementById("breakdown-subtitle");
+
+            const classCounts = {};
+            let totalPeriods = 0;
+
+            for (let key in schedule) {
+                const val = (schedule[key] || "").trim();
+                if (val) {
+                    classCounts[val] = (classCounts[val] || 0) + 1;
+                    totalPeriods++;
+                }
+            }
+
+            title.innerHTML = `<i class="fa-solid fa-chalkboard-user text-blue-600"></i> بيان فصول المعلم (أ/ ${teacherName}):`;
+            sub.innerText = `عدد الفصول المسندة: ${Object.keys(classCounts).length} فصل`;
+
+            container.innerHTML = "";
+
+            if (totalPeriods === 0) {
+                container.innerHTML = `<span style="font-size:12px; color:#94a3b8; font-weight:800;">لم يتم تسكين أي حصص لهذا المعلم بعد.</span>`;
+            } else {
+                Object.keys(classCounts).sort().forEach(clsName => {
+                    const badge = document.createElement("div");
+                    badge.className = "breakdown-badge";
+                    badge.innerHTML = `<span>فصل <b>${clsName}</b></span> <span>عدد: ${classCounts[clsName]} حصة</span>`;
+                    container.appendChild(badge);
+                });
+
+                const totalBadge = document.createElement("div");
+                totalBadge.className = "breakdown-badge total-badge";
+                totalBadge.innerHTML = `<span>إجمالي المسند:</span> <b>${totalPeriods} حصة</b>`;
+                container.appendChild(totalBadge);
+            }
+
+            card.style.display = "flex";
         }
 
         function updateLiveStats() {
@@ -872,9 +971,7 @@
             }
         }
 
-        // ================= ☁️ حفظ الجدول مع التجاوز الذكي لحصص الدين D =================
-       // ================= حفظ الجدول وتوجيهه تلقائياً للجدول الصحيح =================
-       // ================= ☁️ حفظ الجدول الذكي المتوافق مع كافة الجداول =================
+        // ================= ☁️ حفظ الجدول في السحابة =================
         async function saveTeacherSchedule() {
             if(!CURRENT_TEACHER) { Swal.fire('تنبيه', 'يرجى اختيار المعلم أولاً!', 'warning'); return; }
 
@@ -896,7 +993,6 @@
                         if(String(t.unique_id) !== String(CURRENT_TEACHER.unique_id) && t.schedule && t.schedule[key]) {
                             const otherVal = String(t.schedule[key]).trim().toUpperCase();
 
-                            // استثناء حصص الدين المشتركة D
                             const isBothReligionD = valUpper.endsWith('D') && otherVal.endsWith('D') && valUpper === otherVal;
 
                             if (!isBothReligionD) {
@@ -930,7 +1026,6 @@
                 let saveQuery;
 
                 if (CURRENT_TEACHER.is_contract) {
-                    // تحديث معلم الأجر بذكاء بناءً على العمود المتوفر لديه
                     let query = supabaseClient
                         .from("contract_teachers")
                         .update({ 
@@ -943,14 +1038,12 @@
                     } else if (CURRENT_TEACHER.code && !CURRENT_TEACHER.code.startsWith("CON_")) {
                         query = query.eq("code", CURRENT_TEACHER.code);
                     } else {
-                        // الاعتماد على الاسم كمرجع مؤكد
                         query = query.eq("name", CURRENT_TEACHER.name);
                     }
 
                     saveQuery = query;
 
                 } else {
-                    // المعلم المعين الأساسي يعتمد على الكود
                     saveQuery = supabaseClient
                         .from("teachers")
                         .update({ 
@@ -965,6 +1058,8 @@
 
                 CURRENT_TEACHER.short_name = shortName;
                 CURRENT_TEACHER.schedule = scheduleData;
+
+                renderTeacherClassesBreakdown(scheduleData, shortName);
 
                 Swal.fire({
                     icon: 'success',
@@ -981,6 +1076,8 @@
                 btn.disabled = false;
             }
         }
+
+        // ================= 🏫 عرض جدول فصل + بيان المعلمين خارج الجدول =================
         function loadClassSchedule() {
             document.getElementById("teacher-select").selectedIndex = 0; 
             document.getElementById("short-name").value = "";
@@ -991,6 +1088,9 @@
             if(!className) return;
 
             document.getElementById("table-main-title").innerHTML = `جدول حصص فصل / <span style="color:var(--danger)">${className}</span>`;
+
+            const teacherPeriodCounts = {};
+            let totalClassLessons = 0;
 
             document.querySelectorAll('.cell-input').forEach(inp => {
                 inp.value = "";
@@ -1006,8 +1106,12 @@
                     if(t.schedule && t.schedule[key]) {
                         const cellVal = String(t.schedule[key]).trim().toUpperCase();
                         if(cellVal === className.toUpperCase() || cellVal === `${className.toUpperCase()}D`) {
-                            teachersInThisSlot.push(t.short_name || t.name.split(' ')[0]);
+                            const tName = t.short_name || t.name.split(' ')[0];
+                            teachersInThisSlot.push(tName);
                             if(cellVal.endsWith('D')) isReligionSlot = true;
+
+                            teacherPeriodCounts[tName] = (teacherPeriodCounts[tName] || 0) + 1;
+                            totalClassLessons++;
                         }
                     }
                 });
@@ -1015,14 +1119,45 @@
                 if(teachersInThisSlot.length === 1) {
                     inp.value = teachersInThisSlot[0];
                 } else if (teachersInThisSlot.length === 2 && isReligionSlot) {
-                    // حصة دين مشتركة (مسلم + مسيحي) تعرض معاً دون تعارض
                     inp.value = teachersInThisSlot.join(" + ");
-                    inp.style.color = "#047857"; // أخضر هادئ للحصص المشتركة
+                    inp.style.color = "#047857"; 
                 } else if (teachersInThisSlot.length > 1) {
                     inp.value = "تعارض!";
                     inp.classList.add("cell-clash");
                 }
             });
+
+            renderClassTeachersBreakdown(teacherPeriodCounts, className, totalClassLessons);
+        }
+
+        function renderClassTeachersBreakdown(teacherCounts, className, totalLessons) {
+            const card = document.getElementById("breakdown-card");
+            const container = document.getElementById("breakdown-chips-container");
+            const title = document.getElementById("breakdown-title");
+            const sub = document.getElementById("breakdown-subtitle");
+
+            title.innerHTML = `<i class="fa-solid fa-users-rectangle text-amber-600"></i> معلمو فصل (${className}) المسندين وأنصبتهم:`;
+            sub.innerText = `عدد المعلمين: ${Object.keys(teacherCounts).length} معلم`;
+
+            container.innerHTML = "";
+
+            if (Object.keys(teacherCounts).length === 0) {
+                container.innerHTML = `<span style="font-size:12px; color:#94a3b8; font-weight:800;">لا يوجد معلمون مسند لهم حصص في هذا الفصل بعد.</span>`;
+            } else {
+                Object.keys(teacherCounts).sort().forEach(tName => {
+                    const badge = document.createElement("div");
+                    badge.className = "breakdown-badge";
+                    badge.innerHTML = `<span>أ/ <b>${tName}</b></span> <span>عدد: ${teacherCounts[tName]} حصة</span>`;
+                    container.appendChild(badge);
+                });
+
+                const totalBadge = document.createElement("div");
+                totalBadge.className = "breakdown-badge total-badge";
+                totalBadge.innerHTML = `<span>إجمالي حصص الفصل:</span> <b>${totalLessons} حصة</b>`;
+                container.appendChild(totalBadge);
+            }
+
+            card.style.display = "flex";
         }
 
         function openMissingPeriodsModal() {
@@ -1077,6 +1212,7 @@
             document.getElementById("masterModal").classList.add("active");
         }
 
+        // ================= 🌟 توليد جدول اللفاف اليومي A4 مع احتواء النص والارتفاع الجديد =================
         function generateMasterSchedule() {
             const day = document.getElementById("master-day-select").value;
             const stage = document.getElementById("master-stage-select").value;
@@ -1127,7 +1263,7 @@
                     if(assignedTeachers.length === 1) {
                         html += `<td>${assignedTeachers[0]}</td>`;
                     } else if (assignedTeachers.length === 2 && isReligion) {
-                        html += `<td style="color:#047857; font-size:11px;">${assignedTeachers.join("+")}</td>`;
+                        html += `<td style="color:#047857; font-weight:bold;">${assignedTeachers.join(" + ")}</td>`;
                     } else if(assignedTeachers.length > 1) {
                         html += `<td style="color:red; font-weight:900;">تعارض</td>`;
                     } else {
