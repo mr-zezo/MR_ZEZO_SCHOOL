@@ -874,6 +874,7 @@
 
         // ================= ☁️ حفظ الجدول مع التجاوز الذكي لحصص الدين D =================
        // ================= حفظ الجدول وتوجيهه تلقائياً للجدول الصحيح =================
+       // ================= ☁️ حفظ الجدول الذكي المتوافق مع كافة الجداول =================
         async function saveTeacherSchedule() {
             if(!CURRENT_TEACHER) { Swal.fire('تنبيه', 'يرجى اختيار المعلم أولاً!', 'warning'); return; }
 
@@ -895,12 +896,12 @@
                         if(String(t.unique_id) !== String(CURRENT_TEACHER.unique_id) && t.schedule && t.schedule[key]) {
                             const otherVal = String(t.schedule[key]).trim().toUpperCase();
 
-                            // استثناء حصص الدين D
+                            // استثناء حصص الدين المشتركة D
                             const isBothReligionD = valUpper.endsWith('D') && otherVal.endsWith('D') && valUpper === otherVal;
 
                             if (!isBothReligionD) {
                                 if (valUpper === otherVal || valUpper.replace('D', '') === otherVal.replace('D', '')) {
-                                    clashes.push(`• فصل (${val}) في ${dayNamesAr[key.split('_')[0]]} الحصة ${key.split('_')[1]} مسند أيضاً لـ (${t.short_name || t.name})`);
+                                    clashes.push(`• فصل (${val}) في ${dayNamesAr[key.split('_')[0]]} الحصة ${key.split('_')[1]} مسند أيضاً لـ (أ. ${t.short_name || t.name})`);
                                 }
                             }
                         }
@@ -922,21 +923,40 @@
 
             const btn = document.querySelector('.btn-save');
             const oldHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ في السحابة...';
             btn.disabled = true;
 
             try {
-                // توجيه الحفظ: إذا كان معلم أجر يحفظ في contract_teachers، وإذا كان أساسياً يحفظ في teachers
                 let saveQuery;
+
                 if (CURRENT_TEACHER.is_contract) {
-                    saveQuery = supabaseClient
+                    // تحديث معلم الأجر بذكاء بناءً على العمود المتوفر لديه
+                    let query = supabaseClient
                         .from("contract_teachers")
-                        .update({ short_name: shortName, schedule: scheduleData })
-                        .eq("id", CURRENT_TEACHER.id);
+                        .update({ 
+                            short_name: shortName, 
+                            schedule: scheduleData 
+                        });
+
+                    if (CURRENT_TEACHER.nid) {
+                        query = query.eq("nid", CURRENT_TEACHER.nid);
+                    } else if (CURRENT_TEACHER.code && !CURRENT_TEACHER.code.startsWith("CON_")) {
+                        query = query.eq("code", CURRENT_TEACHER.code);
+                    } else {
+                        // الاعتماد على الاسم كمرجع مؤكد
+                        query = query.eq("name", CURRENT_TEACHER.name);
+                    }
+
+                    saveQuery = query;
+
                 } else {
+                    // المعلم المعين الأساسي يعتمد على الكود
                     saveQuery = supabaseClient
                         .from("teachers")
-                        .update({ short_name: shortName, schedule: scheduleData })
+                        .update({ 
+                            short_name: shortName, 
+                            schedule: scheduleData 
+                        })
                         .eq("code", CURRENT_TEACHER.code);
                 }
 
@@ -948,8 +968,8 @@
 
                 Swal.fire({
                     icon: 'success',
-                    title: 'تم الحفظ في السحابة بنجاح!',
-                    text: CURRENT_TEACHER.is_contract ? 'تم حفظ جدول معلم الأجر بنجاح.' : 'تم حفظ جدول المعلم الأساسي بنجاح.',
+                    title: 'تم الحفظ بنجاح!',
+                    text: CURRENT_TEACHER.is_contract ? 'تم حفظ جدول معلم الأجر في السحابة.' : 'تم حفظ جدول المعلم الأساسي في السحابة.',
                     timer: 1500,
                     showConfirmButton: false
                 });
@@ -961,7 +981,6 @@
                 btn.disabled = false;
             }
         }
-
         function loadClassSchedule() {
             document.getElementById("teacher-select").selectedIndex = 0; 
             document.getElementById("short-name").value = "";
