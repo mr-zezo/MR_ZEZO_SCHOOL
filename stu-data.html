@@ -144,6 +144,7 @@
                 <option value="الأول">الصف الأول</option><option value="الثاني">الصف الثاني</option>
                 <option value="الثالث">الصف الثالث</option><option value="الرابع">الصف الرابع</option>
                 <option value="الخامس">الصف الخامس</option><option value="السادس">الصف السادس</option>
+                <option value="ALL" style="background:#e0f2fe; color:#0369a1; font-weight:bold;">🔍 عرض جميع تلاميذ المدرسة (الكل)</option>
             </select>
             <input type="text" id="search-student" class="search-input" placeholder="🔍 بحث بالاسم..." oninput="filterTableByName()">
             
@@ -178,11 +179,11 @@
                     <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="class" checked> الفصل</div></th>
                     <th title="1: تم نقله من فصل لآخر - 0: مستقر"><div class="th-content"><input type="checkbox" class="export-cb" data-key="is_class_transferred" checked> نقل فصل</div></th>
                     <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="code" checked> الكود</div></th>
-                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="nid" checked> الرقم القومي (الأساس)</div></th>
+                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="nid" checked> الرقم القومي</div></th>
                     <th class="readonly-cell"><div class="th-content"><input type="checkbox" class="export-cb" data-key="dob" checked> الميلاد</div></th>
                     <th class="readonly-cell"><div class="th-content"><input type="checkbox" class="export-cb" data-key="gender" checked> النوع</div></th>
                     
-                    <!-- أعمدة السن الثلاثة المنفصلة -->
+                    <!-- أعمدة السن المنفصلة -->
                     <th class="age-cell" title="عمر التلميذ: يوم"><div class="th-content"><input type="checkbox" class="export-cb" data-key="age_day" checked> يوم</div></th>
                     <th class="age-cell" title="عمر التلميذ: شهر"><div class="th-content"><input type="checkbox" class="export-cb" data-key="age_month" checked> شهر</div></th>
                     <th class="age-cell" title="عمر التلميذ: سنة"><div class="th-content"><input type="checkbox" class="export-cb" data-key="age_year" checked> سنة</div></th>
@@ -246,31 +247,24 @@
     <div class="zizo-signature">منظومة مستر زيزو لإدارة بيانات المدرسة © 2026/2027</div>
 
     <script>
-        // إعدادات المحرك المزدوج (Online Supabase + Offline IndexedDB)
         const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // ترقية الذاكرة المحلية لاعتماد الرقم القومي كأساس رئيسي
         const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
-        const DB_VERSION = 4;
         const stdGrades = ["KG1", "KG2", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
         const AGE_DATE_STORAGE_KEY = "ZEZO_PERSISTENT_AGE_CALC_DATE";
 
-        // محرك IndexedDB المحدث (المفتاح الأساسي هو nid)
         function openLocalDB() {
             return new Promise((resolve, reject) => {
-                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                const req = indexedDB.open(DB_NAME);
                 req.onsuccess = () => resolve(req.result);
                 req.onerror = () => reject(req.error);
                 req.onupgradeneeded = (e) => {
                     const db = e.target.result;
-                    if (db.objectStoreNames.contains('students')) {
-                        db.deleteObjectStore('students');
+                    if (!db.objectStoreNames.contains('students')) {
+                        db.createObjectStore('students', { keyPath: 'internal_key' });
                     }
-                    // إنشاء المخزن بالرقم القومي كـ KeyPath أساسي
-                    db.createObjectStore('students', { keyPath: 'nid' });
-                    
                     if (!db.objectStoreNames.contains('system_capsules')) {
                         db.createObjectStore('system_capsules', { keyPath: 'id' });
                     }
@@ -278,7 +272,6 @@
             });
         }
 
-        // محرك ZezoDB الموحد مع اعتماد الرقم القومي كـ conflictKey رئيسي
         const ZezoEngine = {
             getMode: () => localStorage.getItem('ZEZO_APP_MODE') || 'online',
 
@@ -309,14 +302,16 @@
                 }
             },
 
-            async upsert(table, records, conflictKey = 'nid') {
+            async upsert(table, records, conflictKey = 'code') {
                 if (this.getMode() === 'offline') {
                     const db = await openLocalDB();
                     return new Promise((resolve, reject) => {
                         const tx = db.transaction(table, 'readwrite');
                         const store = tx.objectStore(table);
                         records.forEach(r => {
-                            if (!r.nid) r.nid = "TEMP_NID_" + Math.random().toString(36).substr(2, 9);
+                            if (table === 'students') {
+                                r.internal_key = String(r.code || r.nid || ("KEY_" + Math.random().toString(36).substr(2, 9)));
+                            }
                             store.put(r);
                         });
                         tx.oncomplete = () => resolve(true);
@@ -326,28 +321,29 @@
                     const chunkSize = 300;
                     for (let i = 0; i < records.length; i += chunkSize) {
                         let chunk = records.slice(i, i + chunkSize);
-                        
-                        // محاولة الحفظ أولاً بالرقم القومي (nid) كمعيار رئيسي
-                        let { error } = await sbClient.from(table).upsert(chunk, { onConflict: conflictKey });
-                        
-                        // إذا واجه خطأ أعمدة أو خطأ في الـ conflictKey نجرب بدون الأعمدة الزائدة
-                        if (error) {
-                            const sanitizedChunk = chunk.map(r => {
+                        let payload;
+
+                        if (table === 'students') {
+                            payload = chunk.map(r => {
                                 const clean = { ...r };
+                                delete clean.internal_key;
                                 delete clean.age_day;
                                 delete clean.age_month;
                                 delete clean.age_year;
                                 delete clean.is_class_transferred;
+
+                                if (!clean.code || String(clean.code).trim() === "") {
+                                    clean.code = clean.nid ? `NID_${clean.nid}` : `TEMP_${Math.random().toString(36).substr(2, 9)}`;
+                                }
                                 return clean;
                             });
-                            
-                            let retry = await sbClient.from(table).upsert(sanitizedChunk, { onConflict: conflictKey });
-                            // إذا كانت قاعدة بيانات Supabase القديمة تعتمد code كمفتاح أساسي
-                            if (retry.error && retry.error.message.includes("conflict")) {
-                                retry = await sbClient.from(table).upsert(sanitizedChunk, { onConflict: 'code' });
-                            }
-                            if (retry.error) throw retry.error;
+                        } else {
+                            payload = chunk;
                         }
+
+                        const targetKey = (table === 'system_capsules') ? 'id' : conflictKey;
+                        const { error } = await sbClient.from(table).upsert(payload, { onConflict: targetKey });
+                        if (error) throw error;
                     }
                     return true;
                 }
@@ -378,7 +374,6 @@
             }
         };
 
-        // إدارة تاريخ حساب السن (محفوظ دائماً في LocalStorage)
         function getSavedAgeCalcDate() {
             return localStorage.getItem(AGE_DATE_STORAGE_KEY) || "2026-10-01";
         }
@@ -387,43 +382,106 @@
             localStorage.setItem(AGE_DATE_STORAGE_KEY, dateStr);
         }
 
-        // دالة مطابقة اسم الصف بمرونة (تقبل "الأول" أو "الصف الأول" أو "1")
-        function isGradeMatch(studentGrade, selectedGrade) {
-            if (!studentGrade || !selectedGrade) return false;
-            const clean = str => String(str).replace(/الصف\s*/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').trim();
-            const sG = clean(studentGrade);
-            const sel = clean(selectedGrade);
-            if (sG === sel) return true;
-            const gradeNums = { "kg1":"kg1", "kg2":"kg2", "1":"الاول", "2":"الثاني", "3":"الثالث", "4":"الرابع", "5":"الخامس", "6":"السادس" };
-            return gradeNums[sG] === sel || gradeNums[sel] === sG;
+        // ==========================================
+        // محرك الفرز الهجائي (ذكور أولاً ثم إناث أبجدياً)
+        // ==========================================
+        function normalizeArabicForSort(text) {
+            if (!text) return "";
+            let s = String(text).trim();
+            s = s.replace(/[\u064B-\u065F\u0640]/g, ''); // إزالة التشكيل
+            s = s.replace(/[أإآ]/g, 'ا');               // توحيد الألف
+            s = s.replace(/ى/g, 'ي');                   // توحيد الياء
+            s = s.replace(/ة/g, 'ه');                   // توحيد التاء المربوطة
+            s = s.replace(/\s+/g, ' ');
+            return s;
         }
 
-        // دالة حساب السن الدقيق مفصلاً (يوم - شهر - سنة)
+        function isMaleStudent(gender) {
+            if (!gender) return false;
+            const g = String(gender).trim();
+            return g.includes("ذكر") || g.includes("بنين") || g === "1";
+        }
+
+        function sortStudents(arr) {
+            if (!Array.isArray(arr)) return [];
+            return arr.sort((a, b) => {
+                const aIsMale = isMaleStudent(a.gender);
+                const bIsMale = isMaleStudent(b.gender);
+
+                // 1. الذكور أولاً، ثم الإناث
+                if (aIsMale && !bIsMale) return -1;
+                if (!aIsMale && bIsMale) return 1;
+
+                // 2. الترتيب الأبجدي الدقيق بالاسم
+                const nameA = normalizeArabicForSort(a.name || "");
+                const nameB = normalizeArabicForSort(b.name || "");
+                return nameA.localeCompare(nameB, 'ar', { sensitivity: 'base' });
+            });
+        }
+
+        // مطابقة ذكية للصفوف
+        function isGradeMatch(studentGrade, selectedGrade) {
+            if (selectedGrade === "ALL") return true;
+            if (!studentGrade) return false;
+            
+            const sG = String(studentGrade).trim();
+            const sel = String(selectedGrade).trim();
+            if (sG === sel) return true;
+
+            const clean = str => String(str).replace(/الصف\s*/g, '').replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/[\s_\-]/g, '').toLowerCase();
+            
+            const c1 = clean(sG);
+            const c2 = clean(sel);
+            if (c1 === c2) return true;
+
+            const map = {
+                "الاول": ["الاول", "1", "اولي"],
+                "الثاني": ["الثاني", "2", "تانيه"],
+                "الثالث": ["الثالث", "3", "تالته"],
+                "الرابع": ["الرابع", "4", "رابعه"],
+                "الخامس": ["الخامس", "5", "خامسه"],
+                "السادس": ["السادس", "6", "ساته", "سادسه"],
+                "kg1": ["kg1", "كيجي1"],
+                "kg2": ["kg2", "كيجي2"]
+            };
+
+            for (let base in map) {
+                if (map[base].includes(c2) && map[base].includes(c1)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // حساب السن الدقيق (يوم - شهر - سنة)
         function calculateAgeParts(dobStr, refDateStr) {
             if (!dobStr || !refDateStr) return { d: "", m: "", y: "" };
-            const birth = new Date(dobStr);
-            const target = new Date(refDateStr);
-            if (isNaN(birth.getTime()) || isNaN(target.getTime()) || birth > target) {
+            try {
+                const birth = new Date(dobStr);
+                const target = new Date(refDateStr);
+                if (isNaN(birth.getTime()) || isNaN(target.getTime()) || birth > target) {
+                    return { d: "", m: "", y: "" };
+                }
+
+                let years = target.getFullYear() - birth.getFullYear();
+                let months = target.getMonth() - birth.getMonth();
+                let days = target.getDate() - birth.getDate();
+
+                if (days < 0) {
+                    months--;
+                    const prevMonth = new Date(target.getFullYear(), target.getMonth(), 0);
+                    days += prevMonth.getDate();
+                }
+                if (months < 0) {
+                    years--;
+                    months += 12;
+                }
+                return { d: days, m: months, y: years };
+            } catch(e) {
                 return { d: "", m: "", y: "" };
             }
-
-            let years = target.getFullYear() - birth.getFullYear();
-            let months = target.getMonth() - birth.getMonth();
-            let days = target.getDate() - birth.getDate();
-
-            if (days < 0) {
-                months--;
-                const prevMonth = new Date(target.getFullYear(), target.getMonth(), 0);
-                days += prevMonth.getDate();
-            }
-            if (months < 0) {
-                years--;
-                months += 12;
-            }
-            return { d: days, m: months, y: years };
         }
 
-        // استخراج بيانات الرقم القومي وتفصيل السن
         function parseNationalId(nid, refDate) {
             let res = { dob: "", gender: "", age_day: "", age_month: "", age_year: "" };
             nid = String(nid || "").trim();
@@ -443,14 +501,33 @@
             return res;
         }
 
-        // عند تغيير تاريخ حساب السن في شريط الأدوات
+        function extractNationalIdFromRow(row) {
+            for (let key in row) {
+                const cleanKey = key.trim().replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/[\s_\-]/g, '').toLowerCase();
+                if (cleanKey.includes("قومي") || cleanKey === "nid" || cleanKey.includes("nationalid")) {
+                    let val = row[key];
+                    if (val !== undefined && val !== null && val !== "") {
+                        if (typeof val === 'number') {
+                            return BigInt(Math.round(val)).toString();
+                        }
+                        let str = String(val).trim();
+                        if (str.includes('e') || str.includes('E') || str.includes('+')) {
+                            try { return BigInt(Number(str)).toString(); } catch(e){}
+                        }
+                        let digits = str.replace(/\D/g, '');
+                        if (digits.length > 0) return digits;
+                    }
+                }
+            }
+            return "";
+        }
+
         function handleAgeDateChange() {
             const dateInput = document.getElementById("age-calc-date");
             const newDate = dateInput.value;
             if (!newDate) return;
             saveAgeCalcDate(newDate);
 
-            // تحديث السن فورياً لكل الصفوف المعروضة بالجدول
             const rows = document.querySelectorAll("#table-body tr");
             rows.forEach(tr => {
                 if (tr.cells.length < 5) return;
@@ -468,7 +545,6 @@
             });
         }
 
-        // عند تعديل الرقم القومي يدوياً بالجدول
         function handleNidChange(input) {
             const tr = input.closest('tr');
             const nidVal = input.value.trim();
@@ -490,7 +566,6 @@
             }
         }
 
-        // مراقبة تعديل الفصل وتعيين حالة النقل (1: تم نقله، 0: مستقر)
         function handleClassInputChange(input) {
             const tr = input.closest('tr');
             const origClass = (input.dataset.origClass || "").trim();
@@ -516,7 +591,6 @@
             }
         }
 
-        // تحديث مؤشر الاتصال وتحميل تاريخ السن
         window.addEventListener('DOMContentLoaded', () => {
             const mode = ZezoEngine.getMode();
             const badge = document.getElementById('mode-badge');
@@ -531,14 +605,6 @@
             const savedDate = getSavedAgeCalcDate();
             document.getElementById('age-calc-date').value = savedDate;
         });
-
-        function sortStudents(arr) {
-            return arr.sort((a, b) => {
-                if (a.gender === "ذكر" && b.gender !== "ذكر") return -1;
-                if (a.gender !== "ذكر" && b.gender === "ذكر") return 1;
-                return (a.name || "").localeCompare((a.name || ""), 'ar');
-            });
-        }
 
         function toEnglishNum(str) {
             if (!str) return "";
@@ -571,32 +637,33 @@
             return oldClass; 
         }
 
-        // 1. جلب وعرض بيانات الصف (يعرض الكل سواء لهم كود أو بدون كود)
+        // 1. جلب وعرض بيانات الصف فورياً
         async function loadStudentData() {
             const g = document.getElementById("grade-filter").value;
             if(!g) return;
             const tbody = document.getElementById("table-body");
-            tbody.innerHTML = "<tr><td colspan='18' style='text-align:center; padding:50px; font-weight:800; color:#1e3a8a;'><i class='fa-solid fa-spinner fa-spin text-xl'></i> جاري جلب وتجهيز البيانات...</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='18' style='text-align:center; padding:50px; font-weight:800; color:#1e3a8a;'><i class='fa-solid fa-spinner fa-spin text-xl'></i> جاري استرجاع وفرز بيانات الصف (" + g + ")...</td></tr>";
             document.getElementById("search-student").value = ""; 
             
             const refDate = document.getElementById("age-calc-date").value || getSavedAgeCalcDate();
 
             try {
                 const allData = await ZezoEngine.getAll('students');
-                // فلترة ذكية لجميع التلاميذ بهذا الصف سواء وجد كود أو لم يوجد
+
                 let data = allData.filter(student => isGradeMatch(student.grade, g));
 
                 if (!data || data.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan='18' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة لهذا الصف (${g}). يمكنك استيراد ملف إكسيل للبدء.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan='18' style='text-align:center; padding:40px; color:#be123c; font-weight:bold;'>لا توجد بيانات مسجلة لهذا الصف (${g}). إجمالي تلاميذ المدرسة المسجلين بالسحابة: (${allData.length}) تلميذ.<br><br>💡 نصيحة: إذا كنت تبحث عن تلاميذ مسجلين بمسمى مختلف، اختر [🔍 عرض جميع تلاميذ المدرسة] من القائمة بالأعلى.</td></tr>`;
                     return;
                 }
 
                 let arr = data.filter(d => d.transfer_type !== "محول من");
+                
+                // الترتيب الأبجدي: ذكور أولاً ثم إناث
                 arr = sortStudents(arr);
 
                 const fragment = document.createDocumentFragment();
                 arr.forEach((s, i) => {
-                    // حساب وتفكيك السن من تاريخ الميلاد أو الرقم القومي
                     if (s.dob) {
                         const parts = calculateAgeParts(s.dob, refDate);
                         s.age_day = parts.d;
@@ -616,11 +683,12 @@
                 tbody.innerHTML = "";
                 tbody.appendChild(fragment);
             } catch (err) {
-                tbody.innerHTML = `<tr><td colspan='18' style='text-align:center; padding:40px; color:red; font-weight:bold;'>❌ خطأ في جلب البيانات: ${err.message}</td></tr>`;
+                console.error(err);
+                tbody.innerHTML = `<tr><td colspan='18' style='text-align:center; padding:40px; color:red; font-weight:bold;'>❌ خطأ في جلب البيانات: ${err.message || err}</td></tr>`;
             }
         }
 
-        // 2. البحث الفوري داخل الصف
+        // 2. البحث الفوري داخل الجدول
         function filterTableByName() {
             const input = document.getElementById("search-student").value.toLowerCase();
             const rows = document.querySelectorAll("#table-body tr");
@@ -632,7 +700,7 @@
             });
         }
 
-        // 3. استيراد ملف الإكسيل (اعتماد الرقم القومي كأساس والكود اختياري)
+        // 3. استيراد ملف الإكسيل مع الفرز الفوري
         function handleFile(e) {
             const file = e.target.files[0];
             if(!file) return;
@@ -646,19 +714,14 @@
                     let arr = [];
                     
                     jsonData.forEach((row, idx) => {
-                        let nid = String(row.nid || row["الرقم القومي"] || "").trim();
-                        // إذا لم يوجد رقم قومي ننشئ معرف مؤقت لحماية سجل التلميذ
-                        if (!nid) {
-                            nid = "TEMP_NID_" + Date.now() + "_" + (idx + 1);
-                        }
-
-                        let dob = row.dob || row["الميلاد"] || "";
+                        let nid = extractNationalIdFromRow(row);
+                        let dob = row.dob || row["الميلاد"] || row["تاريخ الميلاد"] || "";
                         let gen = row.gender || row["النوع"] || "";
                         let ageDay = row.age_day || row["يوم"] || "";
                         let ageMonth = row.age_month || row["شهر"] || "";
                         let ageYear = row.age_year || row["سنة"] || "";
 
-                        if (nid.length === 14 && !nid.startsWith("TEMP_")) {
+                        if (nid && nid.length === 14) {
                             const parsed = parseNationalId(nid, refDate);
                             dob = parsed.dob;
                             gen = parsed.gender;
@@ -683,45 +746,53 @@
 
                         if (tType === "محول من") { cls = ""; reg = ""; }
                         
-                        // الكود اختياري تماماً
-                        let codeVal = row.code || row["الكود"] || "";
+                        let codeVal = String(row.code || row["الكود"] || row["كود التلميذ"] || "").trim();
 
                         arr.push({
-                            name: row.name || row["اسم التلميذ"] || "",
+                            name: row.name || row["اسم التلميذ"] || row["الاسم"] || "",
                             class: cls,
                             is_class_transferred: isTrans,
-                            code: String(codeVal),
-                            nid: nid, dob: dob, gender: gen, 
+                            code: codeVal,
+                            nid: nid, 
+                            dob: dob, 
+                            gender: gen, 
                             age_day: ageDay, age_month: ageMonth, age_year: ageYear,
                             register_num: reg,
                             status: row.status || row["القيد"] || "منقول",
                             religion: row.religion || row["الديانة"] || "مسلم",
                             dmj: finalDmj,
                             transfer_type: tType,
-                            father_mobile: row.father_mobile || row["الموبايل"] || ""
+                            father_mobile: row.father_mobile || row["الموبايل"] || row["الهاتف"] || ""
                         });
                     });
 
+                    // الفرز الفوري: ذكور أولاً ثم إناث أبجدياً
                     arr = sortStudents(arr);
+
                     const fragment = document.createDocumentFragment();
                     arr.forEach((s, i) => fragment.appendChild(createRowElement(s, i + 1)));
 
                     const tbody = document.getElementById("table-body");
                     tbody.innerHTML = "";
                     tbody.appendChild(fragment);
-                    alert("✅ تم استيراد الملف بنجاح! تم اعتماد الرقم القومي كمعرف أساسي للتلاميذ.");
+                    alert(`✅ تم استيراد عدد (${arr.length}) تلميذ بنجاح مع ترتيبهم (ذكور أولاً أبجدياً ثم إناث أبجدياً)! اضغط (حفظ البيانات) لتثبيتهم.`);
                 } catch(err) { alert("❌ فشل قراءة الملف: " + err.message); }
                 finally { e.target.value = ''; }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        // 4. إنشاء صف الجدول (الكود يمكن أن يكون فارغاً)
+        // 4. إنشاء صف الجدول بدون أي أخطاء نوع بيانات
         function createRowElement(d, i) {
             const tr = document.createElement("tr");
             const isTrans = (d.is_class_transferred == 1 || d.is_class_transferred === "1") ? "1" : "0";
             const flagClass = isTrans === "1" ? "flag-select flag-transferred" : "flag-select flag-stable";
-            const displayNid = (d.nid && !d.nid.startsWith('TEMP_NID_')) ? d.nid : '';
+            
+            // تحويل آمن لنص لمنع أي انهيار في startsWith
+            let displayCode = String(d.code || '');
+            if (displayCode.startsWith('NID_') || displayCode.startsWith('TEMP_')) {
+                displayCode = '';
+            }
 
             tr.innerHTML = `
                 <td style="text-align:center; font-weight:bold;">${i}</td>
@@ -738,12 +809,11 @@
                         <option value="1" ${isTrans === '1' ? 'selected' : ''}>1 (تم نقله)</option>
                     </select>
                 </td>
-                <td><input class="editable-input" value="${d.code || ''}" data-field="code" placeholder="اختياري"></td>
-                <td><input class="editable-input" value="${displayNid}" data-field="nid" data-hidden-temp="${d.nid || ''}" oninput="handleNidChange(this)"></td>
+                <td><input class="editable-input" value="${displayCode}" data-field="code" placeholder="اختياري"></td>
+                <td><input class="editable-input" value="${d.nid || ''}" data-field="nid" oninput="handleNidChange(this)"></td>
                 <td class="readonly-cell"><input class="editable-input" value="${d.dob || ''}" data-field="dob" readonly></td>
                 <td class="readonly-cell"><input class="editable-input" value="${d.gender || ''}" data-field="gender" readonly></td>
                 
-                <!-- أعمدة السن المنفصلة -->
                 <td class="age-cell"><input class="editable-input" value="${d.age_day !== undefined ? d.age_day : ''}" data-field="age_day" readonly></td>
                 <td class="age-cell"><input class="editable-input" value="${d.age_month !== undefined ? d.age_month : ''}" data-field="age_month" readonly></td>
                 <td class="age-cell"><input class="editable-input" value="${d.age_year !== undefined ? d.age_year : ''}" data-field="age_year" readonly></td>
@@ -781,10 +851,12 @@
             else alert("جميع التلاميذ الظاهرين محددة نتيجتهم بالفعل!");
         }
 
-        // 6. الترحيل الذكي الشامل للصف (معتمد على الرقم القومي nid)
+        // 6. الترحيل الذكي الشامل للصف
         async function promoteStudents() {
             const currentGrade = document.getElementById("grade-filter").value;
-            if (!currentGrade) { alert("اختر الصف أولاً من القائمة المنسدلة!"); return; }
+            if (!currentGrade || currentGrade === "ALL") { 
+                alert("اختر صفاً محدداً أولاً (مثال: الصف الأول) لإجراء الترحيل!"); return; 
+            }
 
             const rows = document.querySelectorAll("#table-body tr");
             if(rows.length === 0 || rows[0].cells.length < 2) return;
@@ -801,7 +873,7 @@
             if(missingCount > 0) {
                 if(!confirm(`⚠️ تنبيه: يوجد (${missingCount}) تلميذ لم تحدد نتيجتهم.\nهل تريد تجاهلهم وترحيل الباقي فقط؟`)) return;
             } else {
-                if(!confirm(`هل أنت متأكد من ترحيل جميع تلاميذ الصف (${currentGrade})؟\n\n- الناجح يصعد للصف الأعلى وتعديل رقم فصله تلقائياً.\n- الراسب (باقي) يصعد وتصبح حالته منقول.\n- الراسب (منقول) يبقى بصفه وتصبح حالته باقي.\n- خريجو الصف السادس يتم حذفهم نهائياً من المنظومة.`)) return;
+                if(!confirm(`هل أنت متأكد من ترحيل جميع تلاميذ الصف (${currentGrade})؟`)) return;
             }
 
             const btn = document.getElementById("btn-promote");
@@ -809,7 +881,7 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الترحيل...`;
             
             let upsertList = [];
-            let deleteNids = [];
+            let deleteKeys = [];
 
             rows.forEach(row => {
                 if(row.cells.length < 2) return;
@@ -818,13 +890,9 @@
                     if(i.getAttribute("data-field")) s[i.getAttribute("data-field")] = i.value;
                 });
 
-                const nidInput = row.querySelector('[data-field="nid"]');
-                if (!s.nid && nidInput && nidInput.dataset.hiddenTemp) {
-                    s.nid = nidInput.dataset.hiddenTemp;
-                }
+                if(!s.result || (!s.nid && !s.code)) return; 
 
-                if(!s.result || !s.nid) return; 
-
+                let lookupKey = s.code || (s.nid ? `NID_${s.nid}` : null);
                 let shouldDelete = false;
                 let currentStatus = String(s.status || "").trim().replace(/ى/g, 'ي');
 
@@ -851,7 +919,7 @@
                 }
 
                 if (shouldDelete) {
-                    deleteNids.push(String(s.nid));
+                    if(lookupKey) deleteKeys.push(lookupKey);
                 } else {
                     s.last_result = s.result;
                     delete s.result; 
@@ -860,14 +928,14 @@
             });
 
             try {
-                if (deleteNids.length > 0) {
-                    await ZezoEngine.delete("students", "nid", deleteNids);
+                if (deleteKeys.length > 0) {
+                    await ZezoEngine.delete("students", "code", deleteKeys);
                 }
                 if (upsertList.length > 0) {
-                    await ZezoEngine.upsert("students", upsertList, 'nid');
+                    await ZezoEngine.upsert("students", upsertList, 'code');
                 }
 
-                alert(`🚀 تمت عملية الترحيل بنجاح!\n- تم تحديث وترحيل: (${upsertList.length}) تلميذ بالرقم القومي.\n- تم إنهاء قيد وحذف: (${deleteNids.length}) خريج.`);
+                alert(`🚀 تمت عملية الترحيل بنجاح!\n- تم تحديث وترحيل: (${upsertList.length}) تلميذ.\n- تم إنهاء قيد وحذف: (${deleteKeys.length}) خريج.`);
                 loadStudentData();
             } catch (err) {
                 alert("❌ حدث خطأ أثناء الترحيل: " + err.message);
@@ -876,10 +944,12 @@
             }
         }
 
-        // 7. حفظ وتحديث بيانات التلاميذ (اعتماد الرقم القومي كمعرف أساسي لحل مشكلة الصف الأول)
+        // 7. حفظ وتحديث بيانات التلاميذ في المنظومة
         async function saveAllStudents() {
             const g = document.getElementById("grade-filter").value;
-            if (!g) { alert("اختر الصف أولاً من القائمة المنسدلة لتحديد مكان الحفظ!"); return; }
+            if (!g || g === "ALL") { 
+                alert("اختر الصف أولاً من القائمة المنسدلة لتحديد مكان الحفظ!"); return; 
+            }
             
             const rows = document.querySelectorAll("#table-body tr");
             if(rows.length === 0 || rows[0].cells.length < 2) {
@@ -887,7 +957,6 @@
             }
 
             let studentsToSave = [];
-            let currentNidsInTable = [];
             
             rows.forEach((row, idx) => {
                 const ins = row.querySelectorAll("input, select");
@@ -899,25 +968,17 @@
                             if (field === 'is_class_transferred') {
                                 s[field] = parseInt(i.value, 10) || 0;
                             } else {
-                                s[field] = i.value;
+                                s[field] = i.value.trim();
                             }
                         }
                     });
 
-                    // التأكد من وجود رقم قومي أو استرجاع المعرف المؤقت
-                    const nidInput = row.querySelector('[data-field="nid"]');
-                    if (!s.nid || s.nid.trim() === "") {
-                        s.nid = (nidInput && nidInput.dataset.hiddenTemp) ? nidInput.dataset.hiddenTemp : ("TEMP_NID_" + Date.now() + "_" + (idx + 1));
-                    }
-                    
-                    // حفظ نص السن المركب للتوافق الدائم
                     if (s.age_year !== undefined && s.age_month !== undefined && s.age_day !== undefined) {
                         s.age_october = `${s.age_year} سنة و ${s.age_month} شهر و ${s.age_day} يوم`;
                     }
 
                     if (s.name && s.name.trim() !== "") {
                         studentsToSave.push(s);
-                        currentNidsInTable.push(s.nid);
                     }
                 }
             });
@@ -926,25 +987,13 @@
                 alert("لا توجد أسماء تلاميذ صالحة للحفظ!"); return;
             }
 
-            const isReplace = confirm(`هل تريد استبدال بيانات الصف (${g}) بالكامل بما هو معروض الآن؟\n\n- اضغط "موافق" لحذف أي تلاميذ مسجلين سابقاً بهذا الصف وغير موجودين بالجدول الحالي.\n- اضغط "إلغاء" لتحديث وإضافة المعروض فقط دون حذف السابق.`);
-
             const btn = document.querySelector('.btn-save');
             const oldText = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ في السحابة...`;
 
             try {
-                if (isReplace) {
-                    const allStudents = await ZezoEngine.getAll("students");
-                    const existingNids = allStudents.filter(d => isGradeMatch(d.grade, g)).map(d => d.nid);
-                    const nidsToDelete = existingNids.filter(n => !currentNidsInTable.includes(n));
-
-                    if (nidsToDelete.length > 0) {
-                        await ZezoEngine.delete("students", "nid", nidsToDelete);
-                    }
-                }
-
-                await ZezoEngine.upsert("students", studentsToSave, 'nid');
-                alert(`✅ تم حفظ وتحديث بيانات (${studentsToSave.length}) تلميذ بنجاح بالرقم القومي (سواء كان لديهم كود أو بدون كود)!`);
+                await ZezoEngine.upsert("students", studentsToSave, 'code');
+                alert(`✅ تم حفظ وتحديث بيانات (${studentsToSave.length}) تلميذ بنجاح!`);
                 loadStudentData(); 
             } catch (err) {
                 alert("❌ حدث خطأ أثناء الحفظ: " + err.message);
@@ -953,7 +1002,7 @@
             }
         }
 
-        // 8. تصدير مخصص لإكسيل بالأعمدة المحددة
+        // 8. تصدير مخصص لإكسيل
         function customExportToExcel() {
             const rows = document.querySelectorAll("#table-body tr");
             if(rows.length === 0 || rows[0].cells.length < 2) {
@@ -983,7 +1032,8 @@
                     } else {
                         let el = r.querySelector(`[data-field="${c.key}"]`);
                         let val = el ? el.value : "";
-                        if(c.key === 'nid' && val.startsWith('TEMP_NID_')) val = "";
+                        let strVal = String(val);
+                        if(c.key === 'code' && (strVal.startsWith('NID_') || strVal.startsWith('TEMP_'))) val = "";
                         obj[c.label] = val;
                     }
                 });
@@ -1010,7 +1060,7 @@
             }
         }
 
-        // 9. الإحصاء السريع المباشر
+        // 9. الإحصاء السريع
         function toggleModal(show) {
             const modal = document.getElementById('statsModal');
             if(show) {
@@ -1037,14 +1087,14 @@
                 const d = r.querySelector('[data-field="dmj"]').value; 
                 const c = r.querySelector('[data-field="class"]').value;
 
-                if(gen === "ذكر") st.tb++; else st.tg++;
-                if(rel.includes("مسلم")){ if(gen === "ذكر") st.mb++; else st.mg++; } else { if(gen === "ذكر") st.cb++; else st.cg++; }
+                if(isMaleStudent(gen)) st.tb++; else st.tg++;
+                if(rel.includes("مسلم")){ if(isMaleStudent(gen)) st.mb++; else st.mg++; } else { if(isMaleStudent(gen)) st.cb++; else st.cg++; }
                 if(sta === "منقول") st.mon++; else st.baq++; 
                 if(d === "دمج") st.dmj++;
 
                 if(c){ 
                     if(!st.cls[c]) st.cls[c] = {b:0, g:0}; 
-                    if(gen === "ذكر") st.cls[c].b++; else st.cls[c].g++; 
+                    if(isMaleStudent(gen)) st.cls[c].b++; else st.cls[c].g++; 
                 }
             });
 
@@ -1062,7 +1112,7 @@
             });
         }
 
-        // 10. كبسولة الإحصاء الشاملة للمدرسة
+        // 10. اعتماد كبسولة الإحصاء الشاملة
         async function generateMasterCapsule() {
             const btn = document.querySelector('.btn-golden');
             const oldText = btn.innerHTML;
@@ -1101,7 +1151,7 @@
                     if(!g || !capsule.general[g]) return;
                     matchedCount++;
 
-                    const isB = (s.gender || "").includes("ذكر");
+                    const isB = isMaleStudent(s.gender);
                     const isM = (s.religion || "").includes("مسلم");
                     const isD = (s.dmj === "دمج");
                     const clsName = s.class || "بدون";
@@ -1130,7 +1180,7 @@
                     data: capsule
                 }], 'id');
                 
-                alert(`🚀 تم ضغط واعتماد إحصاء (${matchedCount}) تلميذ في الكبسولة بنجاح!`);
+                alert(`🚀 تم ضغط واعتماد إحصاء (${matchedCount}) تلميذ في الكبسولة بنجاح تام!`);
             } catch(err) { 
                 alert("❌ فشل الاعتماد: " + err.message); 
             } finally {
