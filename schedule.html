@@ -27,6 +27,7 @@
             --info: #0284c7;             
             --border-color: #cbd5e1;     
             
+            /* أبعاد جدول المعلم (A5) */
             --row-title-h: 46px; 
             --row-period-h: 28px; 
             --row-session-h: 28px; 
@@ -40,7 +41,14 @@
             --font-title: 19px; 
             --font-header: 13px; 
             --font-footer: 14px;
-            --master-row-h: 36px; 
+
+            /* ═════════════════════════════════════════════════════════════════════ */
+            /* 🌟 [1] تعديل حجم خط الفصول داخل جدول المعلم الفردي                  */
+            --cell-font-size: 18px; 
+
+            /* 🌟 [2] تعديل ارتفاع صفوف جدول اللفاف A4                            */
+            --master-row-h: 38px; 
+            /* ═════════════════════════════════════════════════════════════════════ */
             --master-col-w: auto;
         }
 
@@ -164,6 +172,16 @@
         .btn-master { background: var(--info); }
         .btn-add-tea { background: var(--secondary); color: white; }
 
+        /* 🌟 ستايل أزرار التنقل بين المعلمين 🌟 */
+        .btn-tea-nav {
+            background: #0f172a; color: #fcd34d; border: 1.5px solid #3b82f6;
+            min-width: 38px; height: 38px; font-size: 14px; border-radius: 8px;
+            padding: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.15s ease;
+        }
+        .btn-tea-nav:hover { background: #1e3a8a; color: white; border-color: #60a5fa; transform: scale(1.05); }
+        .btn-tea-nav:active { transform: scale(0.95); }
+
         /* كارت الإحصاء والتحليل */
         .breakdown-card {
             width: 100%; max-width: 1000px; background: white; border: 1.5px solid #cbd5e1;
@@ -240,7 +258,7 @@
 
         .cell-input {
             width: 100%; height: 100%; text-align: center; border: none; background: transparent;
-            font-weight: 900; font-size: clamp(10px, 1.15vw, 15px); font-family: 'Cairo', 'Arial', sans-serif;
+            font-weight: 900; font-size: var(--cell-font-size); font-family: 'Cairo', 'Arial', sans-serif;
             outline: none; color: #000; transition: all 0.15s; padding: 1px 2px;
             word-break: break-word; line-height: 1.2;
         }
@@ -261,6 +279,7 @@
         }
         .master-table { width: 100%; border-collapse: collapse; text-align: center; border: var(--border-thick) solid #000; table-layout: fixed; }
         .master-table thead th { background: #f1f5f9; height: 30px; font-weight: 900; font-size: 12.5px; border: var(--border-thin) solid #000; }
+        
         .master-table tbody td { 
             height: var(--master-row-h); min-height: var(--master-row-h);
             border: var(--border-thin) solid #000; padding: 2px 4px; 
@@ -365,14 +384,27 @@
         <div class="controls-row-inputs">
             
             <div class="input-group">
-                <label><i class="fa-solid fa-chalkboard-user"></i> جدول معلم (جميع المعلمين: معينين وأجر):</label>
+                <label><i class="fa-solid fa-chalkboard-user"></i> جدول معلم (مع زرّي التقليب المباشر ❮ ❯):</label>
                 <div style="display:flex; flex-direction:column; gap:4px;">
                     <input type="text" id="teacher-quick-filter" class="teacher-search-field" placeholder="🔍 اكتب أول حروف لفلترة الاسم..." oninput="filterTeachersDropdown(this.value)">
                     
-                    <div style="display:flex; gap:5px;">
+                    <!-- 🌟 حاوية قائمة المعلمين مع أزرار الزيادة والنقصان 🌟 -->
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        
+                        <!-- زر المعلم السابق (زيادة/رجوع) -->
+                        <button type="button" class="btn-tea-nav" onclick="navigateTeacher(-1)" title="المعلم السابق في القائمة">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+
                         <select id="teacher-select" onchange="loadTeacherSchedule()" style="flex-grow:1;">
                             <option value="" disabled selected>جاري جلب جميع المعلمين...</option>
                         </select>
+
+                        <!-- زر المعلم التالي (نقصان/تقدم) -->
+                        <button type="button" class="btn-tea-nav" onclick="navigateTeacher(1)" title="المعلم التالي في القائمة">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+
                         <a href="general-schedule.html" class="btn-action btn-add-tea" title="إدارة وإضافة معلمين بالجدول العام"><i class="fa-solid fa-user-plus"></i></a>
                     </div>
                 </div>
@@ -540,8 +572,8 @@
         
         const predefinedClasses = [
             "1/1", "2/1", "3/1", "4/1", "5/1", "6/1",
-            "1/2", "2/2", "3/2", "4/2", "5/2", "6/2",
-            "1/3", "2/3", "3/3", "4/3", "5/3", "6/3", "7/3", "8/3",
+            "1/2", "2/2", "3/2", "4/2", "5/2",
+            "1/3", "2/3", "3/3", "4/3", "5/3", "6/3", "7/3",
             "1/4", "2/4", "3/4", "4/4", "5/4", "6/4", "7/4", "8/4",
             "1/5", "2/5", "3/5", "4/5", "5/5", "6/5", "7/5", "8/5",
             "1/6", "2/6", "3/6", "4/6", "5/6", "6/6", "7/6", "8/6"
@@ -600,6 +632,36 @@
                     allInputs[currentIndex + 1].focus();
                 }
             }
+        }
+
+        // ================= 🌟 دالة التنقل التلقائي بين المعلمين (زيادة ونقصان) 🌟 =================
+        function navigateTeacher(direction) {
+            const select = document.getElementById("teacher-select");
+            const total = select.options.length;
+
+            if (total <= 1) return; // لا يوجد معلمين بعد
+
+            let currentIndex = select.selectedIndex;
+
+            // إذا لم يكن أي معلم مختاراً بعد
+            if (currentIndex <= 0) {
+                if (direction > 0) select.selectedIndex = 1;
+                else select.selectedIndex = total - 1;
+            } else {
+                let newIndex = currentIndex + direction;
+
+                // دوران ذكي: إذا وصل للآخر يرجع للأول والعكس
+                if (newIndex >= total) {
+                    newIndex = 1; // تخطي الخيار الافتراضي رقم 0
+                } else if (newIndex < 1) {
+                    newIndex = total - 1;
+                }
+
+                select.selectedIndex = newIndex;
+            }
+
+            // تحميل وعرض جدول المعلم فوراً
+            loadTeacherSchedule();
         }
 
         function applySmartVoiceSchedule() {
