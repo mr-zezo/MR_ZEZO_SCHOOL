@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>إلزام الصف الأول - منظومة مستر زيزو</title>
     
-    <!-- مكتبات Supabase و Excel -->
+    <!-- مكتبات Supabase و Excel و SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -29,7 +30,7 @@
         body { font-family: 'Cairo', sans-serif; background-color: var(--bg-color); margin: 0; padding: 10px 15px; display: flex; flex-direction: column; align-items: center; }
         
         /* ================= الشريط العلوي ================= */
-        .top-navigation { width: 100%; max-width: 1000px; background: var(--primary-color); padding: 10px 20px; border-radius: 10px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 10px; }
+        .top-navigation { width: 100%; max-width: 1050px; background: var(--primary-color); padding: 10px 20px; border-radius: 10px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 10px; }
         .nav-title { font-size: 17px; font-weight: 900; color: #e2e8f0; display: flex; align-items: center; gap: 10px; }
         
         .dev-badge { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); color: #fff; padding: 6px 25px; border-radius: 50px; font-size: 13px; font-weight: 900; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px; }
@@ -39,7 +40,7 @@
         .btn-nav:hover { background: #1e293b; transform: translateY(-2px); }
 
         /* ================= الحاوية الرئيسية ================= */
-        .container { width: 100%; max-width: 1000px; background: var(--surface-color); padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 5px solid var(--primary-color); }
+        .container { width: 100%; max-width: 1050px; background: var(--surface-color); padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 5px solid var(--primary-color); }
         
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: 800; margin-bottom: 5px; color: var(--text-main); font-size: 14px;}
@@ -50,8 +51,21 @@
         .split-container { display: flex; gap: 10px; margin-top: 5px; }
         .split-container input { background-color: #f0fdf4; border-color: #bbf7d0; text-align: center; color: var(--success); font-size: 13px; font-weight: 900; }
 
-        .btn-submit { background-color: var(--success); color: white; border: none; padding: 15px; width: 100%; font-size: 16px; font-family: 'Cairo', sans-serif; font-weight: 900; border-radius: 8px; cursor: pointer; margin-top: 10px; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2);}
+        /* شريط عرض البيانات المستخرجة تلقائياً من الرقم القومي */
+        .auto-extracted-box {
+            background: #eff6ff; border: 1.5px dashed #3b82f6; border-radius: 8px;
+            padding: 10px 15px; margin-bottom: 15px; display: flex; justify-content: space-between;
+            align-items: center; font-size: 13.5px; font-weight: 900; color: #1e3a8a; flex-wrap: wrap; gap: 10px;
+        }
+        .auto-tag { background: white; padding: 4px 12px; border-radius: 20px; border: 1px solid #bfdbfe; color: #1d4ed8; }
+
+        .btn-action-row { display: grid; grid-template-columns: 2fr 1.2fr; gap: 10px; margin-top: 15px; }
+        
+        .btn-submit { background-color: var(--success); color: white; border: none; padding: 14px; font-size: 15px; font-family: 'Cairo', sans-serif; font-weight: 900; border-radius: 8px; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2);}
         .btn-submit:hover { background-color: #15803d; transform: translateY(-2px);}
+
+        .btn-copy-current { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; border: none; padding: 14px; font-size: 15px; font-family: 'Cairo', sans-serif; font-weight: 900; border-radius: 8px; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.25); }
+        .btn-copy-current:hover { background: #5b21b6; transform: translateY(-2px); }
         
         /* الإحصائيات */
         .stats-dashboard { display: flex; justify-content: space-between; background: #f1f5f9; padding: 15px; border-radius: 10px; margin-top: 25px; text-align: center; font-weight: 900; gap: 15px; flex-wrap: wrap;}
@@ -67,16 +81,18 @@
 
         /* الجدول والحاوية القابلة للتمرير */
         .table-wrapper { width: 100%; max-height: 400px; overflow-y: auto; margin-top: 15px; border: 1px solid var(--border-color); border-radius: 8px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: center; }
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: center; }
         table, th, td { border: 1px solid var(--border-color); }
-        th, td { padding: 10px; font-weight: 800; }
+        th, td { padding: 9px; font-weight: 800; }
         th { background-color: var(--primary-color); color: white; position: sticky; top: 0; z-index: 1; }
         tr:nth-child(even) { background-color: #f8fafc; }
         
         .action-btns { display: flex; gap: 5px; justify-content: center; }
-        .btn-edit { background: var(--info); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Cairo'; font-weight: 900; transition: 0.2s;}
+        .btn-edit { background: var(--info); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-family: 'Cairo'; font-weight: 900; transition: 0.2s;}
         .btn-edit:hover { background: #0369a1; }
-        .btn-delete { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: 'Cairo'; font-weight: 900; transition: 0.2s;}
+        .btn-copy-row { background: #7c3aed; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-family: 'Cairo'; font-weight: 900; transition: 0.2s;}
+        .btn-copy-row:hover { background: #5b21b6; }
+        .btn-delete { background: var(--danger); color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-family: 'Cairo'; font-weight: 900; transition: 0.2s;}
         .btn-delete:hover { background: #9f1239; }
         
         .btn-clear-db { margin-top: 25px; background: var(--danger); color: white; border: none; padding: 12px 15px; border-radius: 8px; cursor: pointer; font-weight: 900; font-family: 'Cairo'; width: 100%; font-size: 15px; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px;}
@@ -97,25 +113,94 @@
     </nav>
 
     <div class="container">
-        <!-- الحقول -->
-        <div class="form-group"><label>اسم التلميذ الخماسي:</label><input type="text" id="studentFullName" class="enter-nav" placeholder="اكتب الاسم واضغط المسطرة..."><div class="split-container"><input type="text" id="st1" readonly placeholder="الأول"><input type="text" id="st2" readonly placeholder="الثاني"><input type="text" id="st3" readonly placeholder="الثالث"><input type="text" id="st4" readonly placeholder="الرابع"><input type="text" id="st5" readonly placeholder="الخامس"></div></div>
         
-        <div class="form-group"><label>اسم الأم الرباعي:</label><input type="text" id="motherFullName" class="enter-nav" placeholder="اكتب الاسم واضغط المسطرة..."><div class="split-container"><input type="text" id="mo1" readonly placeholder="الأول"><input type="text" id="mo2" readonly placeholder="الثاني"><input type="text" id="mo3" readonly placeholder="الثالث"><input type="text" id="mo4" readonly placeholder="الرابع"></div></div>
-
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-            <div class="form-group"><label>رقم الموبايل:</label><input type="text" id="mobile" class="enter-nav" maxlength="11" style="font-family: Arial; text-align: center;"></div>
-            <div class="form-group"><label>الرقم القومي للتلميذ:</label><input type="text" id="studentNid" class="enter-nav" maxlength="14" style="font-family: Arial; text-align: center;"></div>
-            <div class="form-group"><label>الرقم القومي للأب:</label><input type="text" id="fatherNid" class="enter-nav" maxlength="14" style="font-family: Arial; text-align: center;"></div>
-            <div class="form-group"><label>الرقم القومي للأم:</label><input type="text" id="motherNid" class="enter-nav" maxlength="14" style="font-family: Arial; text-align: center;"></div>
+        <!-- حقول الأسماء الخماسية والرباعية -->
+        <div class="form-group">
+            <label>اسم التلميذ الخماسي (الاسم الرابع يستبعد تلقائياً عند النسخ):</label>
+            <input type="text" id="studentFullName" class="enter-nav" placeholder="اكتب الاسم كاملاً واضغط مسطرة...">
+            <div class="split-container">
+                <input type="text" id="st1" readonly placeholder="الأول">
+                <input type="text" id="st2" readonly placeholder="الثاني">
+                <input type="text" id="st3" readonly placeholder="الثالث">
+                <input type="text" id="st4" readonly placeholder="الرابع (مستبعد)">
+                <input type="text" id="st5" readonly placeholder="الخامس (اللقب)">
+            </div>
         </div>
         
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-            <div class="form-group"><label>الديانة:</label><select id="religion" class="enter-nav"><option value="مسلم">مسلم</option><option value="مسيحي">مسيحي</option><option value="أخرى">أخرى</option></select></div>
-            <div class="form-group"><label>المرحلة:</label><select id="stage" class="enter-nav"><option value="مدرسة">مدرسة</option><option value="رياض أطفال">رياض أطفال</option></select></div>
-            <div class="form-group"><label>حالة التسجيل:</label><select id="status" class="enter-nav"><option value="غير مسجل">غير مسجل</option><option value="مسجل">مسجل</option></select></div>
+        <div class="form-group">
+            <label>اسم الأم الرباعي:</label>
+            <input type="text" id="motherFullName" class="enter-nav" placeholder="اكتب الاسم كاملاً واضغط مسطرة...">
+            <div class="split-container">
+                <input type="text" id="mo1" readonly placeholder="الأول">
+                <input type="text" id="mo2" readonly placeholder="الثاني">
+                <input type="text" id="mo3" readonly placeholder="الثالث">
+                <input type="text" id="mo4" readonly placeholder="الرابع">
+            </div>
         </div>
 
-        <button id="submitBtn" class="btn-submit enter-nav" onclick="saveData()"><i class="fa-solid fa-save"></i> إدخال وحفظ البيانات (Enter)</button>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div class="form-group">
+                <label>الرقم القومي للتلميذ (14 رقم):</label>
+                <input type="text" id="studentNid" class="enter-nav" maxlength="14" style="font-family: Arial; text-align: center; font-size:15px;" placeholder="3xxxxxxxxxxxxx" oninput="handleStudentNidInput(this.value)">
+            </div>
+            <div class="form-group">
+                <label>رقم الموبايل:</label>
+                <input type="text" id="mobile" class="enter-nav" maxlength="11" style="font-family: Arial; text-align: center;" placeholder="01xxxxxxxxx">
+            </div>
+            <div class="form-group">
+                <label>الرقم القومي للأب (14 رقم):</label>
+                <input type="text" id="fatherNid" class="enter-nav" maxlength="14" style="font-family: Arial; text-align: center;">
+            </div>
+            <div class="form-group">
+                <label>الرقم القومي للأم (14 رقم):</label>
+                <input type="text" id="motherNid" class="enter-nav" maxlength="14" style="font-family: Arial; text-align: center;">
+            </div>
+        </div>
+
+        <!-- صندوق البيانات التلقائية المستخرجة من الرقم القومي -->
+        <div class="auto-extracted-box" id="autoExtractedBox">
+            <div><i class="fa-solid fa-cake-candles text-blue-600"></i> تاريخ الميلاد المستخرج: <span class="auto-tag" id="dspBirthDate">في انتظار الرقم القومي...</span></div>
+            <div><i class="fa-solid fa-venus-mars text-indigo-600"></i> النوع: <span class="auto-tag" id="dspGender">-</span></div>
+            <div><i class="fa-solid fa-map-location-dot text-emerald-600"></i> المحافظة والقرية: <span class="auto-tag">المنوفية - العراقية</span></div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+            <div class="form-group">
+                <label>القرية / محل الإقامة:</label>
+                <input type="text" id="villageAddress" class="enter-nav" value="العراقية">
+            </div>
+            <div class="form-group">
+                <label>الديانة:</label>
+                <select id="religion" class="enter-nav">
+                    <option value="مسلم">مسلم</option>
+                    <option value="مسيحي">مسيحي</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>المرحلة:</label>
+                <select id="stage" class="enter-nav">
+                    <option value="مدرسة">مدرسة</option>
+                    <option value="رياض أطفال">رياض أطفال</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>حالة التسجيل:</label>
+                <select id="status" class="enter-nav">
+                    <option value="غير مسجل">غير مسجل</option>
+                    <option value="مسجل">مسجل</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- أزرار الإدخال والنسخ المباشر -->
+        <div class="btn-action-row">
+            <button id="submitBtn" class="btn-submit enter-nav" onclick="saveData()">
+                <i class="fa-solid fa-save"></i> إدخال وحفظ البيانات في السحابة (Enter)
+            </button>
+            <button type="button" class="btn-copy-current" onclick="copyCurrentFormLine()">
+                <i class="fa-solid fa-clipboard-check"></i> نسخ سطر البيانات الحالي
+            </button>
+        </div>
 
         <!-- الإحصائيات -->
         <div class="stats-dashboard">
@@ -132,12 +217,24 @@
             <button class="btn-excel" onclick="exportFilteredData('رياض أطفال', 'excel')"><i class="fa-solid fa-file-excel"></i> تصدير رياض (Excel)</button>
         </div>
 
-        <h3 style="margin-top: 30px; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;"><i class="fa-solid fa-users-viewfinder"></i> جميع البيانات المسجلة</h3>
+        <h3 style="margin-top: 30px; color: var(--primary-color); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">
+            <i class="fa-solid fa-users-viewfinder"></i> جميع البيانات المسجلة (مع زر النسخ السريع)
+        </h3>
         
         <!-- الحاوية القابلة للتمرير للجدول -->
         <div class="table-wrapper">
             <table>
-                <thead><tr><th>اسم الطالب</th><th>المرحلة</th><th>الحالة</th><th>القومي للطالب</th><th>إجراء</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th>اسم الطالب</th>
+                        <th>المرحلة</th>
+                        <th>الحالة</th>
+                        <th>القومي للطالب</th>
+                        <th>تاريخ الميلاد</th>
+                        <th>النوع</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
                 <tbody id="dataTableBody"></tbody>
             </table>
         </div>
@@ -154,10 +251,46 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
         
-        const TABLE_NAME = 'primary_registration'; // اسم الجدول في Supabase
+        const TABLE_NAME = 'primary_registration';
         
         let studentsData = [];
         let currentEditId = null;
+
+        // ================= 🧠 محرك استخراج النوع وتاريخ الميلاد من الرقم القومي =================
+        function parseEgyptianNid(nid) {
+            nid = String(nid).trim();
+            if (!/^\d{14}$/.test(nid)) return null;
+
+            const centuryDigit = nid[0];
+            const yearPart = nid.substr(1, 2);
+            const monthPart = nid.substr(3, 2);
+            const dayPart = nid.substr(5, 2);
+
+            let century = "19";
+            if (centuryDigit === "3") century = "20";
+            else if (centuryDigit === "2") century = "19";
+
+            const birthYear = century + yearPart;
+            const birthDate = `${birthYear}-${monthPart}-${dayPart}`;
+
+            const genderDigit = parseInt(nid[12], 10);
+            const gender = (genderDigit % 2 === 0) ? "انثى" : "ذكر";
+
+            return { birthDate, gender };
+        }
+
+        // معالجة فورية عند كتابة الرقم القومي
+        function handleStudentNidInput(val) {
+            const parsed = parseEgyptianNid(val);
+            if (parsed) {
+                document.getElementById('dspBirthDate').innerText = parsed.birthDate;
+                document.getElementById('dspGender').innerText = parsed.gender;
+                document.getElementById('dspGender').style.color = (parsed.gender === "انثى") ? "#be123c" : "#1e3a8a";
+            } else {
+                document.getElementById('dspBirthDate').innerText = "في انتظار الرقم القومي الكامل (14 رقم)...";
+                document.getElementById('dspGender').innerText = "-";
+            }
+        }
 
         // تقسيم الأسماء
         function setupSplitter(mainId, ids) {
@@ -203,6 +336,131 @@
             document.getElementById('totalCount').innerText = studentsData.length;
         }
 
+        // ================= 📋 إنشاء سطر البيانات بالترتيب والشروط المحددة بدقة =================
+        function buildStudentTabDelimitedLine(dataObj) {
+            // استخراج وتنسيق الأسماء مع استبعاد الاسم الرابع
+            const st1 = (dataObj.c2 || dataObj.st1 || "").trim();
+            const st2 = (dataObj.c3 || dataObj.st2 || "").trim();
+            const st3 = (dataObj.c4 || dataObj.st3 || "").trim();
+            const st4 = (dataObj.c5 || dataObj.st4 || "").trim();
+            const st5 = (dataObj.c6 || dataObj.st5 || "").trim();
+
+            // الاسم الأخير: إذا وجد الاسم الخامس نأخذه، وإذا كان الاسم رباعياً فقط نأخذ الرابع
+            let finalLastName = st5 ? st5 : st4;
+
+            const studentNid = (dataObj.c13 || dataObj.studentNid || "").trim();
+            const fatherNid = (dataObj.c14 || dataObj.fatherNid || "").trim();
+            const motherNid = (dataObj.c15 || dataObj.motherNid || "").trim();
+            const mobile = (dataObj.c12 || dataObj.mobile || "").trim();
+            const religion = (dataObj.c16 || dataObj.religion || "مسلم").trim();
+            const village = (dataObj.village || document.getElementById('villageAddress').value || "العراقية").trim();
+
+            const mo1 = (dataObj.c8 || dataObj.mo1 || "").trim();
+            const mo2 = (dataObj.c9 || dataObj.mo2 || "").trim();
+            const mo3 = (dataObj.c10 || dataObj.mo3 || "").trim();
+            const mo4 = (dataObj.c11 || dataObj.mo4 || "").trim();
+
+            // استخراج تاريخ الميلاد والنوع
+            const parsed = parseEgyptianNid(studentNid) || { birthDate: "", gender: "انثى" };
+
+            // بناء الأعمدة بنفس التسلسل المطلوب تماماً
+            const tokens = [
+                st1,                  // 1. الاسم الأول
+                st2,                  // 2. الاسم الثاني
+                st3,                  // 3. الاسم الثالث
+                finalLastName,        // 4. اللقب (الخامس بعد استبعاد الرابع)
+                "مصرى",               // 5. جنسية التلميذ
+                studentNid,           // 6. الرقم القومي للتلميذ
+                parsed.gender,        // 7. النوع (ذكر / انثى)
+                religion,             // 8. الديانة
+                parsed.birthDate,     // 9. تاريخ الميلاد YYYY-MM-DD
+                "المنوفية",           // 10. محافظة الميلاد
+                village,              // 11. القرية / العنوان
+                mobile,               // 12. رقم الموبايل
+                "مصرى",               // 13. جنسية الأب
+                fatherNid,            // 14. الرقم القومي للأب
+                mo1,                  // 15. اسم الأم الأول
+                mo2,                  // 16. اسم الأم الثاني
+                mo3,                  // 17. اسم الأم الثالث
+                mo4,                  // 18. اسم الأم الرابع
+                "مصرى",               // 19. جنسية الأم
+                motherNid,            // 20. الرقم القومي للأم
+                "الصف الأول",         // 21. المرحلة / الصف
+                "مستجد",              // 22. حالة القيد
+                "4",                  // 23. الفئة / الكود
+                "لغة انجليزية",       // 24. اللغة الأولى
+                "معفي",               // 25. الإعفاء
+                "لا يوجد"             // 26. الدمج
+            ];
+
+            return tokens.join("\t");
+        }
+
+        // نسخ النص للحافظة
+        async function copyTextToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم نسخ السطر بنجاح!',
+                    text: 'السطر منسوخ وجاهز للصق المباشر في الإكسيل أو المتصفح.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } catch (err) {
+                const ta = document.createElement("textarea");
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand("copy");
+                document.body.removeChild(ta);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم نسخ السطر بنجاح!',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+        }
+
+        // زر نسخ بيانات الحقول المفتوحة حالياً
+        function copyCurrentFormLine() {
+            const studentNidVal = document.getElementById('studentNid').value.trim();
+            if (!/^\d{14}$/.test(studentNidVal)) {
+                Swal.fire('تنبيه', 'يرجى كتابة الرقم القومي للتلميذ صحيحاً (14 رقم) لإنشاء السطر!', 'warning');
+                return;
+            }
+
+            const currentData = {
+                st1: document.getElementById('st1').value,
+                st2: document.getElementById('st2').value,
+                st3: document.getElementById('st3').value,
+                st4: document.getElementById('st4').value,
+                st5: document.getElementById('st5').value,
+                mo1: document.getElementById('mo1').value,
+                mo2: document.getElementById('mo2').value,
+                mo3: document.getElementById('mo3').value,
+                mo4: document.getElementById('mo4').value,
+                studentNid: studentNidVal,
+                mobile: document.getElementById('mobile').value,
+                fatherNid: document.getElementById('fatherNid').value,
+                motherNid: document.getElementById('motherNid').value,
+                religion: document.getElementById('religion').value,
+                village: document.getElementById('villageAddress').value
+            };
+
+            const line = buildStudentTabDelimitedLine(currentData);
+            copyTextToClipboard(line);
+        }
+
+        // زر نسخ سطر طالب من الجدول
+        function copySavedStudentRow(id) {
+            const r = studentsData.find(s => String(s.id) === String(id));
+            if (!r) return;
+            const line = buildStudentTabDelimitedLine(r);
+            copyTextToClipboard(line);
+        }
+
         // حفظ وتحديث البيانات (Supabase)
         async function saveData() {
             const studentName = document.getElementById('studentFullName').value.trim();
@@ -210,27 +468,25 @@
             const fatherNidVal = document.getElementById('fatherNid').value.trim();
             const motherNidVal = document.getElementById('motherNid').value.trim();
 
-            if(!studentName) { alert("أدخل اسم الطالب!"); return; }
+            if(!studentName) { Swal.fire('تنبيه', 'يرجى إدخال اسم الطالب!', 'warning'); return; }
 
-            // 1. التحقق من أن الأرقام القومية تتكون من 14 رقماً بالضبط
             const nidRegex = /^\d{14}$/; 
             if (!nidRegex.test(studentNidVal)) {
-                alert("عفواً.. الرقم القومي للتلميذ يجب أن يتكون من 14 رقماً!");
+                Swal.fire('تنبيه', 'الرقم القومي للتلميذ يجب أن يتكون من 14 رقماً!', 'warning');
                 document.getElementById('studentNid').focus();
                 return;
             }
             if (!nidRegex.test(fatherNidVal)) {
-                alert("عفواً.. الرقم القومي للأب يجب أن يتكون من 14 رقماً!");
+                Swal.fire('تنبيه', 'الرقم القومي للأب يجب أن يتكون من 14 رقماً!', 'warning');
                 document.getElementById('fatherNid').focus();
                 return;
             }
             if (!nidRegex.test(motherNidVal)) {
-                alert("عفواً.. الرقم القومي للأم يجب أن يتكون من 14 رقماً!");
+                Swal.fire('تنبيه', 'الرقم القومي للأم يجب أن يتكون من 14 رقماً!', 'warning');
                 document.getElementById('motherNid').focus();
                 return;
             }
 
-            // 2. التحقق من عدم تكرار الرقم القومي للطالب
             const isDuplicate = studentsData.some(student => {
                 if (currentEditId) {
                     return student.c13 === studentNidVal && String(student.id) !== String(currentEditId);
@@ -240,14 +496,9 @@
             });
 
             if (isDuplicate) {
-                alert("تنبيه: هذا الرقم القومي للتلميذ مسجل مسبقاً في النظام لطالب آخر!");
+                Swal.fire('تنبيه', 'هذا الرقم القومي للتلميذ مسجل مسبقاً في النظام لطالب آخر!', 'error');
                 document.getElementById('studentNid').focus();
                 return;
-            }
-
-            if (currentEditId) {
-                const confirmEdit = confirm("أنت تقوم الآن بتعديل بيانات تلميذ مضاف مسبقاً.. هل تريد حفظ التعديلات؟");
-                if (!confirmEdit) return; 
             }
 
             const btn = document.getElementById('submitBtn');
@@ -272,9 +523,17 @@
                 }
                 await loadDataFromServer();
                 clearForm();
-            } catch (err) { alert("خطأ في الحفظ: " + err.message); } 
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم الحفظ بنجاح!',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+            } catch (err) { Swal.fire('خطأ في الحفظ', err.message, 'error'); } 
             finally {
-                btn.innerHTML = '<i class="fa-solid fa-save"></i> إدخال وحفظ البيانات (Enter)'; 
+                btn.innerHTML = '<i class="fa-solid fa-save"></i> إدخال وحفظ البيانات في السحابة (Enter)'; 
                 btn.disabled = false;
                 document.getElementById('studentFullName').focus();
             }
@@ -291,24 +550,34 @@
             document.getElementById('mobile').value = r.c12 || ''; document.getElementById('studentNid').value = r.c13 || ''; document.getElementById('fatherNid').value = r.c14 || ''; document.getElementById('motherNid').value = r.c15 || '';
             document.getElementById('religion').value = r.c16 || 'مسلم'; document.getElementById('stage').value = r.c17 || 'مدرسة'; document.getElementById('status').value = r.status || 'غير مسجل';
 
+            handleStudentNidInput(r.c13 || '');
+
             currentEditId = id;
-            document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> تحديث البيانات (Enter)';
+            document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> تحديث البيانات في السحابة (Enter)';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // ================= دالة حذف طالب محدد =================
         async function deleteStudent(id, name) {
-            if (confirm(`هل أنت متأكد من حذف الطالب (${name}) بشكل نهائي؟\nلا يمكن التراجع عن هذا الإجراء.`)) {
+            const res = await Swal.fire({
+                title: 'تأكيد الحذف',
+                text: `هل أنت متأكد من حذف الطالب (${name}) نهائياً؟`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#be123c',
+                confirmButtonText: 'نعم، احذف',
+                cancelButtonText: 'إلغاء'
+            });
+
+            if (res.isConfirmed) {
                 try {
                     const { error } = await supabaseClient.from(TABLE_NAME).delete().eq('id', id);
                     if (error) throw error;
                     
-                    // إذا كان الطالب المحذوف هو نفسه المفتوح للتعديل، نقوم بتفريغ الخانات
                     if (currentEditId == id) clearForm();
-                    
                     await loadDataFromServer();
+                    Swal.fire('تم الحذف', 'تم حذف السجل بنجاح.', 'success');
                 } catch (err) {
-                    alert("خطأ أثناء الحذف: " + err.message);
+                    Swal.fire('خطأ', err.message, 'error');
                 }
             }
         }
@@ -317,15 +586,19 @@
             const tbody = document.getElementById('dataTableBody'); tbody.innerHTML = '';
             
             studentsData.forEach(r => {
+                const parsed = parseEgyptianNid(r.c13) || { birthDate: "-", gender: "-" };
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${r.c1}</td>
+                    <td><b>${r.c1}</b></td>
                     <td>${r.c17}</td>
                     <td style="color:${r.status==='مسجل'?'var(--success)':'var(--danger)'}; font-weight:900;">${r.status}</td>
-                    <td style="font-family:Arial;">${r.c13}</td>
+                    <td style="font-family:Arial; font-weight:bold;">${r.c13}</td>
+                    <td style="font-family:Arial; color:#1e3a8a;">${parsed.birthDate}</td>
+                    <td style="color:${parsed.gender==='انثى'?'#be123c':'#1e3a8a'};">${parsed.gender}</td>
                     <td class="action-btns">
-                        <button class="btn-edit" onclick="editRecord('${r.id}')"><i class="fa-solid fa-pen"></i></button>
-                        <button class="btn-delete" onclick="deleteStudent('${r.id}', '${r.c1}')"><i class="fa-solid fa-trash"></i></button>
+                        <button class="btn-copy-row" onclick="copySavedStudentRow('${r.id}')" title="نسخ سطر هذا الطالب"><i class="fa-solid fa-clipboard"></i></button>
+                        <button class="btn-edit" onclick="editRecord('${r.id}')" title="تعديل"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-delete" onclick="deleteStudent('${r.id}', '${r.c1}')" title="حذف"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -334,16 +607,34 @@
 
         function clearForm() {
             document.querySelectorAll('input[type="text"]').forEach(i => i.value = '');
+            document.getElementById('villageAddress').value = 'العراقية';
             document.getElementById('religion').value = 'مسلم'; document.getElementById('stage').value = 'مدرسة'; document.getElementById('status').value = 'غير مسجل';
-            currentEditId = null; document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-save"></i> إدخال وحفظ البيانات (Enter)';
+            currentEditId = null; 
+            document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-save"></i> إدخال وحفظ البيانات في السحابة (Enter)';
+            document.getElementById('dspBirthDate').innerText = "في انتظار الرقم القومي...";
+            document.getElementById('dspGender').innerText = "-";
         }
 
-        // مسح قاعدة البيانات بالكامل (Supabase)
         async function clearServerData() {
-            const pass = prompt('الرجاء إدخال كلمة المرور لمسح جميع البيانات بالكامل:');
+            const { value: pass } = await Swal.fire({
+                title: 'كلمة المرور مطلوبة',
+                input: 'password',
+                inputLabel: 'أدخل كلمة المرور لمسح جميع البيانات بالكامل:',
+                inputPlaceholder: 'كلمة المرور...',
+                showCancelButton: true
+            });
             
             if (pass === '2026') {
-                if(confirm('تحذير نهائي: هل أنت متأكد من مسح جميع البيانات؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                const confirmRes = await Swal.fire({
+                    title: 'تحذير نهائي!',
+                    text: 'هل أنت متأكد تماماً من مسح كافة السجلات؟ لا يمكن التراجع!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#be123c',
+                    confirmButtonText: 'نعم، امسح كل البيانات'
+                });
+
+                if (confirmRes.isConfirmed) {
                     try {
                         const { error } = await supabaseClient.from(TABLE_NAME).delete().not('c1', 'is', null);
                         if (error) throw error;
@@ -351,26 +642,25 @@
                         studentsData = [];
                         updateTable();
                         updateDashboard();
-                        alert('✅ تم مسح جميع البيانات بنجاح.');
+                        Swal.fire('تم المسح', 'تم تفريغ قاعدة البيانات بنجاح.', 'success');
                     } catch (err) {
-                        alert('❌ حدث خطأ أثناء المسح: ' + err.message);
+                        Swal.fire('خطأ', err.message, 'error');
                     }
                 }
-            } else if (pass !== null) {
-                alert('كلمة المرور خاطئة! تم إلغاء عملية المسح للحفاظ على البيانات.');
+            } else if (pass) {
+                Swal.fire('خطأ', 'كلمة المرور غير صحيحة!', 'error');
             }
         }
 
         async function exportFilteredData(stageTarget, format) {
             await loadDataFromServer(); 
             const filteredData = studentsData.filter(s => s.c17 === stageTarget);
-            if (filteredData.length === 0) { alert(`لا توجد بيانات مرحلة (${stageTarget}) لتصديرها`); return; }
+            if (filteredData.length === 0) { Swal.fire('تنبيه', `لا توجد بيانات مرحلة (${stageTarget}) لتصديرها`, 'info'); return; }
 
             if (format === 'csv') {
                 const unregisteredData = filteredData.filter(s => s.status === 'غير مسجل');
-                
                 if (unregisteredData.length === 0) {
-                    alert(`جميع الطلاب في مرحلة (${stageTarget}) مسجلين بالفعل.. لا يوجد بيانات (غير مسجل) لتصديرها.`);
+                    Swal.fire('تنبيه', `جميع الطلاب في مرحلة (${stageTarget}) مسجلين بالفعل.. لا يوجد بيانات غير مسجل لتصديرها.`, 'info');
                     return;
                 }
 
@@ -381,7 +671,6 @@
                 ];
 
                 const csvRows = [csvHeaders];
-
                 unregisteredData.forEach(r => {
                     csvRows.push([
                         r.c2, r.c3, r.c4, r.c5, r.c6, 
@@ -392,7 +681,6 @@
                 });
 
                 let csvContent = csvRows.map(row => row.map(item => `"${item || ''}"`).join(",")).join("\n");
-                
                 const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
@@ -403,15 +691,16 @@
                 const excelHeaders = [
                     "اسم التلميذ الخماسي", "الاسم الأول", "الاسم الثاني", "الاسم الثالث", "الاسم الرابع", "الاسم الخامس", 
                     "اسم الأم الرباعي", "اسم الأم الأول", "اسم الأم الثاني", "اسم الأم الثالث", "اسم الأم الرابع", 
-                    "رقم الموبايل", "الرقم القومي للطالب", "الرقم القومي للأب", "الرقم القومي للأم", "الديانة", "المرحلة", "حالة التسجيل"
+                    "رقم الموبايل", "الرقم القومي للطالب", "النوع", "تاريخ الميلاد", "الرقم القومي للأب", "الرقم القومي للأم", "الديانة", "المرحلة", "حالة التسجيل"
                 ];
 
                 const excelRows = [excelHeaders];
                 filteredData.forEach(r => {
+                    const parsed = parseEgyptianNid(r.c13) || { birthDate: "", gender: "" };
                     excelRows.push([
                         r.c1, r.c2, r.c3, r.c4, r.c5, r.c6, 
                         r.c7, r.c8, r.c9, r.c10, r.c11, 
-                        r.c12, r.c13, r.c14, r.c15, r.c16, r.c17, r.status
+                        r.c12, r.c13, parsed.gender, parsed.birthDate, r.c14, r.c15, r.c16, r.c17, r.status
                     ]);
                 });
 
