@@ -27,7 +27,6 @@
             --info: #0284c7;             
             --border-color: #cbd5e1;     
             
-            /* أبعاد جدول المعلم (A5) */
             --row-title-h: 46px; 
             --row-period-h: 28px; 
             --row-session-h: 28px; 
@@ -41,19 +40,14 @@
             --font-title: 19px; 
             --font-header: 13px; 
             --font-footer: 14px;
-
-            /* ═════════════════════════════════════════════════════════════════════ */
-            /* 🌟 [هنا يمكنك تعديل ارتفاع صفوف جدول اللفاف A4 بكل سهولة] 🌟          */
-            /* كبّر الرقم (مثلاً 40px أو 45px) أو صغّره حسب الرغبة                    */
             --master-row-h: 36px; 
-            /* ═════════════════════════════════════════════════════════════════════ */
             --master-col-w: auto;
         }
 
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-color); color: var(--text-dark); padding: 8px; display: flex; flex-direction: column; align-items: center; padding-bottom: 60px; }
 
-        /* ================= 1. الشريط العلوي ================= */
+        /* الشريط العلوي */
         .top-navigation {
             width: 100%; max-width: 1180px; background: var(--primary); padding: 10px 14px;
             border-radius: 12px; color: white; display: flex; justify-content: space-between;
@@ -92,7 +86,7 @@
         .btn-nav-general { background: #0284c7 !important; border: 1px solid #38bdf8; }
         .btn-nav-reda { background: #dc2626 !important; border: 1px solid #f87171; }
 
-        /* ================= 2. كارت الإدخال الصوتي ================= */
+        /* كارت الإدخال الصوتي */
         .voice-card {
             width: 100%; max-width: 1180px; background: linear-gradient(135deg, #0f172a, #1e1b4b, #2e1065);
             border: 2px solid #a855f7; border-radius: 14px; padding: 14px 18px;
@@ -106,9 +100,7 @@
         }
         .voice-title { font-size: 13.5px; font-weight: 900; color: #fcd34d; display: flex; align-items: center; gap: 8px; }
 
-        .voice-controls {
-            display: flex; gap: 8px; flex-wrap: wrap; width: 100%; align-items: stretch;
-        }
+        .voice-controls { display: flex; gap: 8px; flex-wrap: wrap; width: 100%; align-items: stretch; }
 
         .voice-text-input {
             flex-grow: 1; padding: 10px 14px; border-radius: 10px; border: 2px solid #c084fc;
@@ -124,7 +116,7 @@
         }
         .btn-apply-voice:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6); }
 
-        /* ================= 3. لوحة التحكم ================= */
+        /* لوحة التحكم */
         .controls-wrapper {
             width: 100%; max-width: 1180px; background: var(--surface); padding: 15px;
             border-radius: 14px; box-shadow: 0 4px 15px rgba(0,0,0,0.04);
@@ -172,7 +164,7 @@
         .btn-master { background: var(--info); }
         .btn-add-tea { background: var(--secondary); color: white; }
 
-        /* ================= 📊 4. كارت الإحصاء والتحليل الذكي (خارج الجدول) ================= */
+        /* كارت الإحصاء والتحليل */
         .breakdown-card {
             width: 100%; max-width: 1000px; background: white; border: 1.5px solid #cbd5e1;
             border-radius: 12px; padding: 12px 16px; margin-bottom: 12px;
@@ -182,9 +174,7 @@
             font-size: 13.5px; font-weight: 900; color: var(--primary);
             display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #cbd5e1; padding-bottom: 6px;
         }
-        .breakdown-chips-grid {
-            display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
-        }
+        .breakdown-chips-grid { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
         .breakdown-badge {
             background: #f1f5f9; border: 1.5px solid #cbd5e1; border-radius: 8px;
             padding: 5px 12px; font-size: 12px; font-weight: 800; color: var(--text-dark);
@@ -196,11 +186,9 @@
         .breakdown-badge.total-badge {
             background: #ecfdf5; border-color: #10b981; color: #047857; font-weight: 900;
         }
-        .breakdown-badge.total-badge b {
-            background: #10b981;
-        }
+        .breakdown-badge.total-badge b { background: #10b981; }
 
-        /* ================= 5. شريط المراقبة الحية ================= */
+        /* شريط المراقبة */
         .live-tracker {
             width: 100%; max-width: 1000px; background: #f0fdf4; border: 1.5px solid #bbf7d0;
             padding: 8px 15px; border-radius: 10px; display: none; justify-content: space-between;
@@ -211,11 +199,8 @@
         .tracker-val { font-size: 15px; font-weight: 900; color: var(--primary); background: white; padding: 1px 8px; border-radius: 6px; border: 1px solid #bbf7d0; }
         .tracker-status { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 900; color: white; }
 
-        /* ================= 6. ورقة الطباعة والجدول الفردي (A5) ================= */
-        .paper-scroll-wrapper {
-            width: 100%; max-width: 1000px; overflow-x: auto;
-            -webkit-overflow-scrolling: touch; padding-bottom: 8px;
-        }
+        /* ورقة الطباعة الفردية A5 */
+        .paper-scroll-wrapper { width: 100%; max-width: 1000px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 8px; }
 
         #print-area {
             background: white; padding: 20px 25px; border: 1px solid #cbd5e1;
@@ -253,7 +238,6 @@
         .main-table th:not(:first-child), .main-table td:not(:first-child) { width: var(--col-session-w); }
         .main-table th:nth-child(2n+1):not(:first-child), .main-table td:nth-child(2n+1):not(:first-child) { border-left: var(--border-thick) solid #000 !important; }
 
-        /* تصغير واحتواء النص تلقائياً لجدول المعلم */
         .cell-input {
             width: 100%; height: 100%; text-align: center; border: none; background: transparent;
             font-weight: 900; font-size: clamp(10px, 1.15vw, 15px); font-family: 'Cairo', 'Arial', sans-serif;
@@ -269,38 +253,24 @@
             border-top: 2px solid #000; color: #000;
         }
 
-        /* ================= 7. جدول اللفاف اليومي (A4) واحتواء النص المطور ================= */
+        /* جدول اللفاف A4 */
         #master-print-area {
             display: none; background: white; padding: 15px; color: #000;
             width: 100%; max-width: 1000px; margin: 0 auto; border: 1px solid #ccc;
             box-shadow: 0 0 20px rgba(0,0,0,0.08); position: relative; min-width: 680px;
         }
         .master-table { width: 100%; border-collapse: collapse; text-align: center; border: var(--border-thick) solid #000; table-layout: fixed; }
-        
         .master-table thead th { background: #f1f5f9; height: 30px; font-weight: 900; font-size: 12.5px; border: var(--border-thin) solid #000; }
-        
-        /* 🌟 خلايا جدول اللفاف واحتواء النص التام مع الارتفاع الجديد 🌟 */
         .master-table tbody td { 
-            height: var(--master-row-h); 
-            min-height: var(--master-row-h);
-            border: var(--border-thin) solid #000;
-            padding: 2px 4px; 
-            font-weight: 800; 
-            font-size: clamp(9.5px, 0.9vw, 12px); 
-            line-height: 1.2; 
-            vertical-align: middle;
-            word-break: break-word;
-            white-space: normal; /* يسمح بنزول الاسم على سطرين لاحتواء تام */
-            overflow: hidden;
+            height: var(--master-row-h); min-height: var(--master-row-h);
+            border: var(--border-thin) solid #000; padding: 2px 4px; 
+            font-weight: 800; font-size: clamp(9.5px, 0.9vw, 12px); line-height: 1.2; 
+            vertical-align: middle; word-break: break-word; white-space: normal; overflow: hidden;
         }
-        
-        .master-table th:first-child, .master-table td:first-child { 
-            width: 80px; font-size: 13px; border-left: var(--border-thick) solid #000 !important; background: #f8fafc; 
-        }
-
+        .master-table th:first-child, .master-table td:first-child { width: 80px; font-size: 13px; border-left: var(--border-thick) solid #000 !important; background: #f8fafc; }
         .btn-close-master { position: absolute; top: 12px; left: 12px; background: var(--danger); color: white; border: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; cursor: pointer; }
 
-        /* ================= 8. النوافذ المنبثقة ================= */
+        /* المودال */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(4px);
             display: none; justify-content: center; align-items: center; z-index: 2000; padding: 12px;
@@ -349,10 +319,9 @@
 
         <div class="nav-actions">
             <a href="general-schedule.html" class="btn-nav btn-nav-general">
-                <i class="fa-solid fa-table-list"></i> الجدول العام (١٢٠)
+                <i class="fa-solid fa-table-list"></i> الجدول العام الشامل
             </a>
 
-            <!-- زر مدير الجدول أ/ رضا -->
             <a href="REDA.html" class="btn-nav btn-nav-reda">
                 <i class="fa-solid fa-mobile-screen"></i> مدير الجدول (رضا)
             </a>
@@ -369,7 +338,7 @@
         </div>
     </nav>
 
-    <!-- ================= 2. كارت الإدخال الصوتي الذكي ================= -->
+    <!-- 2. كارت الإدخال الصوتي الذكي -->
     <div class="voice-card">
         <div class="voice-header">
             <div class="voice-title">
@@ -395,7 +364,6 @@
     <div class="controls-wrapper">
         <div class="controls-row-inputs">
             
-            <!-- حقل اختيار المعلم الشامل مع ميزة البحث الذكي -->
             <div class="input-group">
                 <label><i class="fa-solid fa-chalkboard-user"></i> جدول معلم (جميع المعلمين: معينين وأجر):</label>
                 <div style="display:flex; flex-direction:column; gap:4px;">
@@ -405,7 +373,7 @@
                         <select id="teacher-select" onchange="loadTeacherSchedule()" style="flex-grow:1;">
                             <option value="" disabled selected>جاري جلب جميع المعلمين...</option>
                         </select>
-                        <a href="tea-data.html" target="_blank" class="btn-action btn-add-tea" title="إضافة معلم جديد"><i class="fa-solid fa-user-plus"></i></a>
+                        <a href="general-schedule.html" class="btn-action btn-add-tea" title="إدارة وإضافة معلمين بالجدول العام"><i class="fa-solid fa-user-plus"></i></a>
                     </div>
                 </div>
             </div>
@@ -447,18 +415,16 @@
         <div class="tracker-status" id="tk-status"></div>
     </div>
 
-    <!-- ================= 📊 5. كارت الإحصاء والتحليل الذكي (خارج الجدول) ================= -->
+    <!-- 5. كارت الإحصاء والتحليل الذكي -->
     <div class="breakdown-card" id="breakdown-card">
         <div class="breakdown-header">
             <span id="breakdown-title"><i class="fa-solid fa-chart-pie text-blue-600"></i> تفاصيل الحصص والأنصبة:</span>
             <span id="breakdown-subtitle" style="font-size:12px; color:#64748b;"></span>
         </div>
-        <div class="breakdown-chips-grid" id="breakdown-chips-container">
-            <!-- يتم رسم الحصص أو المعلمين ديناميكياً هنا -->
-        </div>
+        <div class="breakdown-chips-grid" id="breakdown-chips-container"></div>
     </div>
 
-    <!-- 6. حاوية التمرير والجدول الفردي (A5) -->
+    <!-- 6. جدول المعلم الفردي A5 -->
     <div class="paper-scroll-wrapper">
         <div id="print-area">
             <div class="print-header">
@@ -499,7 +465,7 @@
         </div>
     </div>
 
-    <!-- 7. منطقة طباعة جدول اللفاف اليومي (A4) -->
+    <!-- 7. منطقة طباعة جدول اللفاف اليومي A4 -->
     <div class="paper-scroll-wrapper" id="master-wrapper" style="display:none;">
         <div id="master-print-area">
             <button class="btn-close-master" onclick="hideMasterOnScreen()"><i class="fa-solid fa-arrow-right"></i> عودة للجدول الفردي</button>
@@ -560,7 +526,7 @@
         </div>
     </div>
 
-    <!-- ================= المحرك البرمجي ================= -->
+    <!-- المحرك البرمجي المحدث -->
     <script>
         const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
@@ -603,7 +569,6 @@
             });
         }
 
-        // ================= ⚡ إدخال الكيبورد الذكي مع دعم حرف D للدين =================
         function handleCellKeyboardInput(inputEl) {
             let val = inputEl.value.trim();
             let enVal = val.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
@@ -637,7 +602,6 @@
             }
         }
 
-        // ================= 🧠 المحرك الصوتي الذكي =================
         function applySmartVoiceSchedule() {
             if (!CURRENT_TEACHER) {
                 Swal.fire('تنبيه', 'يرجى اختيار المعلم أولاً قبل تسكين الجدول!', 'warning');
@@ -779,7 +743,6 @@
             });
         }
 
-        // ================= جلب جميع المعلمين =================
         async function loadAllTeachersComprehensive() {
             const select = document.getElementById("teacher-select");
             select.innerHTML = '<option value="" disabled selected>⏳ جاري جلب جميع المعلمين (أساسيين وأجر)...</option>';
@@ -800,8 +763,9 @@
                     if (!isWorker && !isOut) {
                         TEACHERS.push({
                             ...t,
+                            db_id: t.id,
                             is_contract: false,
-                            unique_id: String(t.code || t.id),
+                            unique_id: `PERM_${t.id || t.code || t.nid}`,
                             display_title: t.name
                         });
                     }
@@ -811,9 +775,10 @@
                     if (t.name && t.name.trim() !== "") {
                         TEACHERS.push({
                             ...t,
+                            db_id: t.id,
                             code: t.code || `CON_${t.id}`,
                             is_contract: true,
-                            unique_id: String(t.code || t.id),
+                            unique_id: `CONT_${t.id || t.nid || t.code || t.name}`,
                             display_title: `${t.name} (معلم أجر/حصة)`
                         });
                     }
@@ -831,7 +796,6 @@
         function renderTeachersDropdown(list) {
             const select = document.getElementById("teacher-select");
             select.innerHTML = `<option value="" disabled selected>اختر المعلم للبدء (${list.length} معلماً)...</option>`;
-            
             list.forEach(t => { 
                 select.innerHTML += `<option value="${t.unique_id}">${t.display_title}</option>`; 
             });
@@ -871,7 +835,6 @@
             document.getElementById('p-date').innerText = val.split('-').reverse().join(' / ');
         }
 
-        // ================= تحميل جدول المعلم + عرض تفاصيل فصوله خارج الجدول =================
         function loadTeacherSchedule() {
             document.getElementById("class-select").selectedIndex = 0; 
             const selectedVal = document.getElementById("teacher-select").value;
@@ -904,7 +867,6 @@
             });
 
             updateLiveStats();
-
             renderTeacherClassesBreakdown(savedSchedule, sName);
         }
 
@@ -955,7 +917,6 @@
             document.querySelectorAll('.cell-input').forEach(inp => { if(inp.value.trim() !== "") count++; });
             
             document.getElementById("tk-assigned").innerText = count;
-            
             let quota = parseInt(CURRENT_TEACHER.quota) || 0;
             let statusEl = document.getElementById("tk-status");
             
@@ -971,7 +932,6 @@
             }
         }
 
-        // ================= ☁️ حفظ الجدول في السحابة =================
         async function saveTeacherSchedule() {
             if(!CURRENT_TEACHER) { Swal.fire('تنبيه', 'يرجى اختيار المعلم أولاً!', 'warning'); return; }
 
@@ -992,7 +952,6 @@
                     TEACHERS.forEach(t => {
                         if(String(t.unique_id) !== String(CURRENT_TEACHER.unique_id) && t.schedule && t.schedule[key]) {
                             const otherVal = String(t.schedule[key]).trim().toUpperCase();
-
                             const isBothReligionD = valUpper.endsWith('D') && otherVal.endsWith('D') && valUpper === otherVal;
 
                             if (!isBothReligionD) {
@@ -1023,37 +982,23 @@
             btn.disabled = true;
 
             try {
-                let saveQuery;
+                const targetTable = CURRENT_TEACHER.is_contract ? "contract_teachers" : "teachers";
+                let query = supabaseClient.from(targetTable).update({ 
+                    short_name: shortName, 
+                    schedule: scheduleData 
+                });
 
-                if (CURRENT_TEACHER.is_contract) {
-                    let query = supabaseClient
-                        .from("contract_teachers")
-                        .update({ 
-                            short_name: shortName, 
-                            schedule: scheduleData 
-                        });
-
-                    if (CURRENT_TEACHER.nid) {
-                        query = query.eq("nid", CURRENT_TEACHER.nid);
-                    } else if (CURRENT_TEACHER.code && !CURRENT_TEACHER.code.startsWith("CON_")) {
-                        query = query.eq("code", CURRENT_TEACHER.code);
-                    } else {
-                        query = query.eq("name", CURRENT_TEACHER.name);
-                    }
-
-                    saveQuery = query;
-
+                if (CURRENT_TEACHER.db_id) {
+                    query = query.eq("id", CURRENT_TEACHER.db_id);
+                } else if (CURRENT_TEACHER.nid) {
+                    query = query.eq("nid", CURRENT_TEACHER.nid);
+                } else if (CURRENT_TEACHER.code && !CURRENT_TEACHER.code.startsWith("CON_")) {
+                    query = query.eq("code", CURRENT_TEACHER.code);
                 } else {
-                    saveQuery = supabaseClient
-                        .from("teachers")
-                        .update({ 
-                            short_name: shortName, 
-                            schedule: scheduleData 
-                        })
-                        .eq("code", CURRENT_TEACHER.code);
+                    query = query.eq("name", CURRENT_TEACHER.name);
                 }
 
-                const { error } = await saveQuery;
+                const { error } = await query;
                 if (error) throw error;
 
                 CURRENT_TEACHER.short_name = shortName;
@@ -1064,7 +1009,7 @@
                 Swal.fire({
                     icon: 'success',
                     title: 'تم الحفظ بنجاح!',
-                    text: CURRENT_TEACHER.is_contract ? 'تم حفظ جدول معلم الأجر في السحابة.' : 'تم حفظ جدول المعلم الأساسي في السحابة.',
+                    text: CURRENT_TEACHER.is_contract ? 'تم حفظ جدول معلم الأجر المحدد فقط بنجاح.' : 'تم حفظ جدول المعلم الأساسي بنجاح.',
                     timer: 1500,
                     showConfirmButton: false
                 });
@@ -1077,7 +1022,6 @@
             }
         }
 
-        // ================= 🏫 عرض جدول فصل + بيان المعلمين خارج الجدول =================
         function loadClassSchedule() {
             document.getElementById("teacher-select").selectedIndex = 0; 
             document.getElementById("short-name").value = "";
@@ -1212,7 +1156,6 @@
             document.getElementById("masterModal").classList.add("active");
         }
 
-        // ================= 🌟 توليد جدول اللفاف اليومي A4 مع احتواء النص والارتفاع الجديد =================
         function generateMasterSchedule() {
             const day = document.getElementById("master-day-select").value;
             const stage = document.getElementById("master-stage-select").value;
