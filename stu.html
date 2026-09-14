@@ -214,7 +214,7 @@
         <div class="highlight-box">
             <!-- حقل البحث الذكي عن الاسم -->
             <div class="search-container">
-                <label><i class="fa-solid fa-magnifying-glass text-blue-600"></i> اسم التلميذ رباعي (ابحث بالاسم هنا لعرض أقرب 10 نتائج أو سجل تلميذاً جديداً):</label>
+                <label><i class="fa-solid fa-magnifying-glass text-blue-600"></i> اسم التلميذ رباعي (ابحث هنا - يعرض 20 نتيجة):</label>
                 <input type="text" id="student_name" autocomplete="off" placeholder="اكتب أول حروف من اسم التلميذ للبحث..." oninput="smartSearchByName(this.value)" style="border-color:var(--primary); font-weight:900;">
                 <div id="search-results" class="hide-in-shot"></div>
             </div>
@@ -226,6 +226,7 @@
                         <span id="grade-total-badge" style="float:left; background:#dbeafe; color:#1e40af; padding:1px 6px; border-radius:6px; font-size:11px;">إجمالي: ٠</span>
                     </label>
                     <select id="grade_level" onchange="onGradeChange()">
+                        <option value="" style="color:red; font-weight:bold;">-- جميع الصفوف (للبحث فقط) --</option>
                         <option value="KG1">KG1</option><option value="KG2">KG2</option>
                         <option value="الأول">الأول</option><option value="الثاني">الثاني</option>
                         <option value="الثالث">الثالث</option><option value="الرابع">الرابع</option>
@@ -374,6 +375,14 @@
         const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
         const AGE_DATE_STORAGE_KEY = "ZEZO_PERSISTENT_AGE_CALC_DATE";
 
+        // دالة لتوحيد الحروف العربية لتسهيل البحث
+        function normalizeArabic(text) {
+            if (!text) return "";
+            return text.replace(/[أإآ]/g, 'ا')
+                       .replace(/ى/g, 'ي')
+                       .replace(/ة/g, 'ه');
+        }
+
         function openLocalDB() {
             return new Promise((resolve, reject) => {
                 const req = indexedDB.open(DB_NAME);
@@ -430,65 +439,66 @@
                 }
             },
 
-            async searchStudents(val, limit = 10) {
-                const cleanVal = val.trim();
+            // دالة البحث المعدلة لتدعم البحث في كل الصفوف إذا لم يتم تحديد صف
+            async searchStudents(val, grade, limit = 20) {
+                const cleanVal = normalizeArabic(val.trim());
                 if (!cleanVal) return [];
+
+                let allStudents = [];
 
                 if (this.getMode() === 'offline') {
                     const db = await openLocalDB();
-                    return new Promise((resolve, reject) => {
+                    allStudents = await new Promise((resolve, reject) => {
                         const tx = db.transaction('students', 'readonly');
                         const req = tx.objectStore('students').getAll();
-                        req.onsuccess = () => {
-                            const all = req.result || [];
-                            const startsWith = [];
-                            const contains = [];
-                            
-                            all.forEach(s => {
-                                const name = (s.name || '');
-                                if (name.startsWith(cleanVal)) {
-                                    startsWith.push(s);
-                                } else if (name.includes(cleanVal)) {
-                                    contains.push(s);
-                                }
-                            });
-                            
-                            startsWith.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
-                            contains.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
-                            
-                            resolve([...startsWith, ...contains].slice(0, limit));
-                        };
+                        req.onsuccess = () => resolve(req.result || []);
                         req.onerror = () => reject(req.error);
                     });
+                    
+                    // فلترة بالصف فقط إذا تم تحديد صف
+                    if (grade && grade !== "") {
+                        allStudents = allStudents.filter(s => (s.grade || '').trim() === grade.trim());
+                    }
                 } else {
-                    const { data: startsWithData, error: err1 } = await sbClient
+                    // في الأونلاين
+                    let query = sbClient
                         .from('students')
-                        .select('code, name, grade, class')
-                        .ilike('name', `${cleanVal}%`) 
-                        .order('name', { ascending: true })
-                        .limit(limit);
-
-                    if (err1) return [];
-
-                    let results = startsWithData || [];
-
-                    if (results.length < limit) {
-                        const remainingLimit = limit - results.length;
-                        const { data: containsData, error: err2 } = await sbClient
-                            .from('students')
-                            .select('code, name, grade, class')
-                            .ilike('name', `%${cleanVal}%`) 
-                            .not('name', 'ilike', `${cleanVal}%`) 
-                            .order('name', { ascending: true })
-                            .limit(remainingLimit);
-
-                        if (!err2 && containsData) {
-                            results = [...results, ...containsData];
-                        }
+                        .select('code, name, grade, class');
+                    
+                    // إضافة فلتر الصف فقط إذا تم تحديد صف
+                    if (grade && grade !== "") {
+                        query = query.eq('grade', grade);
                     }
 
-                    return results;
+                    const { data, error } = await query;
+                    
+                    if (error) return [];
+                    allStudents = data || [];
                 }
+
+                const startsWith = [];
+                const contains = [];
+                
+                allStudents.forEach(s => {
+                    const originalName = s.name || '';
+                    const normName = normalizeArabic(originalName);
+                    
+                    // إذا كان الاسم يبدأ بنفس الحروف
+                    if (normName.startsWith(cleanVal)) {
+                        startsWith.push(s);
+                    } 
+                    // إذا كان الاسم يحتوي على الحروف في المنتصف
+                    else if (normName.includes(cleanVal)) {
+                        contains.push(s);
+                    }
+                });
+                
+                // ترتيب أبجدي للنتائج
+                startsWith.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+                contains.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+                
+                // دمج القائمتين (الأولوية لمن يبدأ بالحرف) وقص العدد لـ 20
+                return [...startsWith, ...contains].slice(0, limit);
             },
 
             async getStudentsByGrade(grade) {
@@ -586,7 +596,7 @@
                 fileName = sName ? `غياب_${sName}` : 'سجل_غياب';
             } else if (targetId === 'capture-density') {
                 let gName = document.getElementById('grade_level').value;
-                fileName = `كثافة_فصول_الصف_${gName}`;
+                fileName = `كثافة_فصول_الصف_${gName || 'الكل'}`;
             }
 
             hiddenElements.forEach(el => el.style.display = 'none');
@@ -632,6 +642,9 @@
                 badge.innerHTML = '<i class="fa-solid fa-globe"></i> متصل بالسحابة (أونلاين)';
             }
 
+            // تعيين القيمة الافتراضية على "جميع الصفوف" للبحث العام
+            document.getElementById("grade_level").value = "";
+
             await fetchSchoolInfo();
             updateClassDropdown();
             updateGradeCount();
@@ -643,6 +656,10 @@
         async function updateGradeCount() {
             const grade = document.getElementById("grade_level").value;
             const badge = document.getElementById("grade-total-badge");
+            if (!grade) {
+                badge.innerText = "حدد صفاً";
+                return;
+            }
             badge.innerText = "جاري الحساب...";
             try {
                 const students = await ZezoEngine.getStudentsByGrade(grade);
@@ -665,6 +682,11 @@
             const grade = document.getElementById("grade_level").value;
             const classSelect = document.getElementById("class_name");
             classSelect.innerHTML = '<option value="" disabled selected>-- اختر الفصل --</option>';
+
+            if (!grade) {
+                updateClassFieldStyle();
+                return; // لا تقم بتوليد فصول إذا لم يتم اختيار صف
+            }
 
             let count = 0;
             let gradeCode = "";
@@ -773,6 +795,11 @@
 
         async function showClassDensityModal() {
             const selectedGrade = document.getElementById("grade_level").value;
+            if (!selectedGrade) {
+                alert("يرجى اختيار صف دراسي أولاً لعرض كثافته!");
+                return;
+            }
+
             document.getElementById("density-grade-title").innerText = "الصف " + selectedGrade;
             
             const container = document.getElementById("density-table-container");
@@ -868,6 +895,7 @@
             }
         }
 
+        // دالة البحث الذكي المعدلة
         async function smartSearchByName(val) {
             const resBox = document.getElementById("search-results");
             const cleanVal = val.trim();
@@ -876,8 +904,12 @@
                 return; 
             }
 
+            // جلب الصف المختار حالياً (قد يكون فارغاً للبحث في كل الصفوف)
+            const currentGrade = document.getElementById("grade_level").value;
+
             try {
-                const data = await ZezoEngine.searchStudents(cleanVal, 10);
+                // تمرير قيمة البحث، الصف المختار، والحد الأقصى 20
+                const data = await ZezoEngine.searchStudents(cleanVal, currentGrade, 20);
 
                 resBox.innerHTML = "";
                 if (!data || data.length === 0) { 
@@ -888,11 +920,16 @@
                 data.forEach((d, idx) => {
                     const item = document.createElement("div");
                     item.className = "result-item";
+                    // إظهار الصف والفصل في نتيجة البحث لتمييز الطلاب عند البحث العام
                     item.innerHTML = `
                         <span><strong>${idx + 1}.</strong> ${d.name}</span> 
-                        <span class="result-item-badge"><i class="fa-solid fa-graduation-cap"></i> ${d.grade || ''} / ${d.class || ''}</span>
+                        <span class="result-item-badge"><i class="fa-solid fa-graduation-cap"></i> ${d.grade || 'غير محدد'} / ${d.class || 'غير محدد'}</span>
                     `;
-                    item.onclick = () => fetchStudentByCode(d.code);
+                    item.onclick = () => {
+                        fetchStudentByCode(d.code);
+                        document.getElementById("student_name").value = d.name; // تحديث حقل الإدخال بالاسم المختار
+                        resBox.style.display = "none"; // إخفاء القائمة بعد الاختيار
+                    };
                     resBox.appendChild(item);
                 });
                 resBox.style.display = "block";
@@ -926,8 +963,9 @@
 
             document.getElementById("national_id").value = data.nid || "";
             document.getElementById("register_num").value = data.register_num || "";
-            document.getElementById("grade_level").value = data.grade || "الأول";
             
+            // تعيين الصف وتحديث الفصول بناءً عليه
+            document.getElementById("grade_level").value = data.grade || "الأول";
             updateClassDropdown(data.class);
 
             document.getElementById("status").value = data.status || "منقول";
@@ -1049,10 +1087,12 @@
         async function processSave(msgText) {
             let code = document.getElementById("student_code").value.trim();
             const name = document.getElementById("student_name").value.trim();
+            const gradeVal = document.getElementById("grade_level").value;
             const className = document.getElementById("class_name").value;
             const nid = document.getElementById("national_id").value.trim();
 
             if (!name) { alert("اسم التلميذ مطلوب!"); return false; }
+            if (!gradeVal) { alert("يرجى اختيار الصف الدراسي أولاً!"); return false; }
             if (!className) { alert("يرجى اختيار الفصل الدراسي!"); return false; }
             
             if (!code) {
@@ -1077,7 +1117,7 @@
                 age_year: yVal,
                 age_october: compositeAge,
 
-                grade: document.getElementById("grade_level").value, 
+                grade: gradeVal, 
                 class: className,
                 is_class_transferred: isStudentClassTransferred,
                 status: document.getElementById("status").value, 
@@ -1120,6 +1160,9 @@
             document.getElementById("transfer_type").value = "أساسي";
             document.getElementById("status").value = "منقول";
             document.getElementById("religion").value = "مسلم";
+            
+            // نترك الصف كما هو لتسهيل الإدخال المتتالي
+            updateClassDropdown();
             
             origStudentClass = "";
             isStudentClassTransferred = 0;
