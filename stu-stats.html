@@ -31,7 +31,6 @@
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
         body { background-color: var(--bg); color: #1e293b; min-height: 100vh; width: 100%; display: flex; flex-direction: column; align-items: center; }
 
-        /* عرض متوازن ومحكوم بدقة */
         .app-container { width: 100%; max-width: 1250px; margin: 0 auto; }
 
         .card-3d { background: #ffffff; border: 1px solid #cbd5e1; border-bottom: 4px solid #94a3b8; border-radius: 16px; transition: all 0.2s ease; }
@@ -72,7 +71,6 @@
             margin-bottom: 15px;
         }
 
-        /* تنسيق الجدول بعد إزالة الـ fixed وإضافة min-width */
         .ministry-table { 
             width: 100%; 
             border-collapse: collapse; 
@@ -81,7 +79,7 @@
             min-width: 950px; 
         }
         
-        /* زيادة ارتفاع الصفوف لأقصى وضوح مريح */
+        /* إعادة ارتفاع الصفوف للوضع الأصلي المريح تماماً */
         .ministry-table th, .ministry-table td { 
             border: 1px solid #000; 
             padding: 16px 8px;
@@ -119,7 +117,7 @@
             body { padding: 0 !important; background: white !important; width: 100% !important; } 
             .no-print { display: none !important; } 
             #ministry-view { border: none !important; padding: 0 !important; width: 100% !important; box-shadow: none !important; } 
-            #table-scroll-container { overflow: visible !important; } /* مهم للطباعة لعدم قص الجدول */
+            #table-scroll-container { overflow: visible !important; } 
             .ministry-table { font-size: 11pt !important; width: 100% !important; }
             .ministry-table th, .ministry-table td { padding: 12px 6px !important; }
             .signatures-footer { margin-top: 25px !important; page-break-inside: avoid; }
@@ -175,7 +173,7 @@
                 <button class="btn-grade" onclick="renderGradeCards('السادس', this)">السادس</button>
             </div>
 
-            <!-- أزرار الإجراءات مع ميزة لقطة الشاشة -->
+            <!-- أزرار الإجراءات -->
             <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
                 <button class="btn-3d px-3.5 py-1.5 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-bold text-xs md:text-sm flex items-center gap-1.5 shadow cursor-pointer" onclick="takeScreenshot()">
                     <i class="fa-solid fa-camera text-slate-200"></i> لقطة شاشة
@@ -203,7 +201,6 @@
                 <div class="header-left"></div>
             </div>
 
-            <!-- إضافة حاوية التمرير لحماية الجدول في الموبايل -->
             <div class="table-responsive-wrapper" id="table-scroll-container">
                 <table class="ministry-table" id="dom-table">
                     <thead>
@@ -276,7 +273,6 @@
     </div>
 
     <script>
-        // إعدادات المحرك المزدوج
         const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -412,6 +408,7 @@
             target.tb += (source.tb || 0); target.tg += (source.tg || 0);
         }
 
+        // دالة بناء وعرض الجدول (الابتدائي مستقل ورياض الأطفال مستقل)
         function renderStageReport(stageType, btn) {
             if(!CAPSULE) return; 
             activeStage = stageType;
@@ -430,10 +427,12 @@
 
             if(stageType === 'primary') {
                 titleEl.innerText = "ميزانية المرحلة الابتدائية فصول وتلاميذ للعام الدراسي ٢٠٢٦ / ٢٠٢٧ م";
-                targetGrades = primaryGrades; footerText = "إجمالي المرحلة الابتدائية";
+                targetGrades = primaryGrades; 
+                footerText = "إجمالي المرحلة الابتدائية";
             } else {
                 titleEl.innerText = "ميزانية رياض الأطفال فصول وتلاميذ للعام الدراسي ٢٠٢٦ / ٢٠٢٧ م";
-                targetGrades = kgGrades; footerText = "إجمالي رياض الأطفال";
+                targetGrades = kgGrades; 
+                footerText = "إجمالي رياض الأطفال";
             }
 
             targetGrades.forEach(g => {
@@ -446,6 +445,7 @@
                 }
             });
 
+            // طباعة صف الإجمالي الخاص بالمرحلة المحددة فقط
             drawMRow(tb, footerText, stageTotal.cCount, stageTotal, "row-grand-total");
         }
 
@@ -524,7 +524,6 @@
             XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("dom-table")), "ميزانية_المدرسة_المعتمدة.xlsx"); 
         }
 
-        // دالة التقاط صورة عالية الدقة للكشف المعروض (متوافقة مع الموبايل والتمرير)
         function takeScreenshot() {
             let targetEl = null;
             let fileName = "ميزانية_المدرسة";
@@ -534,7 +533,6 @@
                 targetEl = document.getElementById("ministry-view");
                 fileName = activeStage === 'primary' ? "ميزانية_المرحلة_الابتدائية" : "ميزانية_رياض_الأطفال";
                 
-                // فك التمرير مؤقتاً لكي تلتقط الكاميرا الجدول بالكامل وليس الجزء الظاهر فقط
                 if(wrapper) wrapper.style.overflow = 'visible';
                 targetEl.style.width = 'max-content'; 
                 targetEl.style.minWidth = '100%';
@@ -549,11 +547,8 @@
                 return;
             }
 
-            // إعطاء المتصفح جزء من الثانية لتطبيق التعديلات قبل التصوير
             setTimeout(() => {
                 html2canvas(targetEl, { scale: 2, backgroundColor: "#ffffff", useCORS: true }).then(canvas => {
-                    
-                    // إرجاع التنسيقات لحالتها الطبيعية بعد التصوير
                     if (document.getElementById("ministry-view").style.display !== "none") {
                         if(wrapper) wrapper.style.overflow = 'auto';
                         targetEl.style.width = '100%';
@@ -567,7 +562,6 @@
                 }).catch(err => {
                     console.error(err);
                     alert("حدث خطأ أثناء التقاط الصورة.");
-                    // إرجاع التنسيقات في حالة حدوث خطأ
                     if (document.getElementById("ministry-view").style.display !== "none") {
                         if(wrapper) wrapper.style.overflow = 'auto';
                         targetEl.style.width = '100%';
