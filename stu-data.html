@@ -1138,15 +1138,18 @@
                     if(s.transfer_type === "محول من" || s.grade === "خريج") return; 
 
                     let rawG = String(s.grade || "").trim();
+                    let rawGUp = rawG.toUpperCase();
                     let g = null;
-                    if(rawG.includes("1") || rawG.includes("الاول") || rawG.includes("الأول")) g = "الأول";
+                    
+                    // يجب فحص KG أولاً حتى لا يختلط KG1 مع الصف الأول (1)
+                    if(rawGUp.includes("KG1") || rawGUp.includes("كيجي 1") || rawGUp === "KG 1") g = "KG1";
+                    else if(rawGUp.includes("KG2") || rawGUp.includes("كيجي 2") || rawGUp === "KG 2") g = "KG2";
+                    else if(rawG.includes("1") || rawG.includes("الاول") || rawG.includes("الأول")) g = "الأول";
                     else if(rawG.includes("2") || rawG.includes("الثاني") || rawG.includes("الثانى")) g = "الثاني";
                     else if(rawG.includes("3") || rawG.includes("الثالث")) g = "الثالث";
                     else if(rawG.includes("4") || rawG.includes("الرابع")) g = "الرابع";
                     else if(rawG.includes("5") || rawG.includes("الخامس")) g = "الخامس";
                     else if(rawG.includes("6") || rawG.includes("السادس")) g = "السادس";
-                    else if(rawG.toUpperCase().includes("KG1")) g = "KG1";
-                    else if(rawG.toUpperCase().includes("KG2")) g = "KG2";
 
                     if(!g || !capsule.general[g]) return;
                     matchedCount++;
