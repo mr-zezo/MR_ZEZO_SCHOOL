@@ -32,15 +32,13 @@
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg); color: var(--dark); display: flex; flex-direction: column; align-items: center; padding: 12px; min-height: 100vh; }
 
-        /* ================= 1. الشريط العلوي ================= */
         .top-nav {
-            width: 100%; max-width: 1200px; background: var(--dark); padding: 12px 20px;
+            width: 100%; max-width: 1250px; background: var(--dark); padding: 12px 20px;
             border-radius: 12px; color: white; display: flex; justify-content: space-between;
             align-items: center; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             flex-wrap: wrap; gap: 12px; border-bottom: 4px solid var(--primary);
         }
         .nav-title { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 900; color: #fcd34d; margin: 0; }
-        .nav-title i { font-size: 22px; }
 
         .mode-badge {
             padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 900;
@@ -62,11 +60,9 @@
             display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.2); cursor: pointer;
         }
         .btn-nav:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
-        .btn-shot-nav { background: #475569 !important; border-color: #64748b !important; }
 
-        /* ================= 2. شريط التحكم والعمليات ================= */
         .controls-bar {
-            width: 100%; max-width: 1200px; display: flex; justify-content: space-between;
+            width: 100%; max-width: 1250px; display: flex; justify-content: space-between;
             align-items: center; margin-bottom: 15px; background: white; padding: 12px 18px;
             border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02);
             flex-wrap: wrap; gap: 12px;
@@ -82,28 +78,27 @@
         
         .btn-smart {
             background: linear-gradient(135deg, var(--smart), #6d28d9); color: white;
-            border: none; padding: 10px 18px; border-radius: 8px; font-weight: 900;
+            border: none; padding: 10px 16px; border-radius: 8px; font-weight: 900;
             font-size: 13px; cursor: pointer; display: inline-flex; align-items: center;
             gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); transition: 0.2s;
-            animation: pulseSmart 2s infinite;
         }
-        .btn-smart:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(139, 92, 246, 0.4); }
-        @keyframes pulseSmart {
-            0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); }
-            70% { box-shadow: 0 0 0 8px rgba(139, 92, 246, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); }
-        }
+        .btn-smart:hover { transform: translateY(-2px); }
 
         .btn-save {
-            background: var(--success); color: white; border: none; padding: 10px 20px;
+            background: var(--success); color: white; border: none; padding: 10px 18px;
             border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer;
-            display: inline-flex; align-items: center; gap: 8px;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transition: 0.2s;
+            display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
         }
         .btn-save:hover { transform: translateY(-2px); background: #059669; }
 
-        /* ================= 3. التبويبات ================= */
-        .tabs { display: flex; width: 100%; max-width: 1200px; gap: 10px; margin-bottom: 15px; }
+        .btn-print-form {
+            background: #0284c7; color: white; border: none; padding: 10px 18px;
+            border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
+        }
+        .btn-print-form:hover { background: #0369a1; transform: translateY(-2px); }
+
+        .tabs { display: flex; width: 100%; max-width: 1250px; gap: 10px; margin-bottom: 15px; }
         .tab-btn {
             flex: 1; padding: 12px; background: white; border: 2px solid var(--border);
             border-radius: 10px; font-size: 14px; font-weight: 900; color: #64748b;
@@ -114,94 +109,103 @@
             box-shadow: 0 4px 12px rgba(30,58,138,0.2);
         }
 
-        /* ================= 4. كروت المباني وتنسيق الإدخال ================= */
         .tab-content {
-            width: 100%; max-width: 1200px; display: none;
-            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 15px;
+            width: 100%; max-width: 1250px; display: none;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;
         }
         .tab-content.active { display: grid; animation: fadeIn 0.25s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         .building-card {
             background: white; border-radius: 12px; border: 1.5px solid var(--border);
-            overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03); display: flex; flex-direction: column;
         }
         .building-header {
             background: #f1f5f9; padding: 10px 14px; font-weight: 900; font-size: 14px;
             color: var(--primary); border-bottom: 2px solid var(--border);
             display: flex; align-items: center; gap: 8px;
         }
-        .building-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+        .building-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
 
-        .input-group { display: flex; flex-direction: column; gap: 4px; }
+        .input-group { display: flex; flex-direction: column; gap: 3px; }
         .input-group label { font-size: 12px; font-weight: 800; color: #334155; }
         
         .search-input {
-            width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1;
-            font-size: 14px; font-weight: 900; outline: none; transition: 0.2s;
-            background: #ffffff; color: #0f172a;
+            width: 100%; padding: 8px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1;
+            font-size: 13.5px; font-weight: 900; outline: none; transition: 0.2s; background: #ffffff; color: #0f172a;
         }
-        .search-input:focus { border-color: var(--accent); background: white; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15); }
+        .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15); }
 
-        datalist { font-family: 'Cairo'; }
-
-        /* ================= 5. نافذة المساعد الذكي ================= */
+        /* نافذة المساعد الذكي */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(4px);
             display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px;
         }
         .modal-overlay.active { display: flex; }
         .modal-content {
-            background: var(--bg); width: 100%; max-width: 800px; border-radius: 16px;
-            overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
-            display: flex; flex-direction: column; max-height: 90vh;
+            background: var(--bg); width: 100%; max-width: 850px; border-radius: 16px;
+            overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;
         }
-        
         .modal-header {
             background: linear-gradient(135deg, var(--smart), #6d28d9); color: white;
             padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;
         }
         .modal-header h2 { font-size: 16px; font-weight: 900; margin: 0; display: flex; align-items: center; gap: 8px; }
-        .btn-close {
-            background: rgba(255,255,255,0.2); border: none; color: white;
-            width: 32px; height: 32px; border-radius: 6px; font-size: 18px;
-            cursor: pointer; display: flex; justify-content: center; align-items: center;
-        }
-        
+        .btn-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 6px; font-size: 18px; cursor: pointer; }
         .modal-body { padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         
-        .smart-controls { display: flex; gap: 10px; background: white; padding: 12px; border-radius: 10px; border: 1px solid var(--border); }
-        .smart-controls select { flex: 1; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); font-weight: 900; outline: none; font-size: 13px; }
+        .smart-controls { display: flex; gap: 10px; background: white; padding: 12px; border-radius: 10px; border: 1px solid var(--border); flex-wrap: wrap; }
+        .smart-controls select { flex: 1; min-width: 150px; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); font-weight: 900; outline: none; font-size: 13px; }
         
-        .suggestion-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
-        .sug-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 12px; border-top: 4px solid var(--smart); box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .suggestion-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+        .sug-card { background: white; border: 1px solid var(--border); border-radius: 10px; padding: 12px; border-top: 4px solid var(--smart); }
         .sug-loc { font-size: 13px; font-weight: 900; color: var(--dark); margin-bottom: 8px; border-bottom: 1px dashed var(--border); padding-bottom: 4px; }
         
         .sug-teacher {
             display: flex; justify-content: space-between; align-items: center;
-            background: #f8fafc; padding: 6px 10px; border-radius: 6px;
+            background: #f8fafc; padding: 7px 10px; border-radius: 6px;
             margin-bottom: 6px; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s;
         }
         .sug-teacher:hover { background: #dcfce7; border-color: #86efac; transform: translateX(-4px); }
-        .sug-t-name { font-size: 12px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 6px; }
-        .sug-t-score { font-size: 10px; font-weight: bold; background: var(--smart); color: white; padding: 2px 6px; border-radius: 10px; }
-
-        .sug-teacher.assigned { background: var(--success) !important; border-color: var(--success) !important; color: white !important; pointer-events: none; }
-        .sug-teacher.assigned .sug-t-name { color: white !important; }
-        .sug-teacher.assigned .sug-t-score { background: rgba(255,255,255,0.3) !important; color: white !important; }
+        .sug-t-name { font-size: 12.5px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 6px; }
+        .sug-t-desc { font-size: 10px; font-weight: 800; color: #475569; background: #e2e8f0; padding: 2px 6px; border-radius: 6px; }
 
         .btn-finish-smart {
             background: var(--dark); color: white; border: none; padding: 12px;
             border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer;
-            margin-top: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: 0.2s;
         }
-        .btn-finish-smart:hover { background: var(--primary); }
+
+        /* ================= تنسيقات الطباعة A4 Portrait الصارمة ================= */
+        #printable-supervisor-form {
+            display: none;
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 8mm 10mm;
+            }
+            body * {
+                visibility: hidden;
+            }
+            #printable-supervisor-form, #printable-supervisor-form * {
+                visibility: visible;
+            }
+            #printable-supervisor-form {
+                display: block !important;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                background: white;
+                color: black;
+                font-family: 'Cairo', Arial, sans-serif !important;
+            }
+        }
 
         @media (max-width: 768px) {
-            .top-nav { flex-direction: column; text-align: center; }
-            .controls-bar { flex-direction: column; text-align: center; }
-            .btn-smart, .btn-save { width: 100%; justify-content: center; }
-            .smart-controls { flex-direction: column; }
+            .top-nav, .controls-bar { flex-direction: column; text-align: center; }
+            .btn-smart, .btn-save, .btn-print-form { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -212,16 +216,9 @@
     <!-- 1. شريط التنقل العلوي -->
     <nav class="top-nav">
         <h1 class="nav-title"><i class="fa-solid fa-clipboard-user"></i> إعداد جداول الإشراف اليومي</h1>
-        
-        <div id="system-mode-badge" class="mode-badge mode-online">
-            <i class="fa-solid fa-wifi"></i> <span>متصل بالسحابة</span>
-        </div>
-
+        <div id="system-mode-badge" class="mode-badge mode-online"><i class="fa-solid fa-wifi"></i> <span>متصل بالسحابة</span></div>
         <div class="nav-actions">
-            <button onclick="takeSupervisionScreenshot()" class="btn-nav btn-shot-nav" title="التقاط وحفظ صورة عالية الوضوح">
-                <i class="fa-solid fa-camera"></i> لقطة شاشة
-            </button>
-
+            <button onclick="takeSupervisionScreenshot()" class="btn-nav" style="background:#475569;"><i class="fa-solid fa-camera"></i> لقطة شاشة</button>
             <select class="quick-nav-select" onchange="if(this.value) window.location.href=this.value;">
                 <option value="" disabled selected>🚀 انتقال سريع...</option>
                 <option value="index.html">الرئيسية</option>
@@ -245,13 +242,14 @@
             </select>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="btn-smart" onclick="openSmartAssistant()"><i class="fa-solid fa-wand-magic-sparkles"></i> المساعد الذكي للتوزيع</button>
+            <button class="btn-smart" onclick="openSmartAssistant()"><i class="fa-solid fa-wand-magic-sparkles"></i> المساعد الذكي</button>
             <button class="btn-save" onclick="saveSupervisionData()"><i class="fa-solid fa-floppy-disk"></i> حفظ بالسحابة</button>
+            <button class="btn-print-form" onclick="printSupervisorForm()"><i class="fa-solid fa-print"></i> استمارة المشرف (A4)</button>
             <button onclick="takeSupervisionScreenshot()" class="btn-nav" style="background:#475569;"><i class="fa-solid fa-camera"></i> صورة الجدول</button>
         </div>
     </div>
 
-    <!-- 3. أزرار التبويب بين المرحلتين -->
+    <!-- 3. أزرار التبويب -->
     <div class="tabs">
         <button class="tab-btn active" id="tab-btn-lower" onclick="switchTab('lower')">إشراف الصفوف الأولى (1 - 3)</button>
         <button class="tab-btn" id="tab-btn-upper" onclick="switchTab('upper')">إشراف الصفوف العليا (4 - 6)</button>
@@ -259,62 +257,79 @@
 
     <!-- ================= 4. شاشة الصفوف الأولى ================= -->
     <div id="tab-lower" class="tab-content active">
+        <!-- القيادة والفناء والإخلاء -->
         <div class="building-card">
-            <div class="building-header"><i class="fa-solid fa-star" style="color:var(--accent);"></i> القيادة والفناء</div>
+            <div class="building-header"><i class="fa-solid fa-star" style="color:var(--accent);"></i> القيادة والفناء والإخلاء</div>
             <div class="building-body">
                 <div class="input-group"><label>المشرف العام</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="general" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label style="color:var(--danger);"><i class="fa-solid fa-person-walking-dashed-line-arrow-right"></i> مشرف الإخلاء</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="evacuation" placeholder="ابحث بالاسم..."></div>
                 <div class="input-group"><label>مشرف فناء (1)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="yard_1" placeholder="ابحث بالاسم..."></div>
                 <div class="input-group"><label>مشرف فناء (2)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="yard_2" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>مشرف فناء (3)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="yard_3" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>مشرف فناء (4)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="yard_4" placeholder="ابحث بالاسم..."></div>
             </div>
         </div>
 
+        <!-- المبنى القديم -->
         <div class="building-card">
             <div class="building-header"><i class="fa-regular fa-building"></i> المبنى القديم</div>
             <div class="building-body">
                 <div class="input-group"><label>الدور الأرضي</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="old_ground" placeholder="ابحث بالاسم..."></div>
-                <div class="input-group"><label>الدور الثاني</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="old_f2" placeholder="ابحث بالاسم..."></div>
-                <div class="input-group"><label>الدور الثالث</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="old_f3" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الثاني (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="old_f2_1" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الثاني (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="old_f2_2" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الثالث (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="old_f3_1" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الثالث (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="old_f3_2" placeholder="ابحث بالاسم..."></div>
             </div>
         </div>
 
+        <!-- المبنى الشرقي -->
         <div class="building-card">
             <div class="building-header"><i class="fa-solid fa-city"></i> المبنى الشرقي</div>
             <div class="building-body">
                 <div class="input-group"><label>الدور الأرضي</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="east_ground" placeholder="ابحث بالاسم..."></div>
-                <div class="input-group"><label>الدور الثاني</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="east_f2" placeholder="ابحث بالاسم..."></div>
-                <div class="input-group"><label>الدور الثالث</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="east_f3" placeholder="ابحث بالاسم..."></div>
-                <div class="input-group"><label>الدور الرابع</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="east_f4" placeholder="ابحث بالاسم..."></div>
-            </div>
-        </div>
-
-        <div class="building-card">
-            <div class="building-header"><i class="fa-solid fa-hotel"></i> المبنى الجديد</div>
-            <div class="building-body">
-                <div class="input-group"><label>الدور الأرضي</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="new_ground" placeholder="ابحث بالاسم..."></div>
-                <div class="input-group"><label>الدور الثاني</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="new_f2" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الثاني (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="east_f2_1" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الثاني (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="east_f2_2" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الثالث (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="east_f3_1" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الثالث (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="east_f3_2" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الرابع (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="east_f4_1" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الرابع (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="lower" data-loc="east_f4_2" placeholder="ابحث بالاسم..."></div>
             </div>
         </div>
     </div>
 
     <!-- ================= 5. شاشة الصفوف العليا ================= -->
     <div id="tab-upper" class="tab-content">
+        <!-- القيادة والفناء والإخلاء -->
         <div class="building-card">
-            <div class="building-header"><i class="fa-solid fa-star" style="color:var(--accent);"></i> القيادة والفناء</div>
+            <div class="building-header"><i class="fa-solid fa-star" style="color:var(--accent);"></i> القيادة والفناء والإخلاء</div>
             <div class="building-body">
                 <div class="input-group"><label>المشرف العام</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="general" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label style="color:var(--danger);"><i class="fa-solid fa-person-walking-dashed-line-arrow-right"></i> مشرف الإخلاء</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="evacuation" placeholder="ابحث بالاسم..."></div>
                 <div class="input-group"><label>مشرف فناء (1)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="yard_1" placeholder="ابحث بالاسم..."></div>
                 <div class="input-group"><label>مشرف فناء (2)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="yard_2" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>مشرف فناء (3)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="yard_3" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>مشرف فناء (4)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="yard_4" placeholder="ابحث بالاسم..."></div>
             </div>
         </div>
 
-        <div class="building-card">
-            <div class="building-header"><i class="fa-solid fa-hotel"></i> المبنى الجديد</div>
-            <div class="building-body">
-                <div class="input-group"><label>الدور الأرضي</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_ground" placeholder="ابحث بالاسم..."></div>
-                <div class="input-group"><label>الدور الثاني</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f2" placeholder="ابحث بالاسم..."></div>
-                <div class="input-group"><label>الدور الثالث</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f3" placeholder="ابحث بالاسم..."></div>
-                <div class="input-group"><label>الدور الرابع</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f4" placeholder="ابحث بالاسم..."></div>
-                <div class="input-group"><label>الدور الخامس</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f5" placeholder="ابحث بالاسم..."></div>
+        <!-- المبنى الجديد (الصفوف العليا) -->
+        <div class="building-card" style="grid-column: span 2;">
+            <div class="building-header"><i class="fa-solid fa-hotel"></i> المبنى الجديد (الصفوف العليا)</div>
+            <div class="building-body" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+                <div class="input-group"><label>الدور الأرضي (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_ground_1" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الأرضي (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_ground_2" placeholder="ابحث بالاسم..."></div>
+                
+                <div class="input-group"><label>الدور الثاني (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f2_1" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الثاني (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f2_2" placeholder="ابحث بالاسم..."></div>
+                
+                <div class="input-group"><label>الدور الثالث (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f3_1" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الثالث (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f3_2" placeholder="ابحث بالاسم..."></div>
+                
+                <div class="input-group"><label>الدور الرابع (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f4_1" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الرابع (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f4_2" placeholder="ابحث بالاسم..."></div>
+                
+                <div class="input-group"><label>الدور الخامس (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f5_1" placeholder="ابحث بالاسم..."></div>
+                <div class="input-group"><label>الدور الخامس (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f5_2" placeholder="ابحث بالاسم..."></div>
             </div>
         </div>
     </div>
@@ -327,8 +342,8 @@
                 <button class="btn-close" onclick="document.getElementById('smartModal').classList.remove('active')">&times;</button>
             </div>
             <div class="modal-body">
-                <div style="background:#f0fdf4; color:#166534; padding:10px 14px; border-radius:8px; font-size:12px; font-weight:800; border:1px solid #bbf7d0;">
-                    <i class="fa-solid fa-circle-info"></i> اضغط على اسم المعلم لتسكينه في الدور فوراً. يمكنك الاستمرار في اختيار المعلمين لباقي الأدوار دون إغلاق النافذة!
+                <div id="smart-criteria-info" style="background:#f0fdf4; color:#166534; padding:10px 14px; border-radius:8px; font-size:12px; font-weight:800; border:1px solid #bbf7d0;">
+                    جاري فحص وتوفيق الجداول...
                 </div>
                 
                 <div class="smart-controls">
@@ -338,16 +353,19 @@
                     <select id="smart-stage" onchange="generateSmartSuggestions()">
                         <option value="lower">صفوف أولى</option><option value="upper">صفوف عليا</option>
                     </select>
+                    <div id="smart-diagnostic" style="font-size: 11px; font-weight: 800; color: #475569; display: flex; align-items: center; gap: 5px;"></div>
                 </div>
 
                 <div class="suggestion-grid" id="suggestion-container"></div>
-
                 <button class="btn-finish-smart" onclick="document.getElementById('smartModal').classList.remove('active')"><i class="fa-solid fa-check-double"></i> تم الانتهاء من التوزيع</button>
             </div>
         </div>
     </div>
 
-    <!-- ================= المحرك البرمجي وتقنية التصوير الفائق (HD Engine) ================= -->
+    <!-- ================= 7. حاوية استمارة المشرف للطباعة A4 عمودي ================= -->
+    <div id="printable-supervisor-form"></div>
+
+    <!-- ================= المحرك البرمجي وتقنية الطباعة A4 ================= -->
     <script>
         const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
@@ -356,11 +374,96 @@
         let ALL_TEACHERS = [];
         let SCHOOL_MAP = [];
 
-        const LOC_MAPPING = {
-            "المبنى القديم_الدور الأرضي": "old_ground", "المبنى القديم_الدور الثاني": "old_f2", "المبنى القديم_الدور الثالث": "old_f3",
-            "المبنى الشرقي_الدور الأرضي": "east_ground", "المبنى الشرقي_الدور الثاني": "east_f2", "المبنى الشرقي_الدور الثالث": "east_f3", "المبنى الشرقي_الدور الرابع": "east_f4",
-            "المبنى الجديد_الدور الأرضي": "new_ground", "المبنى الجديد_الدور الثاني": "new_f2", "المبنى الجديد_الدور الثالث": "new_f3", "المبنى الجديد_الدور الرابع": "new_f4", "المبنى الجديد_الدور الخامس": "new_f5"
+        const PERIOD_CONFIG = {
+            lower: { "الاحد": 6, "الاثنين": 6, "الثلاثاء": 6, "الاربعاء": 6, "الخميس": 5 },
+            upper: { "الاحد": 7, "الاثنين": 7, "الثلاثاء": 8, "الاربعاء": 7, "الخميس": 6 }
         };
+
+        const FLOOR_LOCS_MAP = {
+            lower: {
+                "المبنى القديم_الدور الأرضي": ["old_ground"],
+                "المبنى القديم_الدور الثاني": ["old_f2_1", "old_f2_2"],
+                "المبنى القديم_الدور الثالث": ["old_f3_1", "old_f3_2"],
+                "المبنى الشرقي_الدور الأرضي": ["east_ground"],
+                "المبنى الشرقي_الدور الثاني": ["east_f2_1", "east_f2_2"],
+                "المبنى الشرقي_الدور الثالث": ["east_f3_1", "east_f3_2"],
+                "المبنى الشرقي_الدور الرابع": ["east_f4_1", "east_f4_2"]
+            },
+            upper: {
+                "المبنى الجديد_الدور الأرضي": ["new_ground_1", "new_ground_2"],
+                "المبنى الجديد_الدور الثاني": ["new_f2_1", "new_f2_2"],
+                "المبنى الجديد_الدور الثالث": ["new_f3_1", "new_f3_2"],
+                "المبنى الجديد_الدور الرابع": ["new_f4_1", "new_f4_2"],
+                "المبنى الجديد_الدور الخامس": ["new_f5_1", "new_f5_2"]
+            }
+        };
+
+        // بنية المواقع بالترتيب الرسمي للاستمارة
+        const FORM_LOCATIONS = {
+            lower: [
+                { label: "المشرف العام لليوم", loc: "general" },
+                { label: "مشرف الإخلاء والأمن والسلامة", loc: "evacuation" },
+                { label: "مشرف الفناء الخارجي (1)", loc: "yard_1" },
+                { label: "مشرف الفناء الخارجي (2)", loc: "yard_2" },
+                { label: "مشرف الفناء الخارجي (3)", loc: "yard_3" },
+                { label: "مشرف الفناء الخارجي (4)", loc: "yard_4" },
+                { label: "المبنى القديم - الدور الأرضي", loc: "old_ground" },
+                { label: "المبنى القديم - الدور الثاني (مشرف 1)", loc: "old_f2_1" },
+                { label: "المبنى القديم - الدور الثاني (مشرف 2)", loc: "old_f2_2" },
+                { label: "المبنى القديم - الدور الثالث (مشرف 1)", loc: "old_f3_1" },
+                { label: "المبنى القديم - الدور الثالث (مشرف 2)", loc: "old_f3_2" },
+                { label: "المبنى الشرقي - الدور الأرضي", loc: "east_ground" },
+                { label: "المبنى الشرقي - الدور الثاني (مشرف 1)", loc: "east_f2_1" },
+                { label: "المبنى الشرقي - الدور الثاني (مشرف 2)", loc: "east_f2_2" },
+                { label: "المبنى الشرقي - الدور الثالث (مشرف 1)", loc: "east_f3_1" },
+                { label: "المبنى الشرقي - الدور الثالث (مشرف 2)", loc: "east_f3_2" },
+                { label: "المبنى الشرقي - الدور الرابع (مشرف 1)", loc: "east_f4_1" },
+                { label: "المبنى الشرقي - الدور الرابع (مشرف 2)", loc: "east_f4_2" }
+            ],
+            upper: [
+                { label: "المشرف العام لليوم", loc: "general" },
+                { label: "مشرف الإخلاء والأمن والسلامة", loc: "evacuation" },
+                { label: "مشرف الفناء الخارجي (1)", loc: "yard_1" },
+                { label: "مشرف الفناء الخارجي (2)", loc: "yard_2" },
+                { label: "مشرف الفناء الخارجي (3)", loc: "yard_3" },
+                { label: "مشرف الفناء الخارجي (4)", loc: "yard_4" },
+                { label: "المبنى الجديد - الدور الأرضي (مشرف 1)", loc: "new_ground_1" },
+                { label: "المبنى الجديد - الدور الأرضي (مشرف 2)", loc: "new_ground_2" },
+                { label: "المبنى الجديد - الدور الثاني (مشرف 1)", loc: "new_f2_1" },
+                { label: "المبنى الجديد - الدور الثاني (مشرف 2)", loc: "new_f2_2" },
+                { label: "المبنى الجديد - الدور الثالث (مشرف 1)", loc: "new_f3_1" },
+                { label: "المبنى الجديد - الدور الثالث (مشرف 2)", loc: "new_f3_2" },
+                { label: "المبنى الجديد - الدور الرابع (مشرف 1)", loc: "new_f4_1" },
+                { label: "المبنى الجديد - الدور الرابع (مشرف 2)", loc: "new_f4_2" },
+                { label: "المبنى الجديد - الدور الخامس (مشرف 1)", loc: "new_f5_1" },
+                { label: "المبنى الجديد - الدور الخامس (مشرف 2)", loc: "new_f5_2" }
+            ]
+        };
+
+        function extractClassSignature(val) {
+            if (!val) return "";
+            let str = typeof val === 'object' ? (val.class || val.cls || val.room || JSON.stringify(val)) : String(val);
+            str = str.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+            const match = str.match(/([1-6])\s*[\/\\\-]\s*([1-9])/);
+            if (match) return `${match[1]}/${match[2]}`;
+            return str.replace(/[\s\-]/g, '/').trim();
+        }
+
+        function getTeacherClass(teacherSchedule, dayName, periodNum) {
+            if (!teacherSchedule) return null;
+            const targetDay = dayName.replace(/أ|إ|آ/g, 'ا');
+
+            for (let key in teacherSchedule) {
+                const cleanKey = key.replace(/أ|إ|آ/g, 'ا');
+                if (cleanKey === `${targetDay}_${periodNum}` || cleanKey === `${targetDay} ${periodNum}` || cleanKey === `${targetDay}-${periodNum}`) {
+                    return teacherSchedule[key];
+                }
+            }
+            if (teacherSchedule[targetDay] && typeof teacherSchedule[targetDay] === 'object') {
+                return teacherSchedule[targetDay][periodNum] || teacherSchedule[targetDay][String(periodNum)];
+            }
+            return null;
+        }
 
         window.addEventListener('DOMContentLoaded', async () => {
             initSystemModeUI();
@@ -383,38 +486,37 @@
         function switchTab(stage) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
             document.getElementById(`tab-btn-${stage}`).classList.add('active');
             document.getElementById(`tab-${stage}`).classList.add('active');
         }
 
         async function fetchBaseData() {
-            const mode = localStorage.getItem('APP_MODE') || 'ONLINE';
             let teachersData = [], contractData = [], mapData = [];
 
-            if (mode === 'ONLINE' && supabaseClient) {
+            if (supabaseClient) {
                 try {
-                    const [resTea, resCon, resMap] = await Promise.all([
-                        supabaseClient.from("teachers").select("name, cadre_job, schedule").eq("emp_status", "على رأس العمل"),
-                        supabaseClient.from("contract_teachers").select("name, schedule").eq("status", "يعمل"),
-                        supabaseClient.from("school_map").select("map_data").eq("id", "main_layout").maybeSingle()
-                    ]);
-
+                    const resTea = await supabaseClient.from("teachers").select("*");
                     if (!resTea.error && resTea.data) {
                         teachersData = resTea.data;
                         localStorage.setItem('local_teachers', JSON.stringify(teachersData));
                     }
+                } catch(e) {}
+
+                try {
+                    const resCon = await supabaseClient.from("contract_teachers").select("*");
                     if (!resCon.error && resCon.data) {
                         contractData = resCon.data;
                         localStorage.setItem('local_contract_teachers', JSON.stringify(contractData));
                     }
-                    if (resMap.data && resMap.data.map_data) {
+                } catch(e) {}
+
+                try {
+                    const resMap = await supabaseClient.from("school_map").select("*").eq("id", "main_layout").maybeSingle();
+                    if (!resMap.error && resMap.data && resMap.data.map_data) {
                         mapData = resMap.data.map_data;
                         localStorage.setItem('local_school_map', JSON.stringify(mapData));
                     }
-                } catch(e) {
-                    console.warn("استخدام التخزين المحلي.");
-                }
+                } catch(e) {}
             }
 
             if (teachersData.length === 0) teachersData = JSON.parse(localStorage.getItem('local_teachers')) || [];
@@ -423,17 +525,23 @@
 
             ALL_TEACHERS = [];
             let datalistHtml = "";
-            const isTeacher = (job) => !(job||"").replace(/\s+/g,"").match(/عامل|اداري|اخصائي|مشرف|سكرتير|فني|خدمات/);
-            
-            teachersData.forEach(t => {
-                if(isTeacher(t.cadre_job)) {
-                    ALL_TEACHERS.push({ name: t.name, schedule: t.schedule||{} });
+            const isExcludedJob = (job) => (job||"").replace(/\s+/g,"").match(/عامل|اداري|اخصائي|مشرف|سكرتير|فني|خدمات/);
+
+            [...teachersData, ...contractData].forEach(t => {
+                const jobName = t.cadre_job || t.job || '';
+                if (!isExcludedJob(jobName)) {
+                    let parsedSchedule = t.schedule || {};
+                    if (typeof parsedSchedule === 'string') {
+                        try { parsedSchedule = JSON.parse(parsedSchedule); } catch(e) { parsedSchedule = {}; }
+                    }
+
+                    ALL_TEACHERS.push({
+                        name: t.name,
+                        cadre: jobName,
+                        schedule: parsedSchedule
+                    });
                     datalistHtml += `<option value="${t.name}">`;
                 }
-            });
-            contractData.forEach(t => {
-                ALL_TEACHERS.push({ name: t.name, schedule: t.schedule||{} });
-                datalistHtml += `<option value="${t.name}">`;
             });
 
             document.getElementById("teachers-list").innerHTML = datalistHtml;
@@ -443,40 +551,31 @@
         async function loadSupervisionData() {
             document.querySelectorAll('.search-input').forEach(inp => inp.value = "");
             const day = document.getElementById("day-select").value;
-            const mode = localStorage.getItem('APP_MODE') || 'ONLINE';
-            
             let supervisionRecords = [];
 
-            if (mode === 'ONLINE' && supabaseClient) {
+            if (supabaseClient) {
                 try {
-                    const { data, error } = await supabaseClient.from("supervision").select("*").eq("day", day);
-                    if (!error && data) {
-                        supervisionRecords = data;
-                        localStorage.setItem(`local_supervision_${day}`, JSON.stringify(data));
-                    }
+                    const { data } = await supabaseClient.from("supervision").select("*").eq("day", day);
+                    if (data && data.length > 0) supervisionRecords = data;
                 } catch(e) {}
             }
-
             if (supervisionRecords.length === 0) {
                 supervisionRecords = JSON.parse(localStorage.getItem(`local_supervision_${day}`)) || [];
             }
 
-            if (supervisionRecords.length > 0) {
-                supervisionRecords.forEach(record => {
-                    const stage = record.stage;
-                    const assignments = record.data || {};
-                    for(let loc in assignments) {
-                        let input = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${loc}"]`);
-                        if(input) input.value = assignments[loc];
-                    }
-                });
-            }
+            supervisionRecords.forEach(record => {
+                const stage = record.stage;
+                const assignments = record.data || {};
+                for(let loc in assignments) {
+                    let input = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${loc}"]`);
+                    if(input) input.value = assignments[loc];
+                }
+            });
         }
 
         async function saveSupervisionData() {
             const day = document.getElementById("day-select").value;
-            let lowerData = {}; 
-            let upperData = {};
+            let lowerData = {}, upperData = {};
 
             document.querySelectorAll('.search-input[data-stage="lower"]').forEach(inp => {
                 if(inp.value.trim() !== "") lowerData[inp.getAttribute("data-loc")] = inp.value.trim();
@@ -492,199 +591,266 @@
 
             localStorage.setItem(`local_supervision_${day}`, JSON.stringify(recordsToUpsert));
 
-            const mode = localStorage.getItem('APP_MODE') || 'ONLINE';
-            if (mode === 'ONLINE' && supabaseClient) {
+            if (supabaseClient) {
                 try {
                     await supabaseClient.from("supervision").upsert(recordsToUpsert);
                     Swal.fire({ icon: 'success', title: 'تم الحفظ بالسحابة بنجاح!', timer: 1500, showConfirmButton: false });
                 } catch(e) { 
-                    Swal.fire({ icon: 'warning', title: 'تم الحفظ محلياً على جهازك', text: 'تعذر الاتصال بالسحابة حالياً.' });
+                    Swal.fire({ icon: 'warning', title: 'تم الحفظ محلياً على جهازك' });
                 }
             } else {
-                Swal.fire({ icon: 'success', title: 'تم الحفظ محلياً بنجاح (أوفلاين)', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'تم الحفظ محلياً بنجاح', timer: 1500, showConfirmButton: false });
             }
         }
 
-        // ================= 🔥 محرك لقطة الشاشة فائق الدقة والوضوح (HD Direct Render) 🔥 =================
-        function takeSupervisionScreenshot() {
+        // ================= طباعة استمارة المشرف العام A4 عمودي =================
+        function printSupervisorForm() {
             const daySelect = document.getElementById("day-select");
             const dayText = daySelect.options[daySelect.selectedIndex].text;
             const isLower = document.getElementById('tab-btn-lower').classList.contains('active');
+            const stage = isLower ? 'lower' : 'upper';
             const stageText = isLower ? "الصفوف الأولى (1 - 3)" : "الصفوف العليا (4 - 6)";
-            const activeTab = isLower ? document.getElementById('tab-lower') : document.getElementById('tab-upper');
 
-            // 1. تجميع البيانات وبناء كارت نقي 100% بألوان صلبة
-            let cardsHtml = "";
-            const cards = activeTab.querySelectorAll('.building-card');
-            
-            cards.forEach(card => {
-                const bldgTitle = card.querySelector('.building-header').innerText.trim();
-                const rows = card.querySelectorAll('.input-group');
+            // استخراج اسم المشرف العام الحالي
+            const generalInput = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="general"]`);
+            const generalName = generalInput ? generalInput.value.trim() || "..................................................." : "...................................................";
+
+            const locs = FORM_LOCATIONS[stage];
+            let rowsHtml = "";
+
+            locs.forEach((item, index) => {
+                const input = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${item.loc}"]`);
+                const val = input ? input.value.trim() : "";
                 
-                let rowsHtml = "";
-                rows.forEach(row => {
-                    const label = row.querySelector('label').innerText.trim();
-                    const val = row.querySelector('input').value.trim() || "—";
-                    
-                    rowsHtml += `
-                        <div style="margin-bottom: 8px; text-align: right;">
-                            <div style="color: #000000 !important; font-weight: 900 !important; font-size: 13px !important; margin-bottom: 2px !important;">${label}</div>
-                            <div style="background: #ffffff !important; color: #000000 !important; border: 2px solid #000000 !important; border-radius: 6px !important; padding: 7px 10px !important; font-size: 16px !important; font-weight: 900 !important; text-align: center !important; font-family: 'Cairo', Arial, sans-serif !important; min-height: 38px !important; display: flex !important; align-items: center !important; justify-content: center !important;">
-                                ${val}
-                            </div>
-                        </div>
-                    `;
-                });
-
-                cardsHtml += `
-                    <div style="background: #ffffff !important; border: 2.5px solid #1e3a8a !important; border-radius: 10px !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; box-shadow: none !important;">
-                        <div style="background: #1e3a8a !important; color: #ffffff !important; font-weight: 900 !important; font-size: 16px !important; padding: 9px 12px !important; text-align: center !important; font-family: 'Cairo', Arial, sans-serif !important;">
-                            ${bldgTitle}
-                        </div>
-                        <div style="padding: 12px 10px !important; background: #ffffff !important; display: flex !important; flex-direction: column !important; gap: 4px !important;">
-                            ${rowsHtml}
-                        </div>
-                    </div>
+                rowsHtml += `
+                    <tr style="height: 34px;">
+                        <td style="text-align: center; font-weight: 900; font-size: 11.5px; border: 1.5px solid #000; padding: 2px 4px;">${index + 1}</td>
+                        <td style="font-weight: 900; font-size: 11.5px; border: 1.5px solid #000; padding: 2px 6px;">${item.label}</td>
+                        <td style="text-align: center; font-weight: 900; font-size: 12.5px; border: 1.5px solid #000; padding: 2px 6px; color: #000;">${val}</td>
+                        <td style="border: 1.5px solid #000; width: 110px;"></td>
+                        <td style="border: 1.5px solid #000; width: 140px;"></td>
+                    </tr>
                 `;
             });
 
-            // 2. إنشاء لوحة تصوير مخصصة ومباشرة (Direct Render Canvas)
-            const printContainer = document.createElement('div');
-            printContainer.style.position = 'fixed';
-            printContainer.style.top = '-9999px';
-            printContainer.style.left = '0';
-            printContainer.style.width = '1200px';
-            printContainer.style.background = '#ffffff';
-            printContainer.style.padding = '20px';
-            printContainer.style.direction = 'rtl';
-            printContainer.style.fontFamily = "'Cairo', Arial, sans-serif";
-
+            const printContainer = document.getElementById('printable-supervisor-form');
             printContainer.innerHTML = `
-                <div style="background: #1e3a8a !important; color: #ffffff !important; padding: 15px 25px !important; border-radius: 10px !important; display: flex !important; justify-content: space-between !important; align-items: center !important; margin-bottom: 15px !important;">
-                    <div style="text-align: right !important;">
-                        <h3 style="margin: 0 !important; font-size: 18px !important; font-weight: 900 !important; color: #ffffff !important;">مدرسة الشهيد أشرف حبيب الابتدائية</h3>
-                        <div style="font-size: 13px !important; font-weight: 700 !important; color: #e2e8f0 !important; margin-top: 3px !important;">العام الدراسي ٢٠٢٦ / ٢٠٢٧</div>
-                    </div>
-                    <div style="text-align: left !important;">
-                        <h2 style="margin: 0 !important; font-size: 19px !important; font-weight: 900 !important; color: #fcd34d !important;">جدول الإشراف اليومي (${stageText})</h2>
-                        <div style="font-size: 14px !important; font-weight: 800 !important; color: #ffffff !important; margin-top: 3px !important;">يوم ${dayText}</div>
-                    </div>
-                </div>
+                <div style="padding: 10px; width: 100%; box-sizing: border-box; direction: rtl; font-family: 'Cairo', Arial, sans-serif;">
+                    
+                    <!-- الترويسة الرسمية -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 8px;">
+                        <div style="text-align: right; font-weight: 800; font-size: 11px; line-height: 1.3;">
+                            <div>وزارة التربية والتعليم والتعليم الفني</div>
+                            <div>مديرية التربية والتعليم</div>
+                            <div>إدارة التعليمية</div>
+                            <div><b>مدرسة الشهيد أشرف حبيب الابتدائية</b></div>
+                        </div>
 
-                <div style="display: grid !important; grid-template-columns: repeat(${cards.length}, 1fr) !important; gap: 15px !important;">
-                    ${cardsHtml}
-                </div>
+                        <div style="text-align: center;">
+                            <div style="background: #1e3a8a; color: #ffffff; padding: 4px 18px; border-radius: 6px; font-size: 15px; font-weight: 900; margin-bottom: 4px; display: inline-block;">
+                                استمارة تكليف ومتابعة الإشراف اليومي
+                            </div>
+                            <div style="font-size: 12px; font-weight: 900; color: #000;">
+                                ${stageText} — العام الدراسي ٢٠٢٦ / ٢٠٢٧ م
+                            </div>
+                        </div>
 
-                <div style="background: #ffffff !important; border: 2px solid #000000 !important; border-radius: 8px !important; padding: 10px 20px !important; margin-top: 15px !important; display: flex !important; justify-content: space-between !important; font-weight: 900 !important; font-size: 14px !important; color: #000000 !important;">
-                    <div>تصميم وإعداد: أ. عبدالعزيز لولح (مستر زيزو)</div>
-                    <div>يعتمد / مدير المدرسة: .......................................</div>
+                        <div style="text-align: left; font-weight: 800; font-size: 11px; line-height: 1.4; border: 1px dashed #000; padding: 4px 8px; border-radius: 4px;">
+                            <div><b>اليوم:</b> ${dayText}</div>
+                            <div><b>التاريخ:</b> &nbsp;&nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;&nbsp; / ٢٠٢٦ م</div>
+                            <div><b>المشرف العام:</b> ${generalName}</div>
+                        </div>
+                    </div>
+
+                    <!-- إرشادات وتعليمات المشرف اليومي -->
+                    <div style="background: #f8fafc; border: 1px solid #000; padding: 4px 10px; font-size: 10px; font-weight: 700; margin-bottom: 8px; border-radius: 4px; display: flex; justify-content: space-between;">
+                        <div>• التواجد الميداني في مكان الإشراف طوال اليوم الدراسي وأثناء الفسحة.</div>
+                        <div>• عدم مغادرة الدور إلا بعد تسليم الفصول وخروج آخر تلميذ.</div>
+                        <div>• الإبلاغ الفوري عن أي طوارئ لإدارة المدرسة.</div>
+                    </div>
+
+                    <!-- جدول الإشراف الرئيسي -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">
+                        <thead>
+                            <tr style="background: #e2e8f0; font-size: 11.5px; font-weight: 900; height: 28px;">
+                                <th style="border: 1.5px solid #000; width: 35px; text-align: center;">م</th>
+                                <th style="border: 1.5px solid #000; text-align: center; width: 32%;">مكان وموقع الإشراف</th>
+                                <th style="border: 1.5px solid #000; text-align: center; width: 32%;">اسم المعلم المشرف المكلف</th>
+                                <th style="border: 1.5px solid #000; text-align: center;">توقيع المعلم بالعلم</th>
+                                <th style="border: 1.5px solid #000; text-align: center;">ملاحظات المشرف العام</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+
+                    <!-- ملاحظات وختام تقرير المشرف العام -->
+                    <div style="border: 1px solid #000; border-radius: 4px; padding: 4px 8px; font-size: 11px; font-weight: 800; margin-bottom: 8px; min-height: 40px;">
+                        <b>ملاحظات وتقرير المشرف العام لليوم:</b> ....................................................................................................................................................................................................................................................
+                    </div>
+
+                    <!-- التوقيعات والاعتماد الرسمي -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 6px 15px; font-weight: 900; font-size: 12px;">
+                        <div style="text-align: center;">
+                            <div>مشرف عام اليوم</div>
+                            <div style="margin-top: 15px;">الاسم: ..............................</div>
+                            <div style="margin-top: 4px;">التوقيع: ............................</div>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <div>مسؤول الجدول المدرسي</div>
+                            <div style="margin-top: 15px;">أ. عبدالعزيز لولح (مستر زيزو)</div>
+                            <div style="margin-top: 4px;">التوقيع: ............................</div>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <div>يعتمد / مدير المدرسة</div>
+                            <div style="margin-top: 15px;">الاسم: ..............................</div>
+                            <div style="margin-top: 4px;">التوقيع: ............................</div>
+                        </div>
+                    </div>
+
                 </div>
             `;
 
-            document.body.appendChild(printContainer);
-
-            // 3. تصوير اللوحة الصافية
-            html2canvas(printContainer, {
-                scale: 2,
-                backgroundColor: "#ffffff",
-                useCORS: true,
-                logging: false
-            }).then(canvas => {
-                document.body.removeChild(printContainer);
-                let link = document.createElement('a');
-                link.download = `جدول_الإشراف_${dayText}_${isLower ? 'صفوف_أولى' : 'صفوف_عليا'}.jpg`;
-                link.href = canvas.toDataURL("image/jpeg", 1.0);
-                link.click();
-            }).catch(err => {
-                document.body.removeChild(printContainer);
-                Swal.fire('خطأ', 'تعذر التقاط لقطة الشاشة', 'error');
-            });
+            // تشغيل نافذة الطباعة مباشرة
+            window.print();
         }
 
-        // ================= 5. المساعد الذكي =================
+        // ================= المساعد الذكي =================
         function openSmartAssistant() {
             document.getElementById("smart-day").value = document.getElementById("day-select").value;
             const isLowerActive = document.getElementById('tab-btn-lower').classList.contains('active');
             document.getElementById("smart-stage").value = isLowerActive ? 'lower' : 'upper';
-            
             generateSmartSuggestions();
             document.getElementById("smartModal").classList.add("active");
-        }
-
-        function isClassRoom(val) {
-            return /^[0-9٠-٩]+\s*[\/\-]\s*[0-9٠-٩]+$/.test(val);
         }
 
         function generateSmartSuggestions() {
             const day = document.getElementById("smart-day").value;
             const stage = document.getElementById("smart-stage").value;
             const container = document.getElementById("suggestion-container");
+            const infoBox = document.getElementById("smart-criteria-info");
+            const diagBox = document.getElementById("smart-diagnostic");
+            
             container.innerHTML = "";
+            diagBox.innerHTML = `<i class="fa-solid fa-users"></i> إجمالي المعلمين بالمنظومة: <b>${ALL_TEACHERS.length}</b>`;
 
-            if(!SCHOOL_MAP || SCHOOL_MAP.length === 0) {
-                container.innerHTML = "<div style='grid-column:1/-1; color:var(--danger); text-align:center; font-weight:bold; padding:15px;'>لم يتم إعداد (خريطة المبنى المدرسي) بعد! يرجى إعدادها أولاً ليعمل المساعد الذكي.</div>";
+            if(ALL_TEACHERS.length === 0) {
+                container.innerHTML = "<div style='grid-column:1/-1; color:var(--danger); text-align:center; font-weight:bold; padding:20px;'><i class=\"fa-solid fa-triangle-exclamation\"></i> لم يتم تحميل أي معلمين من قاعدة البيانات!</div>";
                 return;
             }
 
+            const totalP = PERIOD_CONFIG[stage][day];
+            infoBox.innerHTML = `<b>المرحلة:</b> ${stage==='lower'?'صفوف أولى':'صفوف عليا'} | <b>نصاب يوم ${day}:</b> ${totalP} حصص. (الترتيب حسب التواجد بالدور، والفراغ بآخر الحصص، والتخصص).`;
+
+            if(!SCHOOL_MAP || SCHOOL_MAP.length === 0) {
+                container.innerHTML = "<div style='grid-column:1/-1; color:var(--danger); text-align:center; font-weight:bold; padding:20px;'>يرجى إعداد خريطة المبنى أولاً.</div>";
+                return;
+            }
+
+            const stageMapping = FLOOR_LOCS_MAP[stage] || {};
             let targetFloors = [];
+
             SCHOOL_MAP.forEach(bldg => {
-                bldg.floors.forEach(floor => {
-                    if(floor.stage === stage) {
-                        let locKey = LOC_MAPPING[`${bldg.name}_${floor.name}`];
-                        if(locKey) {
+                if (bldg.floors) {
+                    bldg.floors.forEach(floor => {
+                        const mapKey = `${bldg.name}_${floor.name}`;
+                        if(stageMapping[mapKey]) {
                             targetFloors.push({
                                 bldgName: bldg.name,
                                 floorName: floor.name,
-                                locKey: locKey,
-                                classes: floor.rooms.filter(r => isClassRoom(r))
+                                locKeys: stageMapping[mapKey],
+                                classes: (floor.rooms || []).map(r => extractClassSignature(r))
                             });
                         }
-                    }
-                });
+                    });
+                }
             });
 
             if(targetFloors.length === 0) {
-                container.innerHTML = "<div style='grid-column:1/-1; color:var(--danger); text-align:center; font-weight:bold; padding:15px;'>لم يتم العثور على أدوار مخصصة لهذه المرحلة في خريطة المبنى.</div>";
+                container.innerHTML = "<div style='grid-column:1/-1; color:var(--danger); text-align:center; font-weight:bold; padding:15px;'>لم يتم العثور على أدوار مطابقة لهذه المرحلة.</div>";
                 return;
             }
 
             let html = "";
             targetFloors.forEach(floor => {
-                let scores = {};
-                
+                let candidateScores = [];
+
                 ALL_TEACHERS.forEach(t => {
-                    for(let p=1; p<=8; p++) {
-                        let taughtClass = t.schedule[`${day}_${p}`];
-                        if(taughtClass && floor.classes.includes(taughtClass)) {
-                            scores[t.name] = (scores[t.name] || 0) + 1;
+                    let classesInThisFloor = 0;
+                    let hasLowerClasses = false;
+                    let hasUpperClasses = false;
+
+                    for(let p = 1; p <= 8; p++) {
+                        let rawCls = getTeacherClass(t.schedule, day, p);
+                        if(rawCls) {
+                            let cleanCls = extractClassSignature(rawCls);
+                            if(floor.classes.includes(cleanCls)) classesInThisFloor++;
+                            if (/^[1-3]/.test(cleanCls)) hasLowerClasses = true;
+                            if (/^[4-6]/.test(cleanCls)) hasUpperClasses = true;
                         }
+                    }
+
+                    let score = classesInThisFloor * 15;
+                    const isClassTeacher = /فصل/i.test(t.cadre) || hasLowerClasses;
+                    if(stage === 'lower' && isClassTeacher) score += 10;
+                    if(stage === 'upper' && !isClassTeacher && hasUpperClasses) score += 10;
+
+                    const freeLast = !getTeacherClass(t.schedule, day, totalP);
+                    const freeBeforeLast = !getTeacherClass(t.schedule, day, totalP - 1);
+
+                    let statusBadge = "";
+                    if(freeLast && freeBeforeLast) {
+                        score += 25;
+                        statusBadge = `فاضي آخر حصتين (${totalP-1} و ${totalP}) ⭐`;
+                    } else if(freeLast) {
+                        score += 15;
+                        statusBadge = `فاضي الحصة الأخيرة (${totalP}) ✔️`;
+                    } else if(freeBeforeLast) {
+                        score += 5;
+                        statusBadge = `فاضي الحصة (${totalP-1})`;
+                    } else {
+                        score -= 10;
+                        statusBadge = `مشغول لنهاية اليوم (${totalP})`;
+                    }
+
+                    if(classesInThisFloor > 0 || (score >= 20 && (stage === 'lower' ? hasLowerClasses : hasUpperClasses))) {
+                        candidateScores.push({
+                            name: t.name,
+                            score: score,
+                            floorClasses: classesInThisFloor,
+                            statusBadge: statusBadge
+                        });
                     }
                 });
 
-                let topTeachers = Object.keys(scores)
-                    .map(name => ({ name: name, score: scores[name] }))
-                    .sort((a,b) => b.score - a.score)
-                    .slice(0, 3);
+                candidateScores.sort((a,b) => b.score - a.score);
+                const topCandidates = candidateScores.slice(0, 4);
 
                 let teachersHtml = "";
-                if(topTeachers.length > 0) {
-                    let medals = ['🥇', '🥈', '🥉'];
-                    topTeachers.forEach((t, i) => {
-                        const btnId = `sug_btn_${floor.locKey}_${i}`;
+                if(topCandidates.length > 0) {
+                    let medals = ['🥇', '🥈', '🥉', '🏅'];
+                    topCandidates.forEach((t, i) => {
+                        const targetKeys = JSON.stringify(floor.locKeys).replace(/"/g, '&quot;');
                         teachersHtml += `
-                            <div class="sug-teacher" id="${btnId}" onclick="applySuggestion('${stage}', '${floor.locKey}', '${t.name}', '${btnId}')">
+                            <div class="sug-teacher" onclick="autoAssignTeacher('${stage}', ${targetKeys}, '${t.name}', this)">
                                 <span class="sug-t-name">${medals[i]} ${t.name}</span>
-                                <span class="sug-t-score">${t.score} حصص هنا</span>
+                                <span class="sug-t-desc">${t.floorClasses} حصص بالدور | ${t.statusBadge}</span>
                             </div>
                         `;
                     });
                 } else {
-                    teachersHtml = "<div style='font-size:11px; color:#94a3b8; text-align:center;'>لا يوجد معلمين لديهم حصص بهذا الدور اليوم.</div>";
+                    teachersHtml = "<div style='font-size:11px; color:#94a3b8; text-align:center; padding: 6px;'>لا توجد حصص مسجلة لأي معلم بهذا الدور في هذا اليوم.</div>";
                 }
 
                 html += `
                     <div class="sug-card">
-                        <div class="sug-loc"><i class="fa-solid fa-location-dot" style="color:var(--smart);"></i> ${floor.bldgName} - ${floor.floorName}</div>
+                        <div class="sug-loc">
+                            <i class="fa-solid fa-location-dot" style="color:var(--smart);"></i> ${floor.bldgName} - ${floor.floorName}
+                            <span style="font-size:11px; color:#64748b;">(مطلوب ${floor.locKeys.length} مشرف)</span>
+                        </div>
                         ${teachersHtml}
                     </div>
                 `;
@@ -693,37 +859,102 @@
             container.innerHTML = html;
         }
 
-        function applySuggestion(stage, locKey, teacherName, btnId) {
+        function autoAssignTeacher(stage, locKeys, teacherName, btnEl) {
             document.getElementById("day-select").value = document.getElementById("smart-day").value;
             switchTab(stage);
 
-            let input = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${locKey}"]`);
-            if(input) {
-                input.value = teacherName;
-                
-                const clickedBtn = document.getElementById(btnId);
-                const parentCard = clickedBtn.closest('.sug-card');
-                parentCard.querySelectorAll('.sug-teacher').forEach(b => {
-                    b.classList.remove('assigned');
-                    b.innerHTML = b.innerHTML.replace(' ✔️', '');
+            let assignedLoc = null;
+            for(let key of locKeys) {
+                let input = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${key}"]`);
+                if(input && input.value.trim() === "") {
+                    assignedLoc = key;
+                    input.value = teacherName;
+                    break;
+                }
+            }
+
+            if(!assignedLoc) {
+                assignedLoc = locKeys[0];
+                let input = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${assignedLoc}"]`);
+                if(input) input.value = teacherName;
+            }
+
+            btnEl.style.background = "#dcfce7";
+            btnEl.style.borderColor = "#16a34a";
+
+            let targetInput = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${assignedLoc}"]`);
+            if(targetInput) {
+                targetInput.style.backgroundColor = "#dcfce7";
+                setTimeout(() => targetInput.style.backgroundColor = "", 1000);
+            }
+
+            Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1000, icon: 'success', title: `تم تسكين ${teacherName}` });
+        }
+
+        // ================= تصوير عالي الوضوح =================
+        function takeSupervisionScreenshot() {
+            const dayText = document.getElementById("day-select").options[document.getElementById("day-select").selectedIndex].text;
+            const isLower = document.getElementById('tab-btn-lower').classList.contains('active');
+            const stageText = isLower ? "الصفوف الأولى (1 - 3)" : "الصفوف العليا (4 - 6)";
+            const activeTab = isLower ? document.getElementById('tab-lower') : document.getElementById('tab-upper');
+
+            let cardsHtml = "";
+            const cards = activeTab.querySelectorAll('.building-card');
+            
+            cards.forEach(card => {
+                const bldgTitle = card.querySelector('.building-header').innerText.trim();
+                const rows = card.querySelectorAll('.input-group');
+                let rowsHtml = "";
+                rows.forEach(row => {
+                    const label = row.querySelector('label').innerText.trim();
+                    const val = row.querySelector('input').value.trim() || "—";
+                    rowsHtml += `
+                        <div style="margin-bottom: 5px; text-align: right;">
+                            <div style="color: #000; font-weight: 900; font-size: 11px;">${label}</div>
+                            <div style="background: #fff; color: #000; border: 1.5px solid #000; border-radius: 4px; padding: 4px 6px; font-size: 13px; font-weight: 900; text-align: center; min-height: 28px;">
+                                ${val}
+                            </div>
+                        </div>
+                    `;
                 });
 
-                clickedBtn.classList.add('assigned');
-                clickedBtn.querySelector('.sug-t-name').innerHTML += ' ✔️';
-                
-                input.style.backgroundColor = "#dcfce7";
-                input.style.borderColor = "#16a34a";
-                input.style.color = "#166534";
-                
-                setTimeout(() => {
-                    input.style.backgroundColor = "";
-                    input.style.borderColor = "";
-                    input.style.color = "";
-                }, 1200);
-                
-                const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1000 });
-                Toast.fire({ icon: 'success', title: 'تم تسكين المشرف' });
-            }
+                cardsHtml += `
+                    <div style="background: #fff; border: 2px solid #1e3a8a; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                        <div style="background: #1e3a8a; color: #fff; font-weight: 900; font-size: 13px; padding: 6px; text-align: center;">${bldgTitle}</div>
+                        <div style="padding: 8px; background: #fff; display: flex; flex-direction: column; gap: 2px;">${rowsHtml}</div>
+                    </div>
+                `;
+            });
+
+            const printContainer = document.createElement('div');
+            printContainer.style.position = 'fixed';
+            printContainer.style.top = '-9999px';
+            printContainer.style.width = '1200px';
+            printContainer.style.background = '#fff';
+            printContainer.style.padding = '20px';
+            printContainer.style.direction = 'rtl';
+            printContainer.style.fontFamily = "'Cairo', Arial, sans-serif";
+
+            printContainer.innerHTML = `
+                <div style="background: #1e3a8a; color: #fff; padding: 10px 20px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div><h3 style="margin: 0; font-size: 16px; font-weight: 900;">مدرسة الشهيد أشرف حبيب الابتدائية</h3><div style="font-size: 12px;">العام الدراسي ٢٠٢٦ / ٢٠٢٧</div></div>
+                    <div><h2 style="margin: 0; font-size: 17px; font-weight: 900; color: #fcd34d;">جدول الإشراف اليومي (${stageText})</h2><div style="font-size: 13px; font-weight: 800;">يوم ${dayText}</div></div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(${cards.length}, 1fr); gap: 10px;">${cardsHtml}</div>
+                <div style="border: 1.5px solid #000; border-radius: 6px; padding: 8px 15px; margin-top: 12px; display: flex; justify-content: space-between; font-weight: 900; font-size: 12px;">
+                    <div>تصميم وإعداد: أ. عبدالعزيز لولح (مستر زيزو)</div>
+                    <div>يعتمد / مدير المدرسة: .......................................</div>
+                </div>
+            `;
+
+            document.body.appendChild(printContainer);
+            html2canvas(printContainer, { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
+                document.body.removeChild(printContainer);
+                let link = document.createElement('a');
+                link.download = `جدول_الإشراف_${dayText}_${isLower ? 'صفوف_أولى' : 'صفوف_عليا'}.jpg`;
+                link.href = canvas.toDataURL("image/jpeg", 1.0);
+                link.click();
+            });
         }
     </script>
 </body>
