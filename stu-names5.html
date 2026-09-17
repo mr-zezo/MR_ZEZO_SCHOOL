@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>منظومة مستر زيزو - تسجيل الأسماء الخماسية (الصف الأول)</title>
+    
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- مكتبات Supabase & Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #0f2b48; 
+            --dark: #0f172a; 
+            --bg: #f1f5f9; 
+            --save-btn: #4f46e5; 
+            --info: #0284c7; 
+            --success: #16a34a; 
+            --warning: #d97706; 
+            --danger: #be123c;
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); padding: 10px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+
+        .app-container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 12px; }
+
+        /* شريط التنقل العلوي */
+        .top-nav {
+            background: var(--primary); color: white; padding: 10px 16px; border-radius: 14px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15); border-bottom: 3px solid #f59e0b;
+        }
+        .nav-title { font-size: 15px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+
+        /* كارت الإدخال الرئيسي */
+        .card-entry {
+            background: white; border-radius: 16px; padding: 18px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #cbd5e1; border-top: 5px solid var(--save-btn);
+        }
+
+        .section-title { font-size: 15px; font-weight: 900; color: var(--primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+
+        .search-row {
+            display: grid; grid-template-columns: 140px 1fr auto; gap: 10px; align-items: center;
+            background: #f8fafc; padding: 12px; border-radius: 12px; border: 1.5px solid #e2e8f0; margin-bottom: 14px;
+        }
+
+        label { display: block; font-size: 12px; font-weight: 800; color: #475569; margin-bottom: 4px; }
+        
+        input, select {
+            width: 100%; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 8px 10px;
+            font-size: 14px; font-weight: 800; outline: none; transition: 0.2s; text-align: center;
+        }
+        input:focus, select:focus { border-color: var(--save-btn); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+
+        /* صندوق عرض الاسم الرباعي الأصلي من قاعدة البيانات */
+        .current-name-box {
+            background: #eff6ff; border: 1.5px dashed #60a5fa; border-radius: 10px; padding: 10px 14px;
+            margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
+        }
+        .cn-label { font-size: 12px; font-weight: 800; color: #1e40af; }
+        .cn-value { font-size: 16px; font-weight: 900; color: var(--primary); }
+
+        /* الحقول الخمسة */
+        .five-inputs-grid {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 15px;
+        }
+        .name-part-box { text-align: center; }
+        .name-part-box input {
+            text-align: center; font-size: 15px; font-weight: 900; color: var(--primary); background: #fdfdfd;
+        }
+        .name-part-box input:focus {
+            background: #eef2ff; border-color: var(--save-btn); transform: scale(1.02);
+        }
+
+        /* اسم الأب رباعي التلقائي */
+        .father-name-preview {
+            background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 8px 12px;
+            font-size: 13px; font-weight: 800; color: #166534; display: flex; justify-content: space-between; margin-bottom: 15px;
+        }
+
+        /* الأزرار */
+        .actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn {
+            border: none; padding: 9px 18px; border-radius: 8px; cursor: pointer; font-weight: 900;
+            font-size: 13px; color: white; display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: 0.15s; flex: 1; min-width: 130px;
+        }
+        .btn:active { transform: translateY(2px); }
+        .btn-save { background: var(--save-btn); }
+        .btn-save:hover { background: #4338ca; }
+        .btn-delete-name { background: var(--danger); }
+        .btn-delete-name:hover { background: #9f1239; }
+        .btn-excel { background: #15803d; }
+        .btn-excel:hover { background: #166534; }
+        .btn-clear { background: #64748b; }
+
+        /* جدول العرض السريع والمراجعة */
+        .table-container {
+            background: white; border-radius: 16px; padding: 14px; border: 1px solid #cbd5e1;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow-x: auto; max-height: 420px;
+        }
+        table { width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; }
+        thead th {
+            position: sticky; top: 0; background: var(--primary); color: white;
+            padding: 9px 6px; font-weight: 900; font-size: 12.5px; border: 1px solid #1e3a8a;
+        }
+        tbody td { padding: 7px 5px; border-bottom: 1px solid #e2e8f0; font-weight: 800; color: #334155; }
+        tbody tr:hover { background: #f1f5f9; cursor: pointer; }
+        
+        .badge-5 { background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 6px; font-size: 11px; }
+        .badge-pending { background: #fee2e2; color: #b91c1c; padding: 2px 6px; border-radius: 6px; font-size: 11px; }
+
+        /* التوافق مع الموبايل */
+        @media (max-width: 768px) {
+            .search-row { grid-template-columns: 1fr; }
+            .five-inputs-grid { grid-template-columns: 1fr 1fr; }
+            .five-inputs-grid > div:last-child { grid-column: span 2; }
+            .five-inputs-grid input { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- الشريط العلوي (بدون زر الرئيسية) -->
+        <nav class="top-nav">
+            <div class="nav-title">
+                <i class="fa-solid fa-signature text-amber-400"></i> تسجيل ومراجعة الاسم خماسي (الصف الأول فقط)
+            </div>
+            <div>
+                <span id="mode-badge" style="font-size:11px; padding:2px 8px; border-radius:6px; font-weight:800; background:#10b981;">جاري الفحص...</span>
+            </div>
+        </nav>
+
+        <!-- كارت الإدخال الرئيسي -->
+        <div class="card-entry">
+            <div class="section-title">
+                <i class="fa-solid fa-id-card-clip text-indigo-600"></i> بيانات تلميذ الصف الأول
+            </div>
+
+            <!-- صف البحث والاختيار السريع -->
+            <div class="search-row">
+                <div>
+                    <label><i class="fa-solid fa-hashtag text-indigo-600"></i> رقم السجل (m):</label>
+                    <input type="number" id="reg-search" placeholder="اكتب السجل..." autocomplete="off" oninput="onRegInput(this.value)">
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-user-check text-blue-600"></i> اختر التلميذ بالاسم فقط:</label>
+                    <select id="quick-select" onchange="onStudentSelected(this.value)">
+                        <option value="">-- اضغط للاختيار من قائمة الأسماء --</option>
+                    </select>
+                </div>
+                <div style="display:flex; align-items:flex-end; height:100%;">
+                    <button class="btn btn-clear" style="min-width:auto; padding:8px 14px;" onclick="resetForm(true)" title="تفريغ الحقول">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- الاسم الرباعي الأصلي من المنظومة -->
+            <div class="current-name-box">
+                <span class="cn-label"><i class="fa-solid fa-user-tag"></i> الاسم الرباعي المسجل بقاعدة البيانات:</span>
+                <span class="cn-value" id="current-name-display">لم يتم تحديد تلميذ</span>
+                <span id="student-meta" style="font-size:12px; font-weight:800; color:#64748b;"></span>
+            </div>
+
+            <!-- الحقول الخمسة للتسجيل الخماسي الجديد -->
+            <label style="color:var(--save-btn); font-size:13px; font-weight:900; margin-bottom:6px;">
+                <i class="fa-solid fa-pen-nib"></i> أدخل الاسم خماسياً (المسطرة Space تنقلك للخانة التالية، والمسطرة بالخانة الخامسة تحفظ فوراً):
+            </label>
+            <div class="five-inputs-grid">
+                <div class="name-part-box">
+                    <label>١. الأول (التلميذ)</label>
+                    <input type="text" id="n1" class="name-box" placeholder="الأول" autocomplete="off">
+                </div>
+                <div class="name-part-box">
+                    <label>٢. الثاني (الأب)</label>
+                    <input type="text" id="n2" class="name-box" placeholder="الأب" autocomplete="off">
+                </div>
+                <div class="name-part-box">
+                    <label>٣. الثالث (الجد)</label>
+                    <input type="text" id="n3" class="name-box" placeholder="الجد" autocomplete="off">
+                </div>
+                <div class="name-part-box">
+                    <label>٤. الرابع (جد الأب)</label>
+                    <input type="text" id="n4" class="name-box" placeholder="الرابع" autocomplete="off">
+                </div>
+                <div class="name-part-box">
+                    <label style="color:var(--danger)">٥. الخامس (اللقب)</label>
+                    <input type="text" id="n5" class="name-box" placeholder="اللقب / العائلة" autocomplete="off" style="border-color:#f87171;">
+                </div>
+            </div>
+
+            <!-- اسم الأب رباعي المستنتج تلقائياً -->
+            <div class="father-name-preview">
+                <span><i class="fa-solid fa-person text-green-700"></i> اسم الأب رباعي المستنتج تلقائياً:</span>
+                <span id="father-name-val" style="font-weight:900; color:var(--primary); font-size:14px;">-</span>
+            </div>
+
+            <!-- أزرار العمليات -->
+            <div class="actions-row">
+                <button class="btn btn-save" id="btn-save" onclick="saveFivePartName()">
+                    <i class="fa-solid fa-floppy-disk"></i> حفظ الاسم الخماسي (Enter)
+                </button>
+                <button class="btn btn-delete-name" id="btn-del" onclick="deleteFivePartName()" title="مسح الاسم الخماسي وإعادة التلميذ لغير مسجل">
+                    <i class="fa-solid fa-eraser"></i> مسح الخماسي المحفوظ
+                </button>
+                <button class="btn btn-excel" onclick="exportToExcel()">
+                    <i class="fa-solid fa-file-excel"></i> تصدير إكسيل (رباعي وخماسي)
+                </button>
+            </div>
+        </div>
+
+        <!-- جدول المراجعة -->
+        <div class="table-container">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid #cbd5e1;">
+                <span style="font-weight:900; color:var(--primary); font-size:13.5px;">
+                    <i class="fa-solid fa-list-ol"></i> كشف تلاميذ الصف الأول (اضغط على أي تلميذ لتعديل أو مسح اسمه الخماسي):
+                </span>
+                <span id="table-counter" style="font-size:11.5px; font-weight:800; background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:6px;"></span>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:45px;">م</th>
+                        <th style="width:75px;">رقم السجل</th>
+                        <th>اسم التلميذ خماسي (المسجل هنا)</th>
+                        <th>اسم الأب رباعي</th>
+                        <th style="width:65px;">الفصل</th>
+                        <th style="width:85px;">حالة التسجيل</th>
+                    </tr>
+                </thead>
+                <tbody id="students-tbody">
+                    <tr><td colspan="6" style="padding:25px; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i> جاري استرجاع بيانات الصف الأول...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
+        const CAPSULE_ID = "grade1_names5"; // الكبسولة المستقلة للأسماء الخماسية
+
+        let GRADE1_STUDENTS = [];
+        let SAVED_NAMES5 = {}; 
+        let CURRENT_STUDENT = null;
+
+        function openLocalDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('students')) db.createObjectStore('students', { keyPath: 'code' });
+                    if (!db.objectStoreNames.contains('system_capsules')) db.createObjectStore('system_capsules', { keyPath: 'id' });
+                };
+            });
+        }
+
+        const ZezoEngine = {
+            getMode: () => localStorage.getItem('ZEZO_APP_MODE') || 'online',
+
+            async getGrade1Students() {
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('students', 'readonly');
+                        const req = tx.objectStore('students').getAll();
+                        req.onsuccess = () => {
+                            const all = req.result || [];
+                            const g1 = all.filter(s => {
+                                const g = String(s.grade || '').trim();
+                                return (g === 'الأول' || g === 'الاول' || g === '1' || g.includes('الأول'));
+                            });
+                            resolve(g1);
+                        };
+                        req.onerror = () => reject(req.error);
+                    });
+                } else {
+                    const { data, error } = await sbClient
+                        .from('students')
+                        .select('*')
+                        .in('grade', ['الأول', 'الاول', '1', 'الصف الأول'])
+                        .order('register_num', { ascending: true });
+                    
+                    if (error) throw error;
+                    return data || [];
+                }
+            },
+
+            async getNames5Capsule() {
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve) => {
+                        const tx = db.transaction('system_capsules', 'readonly');
+                        const req = tx.objectStore('system_capsules').get(CAPSULE_ID);
+                        req.onsuccess = () => resolve(req.result ? req.result.data : {});
+                        req.onerror = () => resolve({});
+                    });
+                } else {
+                    const { data, error } = await sbClient
+                        .from('system_capsules')
+                        .select('data')
+                        .eq('id', CAPSULE_ID)
+                        .maybeSingle();
+
+                    if (error || !data) return {};
+                    return data.data || {};
+                }
+            },
+
+            async saveNames5Capsule(capsuleData) {
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('system_capsules', 'readwrite');
+                        tx.objectStore('system_capsules').put({ id: CAPSULE_ID, data: capsuleData });
+                        tx.oncomplete = () => resolve(true);
+                        tx.onerror = () => reject(tx.error);
+                    });
+                } else {
+                    const { error } = await sbClient
+                        .from('system_capsules')
+                        .upsert({ id: CAPSULE_ID, data: capsuleData }, { onConflict: 'id' });
+                    if (error) throw error;
+                    return true;
+                }
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const mode = ZezoEngine.getMode();
+            const badge = document.getElementById('mode-badge');
+            if (mode === 'offline') {
+                badge.style.background = '#d97706';
+                badge.innerHTML = '<i class="fa-solid fa-laptop"></i> وضع محلي (أوفلاين)';
+            } else {
+                badge.style.background = '#10b981';
+                badge.innerHTML = '<i class="fa-solid fa-globe"></i> متصل بالسحابة (أونلاين)';
+            }
+
+            setupKeyboardNavigation();
+            await loadData();
+        });
+
+        async function loadData() {
+            try {
+                const [students, namesCapsule] = await Promise.all([
+                    ZezoEngine.getGrade1Students(),
+                    ZezoEngine.getNames5Capsule()
+                ]);
+
+                SAVED_NAMES5 = namesCapsule || {};
+                GRADE1_STUDENTS = students.filter(s => s.transfer_type !== 'محول من');
+
+                GRADE1_STUDENTS.sort((a, b) => {
+                    const nA = parseInt(a.register_num) || 99999;
+                    const nB = parseInt(b.register_num) || 99999;
+                    return nA - nB;
+                });
+
+                populateQuickSelect();
+                renderStudentsTable();
+            } catch (err) {
+                console.error(err);
+                alert("حدث خطأ أثناء تحميل البيانات: " + err.message);
+            }
+        }
+
+        function populateQuickSelect() {
+            const sel = document.getElementById('quick-select');
+            sel.innerHTML = '<option value="">-- اضغط للاختيار من قائمة الأسماء --</option>';
+            
+            GRADE1_STUDENTS.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.code;
+                opt.textContent = s.name || 'بدون اسم';
+                sel.appendChild(opt);
+            });
+        }
+
+        function renderStudentsTable() {
+            const tbody = document.getElementById('students-tbody');
+            tbody.innerHTML = '';
+            
+            let completedCount = 0;
+
+            GRADE1_STUDENTS.forEach((s, idx) => {
+                const tr = document.createElement('tr');
+                const rec = SAVED_NAMES5[s.code];
+                const has5 = !!(rec && rec.full5);
+
+                if (has5) completedCount++;
+
+                tr.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td style="font-weight:900; color:var(--primary); font-size:14px;">${s.register_num || '-'}</td>
+                    <td style="text-align:right; padding-right:12px; font-weight:900; color:${has5 ? '#1e3a8a' : '#94a3b8'};">
+                        ${has5 ? rec.full5 : '---'}
+                    </td>
+                    <td style="text-align:right; padding-right:12px; color:#166534;">
+                        ${has5 ? rec.father4 : '---'}
+                    </td>
+                    <td>${s.class || '-'}</td>
+                    <td>
+                        <span class="${has5 ? 'badge-5' : 'badge-pending'}">
+                            ${has5 ? 'تم التسجيل' : 'في الانتظار'}
+                        </span>
+                    </td>
+                `;
+                tr.onclick = () => loadStudentToForm(s);
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('table-counter').innerText = `تم تسجيل خماسي: ${completedCount} من ${GRADE1_STUDENTS.length}`;
+        }
+
+        function onRegInput(regVal) {
+            const cleanReg = String(regVal).trim();
+            if (!cleanReg) {
+                resetForm(false);
+                return;
+            }
+
+            const student = GRADE1_STUDENTS.find(s => String(s.register_num).trim() === cleanReg);
+            if (student) {
+                loadStudentToForm(student);
+            } else {
+                CURRENT_STUDENT = null;
+                document.getElementById('current-name-display').innerText = "❌ لا يوجد تلميذ بهذا الرقم في الصف الأول";
+                document.getElementById('current-name-display').style.color = "var(--danger)";
+                document.getElementById('student-meta').innerText = "";
+                clearNameInputs();
+            }
+        }
+
+        function onStudentSelected(code) {
+            if (!code) { resetForm(true); return; }
+            const student = GRADE1_STUDENTS.find(s => s.code === code);
+            if (student) {
+                loadStudentToForm(student);
+            }
+        }
+
+        function loadStudentToForm(s) {
+            CURRENT_STUDENT = s;
+            
+            document.getElementById('reg-search').value = s.register_num || '';
+            document.getElementById('quick-select').value = s.code;
+
+            const nameDisp = document.getElementById('current-name-display');
+            nameDisp.innerText = s.name || 'بدون اسم';
+            nameDisp.style.color = "var(--primary)";
+            
+            document.getElementById('student-meta').innerText = `(فصل: ${s.class || '-'} | كود: ${s.code || '-'})`;
+
+            const existingRecord = SAVED_NAMES5[s.code];
+            if (existingRecord) {
+                document.getElementById('n1').value = existingRecord.p1 || '';
+                document.getElementById('n2').value = existingRecord.p2 || '';
+                document.getElementById('n3').value = existingRecord.p3 || '';
+                document.getElementById('n4').value = existingRecord.p4 || '';
+                document.getElementById('n5').value = existingRecord.p5 || '';
+            } else {
+                clearNameInputs();
+            }
+
+            updateFatherNamePreview();
+
+            setTimeout(() => {
+                document.getElementById('n1').focus();
+                document.getElementById('n1').select();
+            }, 50);
+        }
+
+        function setupKeyboardNavigation() {
+            const inputs = [
+                document.getElementById('n1'),
+                document.getElementById('n2'),
+                document.getElementById('n3'),
+                document.getElementById('n4'),
+                document.getElementById('n5')
+            ];
+
+            inputs.forEach((inp, idx) => {
+                inp.addEventListener('input', updateFatherNamePreview);
+
+                inp.addEventListener('keydown', (e) => {
+                    if (e.key === ' ' || e.code === 'Space') {
+                        e.preventDefault();
+                        const val = inp.value.trim();
+                        inp.value = val;
+
+                        if (idx < 4) {
+                            inputs[idx + 1].focus();
+                            inputs[idx + 1].select();
+                        } else if (idx === 4) {
+                            saveFivePartName();
+                        }
+                    } 
+                    else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (idx === 4) {
+                            saveFivePartName();
+                        } else {
+                            inputs[idx + 1].focus();
+                            inputs[idx + 1].select();
+                        }
+                    }
+                });
+            });
+
+            document.getElementById('reg-search').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('n1').focus();
+                }
+            });
+        }
+
+        function updateFatherNamePreview() {
+            const p2 = document.getElementById('n2').value.trim();
+            const p3 = document.getElementById('n3').value.trim();
+            const p4 = document.getElementById('n4').value.trim();
+            const p5 = document.getElementById('n5').value.trim();
+
+            const fName = [p2, p3, p4, p5].filter(Boolean).join(' ');
+            document.getElementById('father-name-val').innerText = fName || '-';
+        }
+
+        async function saveFivePartName() {
+            if (!CURRENT_STUDENT) {
+                alert("يرجى اختيار تلميذ أولاً!");
+                document.getElementById('reg-search').focus();
+                return;
+            }
+
+            const p1 = document.getElementById('n1').value.trim();
+            const p2 = document.getElementById('n2').value.trim();
+            const p3 = document.getElementById('n3').value.trim();
+            const p4 = document.getElementById('n4').value.trim();
+            const p5 = document.getElementById('n5').value.trim();
+
+            if (!p1 || !p2 || !p3 || !p4 || !p5) {
+                alert("⚠️ يرجى التأكد من كتابة الخمس خانات بالكامل!");
+                if (!p1) document.getElementById('n1').focus();
+                else if (!p2) document.getElementById('n2').focus();
+                else if (!p3) document.getElementById('n3').focus();
+                else if (!p4) document.getElementById('n4').focus();
+                else if (!p5) document.getElementById('n5').focus();
+                return;
+            }
+
+            const full5Name = `${p1} ${p2} ${p3} ${p4} ${p5}`;
+            const father4Name = `${p2} ${p3} ${p4} ${p5}`;
+
+            const saveBtn = document.getElementById('btn-save');
+            const origText = saveBtn.innerHTML;
+            saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...`;
+
+            try {
+                SAVED_NAMES5[CURRENT_STUDENT.code] = {
+                    p1: p1, p2: p2, p3: p3, p4: p4, p5: p5,
+                    full5: full5Name,
+                    father4: father4Name
+                };
+
+                await ZezoEngine.saveNames5Capsule(SAVED_NAMES5);
+                
+                renderStudentsTable();
+
+                document.getElementById('current-name-display').innerText = `${CURRENT_STUDENT.name} (تم تسجيل الخماسي)`;
+                document.getElementById('current-name-display').style.color = "var(--success)";
+
+                const currentReg = parseInt(CURRENT_STUDENT.register_num);
+                if (!isNaN(currentReg)) {
+                    const nextReg = currentReg + 1;
+                    document.getElementById('reg-search').value = nextReg;
+                    onRegInput(nextReg);
+                } else {
+                    resetForm(true);
+                }
+
+            } catch (err) {
+                alert("❌ فشل حفظ الاسم: " + err.message);
+            } finally {
+                saveBtn.innerHTML = origText;
+            }
+        }
+
+        // مسح الاسم الخماسي المسجل وإعادة التلميذ لغير مسجل دون المساس بقاعدة البيانات الأصلية
+        async function deleteFivePartName() {
+            if (!CURRENT_STUDENT) {
+                alert("يرجى اختيار تلميذ أولاً لمسح اسمه الخماسي!");
+                document.getElementById('reg-search').focus();
+                return;
+            }
+
+            if (!SAVED_NAMES5[CURRENT_STUDENT.code]) {
+                alert("هذا التلميذ ليس له اسم خماسي مسجل لمسحه!");
+                return;
+            }
+
+            if (confirm(`هل أنت متأكد من مسح الاسم الخماسي للتلميذ (${CURRENT_STUDENT.name}) وإعادته لحالة "في الانتظار"؟\n(ملاحظة: لن يتم مسح التلميذ من قاعدة بيانات المدرسة إطلاقاً).`)) {
+                try {
+                    delete SAVED_NAMES5[CURRENT_STUDENT.code];
+                    await ZezoEngine.saveNames5Capsule(SAVED_NAMES5);
+
+                    clearNameInputs();
+                    renderStudentsTable();
+
+                    document.getElementById('current-name-display').innerText = CURRENT_STUDENT.name;
+                    document.getElementById('current-name-display').style.color = "var(--primary)";
+
+                    alert("🗑️ تم مسح الاسم الخماسي بنجاح.");
+                } catch (err) {
+                    alert("❌ حدث خطأ أثناء المسح: " + err.message);
+                }
+            }
+        }
+
+        function clearNameInputs() {
+            document.getElementById('n1').value = '';
+            document.getElementById('n2').value = '';
+            document.getElementById('n3').value = '';
+            document.getElementById('n4').value = '';
+            document.getElementById('n5').value = '';
+            updateFatherNamePreview();
+        }
+
+        function resetForm(clearSearch = true) {
+            CURRENT_STUDENT = null;
+            if (clearSearch) {
+                document.getElementById('reg-search').value = '';
+                document.getElementById('quick-select').value = '';
+            }
+            document.getElementById('current-name-display').innerText = "لم يتم تحديد تلميذ";
+            document.getElementById('current-name-display').style.color = "var(--primary)";
+            document.getElementById('student-meta').innerText = "";
+            clearNameInputs();
+        }
+
+        function exportToExcel() {
+            if (GRADE1_STUDENTS.length === 0) {
+                alert("لا توجد بيانات لتصديرها!");
+                return;
+            }
+
+            const exportData = GRADE1_STUDENTS.map((s, idx) => {
+                const rec = SAVED_NAMES5[s.code] || {};
+                
+                return {
+                    "مسلسل": idx + 1,
+                    "رقم السجل": s.register_num || '',
+                    "اسم التلميذ خماسي": rec.full5 || '',
+                    "اسم الأب رباعي": rec.father4 || '',
+                    "الاسم الأصلي بالمنظومة": s.name || '',
+                    "الفصل": s.class || '',
+                    "النوع": s.gender || '',
+                    "الرقم القومي": s.nid || '',
+                    "كود التلميذ": (String(s.code || '').startsWith('NID_') || String(s.code || '').startsWith('TEMP_')) ? '' : s.code
+                };
+            });
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            if (!ws['!views']) ws['!views'] = [];
+            ws['!views'].push({ rightToLeft: true });
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "أسماء الصف الأول خماسي");
+
+            XLSX.writeFile(wb, "كشف_أسماء_الصف_الأول_خماسي_المعتمد.xlsx");
+        }
+    </script>
+</body>
+</html>
