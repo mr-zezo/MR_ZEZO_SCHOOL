@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>منظومة مستر زيزو - سجل التقييمات وأعمال السنة</title>
+    
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- مكتبة Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- مكتبات JSZip & FileSaver -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #0f2b48; 
+            --dark: #0f172a; 
+            --bg: #f1f5f9; 
+            --info: #0284c7; 
+            --success: #16a34a; 
+            --warning: #d97706; 
+            --danger: #be123c;
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); padding: 12px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+
+        .app-container { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 14px; }
+
+        .top-nav {
+            background: var(--primary); color: white; padding: 12px 18px; border-radius: 14px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-bottom: 3px solid #f59e0b;
+        }
+        .nav-title { font-size: 15px; font-weight: 900; display: flex; align-items: center; gap: 8px; }
+        .btn-home {
+            background: #1e3a8a; color: white; text-decoration: none; padding: 6px 14px; border-radius: 8px;
+            font-size: 12px; font-weight: 800; display: flex; align-items: center; gap: 6px; border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .card-main {
+            background: white; border-radius: 16px; padding: 20px 24px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06); border: 1px solid #cbd5e1; border-top: 5px solid #059669;
+        }
+
+        .section-header {
+            border-bottom: 1.5px dashed #cbd5e1; padding-bottom: 10px; margin-bottom: 16px;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;
+        }
+        .section-title { font-size: 16px; font-weight: 900; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+
+        .form-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px;
+        }
+
+        label { display: block; font-size: 12.5px; font-weight: 800; color: #334155; margin-bottom: 5px; }
+
+        select {
+            width: 100%; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 9px 12px;
+            font-size: 14px; font-weight: 800; outline: none; transition: 0.2s; background-color: #f8fafc;
+            color: var(--dark); cursor: pointer; text-align: center;
+        }
+        select:focus { border-color: #059669; background-color: white; box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15); }
+
+        .preview-box {
+            background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 14px;
+            margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+        }
+        .preview-item { display: flex; flex-direction: column; gap: 2px; }
+        .pi-title { font-size: 11.5px; font-weight: 800; color: #15803d; }
+        .pi-val { font-size: 15px; font-weight: 900; color: var(--primary); }
+
+        .preview-students-container {
+            border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 16px; max-height: 220px; overflow-y: auto;
+        }
+        .preview-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 12.5px; }
+        .preview-table thead th { background: #f1f5f9; padding: 8px; font-weight: 900; color: var(--primary); position: sticky; top: 0; }
+        .preview-table tbody td { padding: 6px; border-bottom: 1px solid #f1f5f9; font-weight: 700; }
+
+        .btn-export {
+            width: 100%; border: none; background: linear-gradient(135deg, #059669, #047857);
+            color: white; padding: 13px 20px; border-radius: 12px; font-size: 15px; font-weight: 900;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); transition: 0.2s; border-bottom: 3px solid #065f46;
+        }
+        .btn-export:hover:not(:disabled) { filter: brightness(1.05); transform: translateY(-1px); }
+        .btn-export:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 1px; }
+        .btn-export:disabled { background: #94a3b8; border-color: #64748b; cursor: not-allowed; box-shadow: none; }
+
+        #status-msg {
+            display: none; padding: 10px 14px; border-radius: 10px; font-size: 13px; font-weight: 800;
+            text-align: center; margin-top: 14px;
+        }
+
+        .info-card {
+            background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 12px 16px;
+            font-size: 12px; font-weight: 700; color: #92400e; line-height: 1.7;
+        }
+        .info-card ul { margin-right: 18px; margin-top: 4px; list-style-type: square; }
+
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; gap: 10px; }
+            .preview-box { flex-direction: column; align-items: flex-start; }
+            .top-nav { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- 1. الشريط العلوي -->
+        <nav class="top-nav">
+            <div class="nav-title">
+                <i class="fa-solid fa-file-excel text-emerald-400"></i> سجل التقييمات وأعمال السنة الرسمية
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <span id="mode-badge" style="font-size:11px; padding:2px 8px; border-radius:6px; font-weight:800; background:#10b981;">جاري الفحص...</span>
+                <a href="index.html" class="btn-home"><i class="fa-solid fa-house"></i> الرئيسية</a>
+            </div>
+        </nav>
+
+        <!-- 2. كارت الترحيل والمعاينة -->
+        <div class="card-main">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fa-solid fa-sliders text-emerald-600"></i> اختيار الصف والفصل والمادة
+                </div>
+                <span id="total-school-badge" style="font-size:11.5px; font-weight:800; background:#dbeafe; color:#1e40af; padding:3px 10px; border-radius:8px;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> جاري الاتصال بالقاعدة...
+                </span>
+            </div>
+
+            <!-- القوائم المنسدلة الثلاث -->
+            <div class="form-grid">
+                <!-- اختيار الصف -->
+                <div>
+                    <label><i class="fa-solid fa-graduation-cap text-blue-600"></i> ١. الصف الدراسي:</label>
+                    <select id="grade-select" onchange="onGradeChanged()">
+                        <option value="" disabled selected>-- اختر الصف --</option>
+                        <option value="الأول">الصف الأول</option>
+                        <option value="الثاني">الصف الثاني</option>
+                        <option value="الثالث">الصف الثالث</option>
+                        <option value="الرابع">الصف الرابع</option>
+                        <option value="الخامس">الصف الخامس</option>
+                        <option value="السادس">الصف السادس</option>
+                    </select>
+                </div>
+
+                <!-- اختيار الفصل -->
+                <div>
+                    <label><i class="fa-solid fa-door-open text-amber-600"></i> ٢. الفصل الدراسي:</label>
+                    <select id="class-select" onchange="onClassChanged()" disabled>
+                        <option value="" disabled selected>-- اختر الصف أولاً --</option>
+                    </select>
+                </div>
+
+                <!-- اختيار المادة -->
+                <div>
+                    <label><i class="fa-solid fa-book-bookmark text-emerald-600"></i> ٣. المادة الدراسية:</label>
+                    <select id="subject-select" onchange="updateFilenamePreview()" disabled>
+                        <option value="" disabled selected>-- اختر الصف أولاً --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- صندوق المعاينة والإحصاء -->
+            <div class="preview-box">
+                <div class="preview-item">
+                    <span class="pi-title">عدد تلاميذ الفصل بالقاعدة:</span>
+                    <span class="pi-val" id="prev-count">٠ تلميذ</span>
+                </div>
+                <div class="preview-item">
+                    <span class="pi-title">توزيع النوع:</span>
+                    <span class="pi-val" id="prev-gender">بنين: ٠ | بنات: ٠</span>
+                </div>
+                <div class="preview-item">
+                    <span class="pi-title">اسم الملف المتوقع تنزيله:</span>
+                    <span class="pi-val" id="prev-filename" style="font-size:13px; color:#047857;">-</span>
+                </div>
+            </div>
+
+            <!-- جدول معاينة أسماء التلاميذ -->
+            <div class="preview-students-container" id="preview-container" style="display:none;">
+                <table class="preview-table">
+                    <thead>
+                        <tr>
+                            <th style="width:45px;">م</th>
+                            <th>اسم التلميذ (كما سيتم ترحيله للشيت)</th>
+                            <th style="width:70px;">النوع</th>
+                            <th style="width:80px;">الفصل</th>
+                        </tr>
+                    </thead>
+                    <tbody id="preview-tbody"></tbody>
+                </table>
+            </div>
+
+            <!-- زر الترحيل والتنزيل -->
+            <button class="btn-export" id="btn-export" onclick="processAndExportAssessmentSheet()" disabled>
+                <i class="fa-solid fa-file-arrow-down text-yellow-300"></i> ترحيل البيانات وتنزيل شيت التقييمات (مع التحديث التلقائي للمعادلات)
+            </button>
+
+            <div id="status-msg"></div>
+        </div>
+
+        <div class="info-card">
+            <div style="font-weight:900; margin-bottom:4px;"><i class="fa-solid fa-wand-magic-sparkles text-emerald-700"></i> ميزة التحديث التلقائي للمعادلات مفعلة:</div>
+            <ul>
+                <li>تم تفعيل خاصية <code>fullCalcOnLoad</code> لإجبار برنامج الإكسيل على <b>إعادة حساب كافة المعادلات الرياضية فور فتح الملف مباشرة</b> دون الحاجة لتنشيطها يدوياً.</li>
+                <li>الملف يفتح بصيغة <b>.xlsm</b> سليمة 100% بكامل التنسيقات والحدود والألوان وأكواد الماكرو دون أي رسائل تلف.</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const TEMPLATE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/taqst1.xlsm";
+        const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
+        const DB_VERSION = 2;
+
+        let ALL_STUDENTS = [];
+        let TEMPLATE_ARRAY_BUFFER = null;
+
+        function openLocalDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('students')) {
+                        db.createObjectStore('students', { keyPath: 'internal_key' });
+                    }
+                };
+            });
+        }
+
+        const ZezoEngine = {
+            getMode: () => localStorage.getItem('ZEZO_APP_MODE') || 'online',
+
+            async getAllStudents() {
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('students', 'readonly');
+                        const store = tx.objectStore('students');
+                        const req = store.getAll();
+                        req.onsuccess = () => resolve(req.result || []);
+                        req.onerror = () => reject(req.error);
+                    });
+                } else {
+                    let allData = [];
+                    let start = 0;
+                    const step = 1000;
+                    let hasMore = true;
+                    while (hasMore) {
+                        const { data, error } = await sbClient.from("students").select("*").range(start, start + step - 1);
+                        if (error) throw error;
+                        if (!data || data.length === 0) break;
+                        allData = allData.concat(data);
+                        start += step;
+                        if (data.length < step) hasMore = false;
+                    }
+                    return allData;
+                }
+            }
+        };
+
+        function normalizeGrade(g) {
+            if (!g) return "";
+            let s = String(g).trim().replace(/[\u064B-\u065F\u0640]/g, '');
+            s = s.replace(/الصف\s*/g, '');
+            s = s.replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه');
+            
+            if (s.includes("1") || s.includes("اول")) return "الأول";
+            if (s.includes("2") || s.includes("ثان")) return "الثاني";
+            if (s.includes("3") || s.includes("ثالث")) return "الثالث";
+            if (s.includes("4") || s.includes("رابع")) return "الرابع";
+            if (s.includes("5") || s.includes("خامس")) return "الخامس";
+            if (s.includes("6") || s.includes("سادس")) return "السادس";
+            return s;
+        }
+
+        function isMale(gender) {
+            if (!gender) return false;
+            let g = String(gender).trim();
+            return g.includes("ذكر") || g.includes("بنين") || g === "1";
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            const mode = ZezoEngine.getMode();
+            const badge = document.getElementById('mode-badge');
+            if (mode === 'offline') {
+                badge.style.background = '#d97706';
+                badge.innerHTML = '<i class="fa-solid fa-laptop"></i> وضع محلي (أوفلاين)';
+            } else {
+                badge.style.background = '#10b981';
+                badge.innerHTML = '<i class="fa-solid fa-globe"></i> متصل بالسحابة (أونلاين)';
+            }
+
+            await loadInitialData();
+        });
+
+        async function loadInitialData() {
+            try {
+                const students = await ZezoEngine.getAllStudents();
+                ALL_STUDENTS = (students || []).filter(s => s.transfer_type !== "محول من");
+                
+                document.getElementById('total-school-badge').innerText = `إجمالي المقيدين: ${ALL_STUDENTS.length} تلميذ`;
+
+                fetchTemplate();
+            } catch (err) {
+                console.error("خطأ في جلب بيانات التلاميذ:", err);
+                document.getElementById('total-school-badge').innerText = "❌ خطأ في الاتصال";
+                showStatus("تعذر جلب بيانات التلاميذ من المنظومة: " + err.message, "danger");
+            }
+        }
+
+        async function fetchTemplate() {
+            try {
+                const response = await fetch(TEMPLATE_URL);
+                if (!response.ok) throw new Error("تعذر جلب ملف القالب من السيرفر");
+                TEMPLATE_ARRAY_BUFFER = await response.arrayBuffer();
+            } catch (e) {
+                console.warn("جاري إعادة محاولة جلب القالب عند التصدير:", e.message);
+            }
+        }
+
+        function onGradeChanged() {
+            const selectedGrade = document.getElementById('grade-select').value;
+            const classSelect = document.getElementById('class-select');
+            const subSelect = document.getElementById('subject-select');
+
+            subSelect.innerHTML = '<option value="" disabled selected>-- اختر المادة --</option>';
+            let subjects = ["لغة عربية", "تربية دينية", "رياضيات", "لغة إنجليزية"];
+            if (selectedGrade === "الرابع" || selectedGrade === "الخامس" || selectedGrade === "السادس") {
+                subjects.push("علوم", "دراسات اجتماعية");
+            }
+
+            subjects.forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.textContent = sub;
+                subSelect.appendChild(opt);
+            });
+            subSelect.disabled = false;
+            subSelect.selectedIndex = 1;
+
+            const gradeStudents = ALL_STUDENTS.filter(s => normalizeGrade(s.grade) === selectedGrade);
+            const uniqueClasses = [...new Set(gradeStudents.map(s => String(s.class || '').trim()).filter(Boolean))]
+                .sort((a, b) => a.localeCompare(b, 'ar', { numeric: true }));
+
+            classSelect.innerHTML = '<option value="" disabled selected>-- اختر الفصل --</option>';
+
+            if (uniqueClasses.length === 0) {
+                classSelect.innerHTML = '<option value="" disabled selected>لا توجد فصول مسجلة لهذا الصف</option>';
+                classSelect.disabled = true;
+                document.getElementById('btn-export').disabled = true;
+                onClassChanged();
+            } else {
+                uniqueClasses.forEach(cls => {
+                    const opt = document.createElement('option');
+                    opt.value = cls;
+                    opt.textContent = `فصل ${cls}`;
+                    classSelect.appendChild(opt);
+                });
+                classSelect.disabled = false;
+                classSelect.selectedIndex = 1;
+                onClassChanged();
+            }
+        }
+
+        function onClassChanged() {
+            const selectedGrade = document.getElementById('grade-select').value;
+            const selectedClass = document.getElementById('class-select').value;
+            const btn = document.getElementById('btn-export');
+
+            if (!selectedGrade || !selectedClass) {
+                document.getElementById('prev-count').innerText = "٠ تلميذ";
+                document.getElementById('prev-gender').innerText = "بنين: ٠ | بنات: ٠";
+                document.getElementById('prev-filename').innerText = "-";
+                document.getElementById('preview-container').style.display = "none";
+                btn.disabled = true;
+                return;
+            }
+
+            const students = getClassStudents(selectedGrade, selectedClass);
+
+            let boys = 0, girls = 0;
+            students.forEach(s => {
+                if (isMale(s.gender)) boys++; else girls++;
+            });
+
+            document.getElementById('prev-count').innerText = `${students.length} تلميذ`;
+            document.getElementById('prev-gender').innerText = `بنين: ${boys} | بنات: ${girls}`;
+
+            const tbody = document.getElementById('preview-tbody');
+            tbody.innerHTML = "";
+
+            if (students.length > 0) {
+                students.forEach((st, idx) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${idx + 1}</td>
+                        <td style="text-align:right; padding-right:12px; font-weight:bold;">${st.name}</td>
+                        <td>${isMale(st.gender) ? 'ذكر' : 'أنثى'}</td>
+                        <td>${st.class}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                document.getElementById('preview-container').style.display = "block";
+                btn.disabled = false;
+            } else {
+                tbody.innerHTML = `<tr><td colspan="4" style="color:red; padding:15px;">لا يوجد تلاميذ مسجلين في هذا الفصل!</td></tr>`;
+                document.getElementById('preview-container').style.display = "block";
+                btn.disabled = true;
+            }
+
+            updateFilenamePreview();
+        }
+
+        function updateFilenamePreview() {
+            const grade = document.getElementById('grade-select').value;
+            const cls = document.getElementById('class-select').value;
+            const sub = document.getElementById('subject-select').value;
+
+            if (grade && cls && sub) {
+                const cleanCls = cleanClassForFilename(cls);
+                document.getElementById('prev-filename').innerText = `${sub} الصف ${grade} فصل ${cleanCls}.xlsm`;
+            } else {
+                document.getElementById('prev-filename').innerText = "-";
+            }
+        }
+
+        function getClassStudents(grade, className) {
+            let list = ALL_STUDENTS.filter(s => 
+                normalizeGrade(s.grade) === grade && 
+                String(s.class || '').trim() === String(className).trim()
+            );
+
+            list.sort((a, b) => {
+                const aMale = isMale(a.gender);
+                const bMale = isMale(b.gender);
+                if (aMale && !bMale) return -1;
+                if (!aMale && bMale) return 1;
+                return (a.name || "").localeCompare((b.name || ""), 'ar');
+            });
+
+            return list;
+        }
+
+        function cleanClassForFilename(classStr) {
+            if (!classStr) return "1";
+            let str = String(classStr).trim();
+            if (str.includes('/')) {
+                return str.split('/')[0].trim();
+            }
+            return str.replace(/[\\\/:\*\?"<>\|]/g, '-');
+        }
+
+        // =========================================================================
+        // محرك تعديل خلايا الإكسيل بالـ XML مع الحفاظ على التنسيقات
+        // =========================================================================
+        function updateCellInXml(xmlDoc, cellRef, textValue) {
+            const NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+            const match = cellRef.match(/^([A-Z]+)(\d+)$/);
+            if (!match) return;
+            const col = match[1];
+            const rowNum = match[2];
+
+            let sheetData = xmlDoc.getElementsByTagName("sheetData")[0];
+            if (!sheetData) return;
+
+            let rows = sheetData.getElementsByTagName("row");
+            let rowNode = null;
+            for (let i = 0; i < rows.length; i++) {
+                if (rows[i].getAttribute("r") === rowNum) {
+                    rowNode = rows[i];
+                    break;
+                }
+            }
+
+            if (!rowNode) {
+                rowNode = xmlDoc.createElementNS(NS, "row");
+                rowNode.setAttribute("r", rowNum);
+                let inserted = false;
+                for (let i = 0; i < rows.length; i++) {
+                    if (parseInt(rows[i].getAttribute("r")) > parseInt(rowNum)) {
+                        sheetData.insertBefore(rowNode, rows[i]);
+                        inserted = true;
+                        break;
+                    }
+                }
+                if (!inserted) sheetData.appendChild(rowNode);
+            }
+
+            let cells = rowNode.getElementsByTagName("c");
+            let cellNode = null;
+            for (let i = 0; i < cells.length; i++) {
+                if (cells[i].getAttribute("r") === cellRef) {
+                    cellNode = cells[i];
+                    break;
+                }
+            }
+
+            if (!cellNode) {
+                cellNode = xmlDoc.createElementNS(NS, "c");
+                cellNode.setAttribute("r", cellRef);
+                rowNode.appendChild(cellNode);
+            }
+
+            while (cellNode.firstChild) {
+                cellNode.removeChild(cellNode.firstChild);
+            }
+
+            cellNode.setAttribute("t", "inlineStr");
+            let isNode = xmlDoc.createElementNS(NS, "is");
+            let tNode = xmlDoc.createElementNS(NS, "t");
+            tNode.textContent = String(textValue || '');
+            isNode.appendChild(tNode);
+            cellNode.appendChild(isNode);
+        }
+
+        async function getSheetPathMap(zip) {
+            const wbXmlStr = await zip.file("xl/workbook.xml").async("text");
+            const relsXmlStr = await zip.file("xl/_rels/workbook.xml.rels").async("text");
+
+            const parser = new DOMParser();
+            const wbDoc = parser.parseFromString(wbXmlStr, "text/xml");
+            const relsDoc = parser.parseFromString(relsXmlStr, "text/xml");
+
+            const relsMap = {};
+            const relNodes = relsDoc.getElementsByTagName("Relationship");
+            for (let i = 0; i < relNodes.length; i++) {
+                const id = relNodes[i].getAttribute("Id");
+                const target = relNodes[i].getAttribute("Target");
+                const fileName = target.split("/").pop();
+                relsMap[id] = "xl/worksheets/" + fileName;
+            }
+
+            const sheetMap = {};
+            const sheetNodes = wbDoc.getElementsByTagName("sheet");
+            for (let i = 0; i < sheetNodes.length; i++) {
+                const name = sheetNodes[i].getAttribute("name");
+                const rId = sheetNodes[i].getAttribute("r:id") || sheetNodes[i].getAttribute("id");
+                if (relsMap[rId]) {
+                    sheetMap[name] = relsMap[rId];
+                }
+            }
+            return sheetMap;
+        }
+
+        // =========================================================================
+        // العملية الكبرى: الترحيل + تفعيل الحساب التلقائي لكافة المعادلات
+        // =========================================================================
+        async function processAndExportAssessmentSheet() {
+            const grade = document.getElementById('grade-select').value;
+            const cls = document.getElementById('class-select').value;
+            const subject = document.getElementById('subject-select').value;
+
+            const students = getClassStudents(grade, cls);
+
+            if (students.length === 0) {
+                alert("لا يوجد تلاميذ مسجلين في هذا الفصل لترحيلهم!");
+                return;
+            }
+
+            const btn = document.getElementById('btn-export');
+            const origHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري ترحيل البيانات وتفعيل المعادلات...`;
+            btn.disabled = true;
+
+            showStatus("⏳ جاري فتح القالب وحقن البيانات وتفعيل الحساب التلقائي للمعادلات...", "info");
+
+            try {
+                if (!TEMPLATE_ARRAY_BUFFER) {
+                    await fetchTemplate();
+                }
+                if (!TEMPLATE_ARRAY_BUFFER) {
+                    throw new Error("تعذر تحميل قالب الإكسيل (taq.xlsm) من السيرفر. تأكد من اتصال الإنترنت.");
+                }
+
+                const zip = await JSZip.loadAsync(TEMPLATE_ARRAY_BUFFER);
+                const sheetPaths = await getSheetPathMap(zip);
+
+                const parser = new DOMParser();
+                const serializer = new XMLSerializer();
+
+                // ========================================================
+                // 1. ورقة العمل: taq
+                // ========================================================
+                const taqPath = sheetPaths["taq"] || "xl/worksheets/sheet1.xml";
+                if (zip.file(taqPath)) {
+                    let xmlStr = await zip.file(taqPath).async("text");
+                    let xmlDoc = parser.parseFromString(xmlStr, "text/xml");
+
+                    updateCellInXml(xmlDoc, "J1", cls);
+                    updateCellInXml(xmlDoc, "X1", subject);
+
+                    // 1:25 في C6:C30
+                    for (let i = 0; i < 25; i++) {
+                        const cellRef = `C${6 + i}`;
+                        updateCellInXml(xmlDoc, cellRef, students[i] ? students[i].name : "");
+                    }
+
+                    // 26:50 في C36:C60
+                    for (let i = 0; i < 25; i++) {
+                        const cellRef = `C${36 + i}`;
+                        const stuIndex = 25 + i;
+                        updateCellInXml(xmlDoc, cellRef, students[stuIndex] ? students[stuIndex].name : "");
+                    }
+
+                    zip.file(taqPath, serializer.serializeToString(xmlDoc));
+                }
+
+                // ========================================================
+                // 2. ورقة العمل: GEAB
+                // ========================================================
+                const geabPath = sheetPaths["GEAB"] || "xl/worksheets/sheet2.xml";
+                if (zip.file(geabPath)) {
+                    let xmlStr = await zip.file(geabPath).async("text");
+                    let xmlDoc = parser.parseFromString(xmlStr, "text/xml");
+
+                    updateCellInXml(xmlDoc, "Q1", cls);
+                    updateCellInXml(xmlDoc, "Z1", subject);
+
+                    // 1:50 في C4:C53
+                    for (let i = 0; i < 50; i++) {
+                        const cellRef = `C${4 + i}`;
+                        updateCellInXml(xmlDoc, cellRef, students[i] ? students[i].name : "");
+                    }
+
+                    zip.file(geabPath, serializer.serializeToString(xmlDoc));
+                }
+
+                // ========================================================
+                // 3. ورقة العمل: CONT
+                // ========================================================
+                const contPath = sheetPaths["CONT"] || "xl/worksheets/sheet3.xml";
+                if (zip.file(contPath)) {
+                    let xmlStr = await zip.file(contPath).async("text");
+                    let xmlDoc = parser.parseFromString(xmlStr, "text/xml");
+
+                    updateCellInXml(xmlDoc, "J1", cls);
+                    updateCellInXml(xmlDoc, "X1", subject);
+
+                    // 1:24 في C6:C29
+                    for (let i = 0; i < 24; i++) {
+                        const cellRef = `C${6 + i}`;
+                        updateCellInXml(xmlDoc, cellRef, students[i] ? students[i].name : "");
+                    }
+
+                    // 25:50 في C36:C61
+                    for (let i = 0; i < 26; i++) {
+                        const cellRef = `C${36 + i}`;
+                        const stuIndex = 24 + i;
+                        updateCellInXml(xmlDoc, cellRef, students[stuIndex] ? students[stuIndex].name : "");
+                    }
+
+                    zip.file(contPath, serializer.serializeToString(xmlDoc));
+                }
+
+                // ========================================================
+                // السر هنا: إجبار الإكسيل على إعادة حساب كافة المعادلات فور الفتح!
+                // ========================================================
+                if (zip.file("xl/workbook.xml")) {
+                    let wbXmlStr = await zip.file("xl/workbook.xml").async("text");
+                    let wbDoc = parser.parseFromString(wbXmlStr, "text/xml");
+                    const NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+
+                    let calcPr = wbDoc.getElementsByTagName("calcPr")[0];
+                    if (!calcPr) {
+                        calcPr = wbDoc.createElementNS(NS, "calcPr");
+                        wbDoc.documentElement.appendChild(calcPr);
+                    }
+                    
+                    // تفعيل الحساب التلقائي لجميع معادلات الملف عند فتحه
+                    calcPr.setAttribute("calcMode", "auto");
+                    calcPr.setAttribute("fullCalcOnLoad", "1");
+                    calcPr.setAttribute("forceFullCalculation", "1");
+
+                    zip.file("xl/workbook.xml", serializer.serializeToString(wbDoc));
+                }
+
+                // ========================================================
+                // تنزيل الملف النهائي
+                // ========================================================
+                const cleanCls = cleanClassForFilename(cls);
+                const finalFileName = `${subject} الصف ${grade} فصل ${cleanCls}.xlsm`;
+
+                const outputBlob = await zip.generateAsync({
+                    type: "blob",
+                    mimeType: "application/vnd.ms-excel.sheet.macroEnabled.12"
+                });
+
+                saveAs(outputBlob, finalFileName);
+
+                showStatus(`✅ تم ترحيل (${students.length}) تلميذ بنجاح وتفعيل المعادلات التلقائية بالملف: ${finalFileName}`, "success");
+
+            } catch (err) {
+                console.error(err);
+                showStatus(`❌ حدث خطأ: ${err.message}`, "danger");
+                alert("حدث خطأ أثناء معالجة الملف: " + err.message);
+            } finally {
+                btn.innerHTML = origHtml;
+                btn.disabled = false;
+            }
+        }
+
+        function showStatus(msg, type) {
+            const el = document.getElementById('status-msg');
+            el.style.display = "block";
+            el.innerHTML = msg;
+            if (type === "success") {
+                el.style.backgroundColor = "#dcfce7";
+                el.style.color = "#15803d";
+                el.style.border = "1px solid #86efac";
+            } else if (type === "danger") {
+                el.style.backgroundColor = "#fee2e2";
+                el.style.color = "#b91c1c";
+                el.style.border = "1px solid #fca5a5";
+            } else {
+                el.style.backgroundColor = "#eff6ff";
+                el.style.color = "#1e40af";
+                el.style.border = "1px solid #bfdbfe";
+            }
+        }
+    </script>
+</body>
+</html>
