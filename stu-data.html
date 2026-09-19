@@ -188,7 +188,7 @@
                     <th class="age-cell" title="عمر التلميذ: شهر"><div class="th-content"><input type="checkbox" class="export-cb" data-key="age_month" checked> شهر</div></th>
                     <th class="age-cell" title="عمر التلميذ: سنة"><div class="th-content"><input type="checkbox" class="export-cb" data-key="age_year" checked> سنة</div></th>
 
-                    <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="register_num" checked> السجل</div></th>
+                    <th class="readonly-cell"><div class="th-content"><input type="checkbox" class="export-cb" data-key="register_num" checked> السجل</div></th>
                     <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="status" checked> القيد</div></th>
                     <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="result" checked> النتيجة</div></th>
                     <th><div class="th-content"><input type="checkbox" class="export-cb" data-key="religion" checked> الديانة</div></th>
@@ -382,41 +382,10 @@
             localStorage.setItem(AGE_DATE_STORAGE_KEY, dateStr);
         }
 
-        // ==========================================
-        // محرك الفرز الهجائي (ذكور أولاً ثم إناث أبجدياً)
-        // ==========================================
-        function normalizeArabicForSort(text) {
-            if (!text) return "";
-            let s = String(text).trim();
-            s = s.replace(/[\u064B-\u065F\u0640]/g, ''); // إزالة التشكيل
-            s = s.replace(/[أإآ]/g, 'ا');               // توحيد الألف
-            s = s.replace(/ى/g, 'ي');                   // توحيد الياء
-            s = s.replace(/ة/g, 'ه');                   // توحيد التاء المربوطة
-            s = s.replace(/\s+/g, ' ');
-            return s;
-        }
-
         function isMaleStudent(gender) {
             if (!gender) return false;
             const g = String(gender).trim();
             return g.includes("ذكر") || g.includes("بنين") || g === "1";
-        }
-
-        function sortStudents(arr) {
-            if (!Array.isArray(arr)) return [];
-            return arr.sort((a, b) => {
-                const aIsMale = isMaleStudent(a.gender);
-                const bIsMale = isMaleStudent(b.gender);
-
-                // 1. الذكور أولاً، ثم الإناث
-                if (aIsMale && !bIsMale) return -1;
-                if (!aIsMale && bIsMale) return 1;
-
-                // 2. الترتيب الأبجدي الدقيق بالاسم
-                const nameA = normalizeArabicForSort(a.name || "");
-                const nameB = normalizeArabicForSort(b.name || "");
-                return nameA.localeCompare(nameB, 'ar', { sensitivity: 'base' });
-            });
         }
 
         // مطابقة ذكية للصفوف
@@ -659,8 +628,8 @@
 
                 let arr = data.filter(d => d.transfer_type !== "محول من");
                 
-                // الترتيب الأبجدي: ذكور أولاً ثم إناث
-                arr = sortStudents(arr);
+                // تم إيقاف الترتيب الأبجدي بناءً على طلبك للحفاظ على الترتيب الأصلي
+                // arr = sortStudents(arr);
 
                 const fragment = document.createDocumentFragment();
                 arr.forEach((s, i) => {
@@ -766,8 +735,8 @@
                         });
                     });
 
-                    // الفرز الفوري: ذكور أولاً ثم إناث أبجدياً
-                    arr = sortStudents(arr);
+                    // تم إيقاف الفرز للحفاظ على ترتيب ملف الإكسيل كما هو
+                    // arr = sortStudents(arr);
 
                     const fragment = document.createDocumentFragment();
                     arr.forEach((s, i) => fragment.appendChild(createRowElement(s, i + 1)));
@@ -775,7 +744,7 @@
                     const tbody = document.getElementById("table-body");
                     tbody.innerHTML = "";
                     tbody.appendChild(fragment);
-                    alert(`✅ تم استيراد عدد (${arr.length}) تلميذ بنجاح مع ترتيبهم (ذكور أولاً أبجدياً ثم إناث أبجدياً)! اضغط (حفظ البيانات) لتثبيتهم.`);
+                    alert(`✅ تم استيراد عدد (${arr.length}) تلميذ بنجاح بنفس الترتيب الأصلي للملف! اضغط (حفظ البيانات) لتثبيتهم.`);
                 } catch(err) { alert("❌ فشل قراءة الملف: " + err.message); }
                 finally { e.target.value = ''; }
             };
@@ -818,7 +787,7 @@
                 <td class="age-cell"><input class="editable-input" value="${d.age_month !== undefined ? d.age_month : ''}" data-field="age_month" readonly></td>
                 <td class="age-cell"><input class="editable-input" value="${d.age_year !== undefined ? d.age_year : ''}" data-field="age_year" readonly></td>
 
-                <td><input class="editable-input" value="${d.register_num || ''}" data-field="register_num"></td>
+                <td class="readonly-cell"><input class="editable-input" value="${d.register_num || ''}" data-field="register_num" readonly></td>
                 <td><input class="editable-input" value="${d.status || 'منقول'}" data-field="status"></td>
                 <td>
                     <select class="result-select" data-field="result">
@@ -945,6 +914,7 @@
         }
 
         // 7. حفظ وتحديث بيانات التلاميذ في المنظومة
+        // 7. حفظ وتحديث بيانات التلاميذ في المنظومة
         async function saveAllStudents() {
             const g = document.getElementById("grade-filter").value;
             if (!g || g === "ALL") { 
@@ -993,8 +963,8 @@
 
             try {
                 await ZezoEngine.upsert("students", studentsToSave, 'code');
-                alert(`✅ تم حفظ وتحديث بيانات (${studentsToSave.length}) تلميذ بنجاح!`);
-                loadStudentData(); 
+                alert(`✅ تم حفظ وتحديث بيانات (${studentsToSave.length}) تلميذ بنجاح! (تم الاحتفاظ بالترتيب الحالي)`);
+                // تم إيقاف دالة loadStudentData() هنا لمنع لخبطة الترتيب بعد الحفظ
             } catch (err) {
                 alert("❌ حدث خطأ أثناء الحفظ: " + err.message);
             } finally {
