@@ -101,24 +101,33 @@
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: #f8fafc; width: 100%; max-width: 800px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
-        .modal-header { background: var(--primary-color); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 15px; overflow-y: auto; }
+        .modal-content { background: #f8fafc; width: 100%; max-width: 900px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-header { background: var(--primary-color); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; overflow-y: auto; }
         
-        .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 2px solid var(--primary-color); margin-top: 15px; margin-bottom: 25px;}
-        .schedule-table { width: 100%; min-width: 600px; border-collapse: collapse; text-align: center; background: white; }
-        .schedule-table th, .schedule-table td { border: 1px solid var(--border-color); padding: 12px 5px; font-weight: 900; font-size: 14px; color: var(--text-main); }
-        .schedule-table thead th { background: var(--primary-color); color: white; padding: 12px 5px; }
-        .schedule-table td.has-class { background-color: #f0fdf4; color: var(--success); font-family: Arial, sans-serif; font-size: 15px;}
+        /* تنسيقات الجدول الجديد لتكون بارزة وسهلة القراءة */
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 15px; margin-bottom: 25px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.05);}
+        .schedule-table { width: 100%; min-width: 700px; border-collapse: separate; border-spacing: 5px; text-align: center; background: white; padding: 10px; }
+        .schedule-table th { background: var(--primary-color); color: white; padding: 12px 5px; font-weight: 900; font-size: 14px; border-radius: 8px; }
+        .schedule-table td { padding: 2px; vertical-align: middle; }
         
-        .schedule-summary { background: #eff6ff; border: 1px solid #bfdbfe; padding: 15px; border-radius: 10px; text-align: center; font-weight: 900; color: var(--primary-color); font-size: 15px; }
-        .schedule-summary span { color: var(--danger); font-size: 18px; margin: 0 5px; }
+        /* تصميم الحصة المسندة (بارز ومميز) */
+        .class-badge { background: #15803d; color: white; padding: 10px 4px; border-radius: 8px; font-weight: 900; font-size: 15px; box-shadow: 0 3px 6px rgba(21, 128, 61, 0.25); display: flex; align-items: center; justify-content: center; min-height: 48px; font-family: Arial, sans-serif; }
+        
+        /* تصميم الحصة الفارغة */
+        .free-period { background: #f8fafc; color: #cbd5e1; font-weight: bold; padding: 10px 4px; border-radius: 8px; border: 1px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; min-height: 48px; font-size: 18px; }
+        
+        /* تصميم اسم اليوم */
+        .day-label { background: #eff6ff; color: var(--primary-color); font-weight: 900; font-size: 15px; border-radius: 8px; padding: 10px; border: 1px solid #bfdbfe; }
 
-        .supervision-list { display: flex; flex-direction: column; gap: 10px; }
-        .sup-item { background: white; padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; border-right: 4px solid var(--secondary-color);}
-        .sup-item-day { font-size: 15px; font-weight: 900; color: var(--primary-color); }
-        .sup-item-role { font-size: 13px; font-weight: bold; color: var(--text-main); }
-        .sup-item-leader { font-size: 12px; font-weight: 800; color: var(--danger); background: #fef2f2; padding: 4px 10px; border-radius: 6px;}
+        .schedule-summary { background: #fffbeb; border: 2px solid #fcd34d; padding: 15px; border-radius: 12px; text-align: center; font-weight: 900; color: var(--secondary-color); font-size: 16px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .schedule-summary span { color: var(--danger); font-size: 22px; margin: 0 5px; background: white; padding: 2px 10px; border-radius: 6px; border: 1px solid #fcd34d;}
+
+        .supervision-list { display: flex; flex-direction: column; gap: 12px; }
+        .sup-item { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; border-right: 5px solid var(--secondary-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
+        .sup-item-day { font-size: 16px; font-weight: 900; color: var(--primary-color); display: flex; align-items: center; gap: 8px;}
+        .sup-item-role { font-size: 15px; font-weight: 900; color: var(--text-main); background: #f1f5f9; padding: 5px 12px; border-radius: 6px;}
+        .sup-item-leader { font-size: 13px; font-weight: 900; color: var(--danger); background: #fef2f2; padding: 6px 12px; border-radius: 6px; border: 1px solid #fecaca;}
 
         @media (max-width: 768px) {
             .top-navigation { flex-direction: column; text-align: center; }
@@ -127,7 +136,7 @@
             .rating-box { margin: 0 auto;}
             .grid-fields { grid-template-columns: 1fr; } 
             .files-grid { grid-template-columns: 1fr; } 
-            .sup-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .sup-item { flex-direction: column; align-items: stretch; gap: 10px; text-align: center; }
         }
     </style>
 </head>
@@ -150,7 +159,8 @@
         <form onsubmit="handleManualLogin(event)">
             <div class="login-input-group">
                 <label><i class="fa-solid fa-id-card"></i> الرقم القومي (14 رقم):</label>
-                <input type="text" id="login_nid" maxlength="14" placeholder="••••••••••••••" required autocomplete="off" inputmode="numeric">
+                <!-- بدون تحديد حد أقصى للحروف حتى لا يحدث قص عند كتابة mr أو مسافات -->
+                <input type="text" id="login_nid" placeholder="••••••••••••••" required autocomplete="off">
             </div>
             <button type="submit" class="btn-login-submit" id="btn-login-submit">
                 <i class="fa-solid fa-arrow-right-to-bracket"></i> استعلام ودخول
@@ -295,24 +305,27 @@
     <div class="modal-overlay" id="scheduleModal" onclick="if(event.target.id==='scheduleModal') closeScheduleModal()">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-table-cells"></i> الجدول والإشراف الأسبوعي</h2>
-                <button onclick="closeScheduleModal()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+                <h2 style="font-size:18px; margin:0;"><i class="fa-solid fa-table-cells"></i> الجدول والإشراف الأسبوعي</h2>
+                <button onclick="closeScheduleModal()" style="background:none; border:none; color:white; font-size:28px; cursor:pointer; line-height:1;">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="schedule-summary">
-                    إجمالي الحصص المسندة فعلياً في الجدول: <span id="total-classes-count">0</span> حصة
+                    إجمالي الحصص المسندة فعلياً: <span id="total-classes-count">0</span> حصة
                 </div>
                 
                 <div class="table-responsive">
                     <table class="schedule-table">
                         <thead>
-                            <tr><th>اليوم</th><th>١</th><th>٢</th><th>٣</th><th>٤</th><th>٥</th><th>٦</th><th>٧</th><th>٨</th></tr>
+                            <tr>
+                                <th style="width: 80px;">اليوم</th>
+                                <th>١</th><th>٢</th><th>٣</th><th>٤</th><th>٥</th><th>٦</th><th>٧</th><th>٨</th>
+                            </tr>
                         </thead>
                         <tbody id="schedule-body-view"></tbody>
                     </table>
                 </div>
 
-                <div class="section-title" style="margin-top:20px; font-size:15px; color:var(--danger); border-bottom-color:var(--danger);"><i class="fa-solid fa-users-viewfinder"></i> أيام الإشراف والأدوار</div>
+                <div class="section-title" style="margin-top:30px; font-size:16px; color:var(--danger); border-bottom-color:var(--danger);"><i class="fa-solid fa-users-viewfinder"></i> أيام الإشراف والأدوار</div>
                 <div class="supervision-list" id="supervision-list-view"></div>
             </div>
         </div>
@@ -367,11 +380,10 @@
         let teacherEvaluations = { week: 0, year: 0 };
         let currentDeviceId = null;
 
-        // ================= توليد بصمة الهاتف الذكية الموثوقة =================
+        // ================= توليد بصمة الهاتف الذكية =================
         async function getDeviceFingerprint() {
             let storedId = SafeStorage.getItem('zezo_dev_uuid');
             if (!storedId) {
-                // بصمة ثابتة مبنية على هاتف المعلم + معرّف عشوائي للجلسة
                 const hardwareInfo = (navigator.userAgent || '') + (navigator.hardwareConcurrency || '') + (screen.colorDepth || '');
                 let hash = 0;
                 for (let i = 0; i < hardwareInfo.length; i++) {
@@ -399,7 +411,7 @@
 
             if (passedNid && passedNid.trim().length === 14) {
                 showView('loading-view');
-                await authenticateAndLoad(passedNid.trim(), true);
+                await authenticateAndLoad(passedNid.trim(), true, false);
             } else {
                 showView('login-section');
             }
@@ -416,12 +428,24 @@
             }
         }
 
+        // ================= معالجة تسجيل الدخول (مع خاصية تخطي الأدمن) =================
         async function handleManualLogin(e) {
             e.preventDefault();
-            const nidInput = document.getElementById('login_nid').value.trim();
+            
+            // قراءة القيمة وتحويلها لحروف صغيرة وحذف أي مسافات
+            let rawInput = document.getElementById('login_nid').value.toLowerCase().replace(/\s+/g, '');
+            let isAdminBypass = false;
+            let nidInput = rawInput;
 
-            if (nidInput.length !== 14 || isNaN(nidInput)) {
-                alert("⚠️ يجب إدخال رقم قومي صحيح مكون من 14 رقماً!");
+            // إذا كان يبدأ بـ mr، يتم تفعيل وضع الأدمن وقص أول حرفين
+            if (rawInput.startsWith('mr')) {
+                isAdminBypass = true;
+                nidInput = rawInput.substring(2);
+            }
+
+            // التأكد من أن الرقم المتبقي 14 رقماً فقط
+            if (!/^\d{14}$/.test(nidInput)) {
+                alert("⚠️ تأكد من إدخال الرقم القومي بشكل صحيح (14 رقم)! \n(أو mr متبوعة بـ 14 رقم للأدمن)");
                 return;
             }
 
@@ -429,16 +453,16 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق...';
             btn.disabled = true;
 
-            await authenticateAndLoad(nidInput, false);
+            await authenticateAndLoad(nidInput, false, isAdminBypass);
             
             btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> استعلام ودخول';
             btn.disabled = false;
         }
 
         // ================= التحقق الأمني =================
-        async function authenticateAndLoad(nidInput, isAutoLogin) {
+        async function authenticateAndLoad(nidInput, isAutoLogin, isAdminBypass = false) {
             try {
-                // 1. البحث عن المعلم في قاعدة البيانات
+                // 1. البحث عن المعلم
                 let [resTeacher, resContract] = await Promise.all([
                     supabaseClient.from('teachers').select('*').eq('nid', nidInput).maybeSingle(),
                     supabaseClient.from('contract_teachers').select('*').eq('nid', nidInput).maybeSingle()
@@ -454,56 +478,59 @@
                     return;
                 }
 
-                // 2. فحص الحساب المجمد
-                if (teacher.is_frozen === true) {
-                    document.getElementById('frozen-reason-text').innerText = teacher.freeze_reason || "تم تجميد الحساب لمخالفة أمنية، يرجى مراجعة إدارة المدرسة.";
-                    showView('frozen-view');
-                    return;
-                }
-
-                // 3. فحص هل هذا الهاتف مسجل لزميل آخر؟
-                let [chkOtherTeacher, chkOtherContract] = await Promise.all([
-                    supabaseClient.from('teachers').select('nid, name').eq('device_id', currentDeviceId).neq('nid', nidInput).maybeSingle(),
-                    supabaseClient.from('contract_teachers').select('nid, name').eq('device_id', currentDeviceId).neq('nid', nidInput).maybeSingle()
-                ]);
-
-                let boundOtherTeacher = chkOtherTeacher.data || chkOtherContract.data;
-
-                if (boundOtherTeacher) {
-                    // الهاتف مسجل لمعلم آخر ويحاول الدخول برقم جديد
-                    const freezeMsg = `محاولة دخول برقم قومي آخر (${nidInput}) من جهاز مسجل للمعلم: ${boundOtherTeacher.name}`;
-                    
-                    if (chkOtherTeacher.data) {
-                        await supabaseClient.from('teachers').update({ is_frozen: true, freeze_reason: freezeMsg }).eq('nid', boundOtherTeacher.nid);
-                    } else {
-                        await supabaseClient.from('contract_teachers').update({ is_frozen: true, freeze_reason: freezeMsg }).eq('nid', boundOtherTeacher.nid);
+                // ================= حماية البصمة وتجميد الأجهزة (يتم تخطيها في وضع الأدمن) =================
+                if (!isAdminBypass) {
+                    // 2. فحص هل الحساب مجمد؟
+                    if (teacher.is_frozen === true) {
+                        document.getElementById('frozen-reason-text').innerText = teacher.freeze_reason || "تم تجميد الحساب لمخالفة أمنية، يرجى مراجعة إدارة المدرسة.";
+                        showView('frozen-view');
+                        return;
                     }
 
-                    document.getElementById('frozen-reason-text').innerText = `⚠️ تم تجميد حسابك (${boundOtherTeacher.name}) لمحاولة الدخول برقم قومي لزميل آخر من نفس الهاتف!`;
-                    showView('frozen-view');
-                    return;
-                }
+                    // 3. فحص هل هذا الهاتف مسجل لمعلم آخر؟
+                    let [chkOtherTeacher, chkOtherContract] = await Promise.all([
+                        supabaseClient.from('teachers').select('nid, name').eq('device_id', currentDeviceId).neq('nid', nidInput).maybeSingle(),
+                        supabaseClient.from('contract_teachers').select('nid, name').eq('device_id', currentDeviceId).neq('nid', nidInput).maybeSingle()
+                    ]);
 
-                // 4. ربط الجهاز تلقائياً بعد فك التجميد أو عند أول دخول
-                const savedDev = teacher.device_id ? String(teacher.device_id).trim() : "";
+                    let boundOtherTeacher = chkOtherTeacher.data || chkOtherContract.data;
+
+                    if (boundOtherTeacher) {
+                        const freezeMsg = `محاولة دخول برقم قومي آخر (${nidInput}) من جهاز مسجل للمعلم: ${boundOtherTeacher.name}`;
+                        if (chkOtherTeacher.data) {
+                            await supabaseClient.from('teachers').update({ is_frozen: true, freeze_reason: freezeMsg }).eq('nid', boundOtherTeacher.nid);
+                        } else {
+                            await supabaseClient.from('contract_teachers').update({ is_frozen: true, freeze_reason: freezeMsg }).eq('nid', boundOtherTeacher.nid);
+                        }
+                        document.getElementById('frozen-reason-text').innerText = `⚠️ تم تجميد حسابك (${boundOtherTeacher.name}) لمحاولة الدخول برقم قومي لزميل آخر من نفس الهاتف!`;
+                        showView('frozen-view');
+                        return;
+                    }
+
+                    // 4. ربط الهاتف لأول مرة
+                    const savedDev = teacher.device_id ? String(teacher.device_id).trim() : "";
+                    if (!savedDev || savedDev === "null" || savedDev === "") {
+                        await supabaseClient.from(tableName).update({ 
+                            device_id: currentDeviceId,
+                            is_frozen: false,
+                            freeze_reason: null
+                        }).eq('nid', nidInput);
+                        teacher.device_id = currentDeviceId;
+                    } 
+                    else if (savedDev !== currentDeviceId) {
+                        alert("⚠️ هذا الحساب مربوط بهاتف شخصي آخر بالفعل!\nلا يمكن فتح الحساب من هاتفين مختلفين حفاظاً على الخصوصية.");
+                        SafeStorage.removeItem('saved_teacher_nid');
+                        showView('login-section');
+                        return;
+                    }
+                }
+                // =========================================================================================
+
+                // 5. حفظ الجلسة (فقط للمعلم العادي، الأدمن لا تُحفظ جلسته تلقائياً)
+                if (!isAdminBypass) {
+                    SafeStorage.setItem('saved_teacher_nid', nidInput);
+                }
                 
-                if (!savedDev || savedDev === "null" || savedDev === "") {
-                    await supabaseClient.from(tableName).update({ 
-                        device_id: currentDeviceId,
-                        is_frozen: false,
-                        freeze_reason: null
-                    }).eq('nid', nidInput);
-                    teacher.device_id = currentDeviceId;
-                } 
-                else if (savedDev !== currentDeviceId) {
-                    alert("⚠️ هذا الحساب مربوط بهاتف شخصي آخر بالفعل!\nلا يمكن فتح الحساب من هاتفين مختلفين حفاظاً على الخصوصية. يرجى مراجعة إدارة المدرسة لفك الارتباط.");
-                    SafeStorage.removeItem('saved_teacher_nid');
-                    showView('login-section');
-                    return;
-                }
-
-                // 5. تسجيل الدخول وحفظ الجلسة
-                SafeStorage.setItem('saved_teacher_nid', nidInput);
                 currentTeacher = teacher;
 
                 const [resSup, resLogs] = await Promise.all([
@@ -600,6 +627,7 @@
             window.open(currentTeacher[fieldName], '_blank');
         }
 
+        // ================= عرض الجدول المدرسي بالتصميم البارز =================
         function showTeacherSchedule() {
             if (!currentTeacher) return;
             const tbody = document.getElementById("schedule-body-view");
@@ -611,13 +639,17 @@
             let totalClasses = 0;
 
             days.forEach(day => {
-                let tr = `<tr><td style="background:#f1f5f9; color:var(--primary-color);">${dayNamesAr[day]}</td>`;
+                let tr = `<tr><td><div class="day-label">${dayNamesAr[day]}</div></td>`;
                 for(let i=1; i<=8; i++) {
                     const key = `${day}_${i}`;
                     const className = schedule[key] || "";
-                    if (className) totalClasses++;
-                    const cellClass = className ? "has-class" : "";
-                    tr += `<td class="${cellClass}">${className}</td>`;
+                    
+                    if (className) {
+                        totalClasses++;
+                        tr += `<td><div class="class-badge">${className}</div></td>`;
+                    } else {
+                        tr += `<td><div class="free-period">-</div></td>`;
+                    }
                 }
                 tr += `</tr>`;
                 tbody.innerHTML += tr;
@@ -625,6 +657,7 @@
 
             document.getElementById("total-classes-count").innerText = totalClasses;
 
+            // عرض بيانات الإشراف
             const supContainer = document.getElementById("supervision-list-view");
             supContainer.innerHTML = "";
 
@@ -649,8 +682,8 @@
                         supContainer.innerHTML += `
                             <div class="sup-item">
                                 <div class="sup-item-day"><i class="fa-regular fa-calendar-check"></i> يوم ${dayNamesAr[record.day]}</div>
-                                <div class="sup-item-role">${locNames[loc] || loc} <span style="color:#64748b; font-size:11px;">(${record.stage === 'lower' ? 'أولى' : 'عليا'})</span></div>
-                                <div class="sup-item-leader">مشرف عام اليوم: أ. ${generalLeader}</div>
+                                <div class="sup-item-role">${locNames[loc] || loc} <span style="color:#64748b; font-size:12px;">(${record.stage === 'lower' ? 'أولى' : 'عليا'})</span></div>
+                                <div class="sup-item-leader"><i class="fa-solid fa-star"></i> مشرف عام اليوم: أ. ${generalLeader}</div>
                             </div>
                         `;
                     }
@@ -658,7 +691,7 @@
             });
 
             if(!hasSupervision) {
-                supContainer.innerHTML = "<div style='text-align:center; padding:15px; color:#64748b; font-weight:bold;'>لا يوجد إشراف مسجل لك في المنظومة.</div>";
+                supContainer.innerHTML = "<div style='text-align:center; padding:20px; background:#f8fafc; border-radius:10px; color:#64748b; font-weight:bold; border:1px dashed #cbd5e1;'>لا يوجد إشراف مسجل لك في المنظومة حالياً.</div>";
             }
 
             document.getElementById("scheduleModal").classList.add("active");
@@ -711,6 +744,7 @@
 
         function logout() {
             SafeStorage.removeItem('saved_teacher_nid');
+            document.getElementById('login_nid').value = '';
             showView('login-section');
         }
     </script>
