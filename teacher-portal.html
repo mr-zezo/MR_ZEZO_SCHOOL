@@ -105,19 +105,19 @@
         .modal-header { background: var(--primary-color); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 20px; overflow-y: auto; }
         
-        /* تنسيقات الجدول الجديد لتكون بارزة وسهلة القراءة */
+        /* تصميم الجدول المطور والبارز */
         .table-responsive { width: 100%; overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 15px; margin-bottom: 25px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.05);}
         .schedule-table { width: 100%; min-width: 700px; border-collapse: separate; border-spacing: 5px; text-align: center; background: white; padding: 10px; }
         .schedule-table th { background: var(--primary-color); color: white; padding: 12px 5px; font-weight: 900; font-size: 14px; border-radius: 8px; }
         .schedule-table td { padding: 2px; vertical-align: middle; }
         
-        /* تصميم الحصة المسندة (بارز ومميز) */
+        /* بطاقة الحصة المسندة */
         .class-badge { background: #15803d; color: white; padding: 10px 4px; border-radius: 8px; font-weight: 900; font-size: 15px; box-shadow: 0 3px 6px rgba(21, 128, 61, 0.25); display: flex; align-items: center; justify-content: center; min-height: 48px; font-family: Arial, sans-serif; }
         
-        /* تصميم الحصة الفارغة */
+        /* بطاقة الحصة الفارغة */
         .free-period { background: #f8fafc; color: #cbd5e1; font-weight: bold; padding: 10px 4px; border-radius: 8px; border: 1px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; min-height: 48px; font-size: 18px; }
         
-        /* تصميم اسم اليوم */
+        /* بطاقة اسم اليوم */
         .day-label { background: #eff6ff; color: var(--primary-color); font-weight: 900; font-size: 15px; border-radius: 8px; padding: 10px; border: 1px solid #bfdbfe; }
 
         .schedule-summary { background: #fffbeb; border: 2px solid #fcd34d; padding: 15px; border-radius: 12px; text-align: center; font-weight: 900; color: var(--secondary-color); font-size: 16px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
@@ -159,7 +159,6 @@
         <form onsubmit="handleManualLogin(event)">
             <div class="login-input-group">
                 <label><i class="fa-solid fa-id-card"></i> الرقم القومي (14 رقم):</label>
-                <!-- بدون تحديد حد أقصى للحروف حتى لا يحدث قص عند كتابة mr أو مسافات -->
                 <input type="text" id="login_nid" placeholder="••••••••••••••" required autocomplete="off">
             </div>
             <button type="submit" class="btn-login-submit" id="btn-login-submit">
@@ -428,24 +427,27 @@
             }
         }
 
-        // ================= معالجة تسجيل الدخول (مع خاصية تخطي الأدمن) =================
+        // ================= معالجة تسجيل الدخول (مع خاصية تخطي الأدمن السرية) =================
         async function handleManualLogin(e) {
             e.preventDefault();
             
-            // قراءة القيمة وتحويلها لحروف صغيرة وحذف أي مسافات
+            // قراءة القيمة، تحويلها لحروف صغيرة، وحذف أي مسافات تم إدخالها
             let rawInput = document.getElementById('login_nid').value.toLowerCase().replace(/\s+/g, '');
             let isAdminBypass = false;
             let nidInput = rawInput;
 
-            // إذا كان يبدأ بـ mr، يتم تفعيل وضع الأدمن وقص أول حرفين
-            if (rawInput.startsWith('mr')) {
+            // كلمة الدخول المخصصة للأدمن
+            const adminPrefix = 'mrzezo';
+
+            if (rawInput.startsWith(adminPrefix)) {
                 isAdminBypass = true;
-                nidInput = rawInput.substring(2);
+                nidInput = rawInput.substring(adminPrefix.length); // حذف الكلمة واستخراج الرقم القومي فقط
             }
 
-            // التأكد من أن الرقم المتبقي 14 رقماً فقط
+            // التحقق من أن ما تبقى هو 14 رقم بالضبط
             if (!/^\d{14}$/.test(nidInput)) {
-                alert("⚠️ تأكد من إدخال الرقم القومي بشكل صحيح (14 رقم)! \n(أو mr متبوعة بـ 14 رقم للأدمن)");
+                // رسالة عامة وعادية لا تكشف وجود كلمة سر للأدمن
+                alert("⚠️ تأكد من إدخال الرقم القومي بشكل صحيح (14 رقماً)!");
                 return;
             }
 
@@ -459,7 +461,7 @@
             btn.disabled = false;
         }
 
-        // ================= التحقق الأمني =================
+        // ================= التحقق الأمني وجلب البيانات =================
         async function authenticateAndLoad(nidInput, isAutoLogin, isAdminBypass = false) {
             try {
                 // 1. البحث عن المعلم
@@ -478,7 +480,7 @@
                     return;
                 }
 
-                // ================= حماية البصمة وتجميد الأجهزة (يتم تخطيها في وضع الأدمن) =================
+                // ================= حماية البصمة وتجميد الأجهزة (يتم تخطيها بالكامل للأدمن) =================
                 if (!isAdminBypass) {
                     // 2. فحص هل الحساب مجمد؟
                     if (teacher.is_frozen === true) {
@@ -526,7 +528,7 @@
                 }
                 // =========================================================================================
 
-                // 5. حفظ الجلسة (فقط للمعلم العادي، الأدمن لا تُحفظ جلسته تلقائياً)
+                // 5. حفظ الجلسة (فقط للمعلم العادي، ولا يتم حفظها للأدمن حتى لا يفتح حسابه في الزيارة القادمة)
                 if (!isAdminBypass) {
                     SafeStorage.setItem('saved_teacher_nid', nidInput);
                 }
