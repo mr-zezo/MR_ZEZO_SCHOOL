@@ -388,6 +388,24 @@
             return g.includes("ذكر") || g.includes("بنين") || g === "1";
         }
 
+        // --- محرك الفرز الصارم (ذكور أبجدياً ثم إناث أبجدياً) ---
+        function sortStudents(arr) {
+            return arr.sort((a, b) => {
+                const isMaleA = isMaleStudent(a.gender);
+                const isMaleB = isMaleStudent(b.gender);
+                
+                // 1. الذكور أولاً
+                if (isMaleA && !isMaleB) return -1;
+                if (!isMaleA && isMaleB) return 1;
+                
+                // 2. الترتيب الأبجدي (أ إلى ي)
+                const nameA = String(a.name || "").trim();
+                const nameB = String(b.name || "").trim();
+                return nameA.localeCompare(nameB, 'ar');
+            });
+        }
+        // --------------------------------------------------------
+
         // مطابقة ذكية للصفوف
         function isGradeMatch(studentGrade, selectedGrade) {
             if (selectedGrade === "ALL") return true;
@@ -628,8 +646,8 @@
 
                 let arr = data.filter(d => d.transfer_type !== "محول من");
                 
-                // تم إيقاف الترتيب الأبجدي بناءً على طلبك للحفاظ على الترتيب الأصلي
-                // arr = sortStudents(arr);
+                // تطبيق الفرز الصارم: ذكور أبجدياً ثم إناث أبجدياً
+                arr = sortStudents(arr);
 
                 const fragment = document.createDocumentFragment();
                 arr.forEach((s, i) => {
@@ -735,8 +753,8 @@
                         });
                     });
 
-                    // تم إيقاف الفرز للحفاظ على ترتيب ملف الإكسيل كما هو
-                    // arr = sortStudents(arr);
+                    // تطبيق الفرز الصارم فور الاستيراد من الإكسيل
+                    arr = sortStudents(arr);
 
                     const fragment = document.createDocumentFragment();
                     arr.forEach((s, i) => fragment.appendChild(createRowElement(s, i + 1)));
@@ -744,7 +762,7 @@
                     const tbody = document.getElementById("table-body");
                     tbody.innerHTML = "";
                     tbody.appendChild(fragment);
-                    alert(`✅ تم استيراد عدد (${arr.length}) تلميذ بنجاح بنفس الترتيب الأصلي للملف! اضغط (حفظ البيانات) لتثبيتهم.`);
+                    alert(`✅ تم استيراد عدد (${arr.length}) تلميذ بنجاح وتطبيق الترتيب (ذكور ثم إناث أبجدياً)! اضغط (حفظ البيانات) لتثبيتهم.`);
                 } catch(err) { alert("❌ فشل قراءة الملف: " + err.message); }
                 finally { e.target.value = ''; }
             };
@@ -914,7 +932,6 @@
         }
 
         // 7. حفظ وتحديث بيانات التلاميذ في المنظومة
-        // 7. حفظ وتحديث بيانات التلاميذ في المنظومة
         async function saveAllStudents() {
             const g = document.getElementById("grade-filter").value;
             if (!g || g === "ALL") { 
@@ -957,14 +974,18 @@
                 alert("لا توجد أسماء تلاميذ صالحة للحفظ!"); return;
             }
 
+            // تطبيق الفرز الصارم قبل الحفظ في قاعدة البيانات
+            studentsToSave = sortStudents(studentsToSave);
+
             const btn = document.querySelector('.btn-save');
             const oldText = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ في السحابة...`;
 
             try {
                 await ZezoEngine.upsert("students", studentsToSave, 'code');
-                alert(`✅ تم حفظ وتحديث بيانات (${studentsToSave.length}) تلميذ بنجاح! (تم الاحتفاظ بالترتيب الحالي)`);
-                // تم إيقاف دالة loadStudentData() هنا لمنع لخبطة الترتيب بعد الحفظ
+                alert(`✅ تم حفظ وتحديث بيانات (${studentsToSave.length}) تلميذ بنجاح! (تم تطبيق الترتيب: ذكور ثم إناث أبجدياً)`);
+                // إعادة تحميل الجدول لتحديث الأرقام المسلسلة (م) بناءً على الترتيب الجديد
+                loadStudentData();
             } catch (err) {
                 alert("❌ حدث خطأ أثناء الحفظ: " + err.message);
             } finally {
@@ -1013,6 +1034,28 @@
             if (data.length === 0) {
                 alert("لا يوجد تلاميذ مطابقون لعملية البحث الحالية لتصديرهم.");
                 return;
+            }
+
+            // تطبيق الفرز الصارم قبل التصدير للإكسيل
+            const genderLabel = selectedCols.find(c => c.key === 'gender')?.label;
+            const nameLabel = selectedCols.find(c => c.key === 'name')?.label;
+            const indexLabel = selectedCols.find(c => c.key === 'index')?.label;
+
+            data.sort((a, b) => {
+                const isMaleA = genderLabel ? isMaleStudent(a[genderLabel]) : false;
+                const isMaleB = genderLabel ? isMaleStudent(b[genderLabel]) : false;
+                
+                if (isMaleA && !isMaleB) return -1;
+                if (!isMaleA && isMaleB) return 1;
+                
+                const nameA = nameLabel ? String(a[nameLabel] || "").trim() : "";
+                const nameB = nameLabel ? String(b[nameLabel] || "").trim() : "";
+                return nameA.localeCompare(nameB, 'ar');
+            });
+
+            // إعادة ترقيم عمود (م) ليكون متسلسلاً بشكل صحيح في ملف الإكسيل
+            if (indexLabel) {
+                data.forEach((row, idx) => { row[indexLabel] = idx + 1; });
             }
 
             try {
