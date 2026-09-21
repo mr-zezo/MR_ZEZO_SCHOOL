@@ -462,6 +462,28 @@
             return String(num).replace(/[0-9]/g, w => arabicDigits[w]);
         }
 
+        // ================== دوال الفرز الصارم (ذكور أبجدياً ثم إناث أبجدياً) ==================
+        function isMaleStudent(gender) {
+            if (!gender) return false;
+            const g = String(gender).trim();
+            return g.includes("ذكر") || g.includes("بنين") || g === "1";
+        }
+
+        function sortStudentsStrict(arr) {
+            return arr.sort((a, b) => {
+                const isMaleA = isMaleStudent(a.gender);
+                const isMaleB = isMaleStudent(b.gender);
+
+                if (isMaleA && !isMaleB) return -1;
+                if (!isMaleA && isMaleB) return 1;
+
+                const nameA = String(a.name || "").trim();
+                const nameB = String(b.name || "").trim();
+                return nameA.localeCompare(nameB, 'ar');
+            });
+        }
+        // =======================================================================================
+
         // حساب الأسبوع الدراسي من 12 سبتمبر
         function getAcademicWeekLabel(year, monthIdx, day) {
             const academicYear = (monthIdx >= 8) ? year : (year - 1);
@@ -621,11 +643,8 @@
                 s.transfer_type !== "محول من"
             );
 
-            studentsList.sort((a, b) => {
-                if (a.gender === "ذكر" && b.gender !== "ذكر") return -1;
-                if (a.gender !== "ذكر" && b.gender === "ذكر") return 1;
-                return (a.name || "").localeCompare((a.name || ""), 'ar');
-            });
+            // تطبيق الفرز الصارم: ذكور أبجدياً ثم إناث أبجدياً
+            sortStudentsStrict(studentsList);
 
             setTimeout(() => {
                 area.innerHTML = "";
@@ -719,19 +738,26 @@
                     return; 
                 }
 
+                // تطبيق الفرز الصارم مع الحفاظ على ترتيب الصفوف والفصول أولاً
                 filteredList.sort((a, b) => {
-                    let gA = gradeOrder[a.grade] || 99; 
+                    let gA = gradeOrder[a.grade] || 99;
                     let gB = gradeOrder[b.grade] || 99;
                     if (gA !== gB) return gA - gB;
-                    
+
                     let cA = a.class ? String(a.class).trim() : "";
                     let cB = b.class ? String(b.class).trim() : "";
                     if (cA !== cB) return cA.localeCompare(cB, 'ar', { numeric: true });
-                    
-                    if (a.gender === "ذكر" && b.gender !== "ذكر") return -1;
-                    if (a.gender !== "ذكر" && b.gender === "ذكر") return 1;
-                    
-                    return (a.name || "").localeCompare((b.name || ""), 'ar');
+
+                    // الفرز الصارم للنوع والاسم داخل نفس الفصل
+                    const isMaleA = isMaleStudent(a.gender);
+                    const isMaleB = isMaleStudent(b.gender);
+
+                    if (isMaleA && !isMaleB) return -1;
+                    if (!isMaleA && isMaleB) return 1;
+
+                    const nameA = String(a.name || "").trim();
+                    const nameB = String(b.name || "").trim();
+                    return nameA.localeCompare(nameB, 'ar');
                 });
 
                 area.innerHTML = "";
