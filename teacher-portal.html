@@ -9,48 +9,67 @@
     
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- مكتبة أخذ لقطة الشاشة بجودة فائقة -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <style>
         :root { 
             --primary-color: #1e3a8a;    
             --secondary-color: #d97706;  
-            --bg-color: #f8fafc;         
+            --bg-color: #f1f5f9;         
             --surface-color: #ffffff;    
             --text-main: #0f172a;        
             --danger: #be123c;           
-            --success: #16a34a;          
+            --success: #15803d;          
             --info: #0284c7;             
             --border-color: #cbd5e1;     
         }
 
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
-        body { background-color: var(--bg-color); padding: 15px 10px; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; min-height: 100vh; }
+        body { background-color: var(--bg-color); padding: 12px 8px; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; min-height: 100vh; }
 
-        .top-navigation { width: 100%; max-width: 900px; background: var(--primary-color); padding: 15px; border-radius: 12px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 15px; }
+        /* شريط تحذير متصفح الواتساب */
+        #whatsapp-notice {
+            display: none;
+            width: 100%;
+            max-width: 900px;
+            background: #fffbeb;
+            border: 2px dashed #f59e0b;
+            color: #92400e;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .top-navigation { width: 100%; max-width: 900px; background: var(--primary-color); padding: 15px; border-radius: 12px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 12px; }
         .nav-title { font-size: 16px; font-weight: 900; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
         
-        .dev-badge { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); color: #fff; padding: 6px 20px; border-radius: 50px; font-size: 13px; font-weight: 900; border: 1px solid rgba(255,255,255,0.2); display: flex; align-items: center; gap: 10px; }
+        .dev-badge { background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(5px); color: #fff; padding: 6px 16px; border-radius: 50px; font-size: 13px; font-weight: 900; border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; gap: 8px; }
         .dev-badge span { color: #fcd34d; font-size: 14px; }
 
-        #login-section { width: 100%; max-width: 480px; background: white; padding: 35px 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border-top: 6px solid var(--primary-color); margin-top: 30px; }
-        .login-icon { width: 80px; height: 80px; background: #eff6ff; color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 15px; border: 2px dashed #93c5fd; }
+        #login-section { width: 100%; max-width: 480px; background: white; padding: 30px 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border-top: 6px solid var(--primary-color); margin-top: 15px; }
+        .login-icon { width: 75px; height: 75px; background: #eff6ff; color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 12px; border: 2px dashed #93c5fd; }
         .login-title { font-size: 20px; font-weight: 900; color: var(--primary-color); margin-bottom: 6px; }
-        .login-subtitle { font-size: 13px; color: #64748b; margin-bottom: 25px; font-weight: 700; line-height: 1.6; }
+        .login-subtitle { font-size: 13px; color: #64748b; margin-bottom: 22px; font-weight: 700; line-height: 1.6; }
         
-        .login-input-group { margin-bottom: 20px; text-align: right; }
+        .login-input-group { margin-bottom: 18px; text-align: right; }
         .login-input-group label { display: block; font-size: 13px; font-weight: 900; color: #334155; margin-bottom: 6px; }
-        .login-input-group input { width: 100%; padding: 14px; border: 2px solid #cbd5e1; border-radius: 10px; font-size: 17px; font-weight: 900; text-align: center; outline: none; font-family: Arial, sans-serif; letter-spacing: 2px; transition: 0.2s; }
+        .login-input-group input { width: 100%; padding: 14px; border: 2px solid #cbd5e1; border-radius: 10px; font-size: 18px; font-weight: 900; text-align: center; outline: none; font-family: Arial, sans-serif; letter-spacing: 2px; transition: 0.2s; direction: ltr; }
         .login-input-group input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); }
 
         .btn-login-submit { width: 100%; background: var(--primary-color); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
         .btn-login-submit:hover { background: #172554; }
 
-        .security-note { font-size: 11px; color: #94a3b8; margin-top: 15px; font-weight: 700; line-height: 1.5; background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .security-note { font-size: 11px; color: #64748b; margin-top: 15px; font-weight: 700; line-height: 1.5; background: #f8fafc; padding: 10px 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
 
-        #frozen-view { display: none; width: 100%; max-width: 500px; background: white; padding: 35px 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(190, 18, 60, 0.15); text-align: center; border-top: 6px solid var(--danger); margin-top: 30px; }
-        .frozen-icon { width: 80px; height: 80px; background: #fef2f2; color: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 15px; }
+        #frozen-view { display: none; width: 100%; max-width: 500px; background: white; padding: 35px 22px; border-radius: 16px; box-shadow: 0 10px 30px rgba(190, 18, 60, 0.15); text-align: center; border-top: 6px solid var(--danger); margin-top: 25px; }
+        .frozen-icon { width: 75px; height: 75px; background: #fef2f2; color: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 15px; }
 
-        #loading-view { display: none; width: 100%; max-width: 450px; background: white; padding: 40px 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; border-top: 5px solid var(--secondary-color); margin-top: 50px; }
+        #loading-view { display: none; width: 100%; max-width: 450px; background: white; padding: 40px 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; border-top: 5px solid var(--secondary-color); margin-top: 40px; }
         #loading-view i { font-size: 40px; color: var(--primary-color); margin-bottom: 12px; }
         #loading-view h3 { font-size: 18px; font-weight: 900; color: var(--primary-color); }
         #loading-view p { font-size: 13px; color: #64748b; margin-top: 5px; font-weight: bold; }
@@ -58,76 +77,136 @@
         #profile-section { display: none; width: 100%; max-width: 900px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 6px solid var(--primary-color); animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .profile-header { display: flex; gap: 20px; align-items: center; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; }
-        .avatar-container { width: 130px; height: 130px; flex-shrink: 0; }
+        .profile-header { display: flex; gap: 20px; align-items: center; background: #f8fafc; padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        .avatar-container { width: 110px; height: 110px; flex-shrink: 0; }
         .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-color); background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
         .profile-info { flex-grow: 1; }
-        .profile-info h2 { color: var(--primary-color); font-weight: 900; margin-bottom: 5px; font-size: 20px;}
+        .profile-info h2 { color: var(--primary-color); font-weight: 900; margin-bottom: 4px; font-size: 19px;}
         .profile-info p { color: var(--danger); font-weight: 900; font-family: Arial; font-size: 15px; margin-bottom: 10px;}
 
-        .rating-box { display: flex; gap: 15px; align-items: center; background: white; padding: 8px 15px; border-radius: 10px; border: 1px dashed var(--secondary-color); width: max-content;}
+        .rating-box { display: flex; gap: 15px; align-items: center; background: white; padding: 8px 14px; border-radius: 10px; border: 1px dashed var(--secondary-color); width: max-content;}
         .rating-item { display: flex; flex-direction: column; align-items: center; justify-content: center;}
         .rating-item span { font-size: 11px; color: #64748b; font-weight: 900; }
         .rating-val { font-size: 15px; font-weight: 900; color: var(--secondary-color); display: flex; align-items: center; gap: 4px;}
         .rating-val i { color: #f59e0b; font-size: 14px;}
 
-        .btn-logout { background: var(--danger); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; align-self: flex-start; transition: 0.2s;}
+        .btn-logout { background: var(--danger); color: white; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; align-self: flex-start; transition: 0.2s;}
         .btn-logout:hover { background: #9f1239; }
 
         .data-section { margin-bottom: 25px; }
-        .section-title { font-size: 16px; font-weight: 900; color: var(--primary-color); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
-        .grid-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .field-group { display: flex; flex-direction: column; gap: 5px; }
-        .field-group label { font-size: 13px; font-weight: 800; color: #475569; }
+        .section-title { font-size: 15px; font-weight: 900; color: var(--primary-color); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
+        .grid-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .field-group { display: flex; flex-direction: column; gap: 4px; }
+        .field-group label { font-size: 12px; font-weight: 800; color: #475569; }
         
-        .field-group input { padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 15px; font-weight: 900; background: #f1f5f9; color: var(--text-main); cursor: not-allowed; outline: none; width: 100%; }
+        .field-group input { padding: 11px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; font-weight: 900; background: #f8fafc; color: var(--text-main); cursor: not-allowed; outline: none; width: 100%; }
         .highlight-input { border-color: var(--secondary-color) !important; color: var(--danger) !important; background: #fffbeb !important; }
 
-        .files-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .btn-view-file { background: var(--info); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;}
+        .files-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .btn-view-file { background: var(--info); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;}
         .btn-view-file.empty { background: #94a3b8; cursor: not-allowed; }
         
-        .btn-schedule-view { background: var(--success); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 900; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-bottom: 25px; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2); transition: 0.2s;}
-        .btn-schedule-view:hover { background: #15803d; }
+        .btn-schedule-view { background: linear-gradient(135deg, #16a34a, #15803d); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-bottom: 22px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3); transition: 0.2s;}
+        .btn-schedule-view:hover { filter: brightness(1.05); }
 
-        .message-box { background: #fffbeb; border: 2px solid #fcd34d; padding: 20px; border-radius: 12px; margin-top: 30px; }
-        .message-box h3 { color: var(--secondary-color); font-weight: 900; margin-bottom: 10px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-        .message-box textarea { width: 100%; padding: 15px; border-radius: 8px; border: 1px solid #fcd34d; font-size: 14px; font-weight: 700; outline: none; resize: vertical; min-height: 100px; margin-bottom: 15px; font-family: 'Cairo'; }
-        .btn-send { background: var(--secondary-color); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: 900; cursor: pointer; width: 100%; font-size: 15px; transition: 0.2s;}
+        .message-box { background: #fffbeb; border: 2px solid #fcd34d; padding: 18px; border-radius: 12px; margin-top: 25px; }
+        .message-box h3 { color: var(--secondary-color); font-weight: 900; margin-bottom: 8px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+        .message-box textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #fcd34d; font-size: 13px; font-weight: 700; outline: none; resize: vertical; min-height: 85px; margin-bottom: 12px; font-family: 'Cairo'; }
+        .btn-send { background: var(--secondary-color); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: 900; cursor: pointer; width: 100%; font-size: 14px; transition: 0.2s;}
         .btn-send:hover { background: #b45309; }
 
-        #status-msg { display: none; padding: 12px; border-radius: 8px; margin-top: 15px; text-align: center; font-weight: 900; font-size: 14px; }
+        #status-msg { display: none; padding: 12px; border-radius: 8px; margin-top: 12px; text-align: center; font-weight: 900; font-size: 13px; }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px; }
+        /* نافذة الجدول */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.85); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 8px; }
         .modal-overlay.active { display: flex; }
-        .modal-content { background: #f8fafc; width: 100%; max-width: 900px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
-        .modal-header { background: var(--primary-color); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-body { padding: 20px; overflow-y: auto; }
-        
-        /* تصميم الجدول المطور والبارز */
-        .table-responsive { width: 100%; overflow-x: auto; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 15px; margin-bottom: 25px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.05);}
-        .schedule-table { width: 100%; min-width: 700px; border-collapse: separate; border-spacing: 5px; text-align: center; background: white; padding: 10px; }
-        .schedule-table th { background: var(--primary-color); color: white; padding: 12px 5px; font-weight: 900; font-size: 14px; border-radius: 8px; }
-        .schedule-table td { padding: 2px; vertical-align: middle; }
-        
-        /* بطاقة الحصة المسندة */
-        .class-badge { background: #15803d; color: white; padding: 10px 4px; border-radius: 8px; font-weight: 900; font-size: 15px; box-shadow: 0 3px 6px rgba(21, 128, 61, 0.25); display: flex; align-items: center; justify-content: center; min-height: 48px; font-family: Arial, sans-serif; }
-        
-        /* بطاقة الحصة الفارغة */
-        .free-period { background: #f8fafc; color: #cbd5e1; font-weight: bold; padding: 10px 4px; border-radius: 8px; border: 1px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; min-height: 48px; font-size: 18px; }
-        
-        /* بطاقة اسم اليوم */
-        .day-label { background: #eff6ff; color: var(--primary-color); font-weight: 900; font-size: 15px; border-radius: 8px; padding: 10px; border: 1px solid #bfdbfe; }
+        .modal-content { background: #f8fafc; width: 100%; max-width: 950px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); display: flex; flex-direction: column; max-height: 94vh; }
+        .modal-header { background: var(--primary-color); color: white; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 12px; overflow-y: auto; }
 
-        .schedule-summary { background: #fffbeb; border: 2px solid #fcd34d; padding: 15px; border-radius: 12px; text-align: center; font-weight: 900; color: var(--secondary-color); font-size: 16px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .schedule-summary span { color: var(--danger); font-size: 22px; margin: 0 5px; background: white; padding: 2px 10px; border-radius: 6px; border: 1px solid #fcd34d;}
+        /* زر حفظ الجدول */
+        .schedule-actions { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .btn-download-img { background: #0284c7; color: white; border: none; padding: 13px 20px; border-radius: 10px; font-weight: 900; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1; box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3); transition: 0.2s; }
+        .btn-download-img:hover { background: #0369a1; }
 
-        .supervision-list { display: flex; flex-direction: column; gap: 12px; }
-        .sup-item { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; border-right: 5px solid var(--secondary-color); box-shadow: 0 2px 4px rgba(0,0,0,0.02);}
-        .sup-item-day { font-size: 16px; font-weight: 900; color: var(--primary-color); display: flex; align-items: center; gap: 8px;}
-        .sup-item-role { font-size: 15px; font-weight: 900; color: var(--text-main); background: #f1f5f9; padding: 5px 12px; border-radius: 6px;}
-        .sup-item-leader { font-size: 13px; font-weight: 900; color: var(--danger); background: #fef2f2; padding: 6px 12px; border-radius: 6px; border: 1px solid #fecaca;}
+        /* برواز الجدول المصمم للتصدير كصورة */
+        #schedule-capture-area {
+            background: #ffffff;
+            border: 4px double #1e3a8a;
+            border-radius: 14px;
+            padding: 16px 12px;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .schedule-export-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .export-header-title h3 { font-size: 17px; font-weight: 900; color: var(--primary-color); }
+        .export-header-title p { font-size: 13px; color: #475569; font-weight: 700; margin-top: 2px; }
+
+        .schedule-summary-badge { background: #eff6ff; border: 1.5px solid #bfdbfe; color: var(--primary-color); padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 900; display: flex; align-items: center; gap: 6px; }
+        .schedule-summary-badge span { color: var(--danger); font-size: 18px; }
+
+        /* تصميم الجدول الواضح */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white; }
+        .schedule-table { width: 100%; min-width: 650px; border-collapse: collapse; text-align: center; }
+        .schedule-table th { background: #1e3a8a; color: white; padding: 10px 4px; font-weight: 900; font-size: 13px; border: 1px solid #334155; }
+        .schedule-table td { padding: 6px 3px; border: 1px solid #e2e8f0; vertical-align: middle; }
+        
+        .day-label { background: #f1f5f9; color: var(--primary-color); font-weight: 900; font-size: 14px; padding: 10px 4px; border-radius: 6px; border-right: 4px solid var(--primary-color); }
+        .class-badge { background: #ecfdf5; color: #065f46; border: 1.5px solid #10b981; padding: 8px 4px; border-radius: 6px; font-weight: 900; font-size: 14px; min-height: 42px; display: flex; align-items: center; justify-content: center; }
+        .free-period { color: #cbd5e1; font-weight: bold; font-size: 16px; min-height: 42px; display: flex; align-items: center; justify-content: center; background: #fafafa; border-radius: 6px; }
+
+        /* قسم الإشراف */
+        .supervision-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+        .sup-item { background: #fffbeb; padding: 10px 12px; border-radius: 8px; border: 1px solid #fde68a; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid var(--secondary-color); }
+        .sup-item-day { font-size: 14px; font-weight: 900; color: var(--primary-color); display: flex; align-items: center; gap: 6px;}
+        .sup-item-role { font-size: 13px; font-weight: 800; color: #1e293b; background: white; padding: 4px 10px; border-radius: 6px; border: 1px solid #e2e8f0; }
+        .sup-item-leader { font-size: 12px; font-weight: 800; color: var(--danger); }
+
+        /* برواز وحقوق مستر زيزو */
+        .export-footer-frame {
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 2px dashed #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .export-zezo-badge {
+            background: linear-gradient(135deg, #1e3a8a, #0f172a);
+            color: #ffffff;
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 2px solid #fcd34d;
+        }
+        .export-zezo-badge span { color: #fcd34d; font-size: 14px; }
+        .export-note { font-size: 11px; font-weight: 800; color: #64748b; }
+
+        /* نافذة معاينة الصورة إذا لم يقم الهاتف بالتنزيل التلقائي */
+        #imgPreviewModal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 3000;
+            display: none; flex-direction: column; align-items: center; justify-content: center; padding: 15px;
+        }
+        #imgPreviewModal.active { display: flex; }
+        #imgPreviewModal img { max-width: 100%; max-height: 80vh; border-radius: 10px; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .preview-tip { color: #fcd34d; font-size: 14px; font-weight: 900; margin-bottom: 12px; text-align: center; }
 
         @media (max-width: 768px) {
             .top-navigation { flex-direction: column; text-align: center; }
@@ -136,37 +215,44 @@
             .rating-box { margin: 0 auto;}
             .grid-fields { grid-template-columns: 1fr; } 
             .files-grid { grid-template-columns: 1fr; } 
-            .sup-item { flex-direction: column; align-items: stretch; gap: 10px; text-align: center; }
+            .sup-item { flex-direction: column; align-items: stretch; gap: 6px; text-align: center; }
+            .export-footer-frame { flex-direction: column; text-align: center; justify-content: center; }
         }
     </style>
 </head>
 <body>
 
+    <!-- تنبيه متصفح الواتساب -->
+    <div id="whatsapp-notice">
+        <i class="fa-brands fa-whatsapp" style="font-size:16px; color:#16a34a;"></i>
+        أنت تتصفح عبر واتساب: إذا واجهت صعوبة في الحفظ اضغط على نقاط القائمة (⋮) أعلى الشاشة واختر <b>« فتح في Chrome »</b>.
+    </div>
+
     <nav class="top-navigation">
-        <div class="nav-title"><i class="fa-solid fa-user-tie"></i> بوابة المعلم - الاستعلام عن البيانات</div>
+        <div class="nav-title"><i class="fa-solid fa-user-tie"></i> بوابة المعلم - الاستعلام عن البيانات والجدول</div>
         <div class="dev-badge">
-            <i class="fa-solid fa-medal" style="color:#fcd34d; font-size:18px;"></i> 
+            <i class="fa-solid fa-medal" style="color:#fcd34d; font-size:17px;"></i> 
             إعداد وتطوير &nbsp;|&nbsp; <span>أ/ عبدالعزيز لولح</span> &nbsp;|&nbsp; « مستر زيزو »
         </div>
     </nav>
 
-    <!-- 1. نافذة تسجيل الدخول -->
+    <!-- 1. شاشة تسجيل الدخول -->
     <div id="login-section">
         <div class="login-icon"><i class="fa-solid fa-fingerprint"></i></div>
         <h2 class="login-title">تسجيل دخول المعلم</h2>
-        <p class="login-subtitle">أدخل الرقم القومي الخاص بك لعرض بياناتك والجدول والإشراف.<br><span style="color:var(--danger); font-weight:900;">⚠️ يُربط حساب المعلم تلقائياً بهاتفه الشخصي.</span></p>
+        <p class="login-subtitle">أدخل الرقم القومي الخاص بك لعرض ملفك والجدول والإشراف.<br><span style="color:var(--danger); font-weight:900;">⚠️ يُربط حساب المعلم تلقائياً بهاتفه لحماية خصوصيته.</span></p>
         
         <form onsubmit="handleManualLogin(event)">
             <div class="login-input-group">
                 <label><i class="fa-solid fa-id-card"></i> الرقم القومي (14 رقم):</label>
-                <input type="text" id="login_nid" placeholder="••••••••••••••" required autocomplete="off">
+                <input type="tel" id="login_nid" placeholder="••••••••••••••" required autocomplete="off" inputmode="numeric">
             </div>
             <button type="submit" class="btn-login-submit" id="btn-login-submit">
                 <i class="fa-solid fa-arrow-right-to-bracket"></i> استعلام ودخول
             </button>
         </form>
         <div class="security-note">
-            <i class="fa-solid fa-shield-halved"></i> محاولة الدخول برقم قومي آخر من نفس الهاتف تؤدي لتجميد الحساب الأصلي لحماية الخصوصية.
+            <i class="fa-solid fa-shield-halved" style="color:var(--primary-color);"></i> يقبل الأرقام العربية والإنجليزية ويمسح المسافات تلقائياً لتسهيل الدخول من الواتساب.
         </div>
     </div>
 
@@ -175,7 +261,7 @@
         <div class="frozen-icon"><i class="fa-solid fa-user-lock"></i></div>
         <h2 style="color:var(--danger); font-weight:900; margin-bottom:10px;">الحساب مجمّد أمنياً!</h2>
         <p style="font-size:14px; font-weight:bold; color:#475569; line-height:1.7;" id="frozen-reason-text">
-            تم تجميد هذا الحساب بسبب محاولة الدخول بأكثر من رقم قومي من نفس الجهاز.
+            تم تجميد هذا الحساب بسبب محاولة الدخول برقم قومي آخر من نفس الجهاز.
         </p>
         <div style="background:#fee2e2; color:#991b1b; padding:12px; border-radius:8px; font-weight:900; font-size:13px; margin:20px 0;">
             يرجى مراجعة مسؤول الإحصاء أو مدير المدرسة لفك التجميد.
@@ -188,11 +274,11 @@
     <!-- 3. شاشة التحميل -->
     <div id="loading-view">
         <i class="fa-solid fa-circle-notch fa-spin"></i>
-        <h3>جاري التحقق من البصمة الأمنية واسترجاع البيانات...</h3>
+        <h3>جاري التحقق واسترجاع البيانات...</h3>
         <p>الرجاء الانتظار لحظات</p>
     </div>
 
-    <!-- 4. شاشة الملف الشخصي -->
+    <!-- 4. شاشة الملف الشخصي للمعلم -->
     <div id="profile-section">
         
         <div class="profile-header">
@@ -214,14 +300,14 @@
                     </div>
                 </div>
             </div>
-            <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> تسجيل خروج</button>
+            <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> خروج</button>
         </div>
 
         <button type="button" class="btn-schedule-view" onclick="showTeacherSchedule()">
-            <i class="fa-solid fa-table-cells"></i> عرض الجدول والإشراف الخاص بي
+            <i class="fa-solid fa-calendar-days"></i> استعراض الجدول المدرسي والإشراف وتحميله كصورة
         </button>
 
-        <!-- 1. بيانات شخصية -->
+        <!-- بيانات شخصية -->
         <div class="data-section">
             <div class="section-title"><i class="fa-solid fa-address-card"></i> بيانات شخصية</div>
             <div class="grid-fields">
@@ -232,7 +318,7 @@
             </div>
         </div>
 
-        <!-- 2. بيانات المؤهل -->
+        <!-- بيانات المؤهل -->
         <div class="data-section">
             <div class="section-title"><i class="fa-solid fa-graduation-cap"></i> بيانات المؤهل الدراسي</div>
             <div class="grid-fields">
@@ -245,7 +331,7 @@
             </div>
         </div>
 
-        <!-- 3. بيانات الكادر والدرجة -->
+        <!-- بيانات الكادر والدرجة -->
         <div class="data-section">
             <div class="section-title"><i class="fa-solid fa-briefcase"></i> البيانات الوظيفية والكادر</div>
             <div class="grid-fields">
@@ -259,7 +345,7 @@
             </div>
         </div>
 
-        <!-- 4. بيانات التدريس والانتداب -->
+        <!-- بيانات التدريس والانتداب -->
         <div class="data-section">
             <div class="section-title"><i class="fa-solid fa-chalkboard-user"></i> بيانات التدريس والانتداب</div>
             <div class="grid-fields">
@@ -268,15 +354,6 @@
                 <div class="field-group"><label>النصاب القانوني</label><input type="text" id="p_quota" readonly class="highlight-input"></div>
                 <div class="field-group"><label>أصلي / منتدب</label><input type="text" id="p_status" readonly></div>
                 <div class="field-group"><label>أيام الانتداب</label><input type="text" id="p_secondment_days" readonly></div>
-            </div>
-        </div>
-
-        <!-- 5. بيانات الدخول للمنظومة -->
-        <div class="data-section">
-            <div class="section-title"><i class="fa-solid fa-lock"></i> بيانات الدخول للمنظومة</div>
-            <div class="grid-fields">
-                <div class="field-group"><label>اسم المستخدم (USER)</label><input type="text" id="p_username" readonly style="font-family: Arial;"></div>
-                <div class="field-group"><label>كلمة المرور (PASS)</label><input type="text" id="p_password" readonly style="font-family: Arial;"></div>
             </div>
         </div>
 
@@ -289,45 +366,90 @@
             </div>
         </div>
 
-        <!-- صندوق المراسلة -->
+        <!-- صندوق المراسلة لتعديل البيانات -->
         <div class="message-box">
             <h3><i class="fa-solid fa-envelope-open-text"></i> طلب تعديل بيانات</h3>
-            <p style="font-size: 13px; color: #64748b; margin-bottom: 10px; font-weight: bold;">إذا وجدت خطأ في بياناتك أعلاه، اكتب التعديل المطلوب هنا وسيقوم مسؤول الإحصاء بمراجعته وتعديله.</p>
-            <textarea id="req_message" placeholder="اكتب رسالتك هنا... (مثال: الرجاء تعديل رقم الموبايل إلى 010...)"></textarea>
+            <p style="font-size: 13px; color: #64748b; margin-bottom: 8px; font-weight: bold;">إذا وجدت أي خطأ ببياناتك، اكتب التعديل المطلوب وسيتم تدقيقه من إدارة المدرسة فوراً.</p>
+            <textarea id="req_message" placeholder="اكتب الملاحظات أو البيانات المراد تعديلها هنا..."></textarea>
             <button class="btn-send" onclick="sendRequest()" id="btn-send"><i class="fa-solid fa-paper-plane"></i> إرسال الطلب للإدارة</button>
             <div id="status-msg"></div>
         </div>
 
     </div>
 
-    <!-- نافذة الجدول المدرسي والإشراف -->
+    <!-- نافذة الجدول المدرسي المطور والمجهز للحفظ كصورة -->
     <div class="modal-overlay" id="scheduleModal" onclick="if(event.target.id==='scheduleModal') closeScheduleModal()">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 style="font-size:18px; margin:0;"><i class="fa-solid fa-table-cells"></i> الجدول والإشراف الأسبوعي</h2>
-                <button onclick="closeScheduleModal()" style="background:none; border:none; color:white; font-size:28px; cursor:pointer; line-height:1;">&times;</button>
+                <h2 style="font-size:17px; margin:0;"><i class="fa-solid fa-table-cells"></i> الجدول والإشراف الأسبوعي</h2>
+                <button onclick="closeScheduleModal()" style="background:none; border:none; color:white; font-size:26px; cursor:pointer; line-height:1;">&times;</button>
             </div>
+            
             <div class="modal-body">
-                <div class="schedule-summary">
-                    إجمالي الحصص المسندة فعلياً: <span id="total-classes-count">0</span> حصة
-                </div>
                 
-                <div class="table-responsive">
-                    <table class="schedule-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 80px;">اليوم</th>
-                                <th>١</th><th>٢</th><th>٣</th><th>٤</th><th>٥</th><th>٦</th><th>٧</th><th>٨</th>
-                            </tr>
-                        </thead>
-                        <tbody id="schedule-body-view"></tbody>
-                    </table>
+                <div class="schedule-actions">
+                    <button class="btn-download-img" id="btn-save-schedule" onclick="captureScheduleImage()">
+                        <i class="fa-solid fa-camera"></i> حفظ صورة الجدول كاملة في الهاتف 📸
+                    </button>
                 </div>
 
-                <div class="section-title" style="margin-top:30px; font-size:16px; color:var(--danger); border-bottom-color:var(--danger);"><i class="fa-solid fa-users-viewfinder"></i> أيام الإشراف والأدوار</div>
-                <div class="supervision-list" id="supervision-list-view"></div>
+                <!-- مساحة الجدول المصممة لإنشاء الصورة الرسمية -->
+                <div id="schedule-capture-area">
+                    
+                    <div class="schedule-export-header">
+                        <div class="export-header-title">
+                            <h3 id="exp_teacher_name">جدول المعلم: -</h3>
+                            <p id="exp_teacher_sub">المادة: - | النصاب القانوني: -</p>
+                        </div>
+                        <div class="schedule-summary-badge">
+                            الحصص المسندة فعلياً: <span id="total-classes-count">0</span>
+                        </div>
+                    </div>
+                    
+                    <!-- جدول الحصص الأسبوعي -->
+                    <div class="table-responsive">
+                        <table class="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 85px;">اليوم</th>
+                                    <th>١</th><th>٢</th><th>٣</th><th>٤</th><th>٥</th><th>٦</th><th>٧</th><th>٨</th>
+                                </tr>
+                            </thead>
+                            <tbody id="schedule-body-view"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- إشراف المعلم -->
+                    <div class="section-title" style="margin-top:15px; font-size:14px; color:var(--secondary-color); border-bottom-color:#fde68a;">
+                        <i class="fa-solid fa-person-shelter"></i> تكليفات الإشراف المدرسي
+                    </div>
+                    <div class="supervision-list" id="supervision-list-view"></div>
+
+                    <!-- برواز مستر زيزو أسفل الصورة -->
+                    <div class="export-footer-frame">
+                        <div class="export-zezo-badge">
+                            <i class="fa-solid fa-award"></i>
+                            إعداد وتصميم &nbsp;|&nbsp; <span>مستر زيزو</span>
+                        </div>
+                        <div class="export-note">
+                            منظومة مستر زيزو لإدارة الجداول المدرسية والإحصاء ©
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
         </div>
+    </div>
+
+    <!-- نافذة بديلة لعرض الصورة في حال منع الهاتف التحميل المباشر -->
+    <div id="imgPreviewModal" onclick="this.classList.remove('active')">
+        <div class="preview-tip">
+            <i class="fa-solid fa-hand-pointer"></i> تم إنشاء الجدول كاملاً بنجاح!<br>
+            اضغط مطولاً على الصورة ثم اختر <b>« حفظ الصورة »</b>
+        </div>
+        <img id="previewImageTag" src="" alt="جدول المعلم">
+        <button style="margin-top:15px; background:white; border:none; padding:8px 25px; border-radius:20px; font-weight:900; cursor:pointer;" onclick="document.getElementById('imgPreviewModal').classList.remove('active')">إغلاق</button>
     </div>
 
     <script>
@@ -335,12 +457,32 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // ================= نظام التخزين الآمن والمقاوم للحظر (SafeStorage) =================
+        // تنظيف الأرقام من العربية والمسافات
+        function normalizeDigits(str) {
+            if (!str) return '';
+            const arabicIndic = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            const persian = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+            let res = String(str).trim();
+            for(let i=0; i<10; i++) {
+                res = res.replace(new RegExp(arabicIndic[i], 'g'), i);
+                res = res.replace(new RegExp(persian[i], 'g'), i);
+            }
+            return res.replace(/[^\d]/g, '');
+        }
+
+        function checkWhatsAppBrowser() {
+            const ua = navigator.userAgent || navigator.vendor || window.opera;
+            if (ua.includes('WhatsApp')) {
+                const notice = document.getElementById('whatsapp-notice');
+                if (notice) notice.style.display = 'block';
+            }
+        }
+
         const SafeStorage = {
             mem: {},
             canAccess: function() {
                 try {
-                    const testKey = '__zezo_test__';
+                    const testKey = '__test_zezo__';
                     window.localStorage.setItem(testKey, '1');
                     window.localStorage.removeItem(testKey);
                     return true;
@@ -379,17 +521,16 @@
         let teacherEvaluations = { week: 0, year: 0 };
         let currentDeviceId = null;
 
-        // ================= توليد بصمة الهاتف الذكية =================
         async function getDeviceFingerprint() {
             let storedId = SafeStorage.getItem('zezo_dev_uuid');
             if (!storedId) {
-                const hardwareInfo = (navigator.userAgent || '') + (navigator.hardwareConcurrency || '') + (screen.colorDepth || '');
+                const hardwareInfo = (navigator.userAgent || '') + (screen.width + 'x' + screen.height) + (navigator.language || '');
                 let hash = 0;
                 for (let i = 0; i < hardwareInfo.length; i++) {
                     hash = ((hash << 5) - hash) + hardwareInfo.charCodeAt(i);
                     hash |= 0;
                 }
-                storedId = 'DEV_' + Math.abs(hash).toString(36) + '_' + Math.random().toString(36).substring(2, 7);
+                storedId = 'DEV_' + Math.abs(hash).toString(36) + '_' + Math.random().toString(36).substring(2, 6);
                 SafeStorage.setItem('zezo_dev_uuid', storedId);
             }
             return storedId;
@@ -403,14 +544,15 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
+            checkWhatsAppBrowser();
             currentDeviceId = await getDeviceFingerprint();
 
             const urlParams = new URLSearchParams(window.location.search);
-            const passedNid = urlParams.get('nid') || SafeStorage.getItem('saved_teacher_nid');
+            const passedNid = normalizeDigits(urlParams.get('nid')) || SafeStorage.getItem('saved_teacher_nid');
 
-            if (passedNid && passedNid.trim().length === 14) {
+            if (passedNid && passedNid.length === 14) {
                 showView('loading-view');
-                await authenticateAndLoad(passedNid.trim(), true, false);
+                await authenticateAndLoad(passedNid, true, false);
             } else {
                 showView('login-section');
             }
@@ -427,27 +569,23 @@
             }
         }
 
-        // ================= معالجة تسجيل الدخول (مع خاصية تخطي الأدمن السرية) =================
         async function handleManualLogin(e) {
             e.preventDefault();
             
-            // قراءة القيمة، تحويلها لحروف صغيرة، وحذف أي مسافات تم إدخالها
-            let rawInput = document.getElementById('login_nid').value.toLowerCase().replace(/\s+/g, '');
+            let rawInput = document.getElementById('login_nid').value.trim();
             let isAdminBypass = false;
             let nidInput = rawInput;
 
-            // كلمة الدخول المخصصة للأدمن
             const adminPrefix = 'mrzezo';
-
-            if (rawInput.startsWith(adminPrefix)) {
+            if (rawInput.toLowerCase().startsWith(adminPrefix)) {
                 isAdminBypass = true;
-                nidInput = rawInput.substring(adminPrefix.length); // حذف الكلمة واستخراج الرقم القومي فقط
+                rawInput = rawInput.substring(adminPrefix.length);
             }
 
-            // التحقق من أن ما تبقى هو 14 رقم بالضبط
-            if (!/^\d{14}$/.test(nidInput)) {
-                // رسالة عامة وعادية لا تكشف وجود كلمة سر للأدمن
-                alert("⚠️ تأكد من إدخال الرقم القومي بشكل صحيح (14 رقماً)!");
+            nidInput = normalizeDigits(rawInput);
+
+            if (nidInput.length !== 14) {
+                alert("⚠️ الرجاء كتابة الرقم القومي كاملاً (14 رقماً)!");
                 return;
             }
 
@@ -461,10 +599,8 @@
             btn.disabled = false;
         }
 
-        // ================= التحقق الأمني وجلب البيانات =================
         async function authenticateAndLoad(nidInput, isAutoLogin, isAdminBypass = false) {
             try {
-                // 1. البحث عن المعلم
                 let [resTeacher, resContract] = await Promise.all([
                     supabaseClient.from('teachers').select('*').eq('nid', nidInput).maybeSingle(),
                     supabaseClient.from('contract_teachers').select('*').eq('nid', nidInput).maybeSingle()
@@ -474,22 +610,19 @@
                 let tableName = resTeacher.data ? 'teachers' : (resContract.data ? 'contract_teachers' : null);
 
                 if (!teacher) {
-                    alert("❌ الرقم القومي المدخل غير مسجل في المنظومة!");
+                    alert("❌ هذا الرقم القومي غير مسجل بقاعدة بيانات المدرسة!");
                     SafeStorage.removeItem('saved_teacher_nid');
                     showView('login-section');
                     return;
                 }
 
-                // ================= حماية البصمة وتجميد الأجهزة (يتم تخطيها بالكامل للأدمن) =================
                 if (!isAdminBypass) {
-                    // 2. فحص هل الحساب مجمد؟
                     if (teacher.is_frozen === true) {
                         document.getElementById('frozen-reason-text').innerText = teacher.freeze_reason || "تم تجميد الحساب لمخالفة أمنية، يرجى مراجعة إدارة المدرسة.";
                         showView('frozen-view');
                         return;
                     }
 
-                    // 3. فحص هل هذا الهاتف مسجل لمعلم آخر؟
                     let [chkOtherTeacher, chkOtherContract] = await Promise.all([
                         supabaseClient.from('teachers').select('nid, name').eq('device_id', currentDeviceId).neq('nid', nidInput).maybeSingle(),
                         supabaseClient.from('contract_teachers').select('nid, name').eq('device_id', currentDeviceId).neq('nid', nidInput).maybeSingle()
@@ -504,12 +637,11 @@
                         } else {
                             await supabaseClient.from('contract_teachers').update({ is_frozen: true, freeze_reason: freezeMsg }).eq('nid', boundOtherTeacher.nid);
                         }
-                        document.getElementById('frozen-reason-text').innerText = `⚠️ تم تجميد حسابك (${boundOtherTeacher.name}) لمحاولة الدخول برقم قومي لزميل آخر من نفس الهاتف!`;
+                        document.getElementById('frozen-reason-text').innerText = `⚠️ تم تجميد حسابك (${boundOtherTeacher.name}) لمحاولة فتح حساب زميل آخر من نفس الهاتف!`;
                         showView('frozen-view');
                         return;
                     }
 
-                    // 4. ربط الهاتف لأول مرة
                     const savedDev = teacher.device_id ? String(teacher.device_id).trim() : "";
                     if (!savedDev || savedDev === "null" || savedDev === "") {
                         await supabaseClient.from(tableName).update({ 
@@ -520,15 +652,13 @@
                         teacher.device_id = currentDeviceId;
                     } 
                     else if (savedDev !== currentDeviceId) {
-                        alert("⚠️ هذا الحساب مربوط بهاتف شخصي آخر بالفعل!\nلا يمكن فتح الحساب من هاتفين مختلفين حفاظاً على الخصوصية.");
+                        alert("⚠️ هذا الحساب مربوط بهاتف شخصي آخر بالفعل!\nلا يمكن فتح الحساب من هاتفين مختلفين حفاظاً على سريتك.");
                         SafeStorage.removeItem('saved_teacher_nid');
                         showView('login-section');
                         return;
                     }
                 }
-                // =========================================================================================
 
-                // 5. حفظ الجلسة (فقط للمعلم العادي، ولا يتم حفظها للأدمن حتى لا يفتح حسابه في الزيارة القادمة)
                 if (!isAdminBypass) {
                     SafeStorage.setItem('saved_teacher_nid', nidInput);
                 }
@@ -548,7 +678,7 @@
 
             } catch (err) {
                 console.error(err);
-                alert("حدث خطأ أثناء فحص البيانات: " + err.message);
+                alert("حدث خطأ أثناء تحميل البيانات: " + err.message);
                 showView('login-section');
             }
         }
@@ -612,9 +742,6 @@
             document.getElementById("p_status").value = data.status || "-";
             document.getElementById("p_secondment_days").value = data.secondment_days || "-";
 
-            document.getElementById("p_username").value = data.username || "-";
-            document.getElementById("p_password").value = data.password || "-";
-
             const btnNid = document.getElementById("btn-view-nid");
             if(data.nid_pdf) { btnNid.classList.remove("empty"); btnNid.innerHTML = '<i class="fa-solid fa-id-card"></i> عرض بطاقة الرقم القومي'; }
             else { btnNid.classList.add("empty"); btnNid.innerHTML = '<i class="fa-solid fa-xmark"></i> لا توجد صورة للبطاقة'; }
@@ -629,9 +756,12 @@
             window.open(currentTeacher[fieldName], '_blank');
         }
 
-        // ================= عرض الجدول المدرسي بالتصميم البارز =================
         function showTeacherSchedule() {
             if (!currentTeacher) return;
+            
+            document.getElementById("exp_teacher_name").innerText = `جدول الأستاذ(ة): ${currentTeacher.name}`;
+            document.getElementById("exp_teacher_sub").innerText = `المادة: ${currentTeacher.subject || '-'} | النصاب: ${currentTeacher.quota || currentTeacher.weekly_quota || '-'} حصة`;
+
             const tbody = document.getElementById("schedule-body-view");
             tbody.innerHTML = "";
 
@@ -659,7 +789,7 @@
 
             document.getElementById("total-classes-count").innerText = totalClasses;
 
-            // عرض بيانات الإشراف
+            // إشراف المعلم
             const supContainer = document.getElementById("supervision-list-view");
             supContainer.innerHTML = "";
 
@@ -684,8 +814,8 @@
                         supContainer.innerHTML += `
                             <div class="sup-item">
                                 <div class="sup-item-day"><i class="fa-regular fa-calendar-check"></i> يوم ${dayNamesAr[record.day]}</div>
-                                <div class="sup-item-role">${locNames[loc] || loc} <span style="color:#64748b; font-size:12px;">(${record.stage === 'lower' ? 'أولى' : 'عليا'})</span></div>
-                                <div class="sup-item-leader"><i class="fa-solid fa-star"></i> مشرف عام اليوم: أ. ${generalLeader}</div>
+                                <div class="sup-item-role">${locNames[loc] || loc} <small style="color:#64748b;">(${record.stage === 'lower' ? 'أولى' : 'عليا'})</small></div>
+                                <div class="sup-item-leader"><i class="fa-solid fa-user-shield"></i> مشرف اليوم: أ. ${generalLeader}</div>
                             </div>
                         `;
                     }
@@ -693,7 +823,7 @@
             });
 
             if(!hasSupervision) {
-                supContainer.innerHTML = "<div style='text-align:center; padding:20px; background:#f8fafc; border-radius:10px; color:#64748b; font-weight:bold; border:1px dashed #cbd5e1;'>لا يوجد إشراف مسجل لك في المنظومة حالياً.</div>";
+                supContainer.innerHTML = "<div style='text-align:center; padding:12px; background:#f8fafc; border-radius:8px; color:#64748b; font-weight:bold; border:1px dashed #cbd5e1; font-size:13px;'>لا توجد تكليفات إشراف مدرسي مسجلة لك حالياً.</div>";
             }
 
             document.getElementById("scheduleModal").classList.add("active");
@@ -701,6 +831,80 @@
 
         function closeScheduleModal() {
             document.getElementById("scheduleModal").classList.remove("active");
+        }
+
+        // ================= تصدير وحفظ الجدول كصورة كاملة (حل مشكلة هواتف أندرويد) =================
+        async function captureScheduleImage() {
+            const btn = document.getElementById("btn-save-schedule");
+            const targetElement = document.getElementById("schedule-capture-area");
+
+            const originalBtnHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التقاط الجدول كاملاً...';
+            btn.disabled = true;
+
+            try {
+                // التقاط الجدول مع فرد العرض كاملاً داخل النسخة المستنسخة دون التأثير على الشاشة
+                const canvas = await html2canvas(targetElement, {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    windowWidth: 1000, // محاكاة عرض شاشة واسعة لمنع القص
+                    onclone: (clonedDoc) => {
+                        const clonedArea = clonedDoc.getElementById("schedule-capture-area");
+                        if (clonedArea) {
+                            clonedArea.style.width = "900px";
+                            clonedArea.style.maxWidth = "none";
+                            
+                            // إزالة شريط التمرير من النسخة المصورة وإظهار كامل الحصص 1 إلى 8
+                            const wrappers = clonedArea.querySelectorAll('.table-responsive');
+                            wrappers.forEach(w => {
+                                w.style.overflow = "visible";
+                                w.style.width = "100%";
+                            });
+                            
+                            const tables = clonedArea.querySelectorAll('.schedule-table');
+                            tables.forEach(t => {
+                                t.style.width = "100%";
+                                t.style.minWidth = "850px";
+                            });
+                        }
+                    }
+                });
+
+                const teacherNameSafe = (currentTeacher.name || "معلم").replace(/\s+/g, '_');
+                const fileName = `جدول_${teacherNameSafe}_مستر_زيزو.png`;
+
+                // تحويل لـ Blob لتحميل فائق الاستقرار على أندرويد
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        throw new Error("Blob creation failed");
+                    }
+                    const blobUrl = URL.createObjectURL(blob);
+                    
+                    // محاولة التنزيل التلقائي
+                    const downloadLink = document.createElement("a");
+                    downloadLink.href = blobUrl;
+                    downloadLink.download = fileName;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+
+                    // إظهار نافذة المعاينة الاحتياطية لمستخدمي الواتساب
+                    const previewModal = document.getElementById("imgPreviewModal");
+                    const previewImg = document.getElementById("previewImageTag");
+                    if (previewModal && previewImg) {
+                        previewImg.src = blobUrl;
+                        previewModal.classList.add("active");
+                    }
+                }, "image/png");
+
+            } catch (err) {
+                console.error(err);
+                alert("تعذر حفظ الصورة تلقائياً، يمكنك أخذ لقطة شاشة للجدول.");
+            } finally {
+                btn.innerHTML = originalBtnHtml;
+                btn.disabled = false;
+            }
         }
 
         async function sendRequest() {
