@@ -14,7 +14,34 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
+        /* ══════════════════════════════════════════════════════════════════════════════════════════ */
+        /* 🎛️ [القيم الافتراضية لأبعاد الجداول] 🎛️                                                      */
+        /* ══════════════════════════════════════════════════════════════════════════════════════════ */
         :root { 
+            /* 1️⃣ أبعاد جدول المعلم / جدول الفصل (A5) */
+            --row-data-h: 52px;          /* ارتفاع صفوف الحصص */
+            --row-title-h: 46px;         /* ارتفاع العنوان الرئيسي */
+            --row-period-h: 28px;        /* ارتفاع الفترات */
+            --row-session-h: 28px;       /* ارتفاع أرقام الحصص */
+            --col-day-w: 95px;           /* عرض عمود الأيام */
+            
+            /* 2️⃣ أبعاد جدول اللفاف اليومي المجمع (A4) */
+            --master-row-h: 36px;        /* ارتفاع صفوف الفصول */
+            
+            /* 3️⃣ أحجام الخطوط */
+            --cell-font-size: 18px;      /* خط رقم الفصل في جدول المعلم */
+            --class-cell-font-size: 13px;/* خط اسم المعلم في جدول الفصل */
+
+            /* 4️⃣ الهوامش والحدود للطباعة */
+            --space-top: 15px; 
+            --space-bottom: 12px;
+            --border-thick: 2.5px; 
+            --border-thin: 1px;
+            --font-title: 19px; 
+            --font-header: 13px; 
+            --font-footer: 14px;
+
+            /* 5️⃣ ألوان المنظومة */
             --primary: #1e3a8a;          
             --primary-hover: #172554;
             --secondary: #d97706;        
@@ -26,31 +53,8 @@
             --success: #16a34a;          
             --info: #0284c7;             
             --border-color: #cbd5e1;     
-            
-            /* أبعاد جدول المعلم (A5) */
-            --row-title-h: 46px; 
-            --row-period-h: 28px; 
-            --row-session-h: 28px; 
-            --row-data-h: 50px;
-            --col-day-w: 95px; 
-            --col-session-w: auto;
-            --space-top: 12px; 
-            --space-bottom: 15px;
-            --border-thick: 2.5px; 
-            --border-thin: 1px;
-            --font-title: 19px; 
-            --font-header: 13px; 
-            --font-footer: 14px;
-
-            /* ═════════════════════════════════════════════════════════════════════ */
-            /* 🌟 [1] تعديل حجم خط الفصول داخل جدول المعلم الفردي                  */
-            --cell-font-size: 18px; 
-
-            /* 🌟 [2] تعديل ارتفاع صفوف جدول اللفاف A4                            */
-            --master-row-h: 36px; 
-            /* ═════════════════════════════════════════════════════════════════════ */
-            --master-col-w: auto;
         }
+        /* ══════════════════════════════════════════════════════════════════════════════════════════ */
 
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-color); color: var(--text-dark); padding: 8px; display: flex; flex-direction: column; align-items: center; padding-bottom: 60px; }
@@ -171,8 +175,12 @@
         .btn-missing { background: #7c3aed; }
         .btn-master { background: var(--info); }
         .btn-add-tea { background: var(--secondary); color: white; }
+        
+        /* 🌟 زر فتح نافذة الضبط الجديد 🌟 */
+        .btn-dimensions { background: #0f766e; }
+        .btn-dimensions:hover { background: #115e59; }
 
-        /* 🌟 ستايل أزرار التنقل بين المعلمين 🌟 */
+        /* أزرار التنقل بين المعلمين */
         .btn-tea-nav {
             background: #0f172a; color: #fcd34d; border: 1.5px solid #3b82f6;
             min-width: 38px; height: 38px; font-size: 14px; border-radius: 8px;
@@ -250,10 +258,11 @@
         }
         .period-header { font-size: var(--font-header); height: var(--row-period-h); background: #f8fafc; }
         .main-table thead tr:last-child th { height: var(--row-session-h); font-size: var(--font-header); border-bottom: var(--border-thick) solid #000 !important; }
+        
         .main-table tbody td { height: var(--row-data-h); }
 
         .main-table th:first-child, .main-table td:first-child { width: var(--col-day-w); font-size: var(--font-header); border-left: var(--border-thick) solid #000 !important; background: #f8fafc; }
-        .main-table th:not(:first-child), .main-table td:not(:first-child) { width: var(--col-session-w); }
+        .main-table th:not(:first-child), .main-table td:not(:first-child) { width: auto; }
         .main-table th:nth-child(2n+1):not(:first-child), .main-table td:nth-child(2n+1):not(:first-child) { border-left: var(--border-thick) solid #000 !important; }
 
         .cell-input {
@@ -264,6 +273,14 @@
         }
         .cell-input:focus { background: #fef08a; box-shadow: inset 0 0 0 2px var(--secondary); }
         .cell-clash { color: #dc2626 !important; background: #fee2e2 !important; font-weight: 900; }
+
+        .cell-input.class-view-mode {
+            font-size: var(--class-cell-font-size) !important;
+            font-weight: 800 !important;
+            padding: 0 1px;
+            letter-spacing: -0.3px;
+            white-space: normal;
+        }
 
         .print-footer {
             display: flex; justify-content: space-between; margin-top: var(--space-bottom);
@@ -289,14 +306,14 @@
         .master-table th:first-child, .master-table td:first-child { width: 80px; font-size: 13px; border-left: var(--border-thick) solid #000 !important; background: #f8fafc; }
         .btn-close-master { position: absolute; top: 12px; left: 12px; background: var(--danger); color: white; border: none; padding: 5px 12px; border-radius: 6px; font-weight: 800; cursor: pointer; }
 
-        /* المودال */
+        /* المودال ونوافذ الإعدادات */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(4px);
             display: none; justify-content: center; align-items: center; z-index: 2000; padding: 12px;
         }
         .modal-overlay.active { display: flex; }
         .modal-content {
-            background: var(--bg-color); width: 100%; max-width: 800px; border-radius: 14px;
+            background: var(--bg-color); width: 100%; max-width: 750px; border-radius: 14px;
             overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
             display: flex; flex-direction: column; max-height: 90vh;
         }
@@ -307,6 +324,30 @@
         .missing-table th, .missing-table td { border: 1px solid var(--border-color); padding: 7px; font-weight: 800; font-size: 12.5px; }
         .missing-table thead th { background: var(--primary); color: white; }
         .missing-table td:nth-child(3) { text-align: right; color: var(--danger); line-height: 1.4; font-weight: 900; }
+
+        /* تصميم عناصر نافذة ضبط الأبعاد */
+        .settings-section {
+            background: white; border-radius: 10px; padding: 14px; margin-bottom: 12px;
+            border: 1px solid #cbd5e1; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .settings-section-title {
+            font-size: 13.5px; font-weight: 900; color: var(--primary); margin-bottom: 10px;
+            display: flex; align-items: center; gap: 6px; border-bottom: 2px solid #f1f5f9; padding-bottom: 6px;
+        }
+        .settings-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px;
+        }
+        .setting-item {
+            display: flex; flex-direction: column; gap: 4px; background: #f8fafc;
+            padding: 8px 10px; border-radius: 8px; border: 1px solid #e2e8f0;
+        }
+        .setting-item label { font-size: 12px; font-weight: 800; color: #334155; display: flex; justify-content: space-between; }
+        .setting-control { display: flex; align-items: center; gap: 6px; }
+        .setting-control input[type="range"] { flex: 1; accent-color: var(--primary); }
+        .setting-control input[type="number"] {
+            width: 60px; text-align: center; font-weight: 900; padding: 4px;
+            border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;
+        }
 
         @media print {
             body { background: white !important; padding: 0 !important; direction: rtl !important; }
@@ -379,7 +420,7 @@
         </div>
     </div>
 
-    <!-- 3. لوحة التحكم -->
+    <!-- 3. لوحة التحكم الرئيسية -->
     <div class="controls-wrapper">
         <div class="controls-row-inputs">
             
@@ -388,10 +429,7 @@
                 <div style="display:flex; flex-direction:column; gap:4px;">
                     <input type="text" id="teacher-quick-filter" class="teacher-search-field" placeholder="🔍 اكتب أول حروف لفلترة الاسم..." oninput="filterTeachersDropdown(this.value)">
                     
-                    <!-- 🌟 حاوية قائمة المعلمين مع أزرار الزيادة والنقصان 🌟 -->
                     <div style="display:flex; gap:4px; align-items:center;">
-                        
-                        <!-- زر المعلم السابق (زيادة/رجوع) -->
                         <button type="button" class="btn-tea-nav" onclick="navigateTeacher(-1)" title="المعلم السابق في القائمة">
                             <i class="fa-solid fa-chevron-right"></i>
                         </button>
@@ -400,7 +438,6 @@
                             <option value="" disabled selected>جاري جلب جميع المعلمين...</option>
                         </select>
 
-                        <!-- زر المعلم التالي (نقصان/تقدم) -->
                         <button type="button" class="btn-tea-nav" onclick="navigateTeacher(1)" title="المعلم التالي في القائمة">
                             <i class="fa-solid fa-chevron-left"></i>
                         </button>
@@ -432,6 +469,11 @@
             <button class="btn-action btn-missing" onclick="openMissingPeriodsModal()"><i class="fa-solid fa-triangle-exclamation"></i> الحصص الفارغة</button>
             <button class="btn-action btn-master" onclick="openMasterScheduleModal()"><i class="fa-solid fa-table-list"></i> جدول لفاف يومي</button>
             
+            <!-- 🌟 زر فتح نافذة ضبط الارتفاعات والأبعاد 🌟 -->
+            <button class="btn-action btn-dimensions" onclick="openDimensionsModal()">
+                <i class="fa-solid fa-sliders"></i> ضبط ارتفاعات الصفوف والمقاسات
+            </button>
+
             <div style="flex-grow:1"></div>
 
             <button class="btn-action btn-save" onclick="saveTeacherSchedule()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ في السحابة</button>
@@ -456,7 +498,7 @@
         <div class="breakdown-chips-grid" id="breakdown-chips-container"></div>
     </div>
 
-    <!-- 6. جدول المعلم الفردي A5 -->
+    <!-- 6. جدول المعلم والفصل الفردي A5 -->
     <div class="paper-scroll-wrapper">
         <div id="print-area">
             <div class="print-header">
@@ -558,7 +600,95 @@
         </div>
     </div>
 
-    <!-- المحرك البرمجي المحدث -->
+    <!-- 10. 🌟 نافذة ضبط ارتفاعات الصفوف وأبعاد الجداول (الجديدة) 🌟 -->
+    <div class="modal-overlay" id="dimensionsModal">
+        <div class="modal-content">
+            <div class="modal-header" style="background:#0f766e;">
+                <h2 style="font-size:15px; margin:0;"><i class="fa-solid fa-sliders"></i> لوحة ضبط ارتفاعات الصفوف ومقاسات الجداول</h2>
+                <button onclick="closeDimensionsModal()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                
+                <!-- القسم الأول: جدول المعلم والفصل (A5) -->
+                <div class="settings-section">
+                    <div class="settings-section-title">
+                        <i class="fa-solid fa-table"></i> مقاسات جدول المعلم وجدول الفصل الفردي (A5)
+                    </div>
+                    <div class="settings-grid">
+                        
+                        <div class="setting-item">
+                            <label>ارتفاع صف الحصص الأساسية: <b id="val_row_data_h">52px</b></label>
+                            <div class="setting-control">
+                                <input type="range" id="rng_row_data_h" min="30" max="80" value="52" oninput="updateDimProp('--row-data-h', this.value, 'val_row_data_h', 'px')">
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label>خط أرقام الفصول (جدول المعلم): <b id="val_cell_font">18px</b></label>
+                            <div class="setting-control">
+                                <input type="range" id="rng_cell_font" min="12" max="26" value="18" oninput="updateDimProp('--cell-font-size', this.value, 'val_cell_font', 'px')">
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label>خط اسم المعلم (جدول الفصل): <b id="val_class_font">13px</b></label>
+                            <div class="setting-control">
+                                <input type="range" id="rng_class_font" min="9" max="18" value="13" oninput="updateDimProp('--class-cell-font-size', this.value, 'val_class_font', 'px')">
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label>المسافة العلوية (قبل الجدول): <b id="val_space_top">15px</b></label>
+                            <div class="setting-control">
+                                <input type="range" id="rng_space_top" min="0" max="35" value="15" oninput="updateDimProp('--space-top', this.value, 'val_space_top', 'px')">
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label>المسافة السفلية (قبل التوقيعات): <b id="val_space_bottom">12px</b></label>
+                            <div class="setting-control">
+                                <input type="range" id="rng_space_bottom" min="0" max="35" value="12" oninput="updateDimProp('--space-bottom', this.value, 'val_space_bottom', 'px')">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- القسم الثاني: جدول اللفاف اليومي (A4) -->
+                <div class="settings-section">
+                    <div class="settings-section-title">
+                        <i class="fa-solid fa-list-ol"></i> مقاسات جدول اللفاف اليومي المجمع (A4)
+                    </div>
+                    <div class="settings-grid">
+                        
+                        <div class="setting-item">
+                            <label>ارتفاع صفوف الفصول باللفاف: <b id="val_master_row_h">36px</b></label>
+                            <div class="setting-control">
+                                <input type="range" id="rng_master_row_h" min="20" max="60" value="36" oninput="updateDimProp('--master-row-h', this.value, 'val_master_row_h', 'px')">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- أزرار الإجراءات -->
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+                    <button class="btn-action btn-save" style="flex:1;" onclick="saveDimensionsToStorage()">
+                        <i class="fa-solid fa-check-double"></i> اعتماد وحفظ المقاسات
+                    </button>
+                    <button class="btn-action" style="background:#dc2626; color:white;" onclick="resetDimensionsDefaults()">
+                        <i class="fa-solid fa-rotate-left"></i> استعادة الافتراضي
+                    </button>
+                    <button class="btn-action" style="background:#64748b; color:white;" onclick="closeDimensionsModal()">
+                        إغلاق
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- المحرك البرمجي -->
     <script>
         const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
@@ -580,11 +710,100 @@
         ];
 
         window.addEventListener('DOMContentLoaded', async () => {
+            loadSavedDimensions();
             initEmptyTable();
             loadClassesList();
             loadSavedDate();
             await loadAllTeachersComprehensive();
         });
+
+        // ================= 🌟 دوال التحكم في أبعاد وارتفاعات الصفوف 🌟 =================
+        const defaultDimensions = {
+            '--row-data-h': 52,
+            '--cell-font-size': 18,
+            '--class-cell-font-size': 13,
+            '--space-top': 15,
+            '--space-bottom': 12,
+            '--master-row-h': 36
+        };
+
+        function openDimensionsModal() {
+            document.getElementById("dimensionsModal").classList.add("active");
+        }
+
+        function closeDimensionsModal() {
+            document.getElementById("dimensionsModal").classList.remove("active");
+        }
+
+        function updateDimProp(cssVar, value, labelId, unit = 'px') {
+            document.documentElement.style.setProperty(cssVar, value + unit);
+            document.getElementById(labelId).innerText = value + unit;
+        }
+
+        function saveDimensionsToStorage() {
+            const settings = {
+                '--row-data-h': document.getElementById("rng_row_data_h").value,
+                '--cell-font-size': document.getElementById("rng_cell_font").value,
+                '--class-cell-font-size': document.getElementById("rng_class_font").value,
+                '--space-top': document.getElementById("rng_space_top").value,
+                '--space-bottom': document.getElementById("rng_space_bottom").value,
+                '--master-row-h': document.getElementById("rng_master_row_h").value
+            };
+            localStorage.setItem("zezo_schedule_dimensions", JSON.stringify(settings));
+            Swal.fire({
+                icon: 'success',
+                title: 'تم حفظ المقاسات بنجاح!',
+                text: 'تم تطبيق المقاسات الجديدة وحفظها في المتصفح.',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            closeDimensionsModal();
+        }
+
+        function loadSavedDimensions() {
+            const saved = localStorage.getItem("zezo_schedule_dimensions");
+            const config = saved ? JSON.parse(saved) : defaultDimensions;
+
+            for(let key in config) {
+                document.documentElement.style.setProperty(key, config[key] + 'px');
+            }
+
+            // مزامنة عناصر الإدخال
+            if (document.getElementById("rng_row_data_h")) {
+                document.getElementById("rng_row_data_h").value = config['--row-data-h'] || 52;
+                document.getElementById("val_row_data_h").innerText = (config['--row-data-h'] || 52) + 'px';
+
+                document.getElementById("rng_cell_font").value = config['--cell-font-size'] || 18;
+                document.getElementById("val_cell_font").innerText = (config['--cell-font-size'] || 18) + 'px';
+
+                document.getElementById("rng_class_font").value = config['--class-cell-font-size'] || 13;
+                document.getElementById("val_class_font").innerText = (config['--class-cell-font-size'] || 13) + 'px';
+
+                document.getElementById("rng_space_top").value = config['--space-top'] || 15;
+                document.getElementById("val_space_top").innerText = (config['--space-top'] || 15) + 'px';
+
+                document.getElementById("rng_space_bottom").value = config['--space-bottom'] || 12;
+                document.getElementById("val_space_bottom").innerText = (config['--space-bottom'] || 12) + 'px';
+
+                document.getElementById("rng_master_row_h").value = config['--master-row-h'] || 36;
+                document.getElementById("val_master_row_h").innerText = (config['--master-row-h'] || 36) + 'px';
+            }
+        }
+
+        function resetDimensionsDefaults() {
+            localStorage.removeItem("zezo_schedule_dimensions");
+            for(let key in defaultDimensions) {
+                document.documentElement.style.setProperty(key, defaultDimensions[key] + 'px');
+            }
+            loadSavedDimensions();
+            Swal.fire({
+                icon: 'info',
+                title: 'تمت استعادة المقاسات الافتراضية!',
+                timer: 1200,
+                showConfirmButton: false
+            });
+        }
+        // ==============================================================================
 
         const clean = t => t ? t.trim().replace(/[أإآا]/g, "ا").replace(/ة/g, "ه").replace(/ى/g, "ي").replace(/\s+/g, "") : "";
 
@@ -634,25 +853,22 @@
             }
         }
 
-        // ================= 🌟 دالة التنقل التلقائي بين المعلمين (زيادة ونقصان) 🌟 =================
         function navigateTeacher(direction) {
             const select = document.getElementById("teacher-select");
             const total = select.options.length;
 
-            if (total <= 1) return; // لا يوجد معلمين بعد
+            if (total <= 1) return;
 
             let currentIndex = select.selectedIndex;
 
-            // إذا لم يكن أي معلم مختاراً بعد
             if (currentIndex <= 0) {
                 if (direction > 0) select.selectedIndex = 1;
                 else select.selectedIndex = total - 1;
             } else {
                 let newIndex = currentIndex + direction;
 
-                // دوران ذكي: إذا وصل للآخر يرجع للأول والعكس
                 if (newIndex >= total) {
-                    newIndex = 1; // تخطي الخيار الافتراضي رقم 0
+                    newIndex = 1;
                 } else if (newIndex < 1) {
                     newIndex = total - 1;
                 }
@@ -660,7 +876,6 @@
                 select.selectedIndex = newIndex;
             }
 
-            // تحميل وعرض جدول المعلم فوراً
             loadTeacherSchedule();
         }
 
@@ -922,7 +1137,9 @@
             document.querySelectorAll('.cell-input').forEach(inp => {
                 inp.readOnly = false;
                 inp.style.color = "#000";
-                inp.classList.remove("cell-clash");
+                inp.style.fontSize = ""; 
+                inp.title = "";
+                inp.classList.remove("cell-clash", "class-view-mode");
                 
                 const key = `${inp.getAttribute("data-day")}_${inp.getAttribute("data-session")}`;
                 inp.value = savedSchedule[key] || "";
@@ -1071,7 +1288,7 @@
                 Swal.fire({
                     icon: 'success',
                     title: 'تم الحفظ بنجاح!',
-                    text: CURRENT_TEACHER.is_contract ? 'تم حفظ جدول معلم الأجر المحدد فقط بنجاح.' : 'تم حفظ جدول المعلم الأساسي بنجاح.',
+                    text: CURRENT_TEACHER.is_contract ? 'تم حفظ جدول معلم الأجر المحدد بنجاح.' : 'تم حفظ جدول المعلم الأساسي بنجاح.',
                     timer: 1500,
                     showConfirmButton: false
                 });
@@ -1102,6 +1319,7 @@
                 inp.value = "";
                 inp.readOnly = true; 
                 inp.classList.remove("cell-clash");
+                inp.classList.add("class-view-mode");
                 inp.style.color = "var(--primary)";
 
                 const key = `${inp.getAttribute("data-day")}_${inp.getAttribute("data-session")}`;
@@ -1124,11 +1342,17 @@
 
                 if(teachersInThisSlot.length === 1) {
                     inp.value = teachersInThisSlot[0];
+                    inp.title = teachersInThisSlot[0];
+                    if(inp.value.length > 12) inp.style.fontSize = "11px";
+                    else inp.style.fontSize = "var(--class-cell-font-size)";
                 } else if (teachersInThisSlot.length === 2 && isReligionSlot) {
                     inp.value = teachersInThisSlot.join(" + ");
+                    inp.title = "دين مشترك: " + teachersInThisSlot.join(" + ");
                     inp.style.color = "#047857"; 
+                    inp.style.fontSize = "10px";
                 } else if (teachersInThisSlot.length > 1) {
                     inp.value = "تعارض!";
+                    inp.title = teachersInThisSlot.join(" و ");
                     inp.classList.add("cell-clash");
                 }
             });
