@@ -12,9 +12,10 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- مكتبات Supabase & html2canvas -->
+    <!-- مكتبات Supabase & html2canvas & XlsxPopulate -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx-populate/1.21.0/xlsx-populate.min.js"></script>
 
     <style>
         /* ==========================================================================
@@ -73,7 +74,7 @@
         .btn-3d { border-bottom: 3px solid rgba(0,0,0,0.25); transition: all 0.1s ease; touch-action: manipulation; }
         .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
 
-        /* ================= حاويات الأوراق المطبوعة بهامش تدبيس 1.5 سم ================= */
+        /* ================= حاويات الأوراق المطبوعة بهامش تدبيس ================= */
         .a4-sheet { 
             background: white; 
             width: var(--a4-page-width); 
@@ -81,7 +82,7 @@
             max-height: var(--a4-page-height);
             padding-top: 8mm;
             padding-bottom: 8mm;
-            padding-right: var(--staple-margin-right); /* 1.5 سم يمين للتدبيس */
+            padding-right: var(--staple-margin-right);
             padding-left: 8mm;
             position: relative; 
             border: 1px solid #94a3b8; 
@@ -98,7 +99,7 @@
             max-height: var(--a3-page-height);
             padding-top: 6mm;
             padding-bottom: 6mm;
-            padding-right: var(--staple-margin-right); /* 1.5 سم يمين للتدبيس */
+            padding-right: var(--staple-margin-right);
             padding-left: 8mm;
             position: relative; 
             border: 1px solid #94a3b8; 
@@ -156,7 +157,7 @@
         .sp-code { width: 100px; font-family: Arial, sans-serif; font-size: 12px; letter-spacing: 0.5px; } 
         .sp-notes { width: 150px; white-space: normal !important; line-height: 1.2; font-size: 11px; }
 
-        /* ================= تنسيق دفتر 5 سلوك المطور ================= */
+        /* ================= دفتر 5 سلوك ================= */
         .behavior-header-unified {
             display: flex; justify-content: space-between; align-items: center;
             background-color: #f8fafc; border: 2.5px solid #000; border-radius: 8px;
@@ -176,11 +177,9 @@
         .vertical-text { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 10.5px; padding: 2px 0; height: 68px; }
         .day-num { font-size: 11.5px; height: 20px; }
         
-        /* خانة الغياب الأسبوعي المخصصة */
         .week-sum-header { background-color: #fef3c7 !important; color: #92400e !important; font-weight: 900 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         .week-sum-cell { background-color: #fffbeb !important; font-weight: 900; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-        /* خانة رقم السجل المخصصة مكان السبت */
         .saturday-reg-header { background-color: #f1f5f9 !important; color: #0f2b48 !important; font-weight: 900 !important; border-left: 2px solid #000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
         .saturday-reg-cell { background-color: #f8fafc !important; font-size: 11px !important; font-weight: 900 !important; font-family: Arial, sans-serif !important; color: #0f2b48 !important; border-left: 2px solid #000 !important; text-align: center; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
@@ -193,7 +192,7 @@
         .signatures { display: flex; justify-content: space-between; margin-top: 6px; padding: 0 40px; font-weight: 900; font-size: 14px; }
         .sig-dots { font-weight: 400; color: #9ca3af; letter-spacing: 2px; font-size: 12px; }
 
-        /* ================= أمر الطباعة الفعلي ================= */
+        /* ================= أمر الطباعة ================= */
         @media print {
             html, body { 
                 background: white !important; 
@@ -205,14 +204,14 @@
             }
             .no-print { 
                 display: none !important; 
-                margin: 0 !important;
-                padding: 0 !important;
-                height: 0 !important;
+                margin: 0 !important; 
+                padding: 0 !important; 
+                height: 0 !important; 
             }
             #print-area { 
                 margin: 0 !important; 
                 padding: 0 !important; 
-                width: 100% !important;
+                width: 100% !important; 
             }
             .a4-sheet { 
                 display: block !important; 
@@ -279,7 +278,7 @@
             </div>
         </nav>
 
-        <!-- 2. لوحة الإحصائيات (تستبعد المحولين من تلقائياً) -->
+        <!-- 2. لوحة الإحصائيات -->
         <div class="w-full card-3d p-4 md:p-5 bg-white">
             <div class="text-xs md:text-sm font-black text-slate-700 mb-3 flex items-center gap-2 border-b border-slate-200 pb-2">
                 <i class="fa-solid fa-chart-pie text-blue-600 text-base"></i> ملخص قوة بيانات المدرسة الحالية (الفعليين المقيدين):
@@ -420,10 +419,14 @@
         <!-- 4. أزرار الإجراءات الرئيسية -->
         <div class="w-full flex flex-wrap justify-center items-center gap-4 pt-2">
             <button onclick="window.print()" class="btn-3d px-8 py-3 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white font-black rounded-xl text-sm md:text-base flex items-center gap-2.5 shadow-lg cursor-pointer">
-                <i class="fa-solid fa-print text-yellow-400 text-lg"></i> طباعة الأوراق المعروضة الآن
+                <i class="fa-solid fa-print text-yellow-400 text-lg"></i> طباعة الأوراق المعروضة
             </button>
             <button onclick="takeScreenshot()" class="btn-3d px-8 py-3 bg-slate-600 hover:bg-slate-700 text-white font-black rounded-xl text-sm md:text-base flex items-center gap-2.5 shadow-lg cursor-pointer">
                 <i class="fa-solid fa-camera text-slate-200 text-lg"></i> التقاط وحفظ صورة الكشف
+            </button>
+            <!-- زر ترحيل 5 سلوك للإكسيل -->
+            <button onclick="exportToExcel()" class="btn-3d px-8 py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-black rounded-xl text-sm md:text-base flex items-center gap-2.5 shadow-lg cursor-pointer">
+                <i class="fa-solid fa-file-excel text-emerald-200 text-lg"></i> ترحيل 5 سلوك (Excel)
             </button>
         </div>
 
@@ -462,6 +465,30 @@
             return String(num).replace(/[0-9]/g, w => arabicDigits[w]);
         }
 
+        // دالة تنظيف واستخراج رقم الفصل لاسم الملف فقط (لأن الويندوز يرفض السلاش / في أسماء الملفات)
+        function cleanClassNumber(cls, grade) {
+            if (!cls) return "";
+            let s = String(cls).trim();
+            if (s.includes("/")) {
+                let parts = s.split("/").map(p => p.trim());
+                const gradeNumMap = {
+                    "الأول": "1", "الصف الأول": "1",
+                    "الثاني": "2", "الصف الثاني": "2",
+                    "الثالث": "3", "الصف الثالث": "3",
+                    "الرابع": "4", "الصف الرابع": "4",
+                    "الخامس": "5", "الصف الخامس": "5",
+                    "السادس": "6", "الصف السادس": "6"
+                };
+                const gNum = gradeNumMap[grade];
+                if (gNum) {
+                    if (parts[0] === gNum && parts[1]) return parts[1];
+                    if (parts[1] === gNum && parts[0]) return parts[0];
+                }
+                return parts[1] || parts[0];
+            }
+            return s;
+        }
+
         // ================== دوال الفرز الصارم (ذكور أبجدياً ثم إناث أبجدياً) ==================
         function isMaleStudent(gender) {
             if (!gender) return false;
@@ -482,7 +509,6 @@
                 return nameA.localeCompare(nameB, 'ar');
             });
         }
-        // =======================================================================================
 
         // حساب الأسبوع الدراسي من 12 سبتمبر
         function getAcademicWeekLabel(year, monthIdx, day) {
@@ -568,20 +594,17 @@
             }
         }
 
-        // حساب الإحصائيات (تستثني المحولين من بشكل صارم من القوة الأساسية للمدرسة)
         function calculateStats() {
             let damj = 0, transFrom = 0, transTo = 0, orphan = 0, social = 0, worker = 0;
             let activeEnrolledCount = 0;
             const notDamjValues = ["", "لا", "لا يوجد", "لايوجد", "عادي", "غير مدمج", "false", "no", "0"];
 
             GLOBAL_STUDENTS.forEach(s => {
-                // إذا كان التلميذ محول من: يُحسب في عداد المحولين فقط ولا يُحسب في أي شيء آخر
                 if (s.transfer_type === "محول من") {
                     transFrom++;
                     return; 
                 }
 
-                // التلاميذ الفعليين بالمدرسة
                 activeEnrolledCount++;
 
                 let dmjVal = String(s.dmj || "").trim().toLowerCase();
@@ -604,7 +627,6 @@
             document.getElementById("st-worker").innerText = toArabicNum(worker);
         }
 
-        // تحديث الفصول (تستثني المحولين من لمنع ظهور فصول مهجورة)
         function updateClasses() {
             const grade = document.getElementById("grade-select").value;
             const clsSelect = document.getElementById("class-select");
@@ -628,7 +650,6 @@
             }
         }
 
-        // توليد تقارير الفصول (القوائم المزدوجة، الصحة، 5 سلوك) - تستثني المحولين من نهائياً
         function generateReport(type) {
             const grade = document.getElementById("grade-select").value;
             const targetCls = document.getElementById("class-select").value;
@@ -637,13 +658,11 @@
             if (!grade || !targetCls) { alert("يرجى اختيار الصف والفصل أولاً!"); return; }
             area.innerHTML = "<h3 class='no-print' style='text-align:center; margin-top:30px; color:#0f2b48; font-weight:800;'><i class='fa-solid fa-circle-notch fa-spin'></i> جاري تجهيز الأوراق...</h3>";
 
-            // استبعاد المحولين من بشكل تام من القوائم
             let studentsList = GLOBAL_STUDENTS.filter(s => 
                 String(s.grade).trim() === grade && 
                 s.transfer_type !== "محول من"
             );
 
-            // تطبيق الفرز الصارم: ذكور أبجدياً ثم إناث أبجدياً
             sortStudentsStrict(studentsList);
 
             setTimeout(() => {
@@ -651,7 +670,7 @@
                 let uniqueClasses = targetCls === "all" ? [...new Set(studentsList.map(s => String(s.class).trim()))].sort((a,b)=>a.localeCompare(b,'ar',{numeric:true})) : [targetCls];
 
                 if (studentsList.length === 0) {
-                    area.innerHTML = "<h3 class='no-print' style='text-align:center; color:#be123c; margin-top:30px; font-weight:800;'>لا يوجد تلاميذ مقيدين في هذا الصف (تم استبعاد المحولين من إن وجدوا).</h3>";
+                    area.innerHTML = "<h3 class='no-print' style='text-align:center; color:#be123c; margin-top:30px; font-weight:800;'>لا يوجد تلاميذ مقيدين في هذا الصف.</h3>";
                     return;
                 }
 
@@ -677,7 +696,6 @@
             }, 80);
         }
 
-        // توليد الكشوف الخاصة (المحولين من يظهرون فقط وفقط في كشفهم المخصص)
         function generateSpecialReport(type) {
             const area = document.getElementById("print-area");
             area.innerHTML = "<h3 class='no-print' style='text-align:center; margin-top:30px; color:#0f2b48; font-weight:800;'><i class='fa-solid fa-circle-notch fa-spin'></i> جاري تجهيز الكشف المجمع...</h3>";
@@ -686,12 +704,10 @@
                 let filteredList = []; 
                 let reportTitle = "";
                 
-                // 1. كشف المحولين من (المكان الوحيد المسموح بظهورهم فيه)
                 if (type === 'trans_from') { 
                     filteredList = GLOBAL_STUDENTS.filter(s => s.transfer_type === "محول من"); 
                     reportTitle = "كشف بأسماء التلاميذ ( المحولين من ) المدرسة"; 
                 }
-                // 2. كشف الدمج (يستبعد المحولين من)
                 else if (type === 'damj') { 
                     const notDamjValues = ["", "لا", "لا يوجد", "لايوجد", "عادي", "غير مدمج", "false", "no", "0"];
                     filteredList = GLOBAL_STUDENTS.filter(s => 
@@ -700,7 +716,6 @@
                     ); 
                     reportTitle = "كشف بأسماء تلاميذ ( الدمج ) بالمدرسة"; 
                 }
-                // 3. كشف محول إلى (يستبعد المحولين من)
                 else if (type === 'trans_to') { 
                     filteredList = GLOBAL_STUDENTS.filter(s => 
                         s.transfer_type !== "محول من" && 
@@ -708,7 +723,6 @@
                     ); 
                     reportTitle = "كشف بأسماء التلاميذ ( المحولين إلى ) المدرسة"; 
                 }
-                // 4. كشف الأيتام (يستبعد المحولين من)
                 else if (type === 'orphan') { 
                     filteredList = GLOBAL_STUDENTS.filter(s => 
                         s.transfer_type !== "محول من" && 
@@ -716,7 +730,6 @@
                     ); 
                     reportTitle = "كشف بأسماء التلاميذ ( الأيتام ) بالمدرسة"; 
                 }
-                // 5. كشف البحث الاجتماعي (يستبعد المحولين من)
                 else if (type === 'social') { 
                     filteredList = GLOBAL_STUDENTS.filter(s => 
                         s.transfer_type !== "محول من" && 
@@ -724,7 +737,6 @@
                     ); 
                     reportTitle = "كشف بأسماء تلاميذ ( البحث الاجتماعي ) بالمدرسة"; 
                 }
-                // 6. كشف أبناء العاملين (يستبعد المحولين من)
                 else if (type === 'worker') { 
                     filteredList = GLOBAL_STUDENTS.filter(s => 
                         s.transfer_type !== "محول من" && 
@@ -738,7 +750,6 @@
                     return; 
                 }
 
-                // تطبيق الفرز الصارم مع الحفاظ على ترتيب الصفوف والفصول أولاً
                 filteredList.sort((a, b) => {
                     let gA = gradeOrder[a.grade] || 99;
                     let gB = gradeOrder[b.grade] || 99;
@@ -748,7 +759,6 @@
                     let cB = b.class ? String(b.class).trim() : "";
                     if (cA !== cB) return cA.localeCompare(cB, 'ar', { numeric: true });
 
-                    // الفرز الصارم للنوع والاسم داخل نفس الفصل
                     const isMaleA = isMaleStudent(a.gender);
                     const isMaleB = isMaleStudent(b.gender);
 
@@ -767,7 +777,94 @@
             }, 80);
         }
 
-        // ================== دوال بناء الأوراق الرسمية المطبوعة ================== //
+        // ================== دالة ترحيل 5 سلوك لقالب الإكسيل (xlsm) ==================
+        async function exportToExcel() {
+            const grade = document.getElementById("grade-select").value;
+            const targetCls = document.getElementById("class-select").value;
+            
+            if (!grade || !targetCls || targetCls === "all") {
+                alert("يرجى اختيار الصف واختيار فصل محدد أولاً (لا يمكن ترحيل كل فصول الصف معاً في ملف واحد)!");
+                return;
+            }
+
+            let studentsList = GLOBAL_STUDENTS.filter(s => 
+                String(s.grade).trim() === grade && 
+                String(s.class).trim() === targetCls && 
+                s.transfer_type !== "محول من"
+            );
+            
+            sortStudentsStrict(studentsList);
+
+            if (studentsList.length === 0) {
+                alert("لا يوجد تلاميذ مسجلين في هذا الفصل!");
+                return;
+            }
+
+            const area = document.getElementById("print-area");
+            area.innerHTML = "<h3 class='no-print' style='text-align:center; margin-top:30px; color:#15803d; font-weight:800;'><i class='fa-solid fa-spinner fa-spin'></i> جاري ترحيل البيانات وتجهيز ملف الإكسيل (xlsm)...</h3>";
+
+            try {
+                // 1. جلب قالب الإكسيل الأصلي
+                const templateUrl = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/agm.xlsm";
+                const response = await fetch(templateUrl);
+                if (!response.ok) throw new Error("تعذر تحميل قالب الإكسيل من السيرفر!");
+                const arrayBuffer = await response.arrayBuffer();
+
+                // 2. فتح القالب بمكتبة XlsxPopulate
+                const workbook = await XlsxPopulate.fromDataAsync(arrayBuffer);
+                const sheet = workbook.sheet(0);
+
+                // 3. كتابة الفصل في الخلية AL1 زى ما هو بالفورمات تماماً (مثل 4/1)
+                sheet.cell("AL1").value(String(targetCls).trim());
+
+                // 4. كتابة أسماء التلاميذ من 1 إلى 26 في النطاق C6 إلى C31
+                for (let i = 0; i < 26; i++) {
+                    let cell = sheet.cell(`C${6 + i}`);
+                    if (studentsList[i]) {
+                        cell.value(studentsList[i].name);
+                    } else {
+                        cell.value("");
+                    }
+                }
+
+                // 5. كتابة أسماء التلاميذ من 27 إلى 52 في النطاق C39 إلى C64
+                for (let i = 0; i < 26; i++) {
+                    let studentIndex = i + 26;
+                    let cell = sheet.cell(`C${39 + i}`);
+                    if (studentsList[studentIndex]) {
+                        cell.value(studentsList[studentIndex].name);
+                    } else {
+                        cell.value("");
+                    }
+                }
+
+                // 6. تجهيز اسم الملف بالصيغة المطلوبة (مثال: اجمالى الصف الأول فصل 1.xlsm)
+                let cleanGrade = grade.startsWith("الصف ") ? grade : ("الصف " + grade);
+                if (grade.startsWith("KG")) cleanGrade = grade;
+                const cleanCls = cleanClassNumber(targetCls, grade);
+                const fileName = `اجمالى ${cleanGrade} فصل ${cleanCls}.xlsm`;
+
+                // 7. إنشاء الملف وتنزيله لجهاز المستخدم
+                const blob = await workbook.outputAsync();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                area.innerHTML = `<h3 class='no-print' style='text-align:center; margin-top:30px; color:#15803d; font-weight:800;'><i class='fa-solid fa-circle-check'></i> تم بنجاح ترحيل وتنزيل ملف: (${fileName})</h3>`;
+
+            } catch (err) {
+                console.error("خطأ الترحيل:", err);
+                alert("حدث خطأ أثناء ترحيل الملف: " + err.message);
+                area.innerHTML = "";
+            }
+        }
+
+        // ================== دوال بناء الأوراق المطبوعة ==================
         function buildSpecialPage(title, studentsChunk, startIndex, totalCount, type) {
             const sheet = document.createElement("div"); sheet.className = "a4-sheet show-preview";
             sheet.innerHTML = `
@@ -807,6 +904,7 @@
                 <div class="footer-note">تمت مراجعة بيانات الطلبة بمعرفة شئون الطلبة والبيانات مطابقة لما ورد بملفات الطلبة</div><div class="signatures"><div>شئون الطلبة : <span class="sig-dots">......................................</span></div><div>مدير المدرسة : <span class="sig-dots">......................................</span></div></div>
             `; return sheet;
         }
+
         function buildStandardRows(students) {
             let html = "";
             for (let i = 0; i < 25; i++) {
@@ -830,6 +928,7 @@
                 <div class="signatures"><div>شئون الطلبة : <span class="sig-dots">......................................</span></div><div>مدير المدرسة : <span class="sig-dots">......................................</span></div></div>
             `; return sheet;
         }
+
         function buildHealthPage2(grade, clsName, students) {
             const sheet = document.createElement("div"); sheet.className = "a4-sheet show-preview";
             sheet.innerHTML = `
@@ -838,6 +937,7 @@
                 <div class="signatures" style="margin-top: 20px;"><div>شئون الطلبة : <span class="sig-dots">......................................</span></div><div>مدير المدرسة : <span class="sig-dots">......................................</span></div></div>
             `; return sheet;
         }
+
         function buildHealthRows(students, start, end) {
             let html = "";
             for (let i = start; i < end; i++) {
@@ -846,7 +946,6 @@
             } return html;
         }
 
-        // ================== دالة بناء دفتر 5 سلوك المطورة ================== //
         function buildBehaviorPage(grade, clsName, students, monthIdx, year, pageNum) {
             const sheet = document.createElement("div");
             sheet.className = "a3-sheet show-preview";
@@ -916,20 +1015,17 @@
                 </div>
                 <table class="behavior-table">
                     <thead>
-                        <!-- الصف الأول: أسماء الأسابيع وملخص الشهر -->
                         <tr>
                             <th rowspan="3" class="col-b-m">م</th>
                             <th rowspan="3" class="col-b-name">اسم التلميذ</th>
                             ${weekHeadersTop}
                             <th colspan="4" class="th-week-title" style="background:#e0f2fe !important; color:#0369a1;">ملخص الشهر</th>
                         </tr>
-                        <!-- الصف الثاني: أسماء الأيام، غياب الأسبوع، ورقم السجل مكان السبت -->
                         <tr>
                             ${dayHeaders}
                             <th colspan="2" style="font-size:10.5px; background:#f0fdf4;">الغياب</th>
                             <th colspan="2" style="font-size:10.5px; background:#fef2f2;">التأخر</th>
                         </tr>
-                        <!-- الصف الثالث: أرقام الأيام وخانات التفقيط -->
                         <tr>
                             ${dayNumbers}
                             <th class="col-b-summary">بدون</th>
