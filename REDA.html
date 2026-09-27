@@ -3,517 +3,536 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>غرفة عمليات الجدول (موبايل)</title>
+    <title>مبدل الحصص الحر + التعديل الذكي</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        :root { 
-            --primary-color: #1e3a8a; --secondary-color: #d97706; --bg-color: #f8fafc; 
-            --text-main: #0f172a; --danger: #be123c; --success: #16a34a; 
-            --warning: #f59e0b; --border-color: #cbd5e1; --contract-color: #4338ca;
+        :root {
+            --primary: #1e3a8a;
+            --secondary: #d97706;
+            --bg: #f8fafc;
+            --border: #cbd5e1;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --conflict-bg: #fee2e2;
+            --selected-glow: #f59e0b;
         }
 
-        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: #0f172a; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
         /* الشريط العلوي */
-        .top-nav { background: var(--primary-color); padding: 10px 15px; color: white; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 100; flex-shrink: 0;}
-        .top-nav h1 { font-size: 16px; font-weight: 900; color: #fcd34d; margin: 0; display: flex; align-items: center; gap: 8px;}
-        .top-nav .nav-actions { display: flex; gap: 10px; }
-        .icon-btn { background: rgba(255,255,255,0.2); color: white; border: none; width: 35px; height: 35px; border-radius: 8px; font-size: 16px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .header { background: var(--primary); color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10; flex-shrink: 0; }
+        .header h1 { font-size: 15px; font-weight: 900; color: #fcd34d; display: flex; align-items: center; gap: 8px; }
+        .save-btn { background: var(--success); color: white; border: none; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
 
-        /* شريط التحكم */
-        .controls-bar { padding: 10px; background: white; display: flex; gap: 10px; border-bottom: 2px solid var(--border-color); z-index: 99; flex-shrink: 0;}
-        .day-selector { flex-grow: 1; padding: 10px; font-size: 15px; font-weight: 900; border-radius: 8px; border: 2px solid var(--primary-color); outline: none; color: var(--primary-color); text-align: center; background: #eff6ff;}
-        .btn-save-cloud { background: var(--success); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: 900; font-size: 14px; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(22, 163, 74, 0.3);}
-
-        /* شريط التعليمات */
-        .instruction-bar { background: #fffbeb; color: #b45309; padding: 8px 10px; text-align: center; font-size: 12px; font-weight: 900; border-bottom: 1px solid #fde68a; flex-shrink: 0; transition: 0.3s;}
-        .instruction-bar.active-swap { background: var(--primary-color); color: white; }
-
-        /* الجدول */
-        .table-container { flex-grow: 1; overflow: auto; background: white; padding-bottom: 60px; }
-        .interactive-table { border-collapse: separate; border-spacing: 0; width: max-content; }
-        .interactive-table th, .interactive-table td { border-bottom: 1px solid var(--border-color); border-left: 1px solid var(--border-color); padding: 0; text-align: center; }
-        .interactive-table thead th { position: sticky; top: 0; background: var(--primary-color); color: white; z-index: 10; padding: 10px; font-size: 14px; min-width: 65px; border-bottom: 2px solid #0f172a;}
+        /* منطقة الاختيار */
+        .swap-controls { padding: 8px 10px; background: white; border-bottom: 2px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-shrink: 0; }
+        .selector-box { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; padding: 6px 8px; position: relative; }
+        .selector-box.side-a { border-color: #3b82f6; background: #eff6ff; }
+        .selector-box.side-b { border-color: #f59e0b; background: #fffbeb; }
         
-        .interactive-table tbody th { position: sticky; right: 0; background: #f8fafc; color: var(--primary-color); z-index: 5; font-size: 13px; font-weight: 900; padding: 0 10px; text-align: right; min-width: 140px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 2px solid var(--border-color); box-shadow: -2px 0 5px rgba(0,0,0,0.05);}
-        .interactive-table thead th:first-child { position: sticky; right: 0; z-index: 20; background: #0f172a; border-left: 2px solid var(--border-color);}
+        .selector-title { font-size: 11px; font-weight: 900; text-align: center; display: block; margin-bottom: 4px; }
+        .side-a .selector-title { color: #1d4ed8; }
+        .side-b .selector-title { color: #b45309; }
 
-        .badge-contract { font-size: 10px; background: var(--contract-color); color: white; padding: 2px 5px; border-radius: 4px; margin-right: 5px; font-weight: normal; }
-        .subj-label { font-size: 10px; color: #64748b; display: block; margin-top: -3px; }
+        .search-input { width: 100%; padding: 7px 8px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: bold; outline: none; background: white; }
+        .search-input:focus { border-color: var(--primary); }
 
-        /* الخلايا */
-        .cell-btn { width: 100%; height: 55px; background: transparent; border: none; font-size: 16px; font-weight: 900; outline: none; display: flex; justify-content: center; align-items: center; transition: 0.1s; }
-        .cell-btn.has-class { color: var(--primary-color); }
-        .cell-btn:active { background: #e2e8f0; }
-        .cell-btn.selected-swap { background: var(--warning) !important; color: white !important; box-shadow: inset 0 0 0 3px #b45309; animation: pulse 1s infinite; }
-        .cell-btn.conflict { background: #fee2e2 !important; color: red !important; }
+        .day-dropdown { width: 100%; padding: 5px; margin-top: 5px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; font-weight: bold; background: white; }
 
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        /* القائمة المنسدلة للبحث */
+        .dropdown-results { 
+            position: absolute; top: calc(100% + 4px); left: 0; right: 0; 
+            background: white; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
+            max-height: 200px; overflow-y: auto; z-index: 1000; display: none; 
+            border: 1px solid var(--border); 
+        }
+        .dropdown-item { padding: 8px 10px; font-size: 12px; font-weight: 700; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .dropdown-item:active { background: #e0f2fe; }
+        .badge-contract { font-size: 9px; background: #6366f1; color: white; padding: 2px 4px; border-radius: 4px; }
 
-        /* الرادار السفلي */
-        .radar-bar { position: fixed; bottom: 0; left: 0; right: 0; background: white; box-shadow: 0 -4px 15px rgba(0,0,0,0.1); z-index: 1000; border-top-left-radius: 15px; border-top-right-radius: 15px; transition: 0.3s transform; display: flex; flex-direction: column; max-height: 70vh;}
-        .radar-summary { padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 900; font-size: 15px; cursor: pointer; background: var(--text-main); color: white; border-top-left-radius: 15px; border-top-right-radius: 15px; }
-        .radar-badges { display: flex; gap: 10px; }
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; background: rgba(255,255,255,0.2); }
-        .badge.err { background: var(--danger); }
-        .badge.warn { background: var(--warning); color: black;}
-        .badge.ok { background: var(--success); }
-        .radar-details { overflow-y: auto; padding: 15px; display: none; background: #f8fafc; gap: 8px; flex-direction: column; }
-        .radar-bar.expanded .radar-details { display: flex; }
-        .alert-box { padding: 10px; border-radius: 8px; font-size: 13px; font-weight: bold; display: flex; align-items: flex-start; gap: 8px; line-height: 1.4; }
-        .alert-danger { background: #fef2f2; color: var(--danger); border: 1px solid #fecdd3; }
-        .alert-warning { background: #fffbeb; color: var(--secondary-color); border: 1px solid #fde68a; }
+        /* شريط التعليمات التفاعلي */
+        .instruction-bar { background: #fffbeb; color: #b45309; padding: 6px; text-align: center; font-size: 11px; font-weight: 900; border-bottom: 1px solid #fde68a; flex-shrink: 0; }
+        .instruction-bar.selecting { background: #1e3a8a; color: white; }
 
-        /* نافذة التعديل السريع اليدوي */
-        .bottom-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; flex-direction: column; justify-content: flex-end; }
-        .bottom-modal-content { background: white; border-top-left-radius: 20px; border-top-right-radius: 20px; padding: 25px 20px; text-align: center; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        
-        .qe-title { font-size: 16px; font-weight: 900; color: var(--primary-color); margin-bottom: 10px; }
-        .qe-hint { font-size: 12px; color: #64748b; margin-bottom: 15px; font-weight: bold; }
-        
-        .qe-input { width: 100%; padding: 15px; border-radius: 10px; border: 2px solid var(--primary-color); font-weight: 900; margin-bottom: 20px; font-size: 22px; text-align: center; outline: none; background: #f8fafc; direction: ltr; color: var(--primary-color);}
-        .qe-input:focus { background: white; box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); }
-        
-        .qe-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .qe-btn { padding: 12px; border: none; border-radius: 10px; font-weight: 900; font-size: 15px; color: white; display: flex; justify-content: center; align-items: center; gap: 8px;}
-        .qe-save { background: var(--primary-color); grid-column: 1 / -1; }
-        .qe-delete { background: var(--danger); }
-        .qe-cancel { background: #64748b; }
+        /* مساحة الحصص في عمودين متوازيين */
+        .columns-container { flex-grow: 1; overflow-y: auto; padding: 8px; padding-bottom: 85px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .teacher-column { display: flex; flex-direction: column; gap: 6px; }
 
+        /* كارت الحصة */
+        .slot-card { 
+            background: white; border: 1.5px solid var(--border); border-radius: 8px; 
+            padding: 4px 6px; display: flex; align-items: center; justify-content: space-between; 
+            min-height: 48px; position: relative; transition: 0.15s;
+        }
+        .slot-card.empty-slot { background: #f8fafc; border-style: dashed; }
+        .slot-card.occupied-slot { background: #ffffff; }
+
+        /* تمييز المعلمين */
+        .side-a-card.occupied-slot { border-color: #93c5fd; background: #f0f7ff; }
+        .side-b-card.occupied-slot { border-color: #fde68a; background: #fffdf5; }
+
+        /* حالة التحديد للتبديل */
+        .slot-card.is-selected { 
+            border-color: var(--selected-glow) !important; 
+            background: #fef3c7 !important; 
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4); 
+            transform: scale(0.98);
+        }
+
+        /* حالة التعارض */
+        .slot-card.has-conflict { 
+            background: var(--conflict-bg) !important; 
+            border-color: var(--danger) !important; 
+            color: var(--danger) !important; 
+        }
+
+        .slot-info { display: flex; flex-direction: column; cursor: pointer; flex-grow: 1; text-align: right; }
+        .slot-period { font-size: 10px; color: #64748b; font-weight: bold; }
+        .slot-class { font-size: 15px; font-weight: 900; color: #0f172a; }
+        .has-conflict .slot-class { color: var(--danger); }
+
+        .btn-edit-slot { 
+            background: transparent; border: none; color: #94a3b8; font-size: 14px; 
+            padding: 6px; cursor: pointer; border-radius: 6px; 
+        }
+        .btn-edit-slot:active { background: #e2e8f0; color: var(--primary); }
+
+        /* نافذة التعديل الذكي */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: flex-end; }
+        .modal-content { background: white; width: 100%; border-radius: 20px 20px 0 0; padding: 20px; text-align: center; }
+        .smart-input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid var(--primary); font-size: 24px; font-weight: 900; text-align: center; margin: 15px 0; outline: none; direction: ltr; }
+        .modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-full { grid-column: 1 / -1; }
+
+        /* رادار التعارض السفلي */
+        .radar-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: #0f172a; color: white; border-top-left-radius: 15px; border-top-right-radius: 15px; z-index: 500; font-size: 12px; }
+        .radar-summary { padding: 9px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
+        .radar-details { max-height: 130px; overflow-y: auto; padding: 0 15px 10px 15px; display: none; flex-direction: column; gap: 4px; }
+        .radar-details.show { display: flex; }
+        .alert-item { background: rgba(220, 38, 38, 0.25); border-right: 3px solid var(--danger); padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+
+        .empty-placeholder { grid-column: 1 / -1; text-align: center; color: #64748b; font-size: 13px; font-weight: bold; margin-top: 50px; line-height: 2; }
     </style>
 </head>
 <body>
 
-    <div class="top-nav">
-        <h1><i class="fa-solid fa-mobile-screen"></i> مدير الجدول</h1>
-        <div class="nav-actions">
-            <button class="icon-btn" onclick="window.location.reload()"><i class="fa-solid fa-rotate-right"></i></button>
-            <a href="schedule.html" class="icon-btn" style="text-decoration:none; background: var(--secondary-color);" title="العودة للجدول العادي"><i class="fa-solid fa-table-cells"></i></a>
-            <a href="index.html" class="icon-btn" style="text-decoration:none;"><i class="fa-solid fa-house"></i></a>
+    <div class="header">
+        <h1><i class="fa-solid fa-shuffle"></i> مبدل الحصص الحر</h1>
+        <button class="save-btn" onclick="saveToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ السحابة</button>
+    </div>
+
+    <!-- اختيار المعلمين والبحث -->
+    <div class="swap-controls">
+        <div class="selector-box side-a" id="box-a">
+            <span class="selector-title">المعلم الأول (أ)</span>
+            <input type="text" class="search-input" id="search-a" placeholder="ابحث بالحروف الأولى..." autocomplete="off" oninput="liveSearch('a')" onfocus="liveSearch('a')">
+            <div class="dropdown-results" id="results-a"></div>
+            
+            <select class="day-dropdown" id="day-a" onchange="renderColumns()">
+                <option value="الاحد">الأحد</option>
+                <option value="الاثنين">الإثنين</option>
+                <option value="الثلاثاء">الثلاثاء</option>
+                <option value="الاربعاء">الأربعاء</option>
+                <option value="الخميس">الخميس</option>
+            </select>
+        </div>
+
+        <div class="selector-box side-b" id="box-b">
+            <span class="selector-title">المعلم الثاني (ب)</span>
+            <input type="text" class="search-input" id="search-b" placeholder="ابحث بالحروف الأولى..." autocomplete="off" oninput="liveSearch('b')" onfocus="liveSearch('b')">
+            <div class="dropdown-results" id="results-b"></div>
+            
+            <select class="day-dropdown" id="day-b" onchange="renderColumns()">
+                <option value="الاحد">الأحد</option>
+                <option value="الاثنين">الإثنين</option>
+                <option value="الثلاثاء">الثلاثاء</option>
+                <option value="الاربعاء">الأربعاء</option>
+                <option value="الخميس">الخميس</option>
+            </select>
         </div>
     </div>
 
-    <div class="controls-bar">
-        <select class="day-selector" id="day-select" onchange="renderGrid()">
-            <option value="الاحد">يوم الأحد</option>
-            <option value="الاثنين">يوم الإثنين</option>
-            <option value="الثلاثاء">يوم الثلاثاء</option>
-            <option value="الاربعاء">يوم الأربعاء</option>
-            <option value="الخميس">يوم الخميس</option>
-        </select>
-        <button class="btn-save-cloud" onclick="saveAllToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ</button>
-    </div>
-
+    <!-- شريط الإرشادات التفاعلي -->
     <div class="instruction-bar" id="instruction-bar">
-        👈 ضغطة للتبديل | ضغطتين متتاليتين للتعديل اليدوي السريع
+        👈 اضغط على أي حصة لتحديدها، ثم اضغط على أي حصة أخرى للتبديل بينهما | ✏️ للتعديل
     </div>
 
-    <div class="table-container">
-        <table class="interactive-table">
-            <thead>
-                <tr>
-                    <th>المعلم والمادة</th>
-                    <th>ح 1</th><th>ح 2</th><th>ح 3</th><th>ح 4</th>
-                    <th>ح 5</th><th>ح 6</th><th>ح 7</th><th>ح 8</th>
-                </tr>
-            </thead>
-            <tbody id="grid-body"></tbody>
-        </table>
+    <!-- منطقة عرض الحصص في عمودين متوازيين -->
+    <div class="columns-container" id="columns-container">
+        <div class="empty-placeholder">
+            <i class="fa-solid fa-users" style="font-size:32px; color:var(--primary); margin-bottom:10px;"></i><br>
+            اختر المعلم (أ) والمعلم (ب) للبدء في التبديل الحر بين أي حصص.
+        </div>
     </div>
 
-    <div class="radar-bar" id="radar-bar">
+    <!-- نافذة الإدخال والتعديل الذكي -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-content">
+            <h3 id="modal-title" style="color:var(--primary); font-size:15px;">تعديل الفصل</h3>
+            <p style="font-size:11px; color:#64748b; margin-top:3px;">اكتب رقمين فقط (مثال: اكتب 54 ستتحول تلقائياً إلى ٥/٤)</p>
+            
+            <input type="tel" id="smart-class-input" class="smart-input" placeholder="اكتب رقم الفصل..." oninput="autoFormatClassInput(this)">
+            
+            <div class="modal-btns">
+                <button class="save-btn btn-full" style="justify-content:center; padding:12px;" onclick="applyManualEdit()">حفظ التعديل</button>
+                <button class="save-btn" style="background:var(--danger); justify-content:center;" onclick="clearSlotManual()">تفريغ الحصة</button>
+                <button class="save-btn" style="background:#64748b; justify-content:center;" onclick="closeEditModal()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- رادار التعارضات السفلي -->
+    <div class="radar-bottom">
         <div class="radar-summary" onclick="toggleRadar()">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid fa-satellite-dish" id="radar-icon"></i> حالة الجدول
-            </div>
-            <div class="radar-badges" id="radar-badges">
-                <span class="badge">جاري الفحص...</span>
-            </div>
+            <span><i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> رادار التعارض للمدرّسين:</span>
+            <span id="radar-badge" style="background:#16a34a; padding:2px 8px; border-radius:10px; font-size:11px;">الجدول سليم</span>
         </div>
         <div class="radar-details" id="radar-details"></div>
     </div>
 
-    <div class="bottom-modal-overlay" id="qeModal" onclick="if(event.target===this) closeQuickEdit()">
-        <div class="bottom-modal-content">
-            <div class="qe-title" id="qe-title">تعديل الحصة</div>
-            <div class="qe-hint">اكتب الأرقام فقط (مثال: اكتب 41 لتصبح ٤/١)</div>
-            
-            <input type="tel" class="qe-input" id="qe-class-input" placeholder="اكتب رقم الفصل..." oninput="smartFormatInput(this)" onkeypress="if(event.key==='Enter') applyQuickEdit();">
-            
-            <div class="qe-actions">
-                <button class="qe-btn qe-save" onclick="applyQuickEdit()"><i class="fa-solid fa-check"></i> حفظ التعديل</button>
-                <button class="qe-btn qe-delete" onclick="clearQuickEdit()"><i class="fa-solid fa-eraser"></i> تفريغ</button>
-                <button class="qe-btn qe-cancel" onclick="closeQuickEdit()">إلغاء</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = supabase.createClient(
+            'https://xgsyktjoerrymqoutqcb.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM'
+        );
 
-        const dayNamesAr = {"الاحد":"الأحد", "الاثنين":"الإثنين", "الثلاثاء":"الثلاثاء", "الاربعاء":"الأربعاء", "الخميس":"الخميس"};
-        
-        let TEACHERS = [];
-        let MODIFIED_TEACHERS = new Set();
-        let swapState = null; 
-        let currentEditData = null;
+        let ALL_TEACHERS = [];
+        let TEACHERS_MAP = new Map();
+        let MODIFIED_IDS = new Set();
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            await loadData();
-        });
+        let teacherA = null;
+        let teacherB = null;
 
-        function formatNum(str) {
-            if (!str) return "";
-            return String(str).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
+        // حالة التبديل الحر
+        let selectedSwapSlot = null; // { side, teacherId, day, period, val }
+        let currentEditTarget = null; // { teacherId, day, period }
+
+        const toArDigits = (s) => String(s || "").replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+        const toEnDigits = (s) => String(s || "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+
+        function normalizeArabic(text) {
+            if (!text) return "";
+            return String(text)
+                .replace(/[أإآا]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[\u064B-\u0652]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
         }
 
-        function extractShortName(fullName) {
-            if (!fullName) return "غير محدد";
-            const parts = fullName.trim().split(/\s+/);
-            if(parts.length === 1) return parts[0];
-            if (parts[0] === "عبد" || parts[0] === "ابو" || parts[0] === "أبو") return parts[0] + " " + parts[1] + " " + parts[parts.length - 1];
-            return parts[0] + " " + parts[parts.length - 1];
-        }
+        // ================= الإدخال الذكي: تحويل 54 إلى ٥/٤ =================
+        function autoFormatClassInput(el) {
+            let val = toEnDigits(el.value);
+            val = val.replace(/[^0-9/]/g, ''); // السماح فقط بالأرقام والشرطة
 
-        function smartFormatInput(inputElement) {
-            let val = inputElement.value;
-            let enVal = val.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
-            enVal = enVal.replace(/[^0-9/]/g, '');
-            if (/^[0-9]{2}$/.test(enVal)) enVal = enVal[0] + '/' + enVal[1];
-            inputElement.value = formatNum(enVal);
-        }
-
-        // ================= المترجم الذكي لترتيب المواد =================
-        const orderedSubjectsKeywords = [
-            ["عربي", "لغهاعربيه"],           // 1. عربي
-            ["رياضيات", "حساب"],             // 2. رياضيات
-            ["انجل", "لغهانجليزيه"],         // 3. إنجليزي
-            ["علوم"],                        // 4. علوم
-            ["دراس", "اجتماعي"],             // 5. دراسات
-            ["حاسب", "كمبيوتر", "تكنولوجيا"],// 6. حاسب آلي
-            ["دين"],                         // 7. تربية دينية
-            ["فني", "رسم"],                  // 8. تربية فنية
-            ["رياضي", "بدني", "العاب"],      // 9. تربية رياضية
-            ["موسيقي"],                      // 10. موسيقى
-            ["فصل"],                         // 11. معلم فصل
-            ["اطفال", "رياض"]                // 12. رياض أطفال
-        ];
-
-        function getSubjectRank(subjectString) {
-            if (!subjectString) return 999;
-            
-            // تجريد الكلمة من المسافات والهمزات لتسهيل البحث
-            let cleanSubj = subjectString.replace(/[أإآا]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, "");
-            
-            for (let i = 0; i < orderedSubjectsKeywords.length; i++) {
-                const keywords = orderedSubjectsKeywords[i];
-                for (let keyword of keywords) {
-                    if (cleanSubj.includes(keyword)) {
-                        return i; // إرجاع الترتيب إذا وجد تطابق
-                    }
-                }
+            // إذا كتب رقمين وراء بعض دون شرطة، نضيف الشرطة في المنتصف
+            if (/^[0-9]{2}$/.test(val)) {
+                val = val[0] + '/' + val[1];
             }
-            return 999; // إذا كانت المادة غير معروفة تذهب للنهاية
+            el.value = toArDigits(val);
         }
 
-        async function loadData() {
-            Swal.fire({ title: 'تحميل بيانات المدرسة...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        // 1. تحميل المعلمين
+        window.addEventListener('DOMContentLoaded', async () => {
+            Swal.fire({ title: 'تحميل البيانات...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const [resTeachers, resContract] = await Promise.all([
+                const [resReg, resCon] = await Promise.all([
                     supabaseClient.from("teachers").select("*").eq("emp_status", "على رأس العمل"),
                     supabaseClient.from("contract_teachers").select("*").eq("status", "يعمل")
                 ]);
 
-                if(resTeachers.error) throw resTeachers.error;
-                if(resContract.error) throw resContract.error;
-
-                let combinedTeachers = [];
-
-                // 1. فلترة صارمة جداً للمعلمين الأساسيين
-                (resTeachers.data || []).forEach(t => {
-                    let job = (t.cadre_job || "").replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/\s+/g, "");
-                    let subj = (t.subject || "").replace(/[أإآ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/\s+/g, "");
-                    
-                    const isNonTeacher = 
-                        job.includes("عامل") || 
-                        job.includes("اداري") || 
-                        job.includes("اخصائي") || 
-                        job.includes("مشرف") || 
-                        job.includes("سكرتير") || 
-                        job.includes("امين") || 
-                        job.includes("حارس") || 
-                        job.includes("فني") || 
-                        job.includes("غيرمخاطب") || 
-                        job.includes("خدمات") ||
-                        subj.includes("لايوجد") || 
-                        subj === ""; 
-
-                    if(!isNonTeacher) {
-                        combinedTeachers.push({
-                            id: t.code,
-                            type: 'regular',
-                            name: t.name,
-                            short_name: t.short_name || extractShortName(t.name),
-                            subject: (t.subject || "غير محدد").trim(),
-                            schedule: t.schedule || {}
-                        });
-                    }
+                const list = [];
+                (resReg.data || []).forEach(t => {
+                    list.push({ id: String(t.code), type: 'regular', name: t.name, subject: t.subject || "عام", schedule: t.schedule || {} });
+                });
+                (resCon.data || []).forEach(t => {
+                    list.push({ id: String(t.nid), type: 'contract', name: t.name, subject: t.subject || "عام", schedule: t.schedule || {} });
                 });
 
-                // 2. إضافة معلمي الأجر
-                (resContract.data || []).forEach(t => {
-                    combinedTeachers.push({
-                        id: t.nid,
-                        type: 'contract',
-                        name: t.name,
-                        short_name: extractShortName(t.name),
-                        subject: (t.subject || "غير محدد").trim(),
-                        schedule: t.schedule || {}
-                    });
-                });
+                list.sort((a,b) => a.name.localeCompare(b.name, 'ar'));
+                ALL_TEACHERS = list;
+                list.forEach(t => TEACHERS_MAP.set(t.id, t));
 
-                // 3. الترتيب الصارم باستخدام المترجم الذكي
-                combinedTeachers.sort((a, b) => {
-                    let rankA = getSubjectRank(a.subject);
-                    let rankB = getSubjectRank(b.subject);
-
-                    if (rankA !== rankB) return rankA - rankB; // ترتيب حسب المادة
-                    return (a.name || "").localeCompare(b.name || "", 'ar'); // ترتيب أبجدي لنفس المادة
-                });
-
-                TEACHERS = combinedTeachers;
-                renderGrid();
                 Swal.close();
             } catch(e) {
-                Swal.fire('خطأ', 'فشل تحميل البيانات: ' + e.message, 'error');
+                Swal.fire('خطأ', 'فشل تحميل البيانات', 'error');
             }
-        }
+        });
 
-        function updateInstructionBar() {
-            const bar = document.getElementById("instruction-bar");
-            if(swapState) {
-                bar.innerHTML = `<i class="fa-solid fa-hand-pointer"></i> تم تحديد حصة من يوم (${dayNamesAr[swapState.day]}).. اذهب لأي يوم واضغط على الحصة البديلة!`;
-                bar.classList.add("active-swap");
-            } else {
-                bar.innerHTML = `👈 ضغطة للتبديل | ضغطتين متتاليتين للتعديل اليدوي السريع`;
-                bar.classList.remove("active-swap");
-            }
-        }
+        // 2. البحث الذكي
+        function liveSearch(side) {
+            const input = document.getElementById(`search-${side}`);
+            const resultsBox = document.getElementById(`results-${side}`);
+            const query = normalizeArabic(input.value);
 
-        function renderGrid() {
-            const currentDay = document.getElementById("day-select").value;
-            const tbody = document.getElementById("grid-body");
-            tbody.innerHTML = "";
-
-            TEACHERS.forEach(t => {
-                let tr = document.createElement("tr");
-                
-                let th = document.createElement("th");
-                let nameHtml = t.short_name;
-                if(t.type === 'contract') nameHtml += ` <span class="badge-contract">أجر</span>`;
-                th.innerHTML = `<div>${nameHtml}</div><span class="subj-label">${t.subject}</span>`;
-                tr.appendChild(th);
-
-                for(let i=1; i<=8; i++) {
-                    let td = document.createElement("td");
-                    let btn = document.createElement("button");
-                    btn.className = "cell-btn";
-                    
-                    const cellKey = `${currentDay}_${i}`;
-                    const classVal = t.schedule[cellKey] || "";
-                    
-                    if(classVal) {
-                        btn.innerText = formatNum(classVal);
-                        btn.classList.add("has-class");
-                    } else {
-                        btn.innerHTML = "<span style='color:#cbd5e1; font-weight:normal;'>-</span>";
-                    }
-
-                    btn.dataset.id = t.id;
-                    btn.dataset.day = currentDay;
-                    btn.dataset.period = i;
-                    btn.dataset.val = classVal;
-                    
-                    if(swapState && swapState.id === t.id && swapState.day === currentDay && swapState.period == i) {
-                        btn.classList.add("selected-swap");
-                    }
-
-                    btn.onclick = () => handleMobileClick(btn);
-                    td.appendChild(btn);
-                    tr.appendChild(td);
-                }
-                tbody.appendChild(tr);
-            });
-
-            updateInstructionBar();
-            analyzeDay(); 
-        }
-
-        function handleMobileClick(clickedBtn) {
-            const currentData = {
-                id: clickedBtn.dataset.id,
-                day: clickedBtn.dataset.day,
-                period: clickedBtn.dataset.period,
-                val: clickedBtn.dataset.val
-            };
-
-            if (!swapState) {
-                swapState = currentData;
-                renderGrid(); 
-            } 
-            else if (swapState.id === currentData.id && swapState.day === currentData.day && swapState.period === currentData.period) {
-                swapState = null;
-                renderGrid(); 
-                openQuickEdit(currentData);
-            } 
-            else {
-                executeCrossSwap(swapState, currentData);
-                swapState = null;
-                renderGrid();
-            }
-        }
-
-        function executeCrossSwap(cell1, cell2) {
-            const t1 = TEACHERS.find(t => t.id === cell1.id);
-            const t2 = TEACHERS.find(t => t.id === cell2.id);
-
-            t1.schedule[`${cell1.day}_${cell1.period}`] = cell2.val;
-            t2.schedule[`${cell2.day}_${cell2.period}`] = cell1.val;
-
-            MODIFIED_TEACHERS.add(cell1.id);
-            MODIFIED_TEACHERS.add(cell2.id);
-
-            Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم التبديل بنجاح!', showConfirmButton: false, timer: 1500 });
-        }
-
-        function openQuickEdit(cellData) {
-            currentEditData = cellData;
-            const teacher = TEACHERS.find(t => t.id === cellData.id);
-            
-            document.getElementById("qe-title").innerText = `يوم ${dayNamesAr[cellData.day]} - حصة ${formatNum(cellData.period)}\n(أ. ${teacher.short_name})`;
-            
-            const inputField = document.getElementById("qe-class-input");
-            inputField.value = formatNum(cellData.val);
-            
-            document.getElementById("qeModal").style.display = "flex";
-            setTimeout(() => inputField.focus(), 100);
-        }
-
-        function closeQuickEdit() { 
-            document.getElementById("qeModal").style.display = "none"; 
-            currentEditData = null; 
-        }
-
-        function applyQuickEdit() {
-            if(!currentEditData) return;
-            const inputVal = document.getElementById("qe-class-input").value.trim();
-            const enVal = inputVal.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
-            updateCellData(enVal);
-        }
-
-        function clearQuickEdit() {
-            if(!currentEditData) return;
-            updateCellData("");
-        }
-
-        function updateCellData(newVal) {
-            const teacher = TEACHERS.find(t => t.id === currentEditData.id);
-            teacher.schedule[`${currentEditData.day}_${currentEditData.period}`] = newVal;
-            
-            MODIFIED_TEACHERS.add(currentEditData.id);
-            closeQuickEdit();
-            renderGrid();
-        }
-
-        function toggleRadar() {
-            const bar = document.getElementById("radar-bar");
-            bar.classList.toggle("expanded");
-            const icon = document.getElementById("radar-icon");
-            if(bar.classList.contains("expanded")) {
-                icon.classList.remove("fa-satellite-dish");
-                icon.classList.add("fa-chevron-down");
-            } else {
-                icon.classList.add("fa-satellite-dish");
-                icon.classList.remove("fa-chevron-down");
-            }
-        }
-
-        function analyzeDay() {
-            const day = document.getElementById("day-select").value;
-            const details = document.getElementById("radar-details");
-            const badges = document.getElementById("radar-badges");
-            details.innerHTML = "";
-            badges.innerHTML = "";
-
-            let conflicts = [];
-
-            document.querySelectorAll('.cell-btn').forEach(btn => btn.classList.remove('conflict'));
-
-            for(let p=1; p<=8; p++) {
-                let periodMap = {}; 
-                
-                TEACHERS.forEach(t => {
-                    const cls = t.schedule[`${day}_${p}`];
-                    if(cls) {
-                        if(!periodMap[cls]) periodMap[cls] = [];
-                        periodMap[cls].push({ id: t.id, name: t.short_name });
-                    }
-                });
-
-                for(let cls in periodMap) {
-                    if(periodMap[cls].length > 1) {
-                        let names = periodMap[cls].map(x => x.name).join(" و ");
-                        conflicts.push(`حصة ${formatNum(p)}: فصل ${formatNum(cls)} مع (${names})`);
-                        periodMap[cls].forEach(tea => {
-                            let btn = document.querySelector(`.cell-btn[data-id="${tea.id}"][data-day="${day}"][data-period="${p}"]`);
-                            if(btn) btn.classList.add('conflict');
-                        });
-                    }
-                }
-            }
-
-            if(conflicts.length === 0) {
-                badges.innerHTML = `<span class="badge ok"><i class="fa-solid fa-check"></i> لا يوجد تعارض</span>`;
-                details.innerHTML = `<div style="text-align:center; color:var(--success); font-weight:bold; padding:20px;">الجدول سليم ولا يوجد تعارض في هذا اليوم.</div>`;
-            } else {
-                badges.innerHTML = `<span class="badge err">🔴 ${formatNum(conflicts.length)} تعارض</span>`;
-                conflicts.forEach(msg => {
-                    details.innerHTML += `<div class="alert-box alert-danger"><span>${msg}</span></div>`;
-                });
-            }
-        }
-
-        async function saveAllToCloud() {
-            if(MODIFIED_TEACHERS.size === 0) {
-                Swal.fire({ toast: true, position: 'top', icon: 'info', title: 'لا يوجد تعديلات للحفظ', showConfirmButton: false, timer: 2000 });
+            if (!query) {
+                resultsBox.style.display = 'none';
                 return;
             }
 
-            Swal.fire({ title: 'جاري الحفظ بالسحابة...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            const matches = ALL_TEACHERS.filter(t => normalizeArabic(t.name).includes(query)).slice(0, 15);
+
+            if (matches.length === 0) {
+                resultsBox.innerHTML = `<div class="dropdown-item" style="color:#94a3b8;">لا يوجد معلم مطابق</div>`;
+            } else {
+                resultsBox.innerHTML = matches.map(t => `
+                    <div class="dropdown-item" onmousedown="chooseTeacher('${side}', '${t.id}')">
+                        <div>
+                            <span>${t.name}</span>
+                            <small style="color:#64748b; display:block; font-size:10px;">${t.subject}</small>
+                        </div>
+                        ${t.type === 'contract' ? '<span class="badge-contract">أجر</span>' : ''}
+                    </div>
+                `).join('');
+            }
+            resultsBox.style.display = 'block';
+        }
+
+        function chooseTeacher(side, id) {
+            const teacher = TEACHERS_MAP.get(String(id));
+            if (side === 'a') {
+                teacherA = teacher;
+                document.getElementById('search-a').value = teacher.name;
+                document.getElementById('results-a').style.display = 'none';
+            } else {
+                teacherB = teacher;
+                document.getElementById('search-b').value = teacher.name;
+                document.getElementById('results-b').style.display = 'none';
+            }
+            selectedSwapSlot = null;
+            renderColumns();
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#box-a')) document.getElementById('results-a').style.display = 'none';
+            if (!e.target.closest('#box-b')) document.getElementById('results-b').style.display = 'none';
+        });
+
+        // 3. فحص التعارضات على مستوى المدرسة
+        function findSchoolConflict(targetDay, period, className, currentTeacherId) {
+            if (!className) return null;
+            for (let t of ALL_TEACHERS) {
+                if (t.id === currentTeacherId) continue;
+                const assignedClass = t.schedule[`${targetDay}_${period}`];
+                if (assignedClass && assignedClass.trim() === className.trim()) {
+                    return t.name;
+                }
+            }
+            return null;
+        }
+
+        // 4. بناء الأعمدة الحرة للحصص
+        function renderColumns() {
+            const container = document.getElementById("columns-container");
+            const radarDetails = document.getElementById("radar-details");
+            const radarBadge = document.getElementById("radar-badge");
+            const instruction = document.getElementById("instruction-bar");
+
+            if (!teacherA || !teacherB) {
+                container.innerHTML = `
+                    <div class="empty-placeholder">
+                        <i class="fa-solid fa-users" style="font-size:32px; color:var(--primary); margin-bottom:10px;"></i><br>
+                        يرجى تحديد المعلمين (أ) و (ب) للبدء في المقارنة والتبديل الحر.
+                    </div>`;
+                radarBadge.innerText = "في انتظار الاختيار";
+                radarBadge.style.background = "#64748b";
+                radarDetails.innerHTML = "";
+                return;
+            }
+
+            const dayA = document.getElementById("day-a").value;
+            const dayB = document.getElementById("day-b").value;
+
+            let colAHtml = `<div class="teacher-column">`;
+            let colBHtml = `<div class="teacher-column">`;
+            let conflictsList = [];
+
+            for (let p = 1; p <= 8; p++) {
+                // حصة أ
+                const valA = teacherA.schedule[`${dayA}_${p}`] || "";
+                const confA = findSchoolConflict(dayA, p, valA, teacherA.id);
+                if (confA) conflictsList.push(`(المعلم أ): حصة ${toArDigits(p)} تعارض مع ${confA} في فصل (${toArDigits(valA)})`);
+
+                const isSelectedA = selectedSwapSlot && selectedSwapSlot.teacherId === teacherA.id && selectedSwapSlot.day === dayA && selectedSwapSlot.period == p;
+
+                colAHtml += `
+                    <div class="slot-card side-a-card ${valA ? 'occupied-slot' : 'empty-slot'} ${confA ? 'has-conflict' : ''} ${isSelectedA ? 'is-selected' : ''}" 
+                         id="slot-a-${p}">
+                        <div class="slot-info" onclick="handleSlotClick('a', '${teacherA.id}', '${dayA}', ${p})">
+                            <span class="slot-period">حصة ${toArDigits(p)} ${confA ? '⚠️ تعارض' : ''}</span>
+                            <span class="slot-class">${valA ? toArDigits(valA) : 'فارغ'}</span>
+                        </div>
+                        <button class="btn-edit-slot" onclick="openEditModal('${teacherA.id}', '${dayA}', ${p}, '${teacherA.name}')" title="تعديل يدوي">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                    </div>`;
+
+                // حصة ب
+                const valB = teacherB.schedule[`${dayB}_${p}`] || "";
+                const confB = findSchoolConflict(dayB, p, valB, teacherB.id);
+                if (confB) conflictsList.push(`(المعلم ب): حصة ${toArDigits(p)} تعارض مع ${confB} في فصل (${toArDigits(valB)})`);
+
+                const isSelectedB = selectedSwapSlot && selectedSwapSlot.teacherId === teacherB.id && selectedSwapSlot.day === dayB && selectedSwapSlot.period == p;
+
+                colBHtml += `
+                    <div class="slot-card side-b-card ${valB ? 'occupied-slot' : 'empty-slot'} ${confB ? 'has-conflict' : ''} ${isSelectedB ? 'is-selected' : ''}" 
+                         id="slot-b-${p}">
+                        <div class="slot-info" onclick="handleSlotClick('b', '${teacherB.id}', '${dayB}', ${p})">
+                            <span class="slot-period">حصة ${toArDigits(p)} ${confB ? '⚠️ تعارض' : ''}</span>
+                            <span class="slot-class">${valB ? toArDigits(valB) : 'فارغ'}</span>
+                        </div>
+                        <button class="btn-edit-slot" onclick="openEditModal('${teacherB.id}', '${dayB}', ${p}, '${teacherB.name}')" title="تعديل يدوي">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                    </div>`;
+            }
+
+            colAHtml += `</div>`;
+            colBHtml += `</div>`;
+            container.innerHTML = colAHtml + colBHtml;
+
+            // تحديث الإرشادات
+            if (selectedSwapSlot) {
+                instruction.classList.add("selecting");
+                instruction.innerHTML = `<i class="fa-solid fa-hand-pointer"></i> حددت حصة ${toArDigits(selectedSwapSlot.period)} .. اضغط الآن على <b>أي حصة أخرى</b> للتبديل فوراً!`;
+            } else {
+                instruction.classList.remove("selecting");
+                instruction.innerHTML = `👈 اضغط على أي حصة لتحديدها، ثم اضغط على أي حصة أخرى للتبديل بينهما | ✏️ للتعديل`;
+            }
+
+            // تحديث الرادار
+            if (conflictsList.length > 0) {
+                radarBadge.style.background = "var(--danger)";
+                radarBadge.innerText = `🔴 ${toArDigits(conflictsList.length)} تعارض`;
+                radarDetails.innerHTML = conflictsList.map(c => `<div class="alert-item">${c}</div>`).join('');
+            } else {
+                radarBadge.style.background = "var(--success)";
+                radarBadge.innerText = "الجدول سليم 100%";
+                radarDetails.innerHTML = `<div style="text-align:center; color:#4ade80;">لا توجد تعارضات في الحصص المختارة.</div>`;
+            }
+        }
+
+        // ================= التبديل الحر لأي حصة مع أي حصة =================
+        function handleSlotClick(side, teacherId, day, period) {
+            const currentTeacher = TEACHERS_MAP.get(teacherId);
+            const currentVal = currentTeacher.schedule[`${day}_${period}`] || "";
+
+            // 1. الضغطة الأولى: تحديد الحصة الأولى للتبديل
+            if (!selectedSwapSlot) {
+                selectedSwapSlot = { side, teacherId, day, period, val: currentVal };
+                renderColumns();
+                return;
+            }
+
+            // 2. إذا ضغط نفس الخلية مرة ثانية: إلغاء التحديد
+            if (selectedSwapSlot.teacherId === teacherId && selectedSwapSlot.day === day && selectedSwapSlot.period == period) {
+                selectedSwapSlot = null;
+                renderColumns();
+                return;
+            }
+
+            // 3. الضغطة الثانية على أي حصة أخرى (سواء عند المعلم الآخر، أو نفس المعلم في حصة مختلفة) -> تنفيذ التبديل!
+            const firstTeacher = TEACHERS_MAP.get(selectedSwapSlot.teacherId);
+            const secondTeacher = currentTeacher;
+
+            const firstKey = `${selectedSwapSlot.day}_${selectedSwapSlot.period}`;
+            const secondKey = `${day}_${period}`;
+
+            // تبديل القيمتين
+            firstTeacher.schedule[firstKey] = currentVal;
+            secondTeacher.schedule[secondKey] = selectedSwapSlot.val;
+
+            MODIFIED_IDS.add(firstTeacher.id);
+            MODIFIED_IDS.add(secondTeacher.id);
+
+            Swal.fire({
+                toast: true,
+                position: 'top',
+                icon: 'success',
+                title: `تم تبديل (حصة ${toArDigits(selectedSwapSlot.period)}) مع (حصة ${toArDigits(period)})`,
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            selectedSwapSlot = null;
+            renderColumns();
+        }
+
+        // ================= نافذة التعديل اليدوي السريع =================
+        function openEditModal(teacherId, day, period, teacherName) {
+            currentEditTarget = { teacherId, day, period };
+            const teacher = TEACHERS_MAP.get(teacherId);
+            const currentVal = teacher.schedule[`${day}_${period}`] || "";
+
+            document.getElementById("modal-title").innerText = `${teacherName} (حصة ${toArDigits(period)} - ${day})`;
+            const input = document.getElementById("smart-class-input");
+            input.value = toArDigits(currentVal);
+
+            document.getElementById("editModal").style.display = "flex";
+            setTimeout(() => input.focus(), 100);
+        }
+
+        function closeEditModal() {
+            document.getElementById("editModal").style.display = "none";
+            currentEditTarget = null;
+        }
+
+        function applyManualEdit() {
+            if (!currentEditTarget) return;
+            const inputVal = document.getElementById("smart-class-input").value.trim();
+            const cleanVal = toEnDigits(inputVal);
+
+            const teacher = TEACHERS_MAP.get(currentEditTarget.teacherId);
+            teacher.schedule[`${currentEditTarget.day}_${currentEditTarget.period}`] = cleanVal;
+
+            MODIFIED_IDS.add(teacher.id);
+            closeEditModal();
+            renderColumns();
+        }
+
+        function clearSlotManual() {
+            if (!currentEditTarget) return;
+            const teacher = TEACHERS_MAP.get(currentEditTarget.teacherId);
+            teacher.schedule[`${currentEditTarget.day}_${currentEditTarget.period}`] = "";
+
+            MODIFIED_IDS.add(teacher.id);
+            closeEditModal();
+            renderColumns();
+        }
+
+        function toggleRadar() {
+            document.getElementById("radar-details").classList.toggle("show");
+        }
+
+        // ================= الحفظ السحابي =================
+        async function saveToCloud() {
+            if (MODIFIED_IDS.size === 0) {
+                Swal.fire({ toast: true, position: 'top', icon: 'info', title: 'لا توجد تعديلات لحفظها' });
+                return;
+            }
+
+            Swal.fire({ title: 'جاري الحفظ في السحابة...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
-                for (let tId of MODIFIED_TEACHERS) {
-                    const teacher = TEACHERS.find(t => t.id === tId);
-                    
-                    if (teacher.type === 'regular') {
-                        await supabaseClient.from("teachers").update({ schedule: teacher.schedule }).eq("code", tId);
-                    } else {
-                        await supabaseClient.from("contract_teachers").update({ schedule: teacher.schedule }).eq("nid", tId);
-                    }
-                }
-                
-                MODIFIED_TEACHERS.clear(); 
-                Swal.fire({ icon: 'success', title: 'تم الحفظ بنجاح', timer: 2000, showConfirmButton: false });
+                const requests = Array.from(MODIFIED_IDS).map(id => {
+                    const t = TEACHERS_MAP.get(String(id));
+                    const table = t.type === 'regular' ? "teachers" : "contract_teachers";
+                    const keyCol = t.type === 'regular' ? "code" : "nid";
+                    return supabaseClient.from(table).update({ schedule: t.schedule }).eq(keyCol, t.id);
+                });
+
+                await Promise.all(requests);
+                MODIFIED_IDS.clear();
+                Swal.fire({ icon: 'success', title: 'تم حفظ كافة التعديلات بنجاح!', timer: 1500, showConfirmButton: false });
             } catch(e) {
-                Swal.fire('خطأ', 'حدث خطأ أثناء الحفظ', 'error');
+                Swal.fire('خطأ', 'تعذر الحفظ في السحابة', 'error');
             }
         }
     </script>
