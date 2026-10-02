@@ -342,8 +342,10 @@
 
             subSelect.innerHTML = '<option value="" disabled selected>-- اختر المادة --</option>';
             let subjects = ["لغة عربية", "تربية دينية", "رياضيات", "لغة إنجليزية"];
+            
+            // إضافة المواد الأساسية والأنشطة للصفوف الرابع والخامس والسادس
             if (selectedGrade === "الرابع" || selectedGrade === "الخامس" || selectedGrade === "السادس") {
-                subjects.push("علوم", "دراسات اجتماعية");
+                subjects.push("علوم", "دراسات اجتماعية", "تكنولوجيا", "مهارات", "تربية فنية", "تربية موسيقية");
             }
 
             subjects.forEach(sub => {
@@ -586,7 +588,7 @@
                     await fetchTemplate();
                 }
                 if (!TEMPLATE_ARRAY_BUFFER) {
-                    throw new Error("تعذر تحميل قالب الإكسيل (taq.xlsm) من السيرفر. تأكد من اتصال الإنترنت.");
+                    throw new Error("تعذر تحميل قالب الإكسيل (taqv2.xlsm) من السيرفر. تأكد من اتصال الإنترنت.");
                 }
 
                 const zip = await JSZip.loadAsync(TEMPLATE_ARRAY_BUFFER);
@@ -670,7 +672,7 @@
                 }
 
                 // ========================================================
-                // السر هنا: إجبار الإكسيل على إعادة حساب كافة المعادلات فور الفتح!
+                // إعادة حساب كافة المعادلات فور الفتح تلقائياً
                 // ========================================================
                 if (zip.file("xl/workbook.xml")) {
                     let wbXmlStr = await zip.file("xl/workbook.xml").async("text");
@@ -683,7 +685,6 @@
                         wbDoc.documentElement.appendChild(calcPr);
                     }
                     
-                    // تفعيل الحساب التلقائي لجميع معادلات الملف عند فتحه
                     calcPr.setAttribute("calcMode", "auto");
                     calcPr.setAttribute("fullCalcOnLoad", "1");
                     calcPr.setAttribute("forceFullCalculation", "1");
