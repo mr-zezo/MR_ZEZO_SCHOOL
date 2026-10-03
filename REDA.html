@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>مبدل الحصص الحر + التعديل الذكي</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>نظام إدارة الحصص | مستر زيزو</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -21,120 +21,277 @@
             --selected-glow: #f59e0b;
         }
 
-        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: #0f172a; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Cairo', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+            touch-action: manipulation;
+        }
+
+        body { 
+            background: var(--bg); 
+            color: #0f172a; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
 
         /* الشريط العلوي */
-        .header { background: var(--primary); color: white; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10; flex-shrink: 0; }
-        .header h1 { font-size: 15px; font-weight: 900; color: #fcd34d; display: flex; align-items: center; gap: 8px; }
-        .save-btn { background: var(--success); color: white; border: none; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .header { 
+            background: var(--primary); 
+            color: white; 
+            padding: 10px 14px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            z-index: 10; 
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        .header-title-box { display: flex; flex-direction: column; }
+        .header h1 { font-size: 15px; font-weight: 900; color: #fcd34d; display: flex; align-items: center; gap: 6px; }
+        .author-badge { font-size: 10px; color: #93c5fd; font-weight: 700; margin-top: -2px; }
 
-        /* منطقة الاختيار */
+        .header-actions { display: flex; align-items: center; gap: 6px; }
+        .mode-btn { background: #3b82f6; color: white; border: none; padding: 7px 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .mode-btn.swap-active { background: var(--secondary); }
+        .save-btn { background: var(--success); color: white; border: none; padding: 7px 12px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+
+        /* منطقة البحث والتحكم */
+        .single-mode-controls { 
+            background: white; 
+            padding: 10px 12px; 
+            border-bottom: 2px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            flex-shrink: 0; 
+        }
+
+        .search-wrapper { position: relative; width: 100%; }
+        .search-input { 
+            width: 100%; 
+            padding: 10px 12px; 
+            border: 2px solid var(--border); 
+            border-radius: 8px; 
+            font-size: 16px; /* يمنع التكبير التلقائي في أندرويد */
+            font-weight: bold; 
+            outline: none; 
+            background: #fff; 
+        }
+        .search-input:focus { border-color: var(--primary); }
+
+        /* لست بوكس اختيار اليوم */
+        .day-select-row { display: flex; align-items: center; gap: 8px; }
+        .day-select-label { font-size: 12px; font-weight: 900; color: #475569; white-space: nowrap; }
+        .day-listbox { 
+            flex-grow: 1; 
+            padding: 9px 12px; 
+            border: 1.5px solid var(--border); 
+            border-radius: 8px; 
+            font-size: 14px; 
+            font-weight: bold; 
+            background: #f8fafc; 
+            color: #0f172a; 
+            outline: none;
+            cursor: pointer;
+        }
+        .day-listbox:focus { border-color: var(--primary); background: #ffffff; }
+
+        /* القائمة المنسدلة للبحث الذكي */
+        .dropdown-results { 
+            position: absolute; 
+            top: calc(100% + 4px); 
+            left: 0; 
+            right: 0; 
+            background: white; 
+            border-radius: 10px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25); 
+            max-height: 220px; 
+            overflow-y: auto; 
+            z-index: 2000; 
+            display: none; 
+            border: 1.5px solid var(--border); 
+            -webkit-overflow-scrolling: touch;
+        }
+        .dropdown-item { 
+            padding: 12px; 
+            font-size: 14px; 
+            font-weight: 700; 
+            border-bottom: 1px solid #f1f5f9; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        .dropdown-item:active { background: #e0f2fe; }
+        .badge-contract { font-size: 10px; background: #6366f1; color: white; padding: 2px 6px; border-radius: 4px; }
+
+        /* شريط التوجيه */
+        .instruction-bar { 
+            background: #eff6ff; 
+            color: #1d4ed8; 
+            padding: 6px 10px; 
+            text-align: center; 
+            font-size: 11px; 
+            font-weight: 900; 
+            border-bottom: 1px solid #bfdbfe; 
+            flex-shrink: 0; 
+        }
+        .instruction-bar.selecting { background: #1e3a8a; color: white; }
+
+        /* الحاوية القابلة للتمرير */
+        .content-scrollable { 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 8px 10px; 
+            padding-bottom: 95px; 
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* كروت الحصص للوضع الفردي */
+        .single-grid { display: flex; flex-direction: column; gap: 8px; max-width: 600px; margin: 0 auto; }
+        .single-slot-card { 
+            background: white; 
+            border: 1.5px solid var(--border); 
+            border-radius: 10px; 
+            padding: 8px 10px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            gap: 10px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        .single-slot-card.has-conflict { border-color: var(--danger); background: var(--conflict-bg); }
+        .period-badge { font-size: 13px; font-weight: 900; color: #475569; width: 65px; flex-shrink: 0; }
+
+        .inline-class-input {
+            flex-grow: 1; 
+            border: 1.5px solid var(--border); 
+            border-radius: 8px;
+            padding: 8px 10px; 
+            font-size: 17px; 
+            font-weight: 900; 
+            text-align: center;
+            color: var(--primary); 
+            outline: none; 
+            background: #f8fafc; 
+            direction: ltr;
+            height: 44px;
+        }
+        .inline-class-input:focus { border-color: var(--primary); background: #ffffff; }
+        .has-conflict .inline-class-input { border-color: var(--danger); color: var(--danger); }
+
+        .btn-clear-slot {
+            background: #fee2e2; 
+            border: 1px solid #fecaca; 
+            color: var(--danger);
+            width: 44px; 
+            height: 44px; 
+            border-radius: 8px; 
+            display: flex; 
+            align-items: center;
+            justify-content: center; 
+            cursor: pointer; 
+            font-size: 16px; 
+            flex-shrink: 0;
+        }
+        .btn-clear-slot:active { background: var(--danger); color: white; }
+
+        /* وضع التبديل بين معلمين */
         .swap-controls { padding: 8px 10px; background: white; border-bottom: 2px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-shrink: 0; }
         .selector-box { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; padding: 6px 8px; position: relative; }
         .selector-box.side-a { border-color: #3b82f6; background: #eff6ff; }
         .selector-box.side-b { border-color: #f59e0b; background: #fffbeb; }
-        
         .selector-title { font-size: 11px; font-weight: 900; text-align: center; display: block; margin-bottom: 4px; }
         .side-a .selector-title { color: #1d4ed8; }
         .side-b .selector-title { color: #b45309; }
 
-        .search-input { width: 100%; padding: 7px 8px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: bold; outline: none; background: white; }
-        .search-input:focus { border-color: var(--primary); }
-
-        .day-dropdown { width: 100%; padding: 5px; margin-top: 5px; border: 1px solid var(--border); border-radius: 6px; font-size: 11px; font-weight: bold; background: white; }
-
-        /* القائمة المنسدلة للبحث */
-        .dropdown-results { 
-            position: absolute; top: calc(100% + 4px); left: 0; right: 0; 
-            background: white; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); 
-            max-height: 200px; overflow-y: auto; z-index: 1000; display: none; 
-            border: 1px solid var(--border); 
-        }
-        .dropdown-item { padding: 8px 10px; font-size: 12px; font-weight: 700; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .dropdown-item:active { background: #e0f2fe; }
-        .badge-contract { font-size: 9px; background: #6366f1; color: white; padding: 2px 4px; border-radius: 4px; }
-
-        /* شريط التعليمات التفاعلي */
-        .instruction-bar { background: #fffbeb; color: #b45309; padding: 6px; text-align: center; font-size: 11px; font-weight: 900; border-bottom: 1px solid #fde68a; flex-shrink: 0; }
-        .instruction-bar.selecting { background: #1e3a8a; color: white; }
-
-        /* مساحة الحصص في عمودين متوازيين */
-        .columns-container { flex-grow: 1; overflow-y: auto; padding: 8px; padding-bottom: 85px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .columns-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .teacher-column { display: flex; flex-direction: column; gap: 6px; }
-
-        /* كارت الحصة */
         .slot-card { 
             background: white; border: 1.5px solid var(--border); border-radius: 8px; 
-            padding: 4px 6px; display: flex; align-items: center; justify-content: space-between; 
-            min-height: 48px; position: relative; transition: 0.15s;
+            padding: 6px 8px; display: flex; align-items: center; justify-content: space-between; 
+            min-height: 52px; position: relative; cursor: pointer;
         }
         .slot-card.empty-slot { background: #f8fafc; border-style: dashed; }
-        .slot-card.occupied-slot { background: #ffffff; }
-
-        /* تمييز المعلمين */
+        .slot-card.is-selected { border-color: var(--selected-glow) !important; background: #fef3c7 !important; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4); }
+        .slot-card.has-conflict { background: var(--conflict-bg) !important; border-color: var(--danger) !important; color: var(--danger) !important; }
         .side-a-card.occupied-slot { border-color: #93c5fd; background: #f0f7ff; }
         .side-b-card.occupied-slot { border-color: #fde68a; background: #fffdf5; }
-
-        /* حالة التحديد للتبديل */
-        .slot-card.is-selected { 
-            border-color: var(--selected-glow) !important; 
-            background: #fef3c7 !important; 
-            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4); 
-            transform: scale(0.98);
-        }
-
-        /* حالة التعارض */
-        .slot-card.has-conflict { 
-            background: var(--conflict-bg) !important; 
-            border-color: var(--danger) !important; 
-            color: var(--danger) !important; 
-        }
-
-        .slot-info { display: flex; flex-direction: column; cursor: pointer; flex-grow: 1; text-align: right; }
+        .slot-info { display: flex; flex-direction: column; flex-grow: 1; text-align: right; }
         .slot-period { font-size: 10px; color: #64748b; font-weight: bold; }
         .slot-class { font-size: 15px; font-weight: 900; color: #0f172a; }
-        .has-conflict .slot-class { color: var(--danger); }
 
-        .btn-edit-slot { 
-            background: transparent; border: none; color: #94a3b8; font-size: 14px; 
-            padding: 6px; cursor: pointer; border-radius: 6px; 
+        /* رادار التعارض السفلي والحقوق */
+        .radar-bottom { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            background: #0f172a; 
+            color: white; 
+            border-top-left-radius: 14px; 
+            border-top-right-radius: 14px; 
+            z-index: 500; 
+            font-size: 12px;
+            box-shadow: 0 -3px 10px rgba(0,0,0,0.2);
         }
-        .btn-edit-slot:active { background: #e2e8f0; color: var(--primary); }
-
-        /* نافذة التعديل الذكي */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: flex-end; }
-        .modal-content { background: white; width: 100%; border-radius: 20px 20px 0 0; padding: 20px; text-align: center; }
-        .smart-input { width: 100%; padding: 12px; border-radius: 10px; border: 2px solid var(--primary); font-size: 24px; font-weight: 900; text-align: center; margin: 15px 0; outline: none; direction: ltr; }
-        .modal-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn-full { grid-column: 1 / -1; }
-
-        /* رادار التعارض السفلي */
-        .radar-bottom { position: fixed; bottom: 0; left: 0; right: 0; background: #0f172a; color: white; border-top-left-radius: 15px; border-top-right-radius: 15px; z-index: 500; font-size: 12px; }
-        .radar-summary { padding: 9px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
-        .radar-details { max-height: 130px; overflow-y: auto; padding: 0 15px 10px 15px; display: none; flex-direction: column; gap: 4px; }
+        .radar-summary { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
+        .radar-details { max-height: 120px; overflow-y: auto; padding: 0 14px 8px 14px; display: none; flex-direction: column; gap: 4px; }
         .radar-details.show { display: flex; }
-        .alert-item { background: rgba(220, 38, 38, 0.25); border-right: 3px solid var(--danger); padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+        .alert-item { background: rgba(220, 38, 38, 0.3); border-right: 3px solid var(--danger); padding: 5px 8px; border-radius: 4px; font-size: 11px; }
 
-        .empty-placeholder { grid-column: 1 / -1; text-align: center; color: #64748b; font-size: 13px; font-weight: bold; margin-top: 50px; line-height: 2; }
+        .empty-placeholder { text-align: center; color: #64748b; font-size: 13px; font-weight: bold; margin-top: 45px; line-height: 2; }
     </style>
 </head>
 <body>
 
+    <!-- الشريط العلوي -->
     <div class="header">
-        <h1><i class="fa-solid fa-shuffle"></i> مبدل الحصص الحر</h1>
-        <button class="save-btn" onclick="saveToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ السحابة</button>
+        <div class="header-title-box">
+            <h1 id="app-title"><i class="fa-solid fa-calendar-days"></i> جدول الحصص اليومي</h1>
+            <span class="author-badge"><i class="fa-solid fa-code"></i> فكرة وتطوير: مستر زيزو</span>
+        </div>
+        <div class="header-actions">
+            <button class="mode-btn" id="btn-toggle-mode" onclick="toggleMode()">
+                <i class="fa-solid fa-shuffle"></i> مبدل المعلمين
+            </button>
+            <button class="save-btn" onclick="saveToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ</button>
+        </div>
     </div>
 
-    <!-- اختيار المعلمين والبحث -->
-    <div class="swap-controls">
+    <!-- 1. واجهة المعلم الفردي (الافتراضية) -->
+    <div id="single-controls-wrapper" class="single-mode-controls">
+        <div class="search-wrapper">
+            <input type="text" class="search-input" id="search-single" placeholder="اكتب الحروف الأولى لاسم المعلم (مثال: ع / عب)..." autocomplete="off" oninput="liveSearchSingle()" onfocus="liveSearchSingle()">
+            <div class="dropdown-results" id="results-single"></div>
+        </div>
+        
+        <!-- لست بوكس لاختيار اليوم (الافتراضي: الأحد) -->
+        <div class="day-select-row">
+            <label class="day-select-label" for="day-select-single"><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> اختر اليوم:</label>
+            <select class="day-listbox" id="day-select-single" onchange="onSingleDaySelect(this.value)">
+                <option value="الاحد" selected>الأحد</option>
+                <option value="الاثنين">الإثنين</option>
+                <option value="الثلاثاء">الثلاثاء</option>
+                <option value="الاربعاء">الأربعاء</option>
+                <option value="الخميس">الخميس</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 2. واجهة وضع التبديل بين معلمين -->
+    <div id="swap-controls-wrapper" class="swap-controls" style="display:none;">
         <div class="selector-box side-a" id="box-a">
             <span class="selector-title">المعلم الأول (أ)</span>
-            <input type="text" class="search-input" id="search-a" placeholder="ابحث بالحروف الأولى..." autocomplete="off" oninput="liveSearch('a')" onfocus="liveSearch('a')">
+            <input type="text" class="search-input" id="search-a" placeholder="بداية الاسم..." autocomplete="off" oninput="liveSearchSwap('a')" onfocus="liveSearchSwap('a')">
             <div class="dropdown-results" id="results-a"></div>
-            
-            <select class="day-dropdown" id="day-a" onchange="renderColumns()">
-                <option value="الاحد">الأحد</option>
+            <select class="day-listbox" id="day-a" style="margin-top:5px; padding:6px;" onchange="renderSwapColumns()">
+                <option value="الاحد" selected>الأحد</option>
                 <option value="الاثنين">الإثنين</option>
                 <option value="الثلاثاء">الثلاثاء</option>
                 <option value="الاربعاء">الأربعاء</option>
@@ -144,11 +301,10 @@
 
         <div class="selector-box side-b" id="box-b">
             <span class="selector-title">المعلم الثاني (ب)</span>
-            <input type="text" class="search-input" id="search-b" placeholder="ابحث بالحروف الأولى..." autocomplete="off" oninput="liveSearch('b')" onfocus="liveSearch('b')">
+            <input type="text" class="search-input" id="search-b" placeholder="بداية الاسم..." autocomplete="off" oninput="liveSearchSwap('b')" onfocus="liveSearchSwap('b')">
             <div class="dropdown-results" id="results-b"></div>
-            
-            <select class="day-dropdown" id="day-b" onchange="renderColumns()">
-                <option value="الاحد">الأحد</option>
+            <select class="day-listbox" id="day-b" style="margin-top:5px; padding:6px;" onchange="renderSwapColumns()">
+                <option value="الاحد" selected>الأحد</option>
                 <option value="الاثنين">الإثنين</option>
                 <option value="الثلاثاء">الثلاثاء</option>
                 <option value="الاربعاء">الأربعاء</option>
@@ -157,39 +313,23 @@
         </div>
     </div>
 
-    <!-- شريط الإرشادات التفاعلي -->
+    <!-- شريط الإرشادات -->
     <div class="instruction-bar" id="instruction-bar">
-        👈 اضغط على أي حصة لتحديدها، ثم اضغط على أي حصة أخرى للتبديل بينهما | ✏️ للتعديل
+        اكتب رقمين في خانة الحصة (مثال: 21 تتحول تلقائياً إلى ٢/١) | 🗑️ لتفريغ الحصة
     </div>
 
-    <!-- منطقة عرض الحصص في عمودين متوازيين -->
-    <div class="columns-container" id="columns-container">
+    <!-- مساحة عرض الحصص -->
+    <div class="content-scrollable" id="main-content">
         <div class="empty-placeholder">
-            <i class="fa-solid fa-users" style="font-size:32px; color:var(--primary); margin-bottom:10px;"></i><br>
-            اختر المعلم (أ) والمعلم (ب) للبدء في التبديل الحر بين أي حصص.
-        </div>
-    </div>
-
-    <!-- نافذة الإدخال والتعديل الذكي -->
-    <div class="modal-overlay" id="editModal">
-        <div class="modal-content">
-            <h3 id="modal-title" style="color:var(--primary); font-size:15px;">تعديل الفصل</h3>
-            <p style="font-size:11px; color:#64748b; margin-top:3px;">اكتب رقمين فقط (مثال: اكتب 54 ستتحول تلقائياً إلى ٥/٤)</p>
-            
-            <input type="tel" id="smart-class-input" class="smart-input" placeholder="اكتب رقم الفصل..." oninput="autoFormatClassInput(this)">
-            
-            <div class="modal-btns">
-                <button class="save-btn btn-full" style="justify-content:center; padding:12px;" onclick="applyManualEdit()">حفظ التعديل</button>
-                <button class="save-btn" style="background:var(--danger); justify-content:center;" onclick="clearSlotManual()">تفريغ الحصة</button>
-                <button class="save-btn" style="background:#64748b; justify-content:center;" onclick="closeEditModal()">إلغاء</button>
-            </div>
+            <i class="fa-solid fa-chalkboard-user" style="font-size:38px; color:var(--primary); margin-bottom:10px;"></i><br>
+            ابحث عن معلم بالأعلى لعرض وتعديل حصصه ليوم الأحد.
         </div>
     </div>
 
     <!-- رادار التعارضات السفلي -->
     <div class="radar-bottom">
         <div class="radar-summary" onclick="toggleRadar()">
-            <span><i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> رادار التعارض للمدرّسين:</span>
+            <span><i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> رادار التعارضات:</span>
             <span id="radar-badge" style="background:#16a34a; padding:2px 8px; border-radius:10px; font-size:11px;">الجدول سليم</span>
         </div>
         <div class="radar-details" id="radar-details"></div>
@@ -205,41 +345,32 @@
         let TEACHERS_MAP = new Map();
         let MODIFIED_IDS = new Set();
 
+        let activeMode = 'single'; // 'single' أو 'swap'
+        let singleTeacher = null;
+        let singleDay = 'الاحد';
+
         let teacherA = null;
         let teacherB = null;
-
-        // حالة التبديل الحر
-        let selectedSwapSlot = null; // { side, teacherId, day, period, val }
-        let currentEditTarget = null; // { teacherId, day, period }
+        let selectedSwapSlot = null;
 
         const toArDigits = (s) => String(s || "").replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
         const toEnDigits = (s) => String(s || "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
 
+        // تطبيع متقدم للنصوص العربية
         function normalizeArabic(text) {
             if (!text) return "";
             return String(text)
                 .replace(/[أإآا]/g, 'ا')
                 .replace(/ة/g, 'ه')
                 .replace(/ى/g, 'ي')
-                .replace(/[\u064B-\u0652]/g, '')
+                .replace(/[\u064B-\u0652]/g, '') // التشكيل
+                .replace(/\u0640/g, '')          // التطويل
                 .replace(/\s+/g, ' ')
                 .trim()
                 .toLowerCase();
         }
 
-        // ================= الإدخال الذكي: تحويل 54 إلى ٥/٤ =================
-        function autoFormatClassInput(el) {
-            let val = toEnDigits(el.value);
-            val = val.replace(/[^0-9/]/g, ''); // السماح فقط بالأرقام والشرطة
-
-            // إذا كتب رقمين وراء بعض دون شرطة، نضيف الشرطة في المنتصف
-            if (/^[0-9]{2}$/.test(val)) {
-                val = val[0] + '/' + val[1];
-            }
-            el.value = toArDigits(val);
-        }
-
-        // 1. تحميل المعلمين
+        // ================= التحميل الأولي للبيانات =================
         window.addEventListener('DOMContentLoaded', async () => {
             Swal.fire({ title: 'تحميل البيانات...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
@@ -262,28 +393,197 @@
 
                 Swal.close();
             } catch(e) {
-                Swal.fire('خطأ', 'فشل تحميل البيانات', 'error');
+                Swal.fire('خطأ', 'تعذر تحميل بيانات المعلمين من السحابة', 'error');
             }
         });
 
-        // 2. البحث الذكي
-        function liveSearch(side) {
-            const input = document.getElementById(`search-${side}`);
-            const resultsBox = document.getElementById(`results-${side}`);
-            const query = normalizeArabic(input.value);
+        // ================= خوارزمية البحث الصارم ببدايات الحروف =================
+        function searchTeachersStrictPrefix(rawQuery) {
+            const q = normalizeArabic(rawQuery);
+            if (!q) return [];
 
-            if (!query) {
-                resultsBox.style.display = 'none';
+            return ALL_TEACHERS.filter(t => {
+                const normName = normalizeArabic(t.name);
+                // 1. هل يبدأ الاسم كاملاً بهذه الحروف؟
+                if (normName.startsWith(q)) return true;
+                // 2. أو هل تبدأ أي كلمة مستقلة داخل الاسم بهذه الحروف؟
+                const words = normName.split(' ');
+                return words.some(word => word.startsWith(q));
+            }).sort((a, b) => {
+                const aName = normalizeArabic(a.name);
+                const bName = normalizeArabic(b.name);
+                const aStarts = aName.startsWith(q);
+                const bStarts = bName.startsWith(q);
+                // إعطاء أولوية مطلقة للاسم الذي يبدأ مباشرة بالحروف
+                if (aStarts && !bStarts) return -1;
+                if (!aStarts && bStarts) return 1;
+                return aName.localeCompare(bName, 'ar');
+            }).slice(0, 20);
+        }
+
+        // ================= بحث الوضع الفردي =================
+        function liveSearchSingle() {
+            const input = document.getElementById("search-single");
+            const box = document.getElementById("results-single");
+            const query = input.value;
+
+            if (!query.trim()) { box.style.display = 'none'; return; }
+
+            const matches = searchTeachersStrictPrefix(query);
+            if (matches.length === 0) {
+                box.innerHTML = `<div class="dropdown-item" style="color:#94a3b8;">لا يوجد اسم يبدأ بـ "${query}"</div>`;
+            } else {
+                box.innerHTML = matches.map(t => `
+                    <div class="dropdown-item" onmousedown="selectSingleTeacher('${t.id}')">
+                        <div>
+                            <span>${t.name}</span>
+                            <small style="color:#64748b; display:block; font-size:11px;">${t.subject}</small>
+                        </div>
+                        ${t.type === 'contract' ? '<span class="badge-contract">أجر</span>' : ''}
+                    </div>
+                `).join('');
+            }
+            box.style.display = 'block';
+        }
+
+        function selectSingleTeacher(id) {
+            singleTeacher = TEACHERS_MAP.get(String(id));
+            document.getElementById("search-single").value = singleTeacher.name;
+            document.getElementById("results-single").style.display = 'none';
+            renderSingleView();
+        }
+
+        function onSingleDaySelect(day) {
+            singleDay = day;
+            renderSingleView();
+        }
+
+        // ================= عرض جدول المعلم الفردي =================
+        function renderSingleView() {
+            const container = document.getElementById("main-content");
+            const instruction = document.getElementById("instruction-bar");
+            instruction.innerHTML = `اكتب رقمين في خانة الحصة (مثال: 21 تتحول تلقائياً إلى ٢/١) | 🗑️ لتفريغ الحصة`;
+
+            if (!singleTeacher) {
+                container.innerHTML = `
+                    <div class="empty-placeholder">
+                        <i class="fa-solid fa-chalkboard-user" style="font-size:38px; color:var(--primary); margin-bottom:10px;"></i><br>
+                        ابحث عن معلم بالأعلى لعرض حصصه ليوم (${singleDay}).
+                    </div>`;
+                updateRadar([]);
                 return;
             }
 
-            const matches = ALL_TEACHERS.filter(t => normalizeArabic(t.name).includes(query)).slice(0, 15);
+            let html = `<div class="single-grid">`;
+            let conflicts = [];
 
-            if (matches.length === 0) {
-                resultsBox.innerHTML = `<div class="dropdown-item" style="color:#94a3b8;">لا يوجد معلم مطابق</div>`;
+            for (let p = 1; p <= 8; p++) {
+                const val = singleTeacher.schedule[`${singleDay}_${p}`] || "";
+                const conf = findSchoolConflict(singleDay, p, val, singleTeacher.id);
+                if (conf) conflicts.push(`حصة ${toArDigits(p)}: تعارض مع (${conf}) في فصل (${toArDigits(val)})`);
+
+                html += `
+                    <div class="single-slot-card ${conf ? 'has-conflict' : ''}" id="card-${p}">
+                        <div class="period-badge">حصة ${toArDigits(p)}</div>
+                        <input type="text" 
+                               inputmode="numeric" 
+                               class="inline-class-input" 
+                               id="input-single-${p}"
+                               placeholder="فارغ" 
+                               value="${val ? toArDigits(val) : ''}" 
+                               oninput="handleInlineClassInput(this, '${singleTeacher.id}', '${singleDay}', ${p})"
+                        >
+                        <button class="btn-clear-slot" onclick="clearSlotDirect('${singleTeacher.id}', '${singleDay}', ${p})" title="تفريغ الحصة">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+            }
+
+            html += `</div>`;
+            container.innerHTML = html;
+            updateRadar(conflicts);
+        }
+
+        // إدخال ذكي مباشر (مثال: 21 -> 2/1)
+        function handleInlineClassInput(el, teacherId, day, period) {
+            let val = toEnDigits(el.value).replace(/[^0-9/]/g, '');
+
+            if (/^[0-9]{2}$/.test(val)) {
+                val = val[0] + '/' + val[1];
+            }
+
+            el.value = toArDigits(val);
+
+            const teacher = TEACHERS_MAP.get(teacherId);
+            teacher.schedule[`${day}_${period}`] = val;
+            MODIFIED_IDS.add(teacher.id);
+
+            const card = document.getElementById(`card-${period}`);
+            const conf = findSchoolConflict(day, period, val, teacherId);
+            if (conf) {
+                card.classList.add('has-conflict');
             } else {
-                resultsBox.innerHTML = matches.map(t => `
-                    <div class="dropdown-item" onmousedown="chooseTeacher('${side}', '${t.id}')">
+                card.classList.remove('has-conflict');
+            }
+
+            recalculateCurrentConflicts();
+        }
+
+        // تفريغ الحصة
+        function clearSlotDirect(teacherId, day, period) {
+            const teacher = TEACHERS_MAP.get(teacherId);
+            teacher.schedule[`${day}_${period}`] = "";
+            MODIFIED_IDS.add(teacher.id);
+
+            const input = document.getElementById(`input-single-${period}`);
+            const card = document.getElementById(`card-${period}`);
+            if (input) input.value = "";
+            if (card) card.classList.remove('has-conflict');
+
+            recalculateCurrentConflicts();
+        }
+
+        // ================= التبديل بين النمطين =================
+        function toggleMode() {
+            const btn = document.getElementById("btn-toggle-mode");
+            const singleControls = document.getElementById("single-controls-wrapper");
+            const swapControls = document.getElementById("swap-controls-wrapper");
+            const title = document.getElementById("app-title");
+
+            if (activeMode === 'single') {
+                activeMode = 'swap';
+                btn.innerHTML = `<i class="fa-solid fa-user"></i> تعديل معلم`;
+                btn.classList.add("swap-active");
+                title.innerHTML = `<i class="fa-solid fa-shuffle"></i> مبدل الحصص الحر`;
+                singleControls.style.display = "none";
+                swapControls.style.display = "grid";
+                renderSwapColumns();
+            } else {
+                activeMode = 'single';
+                btn.innerHTML = `<i class="fa-solid fa-shuffle"></i> مبدل المعلمين`;
+                btn.classList.remove("swap-active");
+                title.innerHTML = `<i class="fa-solid fa-calendar-days"></i> جدول الحصص اليومي`;
+                singleControls.style.display = "flex";
+                swapControls.style.display = "none";
+                renderSingleView();
+            }
+        }
+
+        // ================= بحث وضع التبديل الحر =================
+        function liveSearchSwap(side) {
+            const input = document.getElementById(`search-${side}`);
+            const box = document.getElementById(`results-${side}`);
+            const query = input.value;
+
+            if (!query.trim()) { box.style.display = 'none'; return; }
+
+            const matches = searchTeachersStrictPrefix(query);
+            if (matches.length === 0) {
+                box.innerHTML = `<div class="dropdown-item" style="color:#94a3b8;">لا يوجد معلم مطابق</div>`;
+            } else {
+                box.innerHTML = matches.map(t => `
+                    <div class="dropdown-item" onmousedown="chooseTeacherSwap('${side}', '${t.id}')">
                         <div>
                             <span>${t.name}</span>
                             <small style="color:#64748b; display:block; font-size:10px;">${t.subject}</small>
@@ -292,10 +592,10 @@
                     </div>
                 `).join('');
             }
-            resultsBox.style.display = 'block';
+            box.style.display = 'block';
         }
 
-        function chooseTeacher(side, id) {
+        function chooseTeacherSwap(side, id) {
             const teacher = TEACHERS_MAP.get(String(id));
             if (side === 'a') {
                 teacherA = teacher;
@@ -307,43 +607,20 @@
                 document.getElementById('results-b').style.display = 'none';
             }
             selectedSwapSlot = null;
-            renderColumns();
+            renderSwapColumns();
         }
 
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('#box-a')) document.getElementById('results-a').style.display = 'none';
-            if (!e.target.closest('#box-b')) document.getElementById('results-b').style.display = 'none';
-        });
-
-        // 3. فحص التعارضات على مستوى المدرسة
-        function findSchoolConflict(targetDay, period, className, currentTeacherId) {
-            if (!className) return null;
-            for (let t of ALL_TEACHERS) {
-                if (t.id === currentTeacherId) continue;
-                const assignedClass = t.schedule[`${targetDay}_${period}`];
-                if (assignedClass && assignedClass.trim() === className.trim()) {
-                    return t.name;
-                }
-            }
-            return null;
-        }
-
-        // 4. بناء الأعمدة الحرة للحصص
-        function renderColumns() {
-            const container = document.getElementById("columns-container");
-            const radarDetails = document.getElementById("radar-details");
-            const radarBadge = document.getElementById("radar-badge");
+        function renderSwapColumns() {
+            const container = document.getElementById("main-content");
             const instruction = document.getElementById("instruction-bar");
 
             if (!teacherA || !teacherB) {
                 container.innerHTML = `
                     <div class="empty-placeholder">
-                        <i class="fa-solid fa-users" style="font-size:32px; color:var(--primary); margin-bottom:10px;"></i><br>
-                        يرجى تحديد المعلمين (أ) و (ب) للبدء في المقارنة والتبديل الحر.
+                        <i class="fa-solid fa-users" style="font-size:36px; color:var(--primary); margin-bottom:10px;"></i><br>
+                        يرجى تحديد المعلم (أ) والمعلم (ب) للبدء في التبديل الحر بين أي حصص.
                     </div>`;
-                radarBadge.innerText = "في انتظار الاختيار";
-                radarBadge.style.background = "#64748b";
-                radarDetails.innerHTML = "";
+                updateRadar([]);
                 return;
             }
 
@@ -355,97 +632,72 @@
             let conflictsList = [];
 
             for (let p = 1; p <= 8; p++) {
-                // حصة أ
                 const valA = teacherA.schedule[`${dayA}_${p}`] || "";
                 const confA = findSchoolConflict(dayA, p, valA, teacherA.id);
-                if (confA) conflictsList.push(`(المعلم أ): حصة ${toArDigits(p)} تعارض مع ${confA} في فصل (${toArDigits(valA)})`);
-
+                if (confA) conflictsList.push(`(أ): حصة ${toArDigits(p)} تعارض مع ${confA} في (${toArDigits(valA)})`);
                 const isSelectedA = selectedSwapSlot && selectedSwapSlot.teacherId === teacherA.id && selectedSwapSlot.day === dayA && selectedSwapSlot.period == p;
 
                 colAHtml += `
                     <div class="slot-card side-a-card ${valA ? 'occupied-slot' : 'empty-slot'} ${confA ? 'has-conflict' : ''} ${isSelectedA ? 'is-selected' : ''}" 
-                         id="slot-a-${p}">
-                        <div class="slot-info" onclick="handleSlotClick('a', '${teacherA.id}', '${dayA}', ${p})">
+                         onclick="handleSwapSlotClick('a', '${teacherA.id}', '${dayA}', ${p})">
+                        <div class="slot-info">
                             <span class="slot-period">حصة ${toArDigits(p)} ${confA ? '⚠️ تعارض' : ''}</span>
                             <span class="slot-class">${valA ? toArDigits(valA) : 'فارغ'}</span>
                         </div>
-                        <button class="btn-edit-slot" onclick="openEditModal('${teacherA.id}', '${dayA}', ${p}, '${teacherA.name}')" title="تعديل يدوي">
-                            <i class="fa-solid fa-pen"></i>
-                        </button>
                     </div>`;
 
-                // حصة ب
                 const valB = teacherB.schedule[`${dayB}_${p}`] || "";
                 const confB = findSchoolConflict(dayB, p, valB, teacherB.id);
-                if (confB) conflictsList.push(`(المعلم ب): حصة ${toArDigits(p)} تعارض مع ${confB} في فصل (${toArDigits(valB)})`);
-
+                if (confB) conflictsList.push(`(ب): حصة ${toArDigits(p)} تعارض مع ${confB} في (${toArDigits(valB)})`);
                 const isSelectedB = selectedSwapSlot && selectedSwapSlot.teacherId === teacherB.id && selectedSwapSlot.day === dayB && selectedSwapSlot.period == p;
 
                 colBHtml += `
                     <div class="slot-card side-b-card ${valB ? 'occupied-slot' : 'empty-slot'} ${confB ? 'has-conflict' : ''} ${isSelectedB ? 'is-selected' : ''}" 
-                         id="slot-b-${p}">
-                        <div class="slot-info" onclick="handleSlotClick('b', '${teacherB.id}', '${dayB}', ${p})">
+                         onclick="handleSwapSlotClick('b', '${teacherB.id}', '${dayB}', ${p})">
+                        <div class="slot-info">
                             <span class="slot-period">حصة ${toArDigits(p)} ${confB ? '⚠️ تعارض' : ''}</span>
                             <span class="slot-class">${valB ? toArDigits(valB) : 'فارغ'}</span>
                         </div>
-                        <button class="btn-edit-slot" onclick="openEditModal('${teacherB.id}', '${dayB}', ${p}, '${teacherB.name}')" title="تعديل يدوي">
-                            <i class="fa-solid fa-pen"></i>
-                        </button>
                     </div>`;
             }
 
             colAHtml += `</div>`;
             colBHtml += `</div>`;
-            container.innerHTML = colAHtml + colBHtml;
+            container.innerHTML = `<div class="columns-container">${colAHtml}${colBHtml}</div>`;
 
-            // تحديث الإرشادات
             if (selectedSwapSlot) {
                 instruction.classList.add("selecting");
                 instruction.innerHTML = `<i class="fa-solid fa-hand-pointer"></i> حددت حصة ${toArDigits(selectedSwapSlot.period)} .. اضغط الآن على <b>أي حصة أخرى</b> للتبديل فوراً!`;
             } else {
                 instruction.classList.remove("selecting");
-                instruction.innerHTML = `👈 اضغط على أي حصة لتحديدها، ثم اضغط على أي حصة أخرى للتبديل بينهما | ✏️ للتعديل`;
+                instruction.innerHTML = `👈 اضغط على أي حصة لتحديدها، ثم اضغط على أي حصة أخرى للتبديل بينهما.`;
             }
 
-            // تحديث الرادار
-            if (conflictsList.length > 0) {
-                radarBadge.style.background = "var(--danger)";
-                radarBadge.innerText = `🔴 ${toArDigits(conflictsList.length)} تعارض`;
-                radarDetails.innerHTML = conflictsList.map(c => `<div class="alert-item">${c}</div>`).join('');
-            } else {
-                radarBadge.style.background = "var(--success)";
-                radarBadge.innerText = "الجدول سليم 100%";
-                radarDetails.innerHTML = `<div style="text-align:center; color:#4ade80;">لا توجد تعارضات في الحصص المختارة.</div>`;
-            }
+            updateRadar(conflictsList);
         }
 
-        // ================= التبديل الحر لأي حصة مع أي حصة =================
-        function handleSlotClick(side, teacherId, day, period) {
+        function handleSwapSlotClick(side, teacherId, day, period) {
             const currentTeacher = TEACHERS_MAP.get(teacherId);
             const currentVal = currentTeacher.schedule[`${day}_${period}`] || "";
 
-            // 1. الضغطة الأولى: تحديد الحصة الأولى للتبديل
             if (!selectedSwapSlot) {
                 selectedSwapSlot = { side, teacherId, day, period, val: currentVal };
-                renderColumns();
+                renderSwapColumns();
                 return;
             }
 
-            // 2. إذا ضغط نفس الخلية مرة ثانية: إلغاء التحديد
             if (selectedSwapSlot.teacherId === teacherId && selectedSwapSlot.day === day && selectedSwapSlot.period == period) {
                 selectedSwapSlot = null;
-                renderColumns();
+                renderSwapColumns();
                 return;
             }
 
-            // 3. الضغطة الثانية على أي حصة أخرى (سواء عند المعلم الآخر، أو نفس المعلم في حصة مختلفة) -> تنفيذ التبديل!
             const firstTeacher = TEACHERS_MAP.get(selectedSwapSlot.teacherId);
             const secondTeacher = currentTeacher;
 
             const firstKey = `${selectedSwapSlot.day}_${selectedSwapSlot.period}`;
             const secondKey = `${day}_${period}`;
 
-            // تبديل القيمتين
             firstTeacher.schedule[firstKey] = currentVal;
             secondTeacher.schedule[secondKey] = selectedSwapSlot.val;
 
@@ -456,66 +708,122 @@
                 toast: true,
                 position: 'top',
                 icon: 'success',
-                title: `تم تبديل (حصة ${toArDigits(selectedSwapSlot.period)}) مع (حصة ${toArDigits(period)})`,
-                timer: 1500,
+                title: `تم تبديل حصة ${toArDigits(selectedSwapSlot.period)} مع حصة ${toArDigits(period)}`,
+                timer: 1300,
                 showConfirmButton: false
             });
 
             selectedSwapSlot = null;
-            renderColumns();
+            renderSwapColumns();
         }
 
-        // ================= نافذة التعديل اليدوي السريع =================
-        function openEditModal(teacherId, day, period, teacherName) {
-            currentEditTarget = { teacherId, day, period };
-            const teacher = TEACHERS_MAP.get(teacherId);
-            const currentVal = teacher.schedule[`${day}_${period}`] || "";
-
-            document.getElementById("modal-title").innerText = `${teacherName} (حصة ${toArDigits(period)} - ${day})`;
-            const input = document.getElementById("smart-class-input");
-            input.value = toArDigits(currentVal);
-
-            document.getElementById("editModal").style.display = "flex";
-            setTimeout(() => input.focus(), 100);
+        // ================= فحص التعارضات =================
+        function findSchoolConflict(targetDay, period, className, currentTeacherId) {
+            if (!className) return null;
+            const target = className.trim();
+            for (let t of ALL_TEACHERS) {
+                if (t.id === currentTeacherId) continue;
+                const assigned = t.schedule[`${targetDay}_${period}`];
+                if (assigned && assigned.trim() === target) {
+                    return t.name;
+                }
+            }
+            return null;
         }
 
-        function closeEditModal() {
-            document.getElementById("editModal").style.display = "none";
-            currentEditTarget = null;
+        function recalculateCurrentConflicts() {
+            if (activeMode === 'single' && singleTeacher) {
+                let conflicts = [];
+                for (let p = 1; p <= 8; p++) {
+                    const val = singleTeacher.schedule[`${singleDay}_${p}`] || "";
+                    const conf = findSchoolConflict(singleDay, p, val, singleTeacher.id);
+                    if (conf) conflicts.push(`حصة ${toArDigits(p)}: تعارض مع (${conf}) في فصل (${toArDigits(val)})`);
+                }
+                updateRadar(conflicts);
+            }
         }
 
-        function applyManualEdit() {
-            if (!currentEditTarget) return;
-            const inputVal = document.getElementById("smart-class-input").value.trim();
-            const cleanVal = toEnDigits(inputVal);
+        function updateRadar(conflictsList) {
+            const badge = document.getElementById("radar-badge");
+            const details = document.getElementById("radar-details");
 
-            const teacher = TEACHERS_MAP.get(currentEditTarget.teacherId);
-            teacher.schedule[`${currentEditTarget.day}_${currentEditTarget.period}`] = cleanVal;
-
-            MODIFIED_IDS.add(teacher.id);
-            closeEditModal();
-            renderColumns();
-        }
-
-        function clearSlotManual() {
-            if (!currentEditTarget) return;
-            const teacher = TEACHERS_MAP.get(currentEditTarget.teacherId);
-            teacher.schedule[`${currentEditTarget.day}_${currentEditTarget.period}`] = "";
-
-            MODIFIED_IDS.add(teacher.id);
-            closeEditModal();
-            renderColumns();
+            if (conflictsList.length > 0) {
+                badge.style.background = "var(--danger)";
+                badge.innerText = `🔴 ${toArDigits(conflictsList.length)} تعارض`;
+                details.innerHTML = conflictsList.map(c => `<div class="alert-item">${c}</div>`).join('');
+            } else {
+                badge.style.background = "var(--success)";
+                badge.innerText = "الجدول سليم 100%";
+                details.innerHTML = `<div style="text-align:center; color:#4ade80;">لا توجد أي تعارضات مسجلة.</div>`;
+            }
         }
 
         function toggleRadar() {
             document.getElementById("radar-details").classList.toggle("show");
         }
 
-        // ================= الحفظ السحابي =================
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#single-controls-wrapper')) {
+                const s = document.getElementById('results-single');
+                if (s) s.style.display = 'none';
+            }
+            if (!e.target.closest('#box-a')) {
+                const a = document.getElementById('results-a');
+                if (a) a.style.display = 'none';
+            }
+            if (!e.target.closest('#box-b')) {
+                const b = document.getElementById('results-b');
+                if (b) b.style.display = 'none';
+            }
+        });
+
+        // ================= الحفظ السحابي والتنبيه الذكي =================
         async function saveToCloud() {
             if (MODIFIED_IDS.size === 0) {
-                Swal.fire({ toast: true, position: 'top', icon: 'info', title: 'لا توجد تعديلات لحفظها' });
+                Swal.fire({ toast: true, position: 'top', icon: 'info', title: 'لا توجد تعديلات جديدة لحفظها' });
                 return;
+            }
+
+            let totalConflicts = [];
+            const days = ['الاحد', 'الاثنين', 'الثلاثاء', 'الاربعاء', 'الخميس'];
+            
+            MODIFIED_IDS.forEach(id => {
+                const teacher = TEACHERS_MAP.get(String(id));
+                if (teacher) {
+                    days.forEach(day => {
+                        for (let p = 1; p <= 8; p++) {
+                            const val = teacher.schedule[`${day}_${p}`];
+                            if (val) {
+                                const conf = findSchoolConflict(day, p, val, teacher.id);
+                                if (conf) {
+                                    totalConflicts.push(`المعلم (${teacher.name}) في (${day} - حصة ${toArDigits(p)}) يتعارض مع (${conf}) في فصل (${toArDigits(val)})`);
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+
+            if (totalConflicts.length > 0) {
+                const conflictHtml = `
+                    <div style="text-align:right; font-size:12px; max-height:160px; overflow-y:auto; background:#fee2e2; padding:10px; border-radius:8px; border:1px solid #f87171; margin-top:8px;">
+                        ${totalConflicts.map(c => `• ${c}`).join('<br>')}
+                    </div>
+                    <p style="margin-top:12px; font-weight:bold; font-size:13px; color:#b91c1c;">هل تود الاستمرار في الحفظ وتجاهل هذه التعارضات؟</p>
+                `;
+
+                const result = await Swal.fire({
+                    title: 'تنبيه: تم رصد تعارض في الحصص!',
+                    html: conflictHtml,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'نعم، استمر بالحفظ',
+                    cancelButtonText: 'إلغاء ومراجعة الجدول',
+                    confirmButtonColor: 'var(--danger)',
+                    cancelButtonColor: '#64748b'
+                });
+
+                if (!result.isConfirmed) return;
             }
 
             Swal.fire({ title: 'جاري الحفظ في السحابة...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -530,9 +838,9 @@
 
                 await Promise.all(requests);
                 MODIFIED_IDS.clear();
-                Swal.fire({ icon: 'success', title: 'تم حفظ كافة التعديلات بنجاح!', timer: 1500, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'تم حفظ كافة التعديلات بنجاح!', timer: 1700, showConfirmButton: false });
             } catch(e) {
-                Swal.fire('خطأ', 'تعذر الحفظ في السحابة', 'error');
+                Swal.fire('خطأ', 'تعذر إتمام الحفظ بالسحابة', 'error');
             }
         }
     </script>
