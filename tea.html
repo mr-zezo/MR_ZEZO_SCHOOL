@@ -101,10 +101,8 @@
         .grid-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
         .field-group { display: flex; flex-direction: column; gap: 2px; }
         
-        /* التعديل لمنع قص الحروف في العناوين */
         .field-group label { font-size: 12px; font-weight: 800; color: #475569; display: block; line-height: 1.6; padding-bottom: 2px; }
         
-        /* التعديل لتوحيد تصميم الحقول العادية والحقول الوهمية أثناء الطباعة */
         .field-group input, .field-group select, .print-input { 
             padding: 7px 10px; 
             font-size: 13px; 
@@ -117,7 +115,6 @@
             color: var(--dark); 
             width: 100%;
         }
-        /* خصائص إضافية للحقل الوهمي ليطابق شكل الحقل الحقيقي تماماً */
         .print-input { min-height: 35px; display: flex; align-items: center; justify-content: center; overflow: hidden; white-space: nowrap; }
 
         .field-group input:focus, .field-group select:focus { border-color: var(--info); box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15); }
@@ -137,6 +134,7 @@
         .btn-update { background: var(--save-btn); } 
         .btn-delete { background: var(--danger); } 
         .btn-abs { background: var(--primary); } 
+        .btn-reset-fp { background: #7c3aed; }
         .btn-clear { background: #64748b; }
         .btn-action:hover { opacity: 0.92; }
 
@@ -284,7 +282,17 @@
                             <div class="field-group"><label>أصلي / منتدب</label><select data-field="status"><option value="أصلي">أصلي بالمدرسة</option><option value="منتدب كلي">منتدب كلي</option><option value="منتدب جزئي">منتدب جزئي</option></select></div>
                             <div class="field-group"><label>أيام الانتداب</label><input type="text" data-field="secondment_days"></div>
                             <div class="field-group"><label>النصاب القانوني</label><input type="text" data-field="quota" style="background:#fffbeb; border-color:var(--warning); font-family:Arial; font-weight:900;"></div>
-                            <div class="field-group"><label>حالة الموظف</label><select data-field="emp_status"><option value="على رأس العمل">على رأس العمل</option><option value="معاش">معاش</option><option value="متوفى">متوفى</option><option value="تم نقله">تم نقله</option></select></div>
+                            
+                            <!-- تم إضافة خيار (مؤقت) هنا -->
+                            <div class="field-group"><label>حالة الموظف</label>
+                                <select data-field="emp_status">
+                                    <option value="على رأس العمل">على رأس العمل</option>
+                                    <option value="مؤقت">مؤقت</option>
+                                    <option value="معاش">معاش</option>
+                                    <option value="متوفى">متوفى</option>
+                                    <option value="تم نقله">تم نقله</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -313,10 +321,14 @@
                     </div>
 
                     <div class="data-section">
-                        <div class="section-title"><i class="fa-solid fa-lock"></i> بيانات الدخول للنظام</div>
+                        <div class="section-title"><i class="fa-solid fa-lock"></i> بيانات الدخول والنظام</div>
                         <div class="grid-fields">
                             <div class="field-group"><label>اسم المستخدم (USER)</label><input type="text" data-field="username" style="font-family:Arial; color:var(--danger); font-weight:900;"></div>
                             <div class="field-group"><label>كلمة المرور (PASS)</label><input type="text" data-field="password" style="font-family:Arial; color:var(--danger); font-weight:900;"></div>
+                            <div class="field-group">
+                                <label><i class="fa-solid fa-fingerprint text-purple-600"></i> بصمة الجهاز / الموبايل</label>
+                                <input type="text" id="teacher_fingerprint" class="readonly-field" readonly placeholder="غير مسجلة (فارغة)" style="font-family:Arial; font-size:11.5px; color:#6d28d9; background:#f5f3ff !important; border-color:#c4b5fd;">
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -332,6 +344,7 @@
                 <button type="button" class="btn-action btn-add" onclick="saveTeacher('add')"><i class="fa-solid fa-user-plus"></i> إضافة كجديد</button>
                 <button type="button" class="btn-action btn-update" onclick="saveTeacher('update')"><i class="fa-solid fa-user-check"></i> حفظ التعديلات</button>
                 <button type="button" class="btn-action btn-abs" onclick="openAbsenceModal()"><i class="fa-solid fa-calendar-check text-yellow-300"></i> سجل الغياب</button>
+                <button type="button" class="btn-action btn-reset-fp" onclick="resetDeviceFingerprint()" title="فك ربط جهاز الموبايل الخاص بالمعلم"><i class="fa-solid fa-fingerprint"></i> إلغاء ربط البصمة</button>
                 <button type="button" class="btn-action btn-clear" onclick="clearForm()"><i class="fa-solid fa-eraser"></i> تفريغ الخانات</button>
                 <button type="button" class="btn-action btn-delete" onclick="deleteTeacher()"><i class="fa-solid fa-trash"></i> حذف الموظف</button>
                 <div id="status-msg"></div>
@@ -460,6 +473,38 @@
                     if (error) throw error;
                     return true;
                 }
+            },
+
+            async resetFingerprint(nidVal, specificCols) {
+                let updatePayload = {};
+                specificCols.forEach(col => {
+                    updatePayload[col] = null;
+                });
+
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('teachers', 'readwrite');
+                        const store = tx.objectStore('teachers');
+                        const req = store.get(nidVal);
+                        req.onsuccess = () => {
+                            const record = req.result;
+                            if (record) {
+                                specificCols.forEach(col => record[col] = null);
+                                store.put(record);
+                            }
+                        };
+                        tx.oncomplete = () => resolve(true);
+                        tx.onerror = () => reject(tx.error);
+                    });
+                } else {
+                    const { error } = await sbClient
+                        .from('teachers')
+                        .update(updatePayload)
+                        .eq('nid', nidVal);
+                    if (error) throw error;
+                    return true;
+                }
             }
         };
 
@@ -527,7 +572,6 @@
             resBox.style.display = "block";
         }
 
-        // ================= تم تعديل البحث الذكي هنا فقط =================
         function filterTeachers(val) {
             const resBox = document.getElementById("search-results");
             if (!val.trim()) { showAllTeachers(); return; }
@@ -543,21 +587,16 @@
                 const normalizedName = normalizeArabicSearch(t.name);
                 const spacelessName = normalizedName.replace(/\s/g, "");
                 
-                // الأولوية لمن يبدأ بالحرف
                 if (spacelessName.startsWith(spacelessSearch)) {
                     startsWith.push(t);
-                } 
-                // ثم لمن يحتوي عليه
-                else if (spacelessName.includes(spacelessSearch)) {
+                } else if (spacelessName.includes(spacelessSearch)) {
                     contains.push(t);
                 }
             });
 
-            // ترتيب أبجدي دقيق
             startsWith.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
             contains.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
 
-            // دمج المجموعتين
             const filtered = [...startsWith, ...contains];
 
             resBox.innerHTML = "";
@@ -580,10 +619,29 @@
             currentTeacherData = data;
             originalTeacherCode = data.code; 
 
-            document.querySelectorAll('#teacher-form input:not([type="file"]), #teacher-form select').forEach(inp => {
+            document.querySelectorAll('#teacher-form input:not([type="file"]):not(#teacher_fingerprint), #teacher-form select').forEach(inp => {
                 const field = inp.getAttribute('data-field');
                 if (field && data[field] !== undefined) inp.value = data[field];
             });
+
+            // استخراج وتعبئة قيمة البصمة تلقائياً في الحقل المقفل
+            const fpInput = document.getElementById("teacher_fingerprint");
+            let fpVal = "";
+            for (let k of Object.keys(data)) {
+                if (k.match(/device|finger|token|phone_id|hardware|uuid|بصم/i) && data[k]) {
+                    fpVal = data[k];
+                    break;
+                }
+            }
+            if (fpVal) {
+                fpInput.value = fpVal;
+                fpInput.style.color = "#4338ca";
+                fpInput.style.fontWeight = "bold";
+            } else {
+                fpInput.value = "غير مسجلة (فارغة)";
+                fpInput.style.color = "#94a3b8";
+            }
+
             document.getElementById("search-results").style.display = "none";
             document.getElementById("main-search").value = ""; 
 
@@ -713,7 +771,7 @@
             if (!nid) nid = (currentTeacherData && currentTeacherData.nid) ? currentTeacherData.nid : "TEMP_" + Math.random().toString(36).substr(2, 9);
 
             let formData = { nid: nid };
-            document.querySelectorAll('#teacher-form input:not([type="file"]), #teacher-form select').forEach(inp => {
+            document.querySelectorAll('#teacher-form input:not([type="file"]):not(#teacher_fingerprint), #teacher-form select').forEach(inp => {
                 const field = inp.getAttribute('data-field'); 
                 if (field) formData[field] = inp.value.trim();
             });
@@ -731,6 +789,53 @@
                 await fetchAllTeachers(); 
             } catch(e) { 
                 alert("❌ خطأ في الحفظ: " + e.message); 
+            }
+        }
+
+        // ================= دالة إلغاء ربط بصمة الجهاز (تلقائية ومحمية ضد الأخطاء) =================
+        async function resetDeviceFingerprint() {
+            const nid = document.querySelector('[data-field="nid"]').value.trim() || (currentTeacherData ? currentTeacherData.nid : null);
+            const name = document.querySelector('[data-field="name"]').value.trim() || (currentTeacherData ? currentTeacherData.name : "");
+
+            if (!nid) {
+                alert("يرجى اختيار معلم أولاً للقيام بإلغاء ربط البصمة!");
+                return;
+            }
+
+            const sample = currentTeacherData || (allTeachers.length > 0 ? allTeachers[0] : null);
+            let availableCols = sample ? Object.keys(sample) : [];
+
+            let targetCols = availableCols.filter(col => 
+                col.match(/device|finger|print|token|phone_id|hardware|uuid|بصم/i)
+            );
+
+            if (targetCols.length === 0) {
+                let customCol = prompt(`لم يتم اكتشاف اسم عمود البصمة تلقائياً.\n\nالأعمدة المتوفرة حالياً في جدولك هي:\n${availableCols.join(' , ')}\n\nيرجى كتابة اسم عمود البصمة كما هو في قاعدة البيانات:`);
+                if (!customCol || !customCol.trim()) return;
+                targetCols = [customCol.trim()];
+            }
+
+            if (!confirm(`تأكيد فك ربط بصمة الموبايل للمعلم:\n(${name})؟\n\nالعمود الذي سيتم تصفيره: [ ${targetCols.join(', ')} ]`)) {
+                return;
+            }
+
+            try {
+                await ZezoEngine.resetFingerprint(nid, targetCols);
+                
+                if (currentTeacherData) {
+                    targetCols.forEach(col => currentTeacherData[col] = null);
+                }
+
+                // تحديث حقل البصمة المقفل مباشرة في الصفحة
+                const fpInput = document.getElementById("teacher_fingerprint");
+                fpInput.value = "غير مسجلة (فارغة)";
+                fpInput.style.color = "#94a3b8";
+
+                showStatus("✅ تم تصفير بصمة الموبايل بنجاح (Set NULL)", "success");
+                alert(`✅ تم إلغاء ربط بصمة الموبايل بنجاح للمعلم (${name}).\nيمكن للمعلم الآن تسجيل بصمته من الهاتف الجديد.`);
+            } catch (err) {
+                console.error("خطأ أثناء تصفير البصمة:", err);
+                alert("❌ حدث خطأ أثناء تصفير البصمة: " + err.message);
             }
         }
 
@@ -760,6 +865,10 @@
             document.getElementById("main-search").value = ""; 
             document.getElementById("profile-img").src = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; 
             
+            const fpInput = document.getElementById("teacher_fingerprint");
+            fpInput.value = "غير مسجلة (فارغة)";
+            fpInput.style.color = "#94a3b8";
+
             const btnNid = document.getElementById("btn-view-nid");
             btnNid.classList.add("empty"); btnNid.innerHTML = `<i class="fa-solid fa-id-card"></i> الرقم القومي`;
             
@@ -886,13 +995,12 @@
             }
         }
 
-        // ================= دالة التقاط الشاشة (المعالجة النهائية للحقول) =================
+        // ================= دالة التقاط الشاشة =================
         function takeScreenshot(targetId) {
             const targetEl = document.getElementById(targetId);
             const hiddenElements = document.querySelectorAll('.hide-in-shot');
             const showElements = document.querySelectorAll('.show-in-shot');
             
-            // 1. تحديد اسم الملف
             let fileName = "صورة";
             if (targetId === 'capture-card') {
                 let tName = document.getElementById('teacher_name').value.trim();
@@ -907,17 +1015,15 @@
             hiddenElements.forEach(el => el.style.display = 'none');
             showElements.forEach(el => el.style.display = 'block');
 
-            // 2. إنشاء النسخة وضبط الأبعاد للموبايل
             const clone = targetEl.cloneNode(true);
             clone.style.position = 'absolute';
             clone.style.top = '0';
             clone.style.left = '-9999px'; 
-            clone.style.width = '850px'; // إجبار عرض سطح المكتب
+            clone.style.width = '850px';
             clone.style.height = 'max-content';
             clone.style.backgroundColor = '#ffffff';
             document.body.appendChild(clone);
 
-            // 3. الحل الجذري: استبدال الـ input بـ div يحمل نفس التصميم لضمان ظهور النص
             const originalInputs = targetEl.querySelectorAll('input:not([type="file"]), select');
             const cloneInputs = clone.querySelectorAll('input:not([type="file"]), select');
             
@@ -925,32 +1031,26 @@
                 const cln = cloneInputs[index];
                 if (!cln || !cln.parentNode) return;
 
-                // استخراج القيمة
                 let val = orig.tagName === 'SELECT' ? (orig.options[orig.selectedIndex]?.text || "") : orig.value;
 
-                // إنشاء عنصر نصي بديل
                 const div = document.createElement('div');
-                div.className = orig.className; // أخذ نفس الكلاسات الأصلية
-                div.classList.add('print-input'); // إضافة كلاس الطباعة الذي أنشأناه
-                div.innerText = val || " "; // مسافة فارغة لمنع انهيار المربع إذا كان فارغاً
+                div.className = orig.className;
+                div.classList.add('print-input');
+                div.innerText = val || " ";
 
-                // نقل الألوان والخطوط الجانبية (Inline Styles) إن وجدت
                 if (orig.style.fontFamily) div.style.fontFamily = orig.style.fontFamily;
                 if (orig.style.fontWeight) div.style.fontWeight = orig.style.fontWeight;
                 if (orig.style.color) div.style.color = orig.style.color;
                 if (orig.style.backgroundColor) div.style.backgroundColor = orig.style.backgroundColor;
                 if (orig.style.borderColor) div.style.borderColor = orig.style.borderColor;
 
-                // استبدال الحقل بالعنصر النصي
                 cln.parentNode.replaceChild(div, cln);
             });
 
-            // ضمان نقل صورة البروفايل
             const origImg = targetEl.querySelector('#profile-img');
             const cloneImg = clone.querySelector('#profile-img');
             if (origImg && cloneImg) cloneImg.src = origImg.src;
 
-            // 4. التصوير
             setTimeout(() => {
                 html2canvas(clone, { 
                     scale: 2, 
@@ -973,7 +1073,7 @@
                     showElements.forEach(el => el.style.display = 'none');
                     if(document.body.contains(clone)) document.body.removeChild(clone);
                 });
-            }, 200); // 200 ملي ثانية لضمان استقرار الشبكة قبل اللقطة
+            }, 200);
         }
     </script>
 </body>
