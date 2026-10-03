@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -32,7 +33,7 @@
             /* 2️⃣ جدول اللفاف اليومي المجمع (A4) */
             --master-row-h: 36px;        
 
-            /* 3️⃣ 🌟 مقاسات كشف الاحتياطي اليومي (جديد) 🌟 */
+            /* 3️⃣ مقاسات كشف الاحتياطي اليومي */
             --reserve-row-h: 32px;
             --reserve-font-size: 11px;
             --reserve-count-w: 22px;
@@ -326,7 +327,7 @@
         .missing-table thead th { background: var(--primary); color: white; }
         .missing-table td:nth-child(3) { text-align: right; color: var(--danger); line-height: 1.4; font-weight: 900; }
 
-        /* ستايل الـ 20 مقعد */
+        /* ستايل الـ 20 مقعد موحدة لكافة الأيام */
         .exclude-grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; margin-top: 10px; }
         .exclude-field-row { background: white; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 6px 8px; display: flex; align-items: center; gap: 6px; position: relative; }
         .ex-field-number { background: #1e3a8a; color: white; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; flex-shrink: 0; }
@@ -445,6 +446,7 @@
             <button class="btn-action btn-missing" onclick="openMissingPeriodsModal()"><i class="fa-solid fa-triangle-exclamation"></i> الحصص الفارغة</button>
             <button class="btn-action btn-master" onclick="openMasterScheduleModal()"><i class="fa-solid fa-table-list"></i> جدول لفاف يومي</button>
             
+            <!-- أزرار الاحتياطي والتسكين -->
             <button class="btn-action btn-reserve-radar" onclick="openReserveRadarModal()"><i class="fa-solid fa-users-viewfinder"></i> كشف الاحتياطي اليومي</button>
             <button class="btn-action btn-reserve-assign" onclick="openReserveExclusionModal()"><i class="fa-solid fa-user-check"></i> تسكين واستثناء الاحتياطي (20)</button>
 
@@ -526,7 +528,7 @@
         </div>
     </div>
 
-    <!-- 8. 🌟 منطقة طباعة كشف الاحتياطي اليومي المتطابق تماماً مع اللفاف (A4 Landscape) 🌟 -->
+    <!-- 8. منطقة طباعة كشف الاحتياطي اليومي المتطابق تماماً مع اللفاف (A4 Landscape) -->
     <div class="paper-scroll-wrapper" id="reserve-print-wrapper" style="display:none;">
         <div id="reserve-print-area">
             <button class="btn-close-master" onclick="hideReserveOnScreen()"><i class="fa-solid fa-arrow-right"></i> عودة للجدول الفردي</button>
@@ -542,7 +544,6 @@
                 </div>
             </div>
 
-            <!-- جدول الحصص اليومي للاحتياطي -->
             <div id="reserve-sheet-table-container"></div>
 
             <div class="print-footer" style="margin-top:14px;">
@@ -608,14 +609,11 @@
                     <div class="input-group">
                         <label><i class="fa-solid fa-calendar-day"></i> اختر اليوم:</label>
                         <select id="reserve-day-select">
-                            <option value="الاحد">الأحد</option>
-                            <option value="الاثنين">الإثنين</option>
-                            <option value="الثلاثاء">الثلاثاء</option>
-                            <option value="الاربعاء">الأربعاء</option>
+                            <option value="الاحد">الأحد</option><option value="الاثنين">الإثنين</option>
+                            <option value="الثلاثاء">الثلاثاء</option><option value="الاربعاء">الأربعاء</option>
                             <option value="الخميس">الخميس</option>
                         </select>
                     </div>
-
                     <div class="input-group">
                         <label><i class="fa-solid fa-layer-group"></i> اختر المرحلة:</label>
                         <select id="reserve-stage-select">
@@ -627,46 +625,39 @@
                 </div>
 
                 <div style="background:#f0fdf4; border:1px solid #bbf7d0; padding:10px; border-radius:8px; font-size:12px; font-weight:800; color:#15803d; margin-bottom:15px; line-height:1.5;">
-                    <i class="fa-solid fa-circle-check"></i> يظهر المعلمون المتواجدون بالمدرسة اليوم مع عمود صغير لعدد حصصهم، ويتم تفريغ الأعمدة الخارجة عن الحصص المقررة تلقائياً.
+                    <i class="fa-solid fa-circle-check"></i> يظهر المعلمون المتواجدون بالمدرسة اليوم مع عمود صغير لعدد حصصهم، والمستثنون بالـ 20 مقعد محجوبون تلقائياً طوال أيام الأسبوع.
                 </div>
 
                 <div style="display:flex; gap:8px;">
-                    <button class="btn-action btn-save" style="flex:1; height:40px; font-size:13px;" onclick="showReserveOnScreen()">
-                        <i class="fa-solid fa-eye"></i> معاينة كشف اللفاف
-                    </button>
-                    <button class="btn-action btn-print" style="flex:1; height:40px; font-size:13px;" onclick="printReserveSchedule()">
-                        <i class="fa-solid fa-print"></i> طباعة الكشف (A4)
-                    </button>
+                    <button class="btn-action btn-save" style="flex:1; height:40px; font-size:13px;" onclick="showReserveOnScreen()"><i class="fa-solid fa-eye"></i> معاينة كشف اللفاف</button>
+                    <button class="btn-action btn-print" style="flex:1; height:40px; font-size:13px;" onclick="printReserveSchedule()"><i class="fa-solid fa-print"></i> طباعة الكشف (A4)</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 12. نافذة تسكين واستثناء الاحتياطي (20 مقعد) -->
+    <!-- 12. 🌟 نافذة تسكين واستثناء الاحتياطي (20 مقعد موحدة لجميع الأيام ومحفوظة سحابياً) 🌟 -->
     <div class="modal-overlay" id="reserveExclusionModal">
         <div class="modal-content" style="max-width: 820px;">
             <div class="modal-header" style="background:#d97706;">
-                <h2 style="font-size:15px; margin:0;"><i class="fa-solid fa-user-check"></i> تسكين واستثناء معلمين من الاحتياطي (20 مقعد)</h2>
+                <h2 style="font-size:15px; margin:0;"><i class="fa-solid fa-user-check"></i> تسكين واستثناء معلمين من الاحتياطي (20 مقعد - لجميع الأيام)</h2>
                 <button onclick="closeReserveExclusionModal()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
             </div>
             <div class="modal-body">
                 <div style="background:#fffbeb; border:1px solid #fde68a; padding:10px; border-radius:8px; font-size:12px; font-weight:800; color:#b45309; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                    <div><i class="fa-solid fa-circle-info"></i> اكتب أول حروف لاسم المعلم لاختياره. <b>المعلمون هنا يحجبون فوراً من كشف الاحتياطي.</b></div>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        <span>اليوم:</span>
-                        <select id="ex-day-select" style="padding:4px 8px; border-radius:6px; border:1px solid #d97706; font-weight:900;" onchange="loadExclusionFieldsForCurrentDay()">
-                            <option value="الاحد">الأحد</option><option value="الاثنين">الإثنين</option>
-                            <option value="الثلاثاء">الثلاثاء</option><option value="الاربعاء">الأربعاء</option>
-                            <option value="الخميس">الخميس</option>
-                        </select>
+                    <div>
+                        <i class="fa-solid fa-cloud-arrow-up text-amber-600"></i> هذه الاستثناءات <b>تسري على جميع أيام الأسبوع</b> وتُحفظ مباشرة في قاعدة بيانات Supabase.
                     </div>
+                    <span style="background:#047857; color:white; font-size:11px; padding:2px 8px; border-radius:12px; font-weight:900;">
+                        <i class="fa-solid fa-wifi"></i> حفظ سحابي دائم
+                    </span>
                 </div>
 
                 <div class="exclude-grid-container" id="exclude-grid-container"></div>
 
                 <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
                     <button class="btn-action btn-save" style="flex:1; height:42px; font-size:13px;" onclick="saveReserveExclusions()">
-                        <i class="fa-solid fa-floppy-disk"></i> اعتماد وحفظ التسكين والاستثناء
+                        <i class="fa-solid fa-cloud-arrow-up"></i> اعتماد وحفظ سحابي في Supabase
                     </button>
                     <button class="btn-action" style="background:#dc2626; color:white; height:42px;" onclick="clearAllExclusionFields()">
                         <i class="fa-solid fa-eraser"></i> تفريغ الـ 20 حقل
@@ -677,7 +668,7 @@
         </div>
     </div>
 
-    <!-- 13. 🌟 نافذة ضبط ارتفاعات الصفوف والمقاسات (محدثة بمقاسات كشف الاحتياطي) 🌟 -->
+    <!-- 13. نافذة ضبط ارتفاعات الصفوف والمقاسات -->
     <div class="modal-overlay" id="dimensionsModal">
         <div class="modal-content">
             <div class="modal-header" style="background:#0f766e;">
@@ -685,8 +676,6 @@
                 <button onclick="closeDimensionsModal()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
             </div>
             <div class="modal-body">
-                
-                <!-- القسم الأول: جدول المعلم والفصل (A5) -->
                 <div class="settings-section">
                     <div class="settings-section-title"><i class="fa-solid fa-table"></i> مقاسات جدول المعلم وجدول الفصل الفردي (A5)</div>
                     <div class="settings-grid">
@@ -705,7 +694,6 @@
                     </div>
                 </div>
 
-                <!-- القسم الثاني: جدول اللفاف المجمع (A4) -->
                 <div class="settings-section">
                     <div class="settings-section-title"><i class="fa-solid fa-list-ol"></i> مقاسات جدول اللفاف اليومي المجمع (A4)</div>
                     <div class="settings-grid">
@@ -716,7 +704,6 @@
                     </div>
                 </div>
 
-                <!-- 🌟 القسم الثالث: مقاسات كشف الاحتياطي اليومي (جديد) 🌟 -->
                 <div class="settings-section" style="border-color:#0891b2;">
                     <div class="settings-section-title" style="color:#0891b2;"><i class="fa-solid fa-users-viewfinder"></i> مقاسات وخطوط كشف الاحتياطي اليومي (A4)</div>
                     <div class="settings-grid">
@@ -724,12 +711,10 @@
                             <label>ارتفاع صفوف كشف الاحتياطي: <b id="val_reserve_row_h">32px</b></label>
                             <div class="setting-control"><input type="range" id="rng_reserve_row_h" min="20" max="55" value="32" oninput="updateDimProp('--reserve-row-h', this.value, 'val_reserve_row_h', 'px')"></div>
                         </div>
-
                         <div class="setting-item">
                             <label>حجم خط اسم المعلم بالاحتياطي: <b id="val_reserve_font">11px</b></label>
                             <div class="setting-control"><input type="range" id="rng_reserve_font" min="8" max="16" value="11" oninput="updateDimProp('--reserve-font-size', this.value, 'val_reserve_font', 'px')"></div>
                         </div>
-
                         <div class="setting-item">
                             <label>عرض مربع عدد الحصص: <b id="val_reserve_count_w">22px</b></label>
                             <div class="setting-control"><input type="range" id="rng_reserve_count_w" min="16" max="36" value="22" oninput="updateDimProp('--reserve-count-w', this.value, 'val_reserve_count_w', 'px')"></div>
@@ -754,6 +739,7 @@
 
         let TEACHERS = [];
         let CURRENT_TEACHER = null;
+        let UNIVERSAL_EXCLUSIONS = []; // الـ 20 مقعد موحدة لجميع الأيام
 
         const days = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس"];
         const dayNamesAr = {"الاحد":"الأحد", "الاثنين":"الإثنين", "الثلاثاء":"الثلاثاء", "الاربعاء":"الأربعاء", "الخميس":"الخميس"};
@@ -768,6 +754,7 @@
         ];
 
         const toArDigits = (s) => String(s || "").replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+        const toEnDigits = (s) => String(s || "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
 
         window.addEventListener('DOMContentLoaded', async () => {
             loadSavedDimensions();
@@ -776,6 +763,7 @@
             loadSavedDate();
             buildExclusion20Inputs();
             await loadAllTeachersComprehensive();
+            await loadUniversalExclusions();
         });
 
         function normalizeArPrefix(text) {
@@ -810,7 +798,7 @@
             }).slice(0, 15);
         }
 
-        // ================= بناء الـ 20 مقعد =================
+        // ================= 🌟 نظام الاستثناءات الموحدة سحابياً (Supabase + Local Cache) 🌟 =================
         function buildExclusion20Inputs() {
             const container = document.getElementById("exclude-grid-container");
             container.innerHTML = "";
@@ -825,6 +813,69 @@
                     </div>
                 `;
             }
+        }
+
+        async function loadUniversalExclusions() {
+            let loadedList = [];
+
+            // 1. محاولة الجلب من جدول reserve_exclusions في Supabase
+            try {
+                const { data, error } = await supabaseClient.from("reserve_exclusions").select("*").eq("id", 1).maybeSingle();
+                if (data && (data.data || data.list)) {
+                    loadedList = data.data || data.list;
+                }
+            } catch (err) {
+                console.warn("Notice: reserve_exclusions table check:", err);
+            }
+
+            // 2. محاولة بديلة من system_settings في Supabase
+            if (!loadedList || loadedList.length === 0) {
+                try {
+                    const { data, error } = await supabaseClient.from("system_settings").select("*").eq("key", "reserve_exclusions").maybeSingle();
+                    if (data && data.value) {
+                        loadedList = data.value;
+                    }
+                } catch (err) {
+                    console.warn("Notice: system_settings table check:", err);
+                }
+            }
+
+            // 3. إن لم يوجد بالإنترنت جلب من التخزين المحلي
+            if (!loadedList || loadedList.length === 0) {
+                const local = localStorage.getItem("zezo_universal_reserve_exclusions");
+                if (local) {
+                    try { loadedList = JSON.parse(local); } catch(e){}
+                }
+            }
+
+            UNIVERSAL_EXCLUSIONS = loadedList || [];
+            populateExclusionInputs(UNIVERSAL_EXCLUSIONS);
+        }
+
+        function populateExclusionInputs(list) {
+            for (let i = 0; i < 20; i++) {
+                const item = list[i];
+                if (item && item.id) {
+                    const idInput = document.getElementById(`ex-id-${i}`);
+                    const nameInput = document.getElementById(`ex-input-${i}`);
+                    if (idInput) idInput.value = item.id;
+                    if (nameInput) nameInput.value = item.name || "";
+                } else {
+                    const idInput = document.getElementById(`ex-id-${i}`);
+                    const nameInput = document.getElementById(`ex-input-${i}`);
+                    if (idInput) idInput.value = "";
+                    if (nameInput) nameInput.value = "";
+                }
+            }
+        }
+
+        function openReserveExclusionModal() {
+            populateExclusionInputs(UNIVERSAL_EXCLUSIONS);
+            document.getElementById("reserveExclusionModal").classList.add("active");
+        }
+
+        function closeReserveExclusionModal() {
+            document.getElementById("reserveExclusionModal").classList.remove("active");
         }
 
         function handleExLiveSearch(index) {
@@ -864,59 +915,57 @@
             for (let i = 0; i < 20; i++) clearSingleExField(i);
         }
 
-        function openReserveExclusionModal() {
-            document.getElementById("reserveExclusionModal").classList.add("active");
-            loadExclusionFieldsForCurrentDay();
-        }
-
-        function closeReserveExclusionModal() {
-            document.getElementById("reserveExclusionModal").classList.remove("active");
-        }
-
-        function getStoredExclusionsForDay(day) {
-            const raw = localStorage.getItem(`zezo_reserve_ex_${day}`);
-            return raw ? JSON.parse(raw) : [];
-        }
-
-        function loadExclusionFieldsForCurrentDay() {
-            const day = document.getElementById("ex-day-select").value;
-            const savedList = getStoredExclusionsForDay(day);
-            for (let i = 0; i < 20; i++) {
-                const item = savedList[i];
-                if (item && item.id) {
-                    document.getElementById(`ex-id-${i}`).value = item.id;
-                    document.getElementById(`ex-input-${i}`).value = item.name || "";
-                } else {
-                    document.getElementById(`ex-id-${i}`).value = "";
-                    document.getElementById(`ex-input-${i}`).value = "";
-                }
-            }
-        }
-
-        function saveReserveExclusions() {
-            const day = document.getElementById("ex-day-select").value;
+        // حفظ الاستثناءات الموحدة سحابياً ومحلياً
+        async function saveReserveExclusions() {
             const list = [];
             let count = 0;
+
             for (let i = 0; i < 20; i++) {
                 const id = document.getElementById(`ex-id-${i}`).value;
                 const name = document.getElementById(`ex-input-${i}`).value;
-                if (id) { list.push({ id, name }); count++; }
-                else { list.push(null); }
+                if (id) {
+                    list.push({ slot: i, id: id, name: name });
+                    count++;
+                } else {
+                    list.push(null);
+                }
             }
-            localStorage.setItem(`zezo_reserve_ex_${day}`, JSON.stringify(list));
-            Swal.fire({ icon: 'success', title: 'تم اعتماد التسكين والاستثناء!', text: `تم حفظ ${count} معلماً مستثنى ليوم (${dayNamesAr[day]}).`, timer: 1600, showConfirmButton: false });
+
+            UNIVERSAL_EXCLUSIONS = list;
+            // حفظ دائم محلي
+            localStorage.setItem("zezo_universal_reserve_exclusions", JSON.stringify(list));
+
+            Swal.fire({ title: 'جاري الحفظ في السحابة...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            // محاولة الحفظ في Supabase
+            let cloudSaved = false;
+            try {
+                const res1 = await supabaseClient.from("reserve_exclusions").upsert({ id: 1, data: list });
+                if (!res1.error) cloudSaved = true;
+            } catch(e){}
+
+            if (!cloudSaved) {
+                try {
+                    const res2 = await supabaseClient.from("system_settings").upsert({ key: "reserve_exclusions", value: list }, { onConflict: "key" });
+                    if (!res2.error) cloudSaved = true;
+                } catch(e){}
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'تم اعتماد وحفظ الاستثناءات!',
+                text: `تم حفظ ${count} معلماً مستثنى لجميع أيام الأسبوع ${cloudSaved ? 'سحابياً في Supabase' : 'بالمتصفح'} بنجاح.`,
+                timer: 1800,
+                showConfirmButton: false
+            });
+
             closeReserveExclusionModal();
         }
 
-        function openReserveRadarModal() {
-            document.getElementById("reserveRadarModal").classList.add("active");
-        }
+        function openReserveRadarModal() { document.getElementById("reserveRadarModal").classList.add("active"); }
+        function closeReserveRadarModal() { document.getElementById("reserveRadarModal").classList.remove("active"); }
 
-        function closeReserveRadarModal() {
-            document.getElementById("reserveRadarModal").classList.remove("active");
-        }
-
-        // ================= 🌟 حساب الحصص وتحديد المتاحين 🌟 =================
+        // ================= 🌟 حساب الحصص واستبعاد المستثنين طوال الأسبوع 🌟 =================
         function getMaxActivePeriod(day, stage) {
             if (stage === "lower") {
                 return (day === "الخميس") ? 5 : 6;
@@ -927,12 +976,21 @@
             }
         }
 
-        function getAvailableTeachersForDayAndStage(day, stage, excludedIds) {
+        function getAvailableTeachersForDayAndStage(day, stage) {
             const periodAvailable = { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [], 8: [] };
             const maxActive = getMaxActivePeriod(day, stage);
 
+            // استخراج معرفات المعلمين المستثنين لجميع الأيام
+            const excludedIds = new Set(
+                (UNIVERSAL_EXCLUSIONS || [])
+                    .filter(x => x && x.id)
+                    .map(x => String(x.id))
+            );
+
             TEACHERS.forEach(t => {
+                // استبعاد دائم من الاحتياطي لكل أيام الأسبوع
                 if (excludedIds.has(String(t.unique_id))) return;
+
                 const schedule = t.schedule || {};
 
                 let totalAssignedToday = 0;
@@ -973,7 +1031,7 @@
             return { periodAvailable, maxActive };
         }
 
-        // ================= 🖨️ توليد كشف الاحتياطي مع الخلية المقسمة 🖨️ =================
+        // ================= 🖨️ توليد كشف الاحتياطي اليومي المتطابق مع اللفاف 🖨️ =================
         function generateReserveMasterPrintSheet() {
             const day = document.getElementById("reserve-day-select").value;
             const stage = document.getElementById("reserve-stage-select").value;
@@ -985,10 +1043,7 @@
             const savedDate = localStorage.getItem("schedule_start_date");
             document.getElementById("reserve-sheet-date").innerText = savedDate ? `تاريخ الجدول: ${savedDate.split('-').reverse().join(' / ')}` : '';
 
-            const excludedData = getStoredExclusionsForDay(day);
-            const excludedIds = new Set(excludedData.filter(x => x && x.id).map(x => String(x.id)));
-
-            const { periodAvailable, maxActive } = getAvailableTeachersForDayAndStage(day, stage, excludedIds);
+            const { periodAvailable, maxActive } = getAvailableTeachersForDayAndStage(day, stage);
 
             let maxRows = 0;
             for (let p = 1; p <= maxActive; p++) {
@@ -1070,7 +1125,7 @@
             }
         });
 
-        // ================= 🌟 الأبعاد والمقاسات الشاملة (محفوظة في التخزين) 🌟 =================
+        // ================= الأبعاد والمقاسات =================
         const defaultDimensions = {
             '--row-data-h': 52,
             '--cell-font-size': 18,
@@ -1104,7 +1159,7 @@
                 '--reserve-count-w': document.getElementById("rng_reserve_count_w").value
             };
             localStorage.setItem("zezo_schedule_dimensions", JSON.stringify(settings));
-            Swal.fire({ icon: 'success', title: 'تم حفظ كافة المقاسات بنجاح!', timer: 1400, showConfirmButton: false });
+            Swal.fire({ icon: 'success', title: 'تم حفظ المقاسات بنجاح!', timer: 1400, showConfirmButton: false });
             closeDimensionsModal();
         }
 
@@ -1123,7 +1178,6 @@
                 document.getElementById("rng_master_row_h").value = config['--master-row-h'] || 36;
                 document.getElementById("val_master_row_h").innerText = (config['--master-row-h'] || 36) + 'px';
 
-                // مقاسات الاحتياطي
                 document.getElementById("rng_reserve_row_h").value = config['--reserve-row-h'] || 32;
                 document.getElementById("val_reserve_row_h").innerText = (config['--reserve-row-h'] || 32) + 'px';
                 document.getElementById("rng_reserve_font").value = config['--reserve-font-size'] || 11;
