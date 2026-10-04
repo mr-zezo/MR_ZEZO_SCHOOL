@@ -42,7 +42,7 @@
             --list-col-m: 35px;           
             --list-col-code: 95px;        
 
-            /* مقاسات كشوف الصحة */
+            /* مقاسات كشوف الصحة وفحص النظر */
             --health-row-height: 34px;    
             --health-name-font: 12px;   
             --health-num-font: 11.5px;      
@@ -318,11 +318,11 @@
         <!-- 3. لوحات التحكم الرئيسية -->
         <div class="w-full grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5">
             
-            <!-- لوحة 1: القوائم المدرسية ودفاتر السلوك -->
+            <!-- لوحة 1: القوائم المدرسية ودفاتر السلوك وفحص النظر -->
             <div class="card-3d p-4 md:p-5 bg-white flex flex-col justify-between space-y-4">
                 <div>
                     <div class="text-sm md:text-base font-black text-[#0f2b48] border-b border-slate-200 pb-2.5 mb-3.5 flex items-center gap-2">
-                        <i class="fa-solid fa-users text-blue-600 text-lg"></i> طباعة قوائم الفصول ودفاتر 5 سلوك (25 تلميذ لكل ورقة)
+                        <i class="fa-solid fa-users text-blue-600 text-lg"></i> طباعة قوائم الفصول، الكشوف الصحية ودفاتر السلوك
                     </div>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3.5">
@@ -360,18 +360,23 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-2.5 pt-2">
-                    <button onclick="generateReport('list')" class="btn-3d p-3 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs md:text-sm font-black flex flex-col items-center justify-center gap-1.5 shadow cursor-pointer">
+                <!-- أزرار استخراج القوائم مع زر عيون أطفالنا -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
+                    <button onclick="generateReport('list')" class="btn-3d p-2.5 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs md:text-sm font-black flex flex-col items-center justify-center gap-1 shadow cursor-pointer">
                         <i class="fa-solid fa-table-list text-yellow-300 text-base"></i>
                         <span>قوائم مزدوجة</span>
                     </button>
-                    <button onclick="generateReport('health')" class="btn-3d p-3 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs md:text-sm font-black flex flex-col items-center justify-center gap-1.5 shadow cursor-pointer">
+                    <button onclick="generateReport('health')" class="btn-3d p-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs md:text-sm font-black flex flex-col items-center justify-center gap-1 shadow cursor-pointer">
                         <i class="fa-solid fa-heart-pulse text-teal-200 text-base"></i>
                         <span>كشف الصحة</span>
                     </button>
-                    <button onclick="generateReport('behavior')" class="btn-3d p-3 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs md:text-sm font-black flex flex-col items-center justify-center gap-1.5 shadow cursor-pointer">
+                    <button onclick="generateReport('eye')" class="btn-3d p-2.5 bg-cyan-700 hover:bg-cyan-800 text-white rounded-xl text-xs md:text-sm font-black flex flex-col items-center justify-center gap-1 shadow cursor-pointer">
+                        <i class="fa-solid fa-eye text-cyan-200 text-base"></i>
+                        <span>عيون أطفالنا</span>
+                    </button>
+                    <button onclick="generateReport('behavior')" class="btn-3d p-2.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs md:text-sm font-black flex flex-col items-center justify-center gap-1 shadow cursor-pointer">
                         <i class="fa-solid fa-calendar-check text-indigo-200 text-base"></i>
-                        <span>دفتر 5 سلوك (A3)</span>
+                        <span>دفتر 5 سلوك</span>
                     </button>
                 </div>
             </div>
@@ -678,10 +683,16 @@
                     const classList = studentsList.filter(s => String(s.class).trim() === cName);
                     if (classList.length === 0) return;
 
-                    if (type === 'list') area.appendChild(buildStandardList(grade, cName, classList));
+                    if (type === 'list') {
+                        area.appendChild(buildStandardList(grade, cName, classList));
+                    }
                     else if (type === 'health') {
                         area.appendChild(buildHealthPage1(grade, cName, classList));
                         area.appendChild(buildHealthPage2(grade, cName, classList));
+                    }
+                    else if (type === 'eye') {
+                        area.appendChild(buildEyePage1(grade, cName, classList));
+                        area.appendChild(buildEyePage2(grade, cName, classList));
                     }
                     else if (type === 'behavior') {
                         const monthIdx = parseInt(document.getElementById("month-select").value);
@@ -920,6 +931,7 @@
             } return html;
         }
 
+        /* كشوف الصحة الأصلية */
         function buildHealthPage1(grade, clsName, students) {
             const sheet = document.createElement("div"); sheet.className = "a4-sheet show-preview";
             sheet.innerHTML = `
@@ -946,6 +958,81 @@
             } return html;
         }
 
+        /* ================= كشوف فحص النظر (عيون أطفالنا) ================= */
+        function buildEyePage1(grade, clsName, students) {
+            const sheet = document.createElement("div"); sheet.className = "a4-sheet show-preview";
+            sheet.innerHTML = `
+                <div class="health-pro-header">
+                    <div class="hp-right"><div>مدرسة الشهيد أشرف حبيب</div><div></div></div>
+                    <div class="hp-center">
+                        <h1>كشف مبادرة عيون أطفالنا ( فحص النظر )</h1>
+                        <div class="hp-year">للعام الدراسي ٢٠٢٦ / ٢٠٢٧ م</div>
+                    </div>
+                    <div class="hp-left">
+                        <div class="hp-badge">الصف: ${grade}</div>
+                        <div class="hp-badge">فصل: <span dir="ltr">${toArabicNum(clsName)}</span></div>
+                    </div>
+                </div>
+                <table class="health-table">
+                    <thead>
+                        <tr>
+                            <th class="h-m">م</th>
+                            <th class="h-name-val" style="text-align:center !important">اسم التلميذ</th>
+                            <th class="h-nid">الرقم القومى</th>
+                            <th class="h-mob">موبايل</th>
+                            <th style="width:60px;">يمنى</th>
+                            <th style="width:60px;">يسرى</th>
+                            <th style="width:105px;">نتيجة الفحص</th>
+                        </tr>
+                    </thead>
+                    <tbody>${buildEyeRows(students, 0, 25)}</tbody>
+                </table>
+                <div class="signatures"><div>شئون الطلبة : <span class="sig-dots">......................................</span></div><div>مدير المدرسة : <span class="sig-dots">......................................</span></div></div>
+            `; return sheet;
+        }
+
+        function buildEyePage2(grade, clsName, students) {
+            const sheet = document.createElement("div"); sheet.className = "a4-sheet show-preview";
+            sheet.innerHTML = `
+                <div class="health-pro-header-sub">
+                    <div class="hp-sub-title">تابـــــــــــع كشف مبادرة عيون أطفالنا ( فحص النظر )</div>
+                    <div class="hp-sub-badge">فصل <span dir="ltr" style="margin-right:8px;">${toArabicNum(clsName)}</span></div>
+                </div>
+                <table class="health-table">
+                    <thead>
+                        <tr>
+                            <th class="h-m">م</th>
+                            <th class="h-name-val" style="text-align:center !important">اسم التلميذ</th>
+                            <th class="h-nid">الرقم القومى</th>
+                            <th class="h-mob">موبايل<br><small>ولى الامر</small></th>
+                            <th style="width:60px;">يمنى</th>
+                            <th style="width:60px;">يسرى</th>
+                            <th style="width:105px;">نتيجة الفحص</th>
+                        </tr>
+                    </thead>
+                    <tbody>${buildEyeRows(students, 25, 50)}</tbody>
+                </table>
+                <div class="signatures" style="margin-top: 20px;"><div>شئون الطلبة : <span class="sig-dots">......................................</span></div><div>مدير المدرسة : <span class="sig-dots">......................................</span></div></div>
+            `; return sheet;
+        }
+
+        function buildEyeRows(students, start, end) {
+            let html = "";
+            for (let i = start; i < end; i++) {
+                const s = students[i];
+                html += `<tr>
+                    <td class="h-m">${s ? toArabicNum(i + 1) : ""}</td>
+                    <td class="h-name-val">${s ? s.name : ""}</td>
+                    <td class="h-nid">${s ? (s.nid || "") : ""}</td>
+                    <td class="h-mob">${s ? (s.father_mobile || "") : ""}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>`;
+            } return html;
+        }
+
+        /* دفاتر 5 سلوك */
         function buildBehaviorPage(grade, clsName, students, monthIdx, year, pageNum) {
             const sheet = document.createElement("div");
             sheet.className = "a3-sheet show-preview";
