@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>التقارير المجمعة الشاملة - منظومة مستر زيزو</title>
+    
+    <!-- الخطوط والأيقونات -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- مكتبة Supabase الرسمية -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary: #0f2b48;
+            --secondary: #d97706;
+            --bg: #f8fafc;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --info: #0284c7;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Cairo', sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        body { 
+            background-color: var(--bg); 
+            color: #0f172a; 
+            min-height: 100vh; 
+            padding-bottom: 30px;
+        }
+
+        .header-gradient {
+            background: linear-gradient(135deg, #0f2b48 0%, #1e3a8a 100%);
+        }
+
+        /* كروت الموبايل ثلاثية الأبعاد */
+        .card-box {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-bottom: 3.5px solid #cbd5e1;
+            border-radius: 16px;
+            transition: all 0.2s ease;
+        }
+
+        /* شريط التبويبات المتجاوب للموبايل */
+        .tab-btn {
+            flex: 1;
+            padding: 11px 8px;
+            font-size: 13px;
+            font-weight: 800;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
+        }
+        .tab-btn.active {
+            background: #0f2b48;
+            color: #ffffff;
+            border-color: #0f2b48;
+            box-shadow: 0 4px 12px rgba(15, 43, 72, 0.25);
+        }
+
+        /* الجداول التفاعلية للهاتف */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-radius: 12px;
+            border: 1.5px solid #cbd5e1;
+            background: white;
+        }
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 12px;
+            min-width: 860px;
+        }
+        .custom-table th {
+            background: #0f2b48;
+            color: white;
+            font-weight: 900;
+            padding: 8px 4px;
+            border: 1px solid #334155;
+            white-space: nowrap;
+        }
+        .custom-table td {
+            padding: 8px 4px;
+            border: 1px solid #e2e8f0;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+        .custom-table tr:nth-child(even) { background-color: #f8fafc; }
+        
+        .sub-head { background-color: #1e293b !important; font-size: 11px !important; color: #fcd34d !important; }
+        .col-tot { background-color: #f1f5f9 !important; font-weight: 900; color: #0f2b48; }
+
+        .total-row {
+            background-color: #e2e8f0 !important;
+            font-weight: 900;
+            border-top: 2.5px solid #0f2b48;
+            color: #0f2b48;
+        }
+
+        /* شارات ملونة */
+        .badge-chip {
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 900;
+        }
+        .badge-surplus { background: #dcfce7; color: #15803d; }
+        .badge-deficit { background: #fee2e2; color: #b91c1c; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. الشريط العلوي المتجاوب (تم حذف زر الرئيسية نهائياً) -->
+    <header class="header-gradient text-white p-3.5 sticky top-0 z-50 shadow-md">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-blue-600/40 border border-blue-400/40 flex items-center justify-center text-yellow-300 text-xl shadow-inner">
+                    <i class="fa-solid fa-chart-pie"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-base font-black leading-tight">التقارير المجمعة الشاملة</h1>
+                    <p class="text-[11px] text-blue-200">مدرسة الشهيد أشرف حبيب الابتدائية - إدارة الشهداء</p>
+                </div>
+            </div>
+
+            <button onclick="fetchAllReportsData(true)" class="px-3.5 py-2 bg-white/10 hover:bg-white/20 active:scale-95 rounded-xl text-xs font-black transition flex items-center gap-1.5 border border-white/15">
+                <i class="fa-solid fa-arrows-rotate text-yellow-300"></i>
+                <span>تحديث الأرقام</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto p-3 space-y-3.5">
+
+        <!-- 2. حالة الاتصال والأرشفة الحية -->
+        <div class="card-box p-3 flex items-center justify-between text-xs font-bold text-slate-600">
+            <div class="flex items-center gap-2">
+                <span id="sys-mode-tag" class="badge-chip bg-emerald-100 text-emerald-800">
+                    <i class="fa-solid fa-wifi"></i> متصل بالسحابة
+                </span>
+                <span id="data-status-txt">جاري تدقيق وحساب ميزانية المدرسة...</span>
+            </div>
+            <div class="text-[11px] text-slate-400 font-mono" id="last-updated-time"></div>
+        </div>
+
+        <!-- 3. شريط التبويبات الثلاثة (مخصص للمس بالهاتف) -->
+        <div class="flex gap-1.5 p-1 bg-white border border-slate-200 rounded-2xl shadow-sm">
+            <button class="tab-btn active" id="btn-tab-students" onclick="switchMainTab('students')">
+                <i class="fa-solid fa-children text-amber-500"></i> ميزانية التلاميذ
+            </button>
+            <button class="tab-btn" id="btn-tab-teachers" onclick="switchMainTab('teachers')">
+                <i class="fa-solid fa-chalkboard-user text-blue-500"></i> إحصاء المعلمين
+            </button>
+            <button class="tab-btn" id="btn-tab-absence" onclick="switchMainTab('absence')">
+                <i class="fa-solid fa-calendar-xmark text-rose-500"></i> غياب المدرسة
+            </button>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- القسم الأول: ميزانية التلاميذ (مدرسة ورياض أطفال)        -->
+        <!-- ======================================================== -->
+        <div id="section-students" class="space-y-3">
+            
+            <!-- كروت المؤشرات الدقيقة -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                <div class="card-box p-2.5 border-t-4 border-t-blue-600">
+                    <div class="text-[11px] text-slate-500 font-bold">إجمالي قوة المدرسة (فعلي)</div>
+                    <div id="kpi-stu-total" class="text-2xl font-black text-blue-900 mt-0.5">٠</div>
+                    <div class="text-[10px] text-slate-400" id="kpi-stu-gender">بنين: ٠ | بنات: ٠</div>
+                </div>
+                <div class="card-box p-2.5 border-t-4 border-t-amber-500">
+                    <div class="text-[11px] text-slate-500 font-bold">المرحلة الابتدائية</div>
+                    <div id="kpi-stu-primary" class="text-2xl font-black text-amber-800 mt-0.5">٠</div>
+                    <div class="text-[10px] text-slate-400" id="kpi-pri-classes">٠ فصول</div>
+                </div>
+                <div class="card-box p-2.5 border-t-4 border-t-emerald-500">
+                    <div class="text-[11px] text-slate-500 font-bold">رياض الأطفال (KG)</div>
+                    <div id="kpi-stu-kg" class="text-2xl font-black text-emerald-800 mt-0.5">٠</div>
+                    <div class="text-[10px] text-slate-400" id="kpi-kg-classes">٠ قاعات</div>
+                </div>
+                <div class="card-box p-2.5 border-t-4 border-t-purple-600">
+                    <div class="text-[11px] text-slate-500 font-bold">حالات الدمج</div>
+                    <div id="kpi-stu-dmj" class="text-2xl font-black text-purple-900 mt-0.5">٠</div>
+                    <div class="text-[10px] text-slate-400" id="kpi-dmj-gender">بنين: ٠ | بنات: ٠</div>
+                </div>
+            </div>
+
+            <!-- أزرار تبديل وتصفية العرض -->
+            <div class="flex justify-between items-center bg-white p-2.5 rounded-xl border border-slate-200">
+                <span class="text-xs font-black text-[#0f2b48] flex items-center gap-1.5">
+                    <i class="fa-solid fa-layer-group text-blue-600"></i> ميزانية فصول:
+                </span>
+                <div class="flex gap-1">
+                    <button onclick="filterStudentStage('all')" id="subtab-stu-all" class="px-3 py-1 text-xs font-black rounded-lg bg-blue-900 text-white">الكل</button>
+                    <button onclick="filterStudentStage('primary')" id="subtab-stu-pri" class="px-3 py-1 text-xs font-black rounded-lg bg-slate-100 text-slate-700">ابتدائي</button>
+                    <button onclick="filterStudentStage('kg')" id="subtab-stu-kg" class="px-3 py-1 text-xs font-black rounded-lg bg-slate-100 text-slate-700">رياض أطفال</button>
+                </div>
+            </div>
+
+            <!-- تنبيه سحب الجدول على الموبايل -->
+            <div class="text-[11px] font-bold text-slate-400 flex items-center justify-between px-1">
+                <span><i class="fa-solid fa-arrows-left-right text-amber-500 ml-1"></i> اسحب الجدول أفقياً لاستعراض كافة بيانات الديانة والدمج والكثافة</span>
+                <span id="badge-calc-mode" class="badge-chip bg-blue-50 text-blue-900 border border-blue-200">حصر حي ومباشر</span>
+            </div>
+
+            <!-- جدول ميزانية الفصول والتلاميذ الوزاري الدقيق -->
+            <div class="table-container shadow-sm">
+                <table class="custom-table" id="students-budget-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="width: 100px;">الصف</th>
+                            <th rowspan="2" style="width: 65px;">الفصول</th>
+                            <th colspan="3">مسلم</th>
+                            <th colspan="3">مسيحي</th>
+                            <th colspan="3">دمج</th>
+                            <th colspan="3">جملة التلاميذ</th>
+                            <th rowspan="2" style="width: 65px;">الكثافة</th>
+                        </tr>
+                        <tr>
+                            <th class="sub-head">بنين</th><th class="sub-head">بنات</th><th class="sub-head col-tot">جملة</th>
+                            <th class="sub-head">بنين</th><th class="sub-head">بنات</th><th class="sub-head col-tot">جملة</th>
+                            <th class="sub-head">بنين</th><th class="sub-head">بنات</th><th class="sub-head col-tot">جملة</th>
+                            <th class="sub-head">بنين</th><th class="sub-head">بنات</th><th class="sub-head col-tot" style="background:#cbd5e1!important;">جملة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-students-budget">
+                        <tr><td colspan="15" class="p-8 text-slate-400 font-bold"><i class="fa-solid fa-spinner fa-spin ml-2"></i> جاري استخراج ميزانية التلاميذ الدقيقة...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- كروت سريعة للموبايل لكل صف -->
+            <div class="card-box p-3 space-y-2">
+                <div class="text-xs sm:text-sm font-black text-[#0f2b48] border-b pb-2 flex items-center justify-between">
+                    <span><i class="fa-solid fa-mobile-screen-button text-blue-600 ml-1"></i> بطاقات تفصيلية سريعة لصفوف المدرسة:</span>
+                    <span class="text-[10px] text-slate-400 font-normal">عرض فوري للموبايل</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="mobile-grades-cards-grid"></div>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- القسم الثاني: ميزانية وإحصاء المعلمين الأساسيين          -->
+        <!-- ======================================================== -->
+        <div id="section-teachers" class="space-y-3" style="display: none;">
+            
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                <div class="card-box p-2.5 border-t-4 border-t-emerald-600">
+                    <div class="text-[11px] text-slate-500 font-bold">قوة العاملين الأساسيين</div>
+                    <div id="kpi-tea-total" class="text-xl font-black text-emerald-900 mt-0.5">٠</div>
+                    <div class="text-[10px] text-slate-400" id="kpi-tea-gender">رجال: ٠ | سيدات: ٠</div>
+                </div>
+                <div class="card-box p-2.5 border-t-4 border-t-blue-600">
+                    <div class="text-[11px] text-slate-500 font-bold">معلمو التدريس الفعلي</div>
+                    <div id="kpi-tea-teachers" class="text-xl font-black text-blue-900 mt-0.5">٠</div>
+                    <div class="text-[10px] text-slate-400">على رأس العمل</div>
+                </div>
+                <div class="card-box p-2.5 border-t-4 border-t-amber-500">
+                    <div class="text-[11px] text-slate-500 font-bold">المعلمون المؤقتون</div>
+                    <div id="kpi-tea-temp" class="text-xl font-black text-amber-900 mt-0.5">٠</div>
+                    <div class="text-[10px] text-slate-400">ضمن القوة</div>
+                </div>
+                <div class="card-box p-2.5 border-t-4 border-t-slate-600">
+                    <div class="text-[11px] text-slate-500 font-bold">إداريون وعمال</div>
+                    <div id="kpi-tea-support" class="text-xl font-black text-slate-800 mt-0.5">٠</div>
+                    <div class="text-[10px] text-slate-400">هيئة معاونة</div>
+                </div>
+            </div>
+
+            <!-- جدول عجز وزيادة المواد بالحصة -->
+            <div class="card-box p-3 space-y-2">
+                <div class="flex justify-between items-center border-b pb-2">
+                    <span class="text-xs sm:text-sm font-black text-[#0f2b48]">
+                        <i class="fa-solid fa-scale-balanced text-amber-500 ml-1"></i> ميزان العجز والزيادة حسب المواد
+                    </span>
+                    <span class="text-[10px] text-slate-400">مقارنة الحصص بالأنصبة</span>
+                </div>
+
+                <div class="table-container">
+                    <table class="custom-table" id="teachers-deficit-table" style="min-width: 580px;">
+                        <thead>
+                            <tr>
+                                <th style="text-align: right; padding-right: 12px;">المادة والتخصص</th>
+                                <th>عدد المعلمين</th>
+                                <th>الحصص المطلوبة</th>
+                                <th>الأنصبة المتاحة</th>
+                                <th>الميزان</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-teachers-deficit">
+                            <tr><td colspan="5" class="p-6 text-slate-400 font-bold"><i class="fa-solid fa-spinner fa-spin ml-1"></i> جاري حصر ميزان المواد...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- حصر الكادر المالي والدرجات -->
+            <div class="card-box p-3 space-y-2">
+                <div class="text-xs sm:text-sm font-black text-[#0f2b48] border-b pb-2">
+                    <i class="fa-solid fa-id-card text-blue-600 ml-1"></i> توزيع المعلمين حسب وظائف الكادر المالي
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-bold text-center" id="cadre-stats-grid"></div>
+            </div>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- القسم الثالث: غياب المدرسة الأسبوعي الشامل               -->
+        <!-- ======================================================== -->
+        <div id="section-absence" class="space-y-3" style="display: none;">
+            
+            <div class="card-box p-3 space-y-2.5">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <label class="text-xs sm:text-sm font-black text-[#0f2b48]">
+                        <i class="fa-solid fa-calendar-day text-rose-600 ml-1"></i> اختر الأسبوع الدراسي المطلوب عرضه:
+                    </label>
+                    <select id="select-absence-week" onchange="renderWeeklyAbsenceReport()" class="w-full sm:w-60 p-2 bg-slate-50 border-2 border-blue-900 rounded-xl text-xs sm:text-sm font-black outline-none cursor-pointer text-[#0f2b48]"></select>
+                </div>
+                <div id="week-date-badge" class="text-center text-xs font-bold text-blue-900 bg-blue-50 py-1.5 px-3 rounded-lg border border-blue-200">
+                    جاري تحديد تاريخ الأسبوع...
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="card-box p-2.5 border-t-4 border-t-rose-600">
+                    <div class="text-[10px] sm:text-xs text-slate-500 font-bold">أيام الغياب</div>
+                    <div id="kpi-abs-total-days" class="text-xl font-black text-rose-700 mt-0.5">٠</div>
+                    <div class="text-[10px] text-slate-400">في هذا الأسبوع</div>
+                </div>
+                <div class="card-box p-2.5 border-t-4 border-t-emerald-600">
+                    <div class="text-[10px] sm:text-xs text-slate-500 font-bold">نسبة الحضور العامة</div>
+                    <div id="kpi-abs-percent" class="text-xl font-black text-emerald-800 mt-0.5">%٠</div>
+                    <div class="text-[10px] text-slate-400">للمدرسة بالكامل</div>
+                </div>
+                <div class="card-box p-2.5 border-t-4 border-t-amber-500">
+                    <div class="text-[10px] sm:text-xs text-slate-500 font-bold">التلاميذ الغائبون</div>
+                    <div id="kpi-abs-students-count" class="text-xl font-black text-amber-900 mt-0.5">٠</div>
+                    <div class="text-[10px] text-slate-400">تلميذ غائب</div>
+                </div>
+            </div>
+
+            <!-- جدول غياب صفوف المدرسة -->
+            <div class="card-box p-3 space-y-2">
+                <div class="text-xs sm:text-sm font-black text-[#0f2b48] border-b pb-2">
+                    <i class="fa-solid fa-list-check text-blue-600 ml-1"></i> معدل غياب وحضور الصفوف الدراسية في هذا الأسبوع
+                </div>
+                <div class="table-container">
+                    <table class="custom-table" id="grades-absence-table" style="min-width: 500px;">
+                        <thead>
+                            <tr>
+                                <th>الصف الدراسي</th>
+                                <th>عدد المقيدين</th>
+                                <th>أيام الغياب المرصودة</th>
+                                <th>نسبة الحضور</th>
+                                <th>التقييم</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-grades-absence">
+                            <tr><td colspan="5" class="p-6 text-slate-400 font-bold"><i class="fa-solid fa-spinner fa-spin ml-1"></i> جاري استخراج غياب الصفوف...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- كشف التلاميذ الغائبين بالتفصيل -->
+            <div class="card-box p-3 space-y-2.5">
+                <div class="flex justify-between items-center cursor-pointer" onclick="toggleAbsenteesList()">
+                    <span class="text-xs sm:text-sm font-black text-rose-800 flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-xmark"></i> كشف بأسماء التلاميذ الغائبين خلال الأسبوع (<span id="absentees-badge-count">٠</span>)
+                    </span>
+                    <button type="button" class="text-xs text-blue-700 font-bold flex items-center gap-1">
+                        <span id="btn-toggle-txt">عرض الكشف</span>
+                        <i class="fa-solid fa-chevron-down" id="icon-toggle"></i>
+                    </button>
+                </div>
+
+                <div id="absentees-list-wrapper" style="display: none;" class="pt-2 border-t">
+                    <div class="table-container max-h-80">
+                        <table class="custom-table" style="min-width: 550px;">
+                            <thead>
+                                <tr>
+                                    <th>م</th>
+                                    <th style="text-align: right;">اسم التلميذ</th>
+                                    <th>الصف</th>
+                                    <th>الفصل</th>
+                                    <th>أيام الغياب</th>
+                                    <th>موبايل ولي الأمر</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-absentees-details"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // إعدادات Supabase والاتصال
+        const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
+        const DB_VERSION = 2;
+
+        let RAW_STUDENTS = [];
+        let RAW_TEACHERS = [];
+        let CAPSULE_PLAN = {};
+        let ABSENCE_DATES = {};
+        let CAPSULE_STATS_2026 = null;
+        let SCHOOL_INFO = {};
+
+        const toAr = n => { 
+            if (n === 0) return "٠"; 
+            if (!n && n !== 0) return "-"; 
+            return String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]); 
+        };
+
+        const arabicWeeks = [
+            "الأول","الثاني","الثالث","الرابع","الخامس","السادس","السابع","الثامن","التاسع","العاشر",
+            "الحادي عشر","الثاني عشر","الثالث عشر","الرابع عشر","الخامس عشر","السادس عشر","السابع عشر",
+            "الثامن عشر","التاسع عشر","العشرون","الحادي والعشرون","الثاني والعشرون","الثالث والعشرون",
+            "الرابع والعشرون","الخامس والعشرون","السادس والعشرون","السابع والعشرون","الثامن والعشرون",
+            "التاسع والعشرون","الثلاثون"
+        ];
+
+        const standardGrades = ["KG1", "KG2", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
+
+        // كشف النوع الدقيق
+        function isMaleStudent(gender, nid) {
+            if (gender) {
+                const g = String(gender).trim();
+                if (g.includes("ذكر") || g.includes("بنين") || g === "1") return true;
+                if (g.includes("أنثى") || g.includes("انثى") || g.includes("بنات") || g === "2") return false;
+            }
+            if (nid && String(nid).trim().length === 14) {
+                return parseInt(String(nid).trim().charAt(12), 10) % 2 !== 0;
+            }
+            return true;
+        }
+
+        // كشف الدمج الدقيق
+        function isDmjStudent(dmjVal) {
+            if (!dmjVal) return false;
+            const notDamj = ["", "لا", "لا يوجد", "لايوجد", "عادي", "طبيعي", "غير مدمج", "false", "0", "-"];
+            return !notDamj.includes(String(dmjVal).trim().toLowerCase());
+        }
+
+        // مطابقة الصف الدراسي بمرونة تامة
+        function matchStandardGrade(rawGrade) {
+            if (!rawGrade) return null;
+            let s = String(rawGrade).trim().toUpperCase();
+            
+            // فحص KG أولاً حتى لا يختلط بـ 1
+            if (s.includes("KG1") || s.includes("كيجي 1") || s.includes("كيجي1") || s === "KG 1") return "KG1";
+            if (s.includes("KG2") || s.includes("كيجي 2") || s.includes("كيجي2") || s === "KG 2") return "KG2";
+
+            let clean = s.replace(/الصف\s*/g, '').replace(/[أإآا]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/\s+/g, '');
+            if (clean.includes("1") || clean.includes("اول")) return "الأول";
+            if (clean.includes("2") || clean.includes("ثان")) return "الثاني";
+            if (clean.includes("3") || clean.includes("ثالث")) return "الثالث";
+            if (clean.includes("4") || clean.includes("رابع")) return "الرابع";
+            if (clean.includes("5") || clean.includes("خامس")) return "الخامس";
+            if (clean.includes("6") || clean.includes("سادس") || clean.includes("ساته")) return "السادس";
+            return null;
+        }
+
+        function normalizeArabic(text) {
+            if (!text) return "";
+            return String(text)
+                .replace(/[أإآا]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[\u064B-\u0652]/g, '')
+                .replace(/\s+/g, '')
+                .toLowerCase();
+        }
+
+        // ================= IndexedDB Fallback =================
+        function openLocalDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('students')) db.createObjectStore('students', { keyPath: 'code' });
+                    if (!db.objectStoreNames.contains('teachers')) db.createObjectStore('teachers', { keyPath: 'nid' });
+                    if (!db.objectStoreNames.contains('system_capsules')) db.createObjectStore('system_capsules', { keyPath: 'id' });
+                };
+            });
+        }
+
+        async function fetchOfflineTable(storeName) {
+            try {
+                const db = await openLocalDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction(storeName, 'readonly');
+                    const req = tx.objectStore(storeName).getAll();
+                    req.onsuccess = () => resolve(req.result || []);
+                    req.onerror = () => resolve([]);
+                });
+            } catch(e) { return []; }
+        }
+
+        // ================= دورة حياة الصفحة =================
+        window.addEventListener('DOMContentLoaded', async () => {
+            initWeekSelector();
+            await fetchAllReportsData();
+        });
+
+        function initWeekSelector() {
+            const sel = document.getElementById("select-absence-week");
+            sel.innerHTML = "";
+            for (let i = 0; i < 30; i++) {
+                const opt = document.createElement("option");
+                opt.value = `W${i + 1}`;
+                opt.textContent = `الأسبوع (${arabicWeeks[i]})`;
+                sel.appendChild(opt);
+            }
+        }
+
+        function switchMainTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-tab-' + tab).classList.add('active');
+
+            document.getElementById('section-students').style.display = (tab === 'students') ? 'block' : 'none';
+            document.getElementById('section-teachers').style.display = (tab === 'teachers') ? 'block' : 'none';
+            document.getElementById('section-absence').style.display = (tab === 'absence') ? 'block' : 'none';
+        }
+
+        // ================= سحب كافة بيانات المدرسة بدون قطع 1000 تلميذ =================
+        async function fetchAllReportsData(isManual = false) {
+            const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
+            const badge = document.getElementById('sys-mode-tag');
+            const statusTxt = document.getElementById('data-status-txt');
+            
+            if (mode === 'offline') {
+                badge.className = "badge-chip bg-amber-100 text-amber-800";
+                badge.innerHTML = `<i class="fa-solid fa-laptop"></i> وضع محلي (أوفلاين)`;
+            } else {
+                badge.className = "badge-chip bg-emerald-100 text-emerald-800";
+                badge.innerHTML = `<i class="fa-solid fa-wifi"></i> متصل بالسحابة`;
+            }
+
+            if (isManual) {
+                Swal.fire({ title: 'جاري حصر وتدقيق ميزانية المدرسة بالكامل...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            }
+
+            try {
+                if (mode === 'offline') {
+                    const [st, te, caps] = await Promise.all([
+                        fetchOfflineTable('students'),
+                        fetchOfflineTable('teachers'),
+                        fetchOfflineTable('system_capsules')
+                    ]);
+                    RAW_STUDENTS = (st || []).filter(s => {
+                        const tr = String(s.transfer_type || "").trim();
+                        return !tr.includes("محول من") && !tr.includes("محولمن") && !String(s.grade || "").includes("خريج");
+                    });
+                    RAW_TEACHERS = te || [];
+                    const planObj = (caps || []).find(c => c.id === 'school_plan');
+                    if (planObj && planObj.data) CAPSULE_PLAN = planObj.data;
+                    const dateObj = (caps || []).find(c => c.id === 'absence_dates');
+                    if (dateObj && dateObj.data) ABSENCE_DATES = dateObj.data;
+                    const statsObj = (caps || []).find(c => c.id === 'stats_2026');
+                    if (statsObj && statsObj.data) CAPSULE_STATS_2026 = statsObj.data;
+                    const infoObj = (caps || []).find(c => c.id === 'school_info');
+                    if (infoObj && infoObj.data) SCHOOL_INFO = infoObj.data;
+                } else {
+                    // سحب التلاميذ بحلقة تدريجية كاملة لتجاوز سقف الـ 1000
+                    let allStudents = [];
+                    let start = 0;
+                    const step = 1000;
+                    let hasMore = true;
+
+                    while (hasMore) {
+                        const { data, error } = await sbClient
+                            .from('students')
+                            .select('*')
+                            .range(start, start + step - 1);
+
+                        if (error) throw error;
+                        if (!data || data.length === 0) break;
+
+                        allStudents = allStudents.concat(data);
+                        start += step;
+                        if (data.length < step) hasMore = false;
+                    }
+
+                    RAW_STUDENTS = allStudents.filter(s => {
+                        const tr = String(s.transfer_type || "").trim();
+                        return !tr.includes("محول من") && !tr.includes("محولمن") && !String(s.grade || "").includes("خريج");
+                    });
+
+                    // سحب المعلمين
+                    let allTeachers = [];
+                    start = 0;
+                    hasMore = true;
+                    while (hasMore) {
+                        const { data, error } = await sbClient.from('teachers').select('*').range(start, start + step - 1);
+                        if (error) throw error;
+                        if (!data || data.length === 0) break;
+                        allTeachers = allTeachers.concat(data);
+                        start += step;
+                        if (data.length < step) hasMore = false;
+                    }
+                    RAW_TEACHERS = allTeachers;
+
+                    // سحب الكبسولات الإحصائية والخطط
+                    const [resPlan, resDates, resStats2026, resInfo] = await Promise.all([
+                        sbClient.from('system_capsules').select('data').eq('id', 'school_plan').maybeSingle(),
+                        sbClient.from('system_capsules').select('data').eq('id', 'absence_dates').maybeSingle(),
+                        sbClient.from('system_capsules').select('data').eq('id', 'stats_2026').maybeSingle(),
+                        sbClient.from('system_capsules').select('data').eq('id', 'school_info').maybeSingle()
+                    ]);
+
+                    if (resPlan.data && resPlan.data.data) CAPSULE_PLAN = resPlan.data.data;
+                    if (resDates.data && resDates.data.data) ABSENCE_DATES = resDates.data.data;
+                    if (resStats2026.data && resStats2026.data.data) CAPSULE_STATS_2026 = resStats2026.data.data;
+                    if (resInfo.data && resInfo.data.data) SCHOOL_INFO = resInfo.data.data;
+                }
+
+                statusTxt.innerText = `حصر دقيق: (${RAW_STUDENTS.length}) تلميذ فعلي مقيد بالمدرسة`;
+                document.getElementById('last-updated-time').innerText = new Date().toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
+
+                // رسم التقارير
+                renderStudentsBudgetReport(currentStudentFilter);
+                renderTeachersBudgetReport();
+                renderWeeklyAbsenceReport();
+
+                if (isManual) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'تم تحديث البيانات بالكامل',
+                        text: `تم حصر ${RAW_STUDENTS.length} تلميذ مقيد و ${RAW_TEACHERS.length} موظف بنجاح تام!`,
+                        timer: 1600,
+                        showConfirmButton: false
+                    });
+                }
+
+            } catch (err) {
+                console.error(err);
+                statusTxt.innerText = "تعذر تحديث بعض البيانات: " + err.message;
+                if (isManual) Swal.fire('خطأ', 'فشل تحميل بعض التقارير: ' + err.message, 'error');
+            }
+        }
+
+        // ================= 1. ميزانية التلاميذ الدقيقة بالكامل =================
+        let currentStudentFilter = 'all';
+
+        function filterStudentStage(stage) {
+            currentStudentFilter = stage;
+            document.getElementById('subtab-stu-all').className = stage === 'all' ? 'px-3 py-1 text-xs font-black rounded-lg bg-blue-900 text-white' : 'px-3 py-1 text-xs font-black rounded-lg bg-slate-100 text-slate-700';
+            document.getElementById('subtab-stu-pri').className = stage === 'primary' ? 'px-3 py-1 text-xs font-black rounded-lg bg-blue-900 text-white' : 'px-3 py-1 text-xs font-black rounded-lg bg-slate-100 text-slate-700';
+            document.getElementById('subtab-stu-kg').className = stage === 'kg' ? 'px-3 py-1 text-xs font-black rounded-lg bg-blue-900 text-white' : 'px-3 py-1 text-xs font-black rounded-lg bg-slate-100 text-slate-700';
+            renderStudentsBudgetReport(stage);
+        }
+
+        function renderStudentsBudgetReport(filter = 'all') {
+            const tbody = document.getElementById("tbody-students-budget");
+            const mobileCardsGrid = document.getElementById("mobile-grades-cards-grid");
+            tbody.innerHTML = "";
+            mobileCardsGrid.innerHTML = "";
+
+            let totalStu = 0, totalBoys = 0, totalGirls = 0, totalDmj = 0, dmjBoys = 0, dmjGirls = 0;
+            let primaryStu = 0, kgStu = 0;
+            let primaryClassesSet = new Set(), kgClassesSet = new Set();
+
+            const gradeStats = {};
+            standardGrades.forEach(g => {
+                gradeStats[g] = {
+                    grade: g,
+                    boys: 0, girls: 0,
+                    mb: 0, mg: 0,
+                    cb: 0, cg: 0,
+                    db: 0, dg: 0,
+                    classesSet: new Set()
+                };
+            });
+
+            // تجميع وحصر بيانات كل تلميذ
+            RAW_STUDENTS.forEach(s => {
+                totalStu++;
+                const isB = isMaleStudent(s.gender, s.nid);
+                if (isB) totalBoys++; else totalGirls++;
+
+                const isD = isDmjStudent(s.dmj);
+                if (isD) {
+                    totalDmj++;
+                    if (isB) dmjBoys++; else dmjGirls++;
+                }
+
+                const matchedGrade = matchStandardGrade(s.grade);
+
+                if (matchedGrade && gradeStats[matchedGrade]) {
+                    const st = gradeStats[matchedGrade];
+                    if (isB) st.boys++; else st.girls++;
+
+                    const isChristian = (s.religion || "").includes("مسيحي");
+                    if (isChristian) {
+                        if (isB) st.cb++; else st.cg++;
+                    } else {
+                        if (isB) st.mb++; else st.mg++;
+                    }
+
+                    if (isD) {
+                        if (isB) st.db++; else st.dg++;
+                    }
+
+                    if (s.class) {
+                        st.classesSet.add(String(s.class).trim());
+                        if (matchedGrade.startsWith("KG")) kgClassesSet.add(String(s.class).trim());
+                        else primaryClassesSet.add(String(s.class).trim());
+                    }
+
+                    if (matchedGrade.startsWith("KG")) kgStu++; else primaryStu++;
+                }
+            });
+
+            // التحقق من فصول خطة المدرسة المعتمدة إن وجدت في school_info
+            if (SCHOOL_INFO) {
+                if (SCHOOL_INFO.cls_kg1 && gradeStats["KG1"].classesSet.size === 0) gradeStats["KG1"].officialClasses = parseInt(SCHOOL_INFO.cls_kg1);
+                if (SCHOOL_INFO.cls_kg2 && gradeStats["KG2"].classesSet.size === 0) gradeStats["KG2"].officialClasses = parseInt(SCHOOL_INFO.cls_kg2);
+                if (SCHOOL_INFO.cls_g1 && gradeStats["الأول"].classesSet.size === 0) gradeStats["الأول"].officialClasses = parseInt(SCHOOL_INFO.cls_g1);
+                if (SCHOOL_INFO.cls_g2 && gradeStats["الثاني"].classesSet.size === 0) gradeStats["الثاني"].officialClasses = parseInt(SCHOOL_INFO.cls_g2);
+                if (SCHOOL_INFO.cls_g3 && gradeStats["الثالث"].classesSet.size === 0) gradeStats["الثالث"].officialClasses = parseInt(SCHOOL_INFO.cls_g3);
+                if (SCHOOL_INFO.cls_g4 && gradeStats["الرابع"].classesSet.size === 0) gradeStats["الرابع"].officialClasses = parseInt(SCHOOL_INFO.cls_g4);
+                if (SCHOOL_INFO.cls_g5 && gradeStats["الخامس"].classesSet.size === 0) gradeStats["الخامس"].officialClasses = parseInt(SCHOOL_INFO.cls_g5);
+                if (SCHOOL_INFO.cls_g6 && gradeStats["السادس"].classesSet.size === 0) gradeStats["السادس"].officialClasses = parseInt(SCHOOL_INFO.cls_g6);
+            }
+
+            // تحديث كروت المؤشرات العلوية
+            document.getElementById("kpi-stu-total").innerText = toAr(totalStu);
+            document.getElementById("kpi-stu-gender").innerText = `بنين: ${toAr(totalBoys)} | بنات: ${toAr(totalGirls)}`;
+            document.getElementById("kpi-stu-primary").innerText = toAr(primaryStu);
+            document.getElementById("kpi-pri-classes").innerText = `${toAr(primaryClassesSet.size)} فصول مسجلة`;
+            document.getElementById("kpi-stu-kg").innerText = toAr(kgStu);
+            document.getElementById("kpi-kg-classes").innerText = `${toAr(kgClassesSet.size)} قاعات مسجلة`;
+            document.getElementById("kpi-stu-dmj").innerText = toAr(totalDmj);
+            document.getElementById("kpi-dmj-gender").innerText = `بنين: ${toAr(dmjBoys)} | بنات: ${toAr(dmjGirls)}`;
+
+            // التصفية
+            let gradesToRender = standardGrades;
+            if (filter === 'primary') gradesToRender = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
+            if (filter === 'kg') gradesToRender = ["KG1", "KG2"];
+
+            let sumClasses = 0, sumBoys = 0, sumGirls = 0, sumTotal = 0;
+            let sumMb = 0, sumMg = 0, sumCb = 0, sumCg = 0, sumDb = 0, sumDg = 0;
+
+            gradesToRender.forEach(gKey => {
+                const g = gradeStats[gKey];
+                const classesCount = g.classesSet.size || g.officialClasses || 0;
+                const totalG = g.boys + g.girls;
+                const density = classesCount > 0 ? Math.round(totalG / classesCount) : 0;
+
+                sumClasses += classesCount;
+                sumBoys += g.boys;
+                sumGirls += g.girls;
+                sumTotal += totalG;
+
+                sumMb += g.mb; sumMg += g.mg;
+                sumCb += g.cb; sumCg += g.cg;
+                sumDb += g.db; sumDg += g.dg;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="font-black text-[#0f2b48]">${g.grade}</td>
+                        <td class="font-bold bg-slate-50">${toAr(classesCount)}</td>
+                        <td>${toAr(g.mb)}</td><td>${toAr(g.mg)}</td><td class="col-tot">${toAr(g.mb + g.mg)}</td>
+                        <td>${toAr(g.cb)}</td><td>${toAr(g.cg)}</td><td class="col-tot">${toAr(g.cb + g.cg)}</td>
+                        <td>${toAr(g.db)}</td><td>${toAr(g.dg)}</td><td class="col-tot">${toAr(g.db + g.dg)}</td>
+                        <td class="text-blue-900 font-bold">${toAr(g.boys)}</td>
+                        <td class="text-rose-900 font-bold">${toAr(g.girls)}</td>
+                        <td class="font-black text-[#0f2b48] bg-slate-100">${toAr(totalG)}</td>
+                        <td class="font-black ${density > 45 ? 'text-rose-700 bg-rose-50' : 'text-emerald-700'}">${toAr(density)}</td>
+                    </tr>
+                `;
+
+                // بطاقة الموبايل السريعة
+                mobileCardsGrid.innerHTML += `
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                        <div class="flex justify-between items-center border-b pb-1.5">
+                            <span class="font-black text-[#0f2b48] text-sm">${g.grade}</span>
+                            <span class="badge-chip bg-blue-100 text-blue-900">${toAr(classesCount)} فصول / قاعات</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1 text-center text-xs">
+                            <div class="bg-white p-1.5 rounded border">
+                                <span class="text-slate-400 block text-[10px]">بنين</span>
+                                <b class="text-blue-800 text-sm">${toAr(g.boys)}</b>
+                            </div>
+                            <div class="bg-white p-1.5 rounded border">
+                                <span class="text-slate-400 block text-[10px]">بنات</span>
+                                <b class="text-rose-800 text-sm">${toAr(g.girls)}</b>
+                            </div>
+                            <div class="bg-white p-1.5 rounded border bg-blue-50/50">
+                                <span class="text-slate-400 block text-[10px]">الجملة</span>
+                                <b class="text-[#0f2b48] text-sm">${toAr(totalG)}</b>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center text-[11px] pt-1 text-slate-600 font-bold">
+                            <span>مسلم: ${toAr(g.mb + g.mg)} | مسيحي: ${toAr(g.cb + g.cg)} | دمج: ${toAr(g.db + g.dg)}</span>
+                            <span class="font-black ${density > 45 ? 'text-rose-700' : 'text-emerald-700'}">كثافة: ${toAr(density)}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            const overallDensity = sumClasses > 0 ? Math.round(sumTotal / sumClasses) : 0;
+            tbody.innerHTML += `
+                <tr class="total-row">
+                    <td>الإجمالي</td>
+                    <td>${toAr(sumClasses)}</td>
+                    <td>${toAr(sumMb)}</td><td>${toAr(sumMg)}</td><td class="col-tot">${toAr(sumMb + sumMg)}</td>
+                    <td>${toAr(sumCb)}</td><td>${toAr(sumCg)}</td><td class="col-tot">${toAr(sumCb + sumCg)}</td>
+                    <td>${toAr(sumDb)}</td><td>${toAr(sumDg)}</td><td class="col-tot">${toAr(sumDb + sumDg)}</td>
+                    <td>${toAr(sumBoys)}</td>
+                    <td>${toAr(sumGirls)}</td>
+                    <td style="background:#cbd5e1!important;">${toAr(sumTotal)}</td>
+                    <td>${toAr(overallDensity)}</td>
+                </tr>
+            `;
+        }
+
+        // ================= 2. ميزانية وإحصاء المعلمين الأساسيين =================
+        function renderTeachersBudgetReport() {
+            const tbody = document.getElementById("tbody-teachers-deficit");
+            tbody.innerHTML = "";
+
+            let totalActive = 0, maleCount = 0, femaleCount = 0, teachersOnly = 0, tempCount = 0, supportCount = 0;
+            const cadreStats = {};
+
+            RAW_TEACHERS.forEach(t => {
+                const st = (t.emp_status || "على رأس العمل").trim();
+                const isOut = ["معاش", "متوفى", "منهي خدمته", "تم نقله"].includes(st);
+                if (isOut) return;
+
+                totalActive++;
+                if (t.gender === "ذكر") maleCount++; else femaleCount++;
+
+                const job = normalizeArabic(t.cadre_job || "");
+                const isWorker = job.includes("عامل") || job.includes("حارس") || job.includes("خدمات");
+                const isAdmin = job.includes("اداري") || job.includes("سكرتير") || job.includes("اخصائي") || job.includes("مشرف");
+
+                if (isWorker || isAdmin) {
+                    supportCount++;
+                } else {
+                    teachersOnly++;
+                }
+
+                if (st === "مؤقت") tempCount++;
+
+                let c = t.fin_degree || "معلم";
+                if (c.includes("مساعد")) c = "معلم مساعد";
+                else if (c.includes("أول أ") || c.includes("اول ا")) c = "معلم أول أ";
+                else if (c.includes("أول") || c.includes("اول")) c = "معلم أول";
+                else if (c.includes("خبير")) c = "معلم خبير";
+                else if (c.includes("كبير")) c = "كبير معلمين";
+                else c = "معلم";
+
+                cadreStats[c] = (cadreStats[c] || 0) + 1;
+            });
+
+            document.getElementById("kpi-tea-total").innerText = toAr(totalActive);
+            document.getElementById("kpi-tea-gender").innerText = `رجال: ${toAr(maleCount)} | سيدات: ${toAr(femaleCount)}`;
+            document.getElementById("kpi-tea-teachers").innerText = toAr(teachersOnly);
+            document.getElementById("kpi-tea-temp").innerText = toAr(tempCount);
+            document.getElementById("kpi-tea-support").innerText = toAr(supportCount);
+
+            // المواد والأنصبة
+            const subjectsConfig = [
+                { name: "اللغة العربية والتربية الدينية", keys: ["arabic", "religion"], kws: ["عرب", "دين", "اسلام"] },
+                { name: "الرياضيات", keys: ["math"], kws: ["رياضيات", "حساب"] },
+                { name: "اللغة الإنجليزية", keys: ["english"], kws: ["انجل", "انجليز"] },
+                { name: "العلوم", keys: ["science"], kws: ["علوم"] },
+                { name: "الدراسات الاجتماعية", keys: ["social"], kws: ["دراس"] },
+                { name: "تكنولوجيا المعلومات", keys: ["tech"], kws: ["تكنو", "حاسب"] },
+                { name: "المهارات المهنية", keys: ["skills"], kws: ["مهار"] },
+                { name: "التربية الفنية", keys: ["art"], kws: ["فني", "رسم"] },
+                { name: "التربية الرياضية", keys: ["pe"], kws: ["بدني", "العاب", "رياضيه", "رياضية"] },
+                { name: "التربية الموسيقية", keys: ["music"], kws: ["موسيقي", "موسيقى"] }
+            ];
+
+            const grades = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
+
+            subjectsConfig.forEach(sub => {
+                let requiredPeriods = 0;
+                grades.forEach(g => {
+                    if (CAPSULE_PLAN[g] && CAPSULE_PLAN[g].subjects && CAPSULE_PLAN[g].classes) {
+                        const cls = parseInt(CAPSULE_PLAN[g].classes) || 0;
+                        let subSum = 0;
+                        sub.keys.forEach(k => subSum += (parseInt(CAPSULE_PLAN[g].subjects[k]) || 0));
+                        requiredPeriods += (cls * subSum);
+                    }
+                });
+
+                let availableQuota = 0;
+                let countAssigned = 0;
+
+                RAW_TEACHERS.forEach(t => {
+                    const st = (t.emp_status || "على رأس العمل").trim();
+                    if (["معاش", "متوفى", "منهي خدمته", "تم نقله"].includes(st)) return;
+
+                    const tSub = normalizeArabic(t.subject || "");
+                    const isMatch = sub.kws.some(kw => tSub.includes(normalizeArabic(kw)));
+
+                    if (isMatch) {
+                        countAssigned++;
+                        availableQuota += (parseInt(t.quota) || 0);
+                    }
+                });
+
+                const diff = availableQuota - requiredPeriods;
+                let diffBadge = "";
+                if (diff < 0) {
+                    diffBadge = `<span class="badge-chip badge-deficit">عجز (${toAr(Math.abs(diff))})</span>`;
+                } else if (diff > 0) {
+                    diffBadge = `<span class="badge-chip badge-surplus">زيادة (${toAr(diff)})</span>`;
+                } else {
+                    diffBadge = `<span class="text-slate-400 font-bold">متزن</span>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="text-align: right; padding-right: 12px; font-weight: 900; color: #0f2b48;">${sub.name}</td>
+                        <td class="font-black">${toAr(countAssigned)}</td>
+                        <td class="text-slate-500">${toAr(requiredPeriods)}</td>
+                        <td class="text-blue-900 font-black">${toAr(availableQuota)}</td>
+                        <td>${diffBadge}</td>
+                    </tr>
+                `;
+            });
+
+            // كروت الكادر
+            const cadreGrid = document.getElementById("cadre-stats-grid");
+            cadreGrid.innerHTML = "";
+            const cadreOrder = ["معلم مساعد", "معلم", "معلم أول", "معلم أول أ", "معلم خبير", "كبير معلمين"];
+            cadreOrder.forEach(cName => {
+                const count = cadreStats[cName] || 0;
+                cadreGrid.innerHTML += `
+                    <div class="p-2 bg-slate-50 border rounded-xl flex justify-between items-center">
+                        <span class="text-slate-700">${cName}</span>
+                        <span class="font-black text-[#0f2b48] bg-white px-2 py-0.5 rounded border">${toAr(count)}</span>
+                    </div>
+                `;
+            });
+        }
+
+        // ================= 3. غياب المدرسة الأسبوعي الشامل =================
+        function renderWeeklyAbsenceReport() {
+            const weekKey = document.getElementById("select-absence-week").value;
+            const weekIndex = parseInt(weekKey.replace('W', '')) - 1;
+            
+            const dateBadge = document.getElementById("week-date-badge");
+            let dateText = `الأسبوع الدراسي (${arabicWeeks[weekIndex]})`;
+            
+            if (ABSENCE_DATES.term1) {
+                const d1 = new Date(ABSENCE_DATES.term1);
+                if (weekIndex < 17) {
+                    d1.setDate(d1.getDate() + (weekIndex * 7));
+                    const dEnd = new Date(d1);
+                    dEnd.setDate(dEnd.getDate() + 4);
+                    dateText += ` : من ${d1.toLocaleDateString('ar-EG')} إلى ${dEnd.toLocaleDateString('ar-EG')}`;
+                }
+            }
+            dateBadge.innerText = dateText;
+
+            let totalSchoolAbsDays = 0;
+            let totalEnrolledStudents = RAW_STUDENTS.length;
+            const absenteesList = [];
+
+            const gradesAbsenceMap = {};
+            const activeGrades = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
+            activeGrades.forEach(g => {
+                gradesAbsenceMap[g] = { grade: g, enrolled: 0, absDays: 0 };
+            });
+
+            RAW_STUDENTS.forEach(s => {
+                const matchedGrade = matchStandardGrade(s.grade);
+                if (matchedGrade && gradesAbsenceMap[matchedGrade]) {
+                    gradesAbsenceMap[matchedGrade].enrolled++;
+                }
+
+                let absObj = typeof s.absences === 'string' ? JSON.parse(s.absences || '{}') : (s.absences || {});
+                const days = parseInt(absObj[weekKey]) || 0;
+
+                if (days > 0) {
+                    totalSchoolAbsDays += days;
+                    if (matchedGrade && gradesAbsenceMap[matchedGrade]) {
+                        gradesAbsenceMap[matchedGrade].absDays += days;
+                    }
+                    absenteesList.push({
+                        name: s.name,
+                        grade: matchedGrade || s.grade || "-",
+                        class: s.class || "-",
+                        days: days,
+                        mobile: s.father_mobile || s.mobile || "-"
+                    });
+                }
+            });
+
+            const totalSchoolPossibleDays = totalEnrolledStudents * 5;
+            const schoolAttendancePercent = totalSchoolPossibleDays > 0 
+                ? (((totalSchoolPossibleDays - totalSchoolAbsDays) / totalSchoolPossibleDays) * 100).toFixed(1) 
+                : 100;
+
+            document.getElementById("kpi-abs-total-days").innerText = toAr(totalSchoolAbsDays);
+            document.getElementById("kpi-abs-percent").innerText = `%${toAr(schoolAttendancePercent)}`;
+            document.getElementById("kpi-abs-students-count").innerText = toAr(absenteesList.length);
+            document.getElementById("absentees-badge-count").innerText = toAr(absenteesList.length);
+
+            // جدول صفوف المدرسة
+            const tbodyGrades = document.getElementById("tbody-grades-absence");
+            tbodyGrades.innerHTML = "";
+
+            activeGrades.forEach(gName => {
+                const row = gradesAbsenceMap[gName];
+                const possible = row.enrolled * 5;
+                const pct = possible > 0 ? (((possible - row.absDays) / possible) * 100).toFixed(1) : 100;
+                
+                let ratingBadge = "";
+                if (pct >= 95) ratingBadge = `<span class="badge-chip badge-surplus">ممتاز</span>`;
+                else if (pct >= 85) ratingBadge = `<span class="badge-chip bg-blue-100 text-blue-800">جيد جداً</span>`;
+                else ratingBadge = `<span class="badge-chip badge-deficit">انخفاض حضور</span>`;
+
+                tbodyGrades.innerHTML += `
+                    <tr>
+                        <td class="font-black text-[#0f2b48]">الصف ${row.grade}</td>
+                        <td>${toAr(row.enrolled)}</td>
+                        <td class="font-black text-rose-700">${toAr(row.absDays)}</td>
+                        <td class="font-black text-blue-900">%${toAr(pct)}</td>
+                        <td>${ratingBadge}</td>
+                    </tr>
+                `;
+            });
+
+            // كشف التلاميذ الغائبين
+            const tbodyAbsentees = document.getElementById("tbody-absentees-details");
+            tbodyAbsentees.innerHTML = "";
+
+            if (absenteesList.length === 0) {
+                tbodyAbsentees.innerHTML = `<tr><td colspan="6" class="p-4 text-emerald-700 font-black">🎉 حضور كامل 100%! لا يوجد أي غياب مسجل في هذا الأسبوع.</td></tr>`;
+            } else {
+                absenteesList.sort((a, b) => b.days - a.days || a.name.localeCompare(b.name, 'ar'));
+                absenteesList.forEach((st, idx) => {
+                    tbodyAbsentees.innerHTML += `
+                        <tr>
+                            <td>${toAr(idx + 1)}</td>
+                            <td style="text-align: right; font-weight: 900; color: #0f2b48;">${st.name}</td>
+                            <td>${st.grade}</td>
+                            <td>${toAr(st.class)}</td>
+                            <td class="font-black text-rose-700">${toAr(st.days)} أيام</td>
+                            <td class="font-mono text-xs">${st.mobile}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function toggleAbsenteesList() {
+            const wrapper = document.getElementById("absentees-list-wrapper");
+            const btnTxt = document.getElementById("btn-toggle-txt");
+            const icon = document.getElementById("icon-toggle");
+
+            if (wrapper.style.display === "none") {
+                wrapper.style.display = "block";
+                btnTxt.innerText = "إخفاء الكشف";
+                icon.className = "fa-solid fa-chevron-up";
+            } else {
+                wrapper.style.display = "none";
+                btnTxt.innerText = "عرض الكشف";
+                icon.className = "fa-solid fa-chevron-down";
+            }
+        }
+    </script>
+</body>
+</html>
