@@ -45,9 +45,9 @@
         .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
 
         /* أزرار التبويبات */
-        .tabs-container { display: flex; gap: 8px; width: 100%; margin-bottom: 12px; }
+        .tabs-container { display: flex; gap: 8px; width: 100%; margin-bottom: 12px; flex-wrap: wrap; }
         .tab-btn { 
-            flex: 1; background: white; border: 1px solid #cbd5e1; border-bottom: 4px solid #cbd5e1; 
+            flex: 1; min-width: 140px; background: white; border: 1px solid #cbd5e1; border-bottom: 4px solid #cbd5e1; 
             padding: 10px; border-radius: 14px; font-weight: 900; font-size: 13.5px; color: #475569; 
             cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; 
         }
@@ -91,6 +91,38 @@
         .bg-warn1 { background: var(--warn1); color: black; } 
         .bg-warn2 { background: var(--warn2); } 
         .bg-danger { background: var(--danger); }
+
+        /* القائمة المنسدلة للبحث بالبادئة */
+        .dropdown-results-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            max-height: 240px;
+            overflow-y: auto;
+            z-index: 2500;
+            display: none;
+            border: 2px solid #7c3aed;
+            -webkit-overflow-scrolling: touch;
+        }
+        .dropdown-item-row {
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 800;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.15s;
+        }
+        .dropdown-item-row:hover, .dropdown-item-row:active {
+            background: #f5f3ff;
+            color: #6d28d9;
+        }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         
@@ -140,9 +172,10 @@
             </div>
         </nav>
 
-        <!-- 2. أزرار التبويبات المنسقة -->
+        <!-- 2. أزرار التبويبات المنسقة (مع زر الجزء الجديد) -->
         <div class="tabs-container no-print">
             <button class="tab-btn active" onclick="switchTab('entry')"><i class="fa-solid fa-keyboard text-blue-600"></i> الرصد السريع</button>
+            <button class="tab-btn" onclick="switchTab('reg-edit')"><i class="fa-solid fa-address-book text-purple-600"></i> استعلام وتعديل السجل</button>
             <button class="tab-btn" onclick="switchTab('reports')"><i class="fa-solid fa-chart-line text-emerald-600"></i> التحليل والإنذارات</button>
             
             <!-- تبويب إعدادات التواريخ: مخفي تماماً ولا يفتح إلا للمدير العام -->
@@ -233,7 +266,110 @@
             </div>
         </div>
 
-        <!-- 4. التبويب الثاني: شاشة التحليل والإنذارات والمخطط البياني -->
+        <!-- ================= 🌟 الجزء الجديد: استعلام وتعديل رقم السجل 🌟 ================= -->
+        <div id="reg-edit" class="content-box">
+            <div class="card-3d p-4 md:p-6 bg-white space-y-4 max-w-2xl mx-auto border-t-4 border-t-purple-600">
+                <div class="border-b border-slate-200 pb-3 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-lg">
+                            <i class="fa-solid fa-address-book"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm md:text-base font-black text-slate-800">استعلام وتعديل رقم السجل (الكود الداخلي)</h2>
+                            <p class="text-[11px] text-slate-500 font-bold">ابحث بالحروف الأولى لاسم التلميذ لتعديل رقم سجله وعرض فصله المقيد به</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1. اختيار الصف -->
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-1.5 flex items-center gap-1.5">
+                        <i class="fa-solid fa-graduation-cap text-purple-600"></i> ١. اختر الصف الدراسي أولاً:
+                    </label>
+                    <select id="reg-grade-select" onchange="onRegGradeSelectChanged(this.value)" class="w-full p-2.5 bg-slate-50 border-2 border-purple-200 rounded-xl text-xs md:text-sm font-black text-slate-800 outline-none focus:border-purple-600 cursor-pointer">
+                        <option value="" disabled selected>-- اضغط لاختيار الصف لتحميل تلاميذه --</option>
+                        <option value="الأول">الصف الأول</option>
+                        <option value="الثاني">الصف الثاني</option>
+                        <option value="الثالث">الصف الثالث</option>
+                        <option value="الرابع">الصف الرابع</option>
+                        <option value="الخامس">الصف الخامس</option>
+                        <option value="السادس">الصف السادس</option>
+                    </select>
+                </div>
+
+                <!-- 2. حقل البحث بالبادئة (الحروف الأولى) والقائمة المنسدلة الذكية -->
+                <div class="relative" id="reg-search-wrapper">
+                    <label class="block text-xs font-black text-slate-700 mb-1.5 flex items-center justify-between">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-magnifying-glass text-blue-600"></i> ٢. ابحث بالاسم (الحروف الأولى مثال: ع / عب / أحمد):</span>
+                        <span id="reg-students-count-badge" class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold">في انتظار اختيار الصف</span>
+                    </label>
+                    
+                    <input type="text" 
+                           id="reg-search-input" 
+                           class="w-full p-3 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs md:text-sm font-black text-slate-800 outline-none focus:border-purple-600 focus:bg-white transition"
+                           placeholder="اكتب أول حروف من اسم التلميذ..." 
+                           autocomplete="off" 
+                           oninput="onRegSearchInput(this.value)" 
+                           onfocus="onRegSearchInput(this.value)"
+                           disabled>
+
+                    <!-- القائمة المنسدلة الفورية لنتائج البحث بالبادئة -->
+                    <div id="reg-dropdown-results" class="dropdown-results-box"></div>
+                </div>
+
+                <!-- 3. كارت تفاصيل التلميذ المحدد (الفصل غير قابل للتعديل + رقم السجل قابل للتعديل) -->
+                <div id="reg-student-details-card" class="hidden p-4 bg-purple-50/60 border-2 border-purple-200 rounded-2xl space-y-3.5 animate-fade-in">
+                    
+                    <div class="flex items-center justify-between border-b border-purple-200/80 pb-2">
+                        <span class="text-xs font-black text-purple-950 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-user text-purple-700 text-base"></i>
+                            <span id="reg-display-student-name" class="text-sm font-black text-purple-900">...</span>
+                        </span>
+                        <span id="reg-display-student-code" class="text-[11px] font-mono font-bold bg-white px-2 py-0.5 rounded-md border border-purple-200 text-purple-700">كود: -</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- فصل التلميذ: للعرض فقط وبدون إمكانية التعديل -->
+                        <div>
+                            <label class="block text-xs font-black text-slate-600 mb-1 flex items-center gap-1">
+                                <i class="fa-solid fa-lock text-slate-400"></i> فصل التلميذ (للعرض فقط):
+                            </label>
+                            <input type="text" 
+                                   id="reg-field-class" 
+                                   class="w-full p-2.5 bg-slate-200/80 border border-slate-300 rounded-xl text-sm font-black text-center text-slate-700 cursor-not-allowed select-none outline-none" 
+                                   readonly 
+                                   title="فصل التلميذ مقفل للقراءة فقط ولا يمكن تعديله من هنا">
+                        </div>
+
+                        <!-- رقم السجل: قابل للتعديل والإدخال الفوري -->
+                        <div>
+                            <label class="block text-xs font-black text-purple-900 mb-1 flex items-center gap-1">
+                                <i class="fa-solid fa-pen-to-square text-purple-600"></i> رقم السجل (قابل للتعديل):
+                            </label>
+                            <input type="number" 
+                                   id="reg-field-regnum" 
+                                   class="w-full p-2.5 bg-white border-2 border-purple-500 rounded-xl text-base font-black text-center text-blue-950 outline-none focus:border-purple-700 focus:ring-2 focus:ring-purple-200 transition" 
+                                   placeholder="أدخل رقم السجل الجديد..."
+                                   onkeypress="if(event.key === 'Enter') saveModifiedRegisterNum()">
+                        </div>
+                    </div>
+
+                    <!-- زر حفظ وتحديث السجل -->
+                    <button type="button" 
+                            id="btn-save-reg" 
+                            onclick="saveModifiedRegisterNum()" 
+                            class="btn-3d w-full py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-black rounded-xl text-sm shadow flex items-center justify-center gap-2 cursor-pointer transition">
+                        <i class="fa-solid fa-floppy-disk text-yellow-300"></i>
+                        <span id="btn-save-reg-text">حفظ وتحديث رقم السجل في السحابة (Enter)</span>
+                    </button>
+
+                    <div id="reg-feedback-msg" class="hidden text-center text-xs font-black p-2 rounded-xl transition"></div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 4. التبويب الثالث: شاشة التحليل والإنذارات والمخطط البياني -->
         <div id="reports" class="content-box">
             
             <div class="no-print card-3d p-3.5 bg-white space-y-3 mb-3">
@@ -337,7 +473,7 @@
 
         </div>
 
-        <!-- 5. التبويب الثالث: إعدادات الخريطة الزمنية -->
+        <!-- 5. التبويب الرابع: إعدادات الخريطة الزمنية -->
         <div id="settings" class="content-box">
             <div class="card-3d p-5 bg-white max-w-xl mx-auto space-y-4">
                 <div class="text-sm font-black text-[#0f2b48] border-b pb-2 flex items-center justify-between">
@@ -381,10 +517,28 @@
         let myChart = null; 
         let isAdminUnlocked = false; 
 
+        // متغيرات الجزء الجديد (تعديل رقم السجل)
+        let REG_GRADE_STUDENTS = [];
+        let CURRENT_REG_EDIT_STUDENT = null;
+
         function toArabicNum(num) {
             if (num === 0) return "٠";
             if (!num) return "-";
             return String(num).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
+        }
+
+        // توحيد الحروف للبحث الدقيق بالبادئة
+        function normalizeArabic(text) {
+            if (!text) return "";
+            return String(text)
+                .replace(/[أإآا]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[\u064B-\u0652]/g, '')
+                .replace(/\u0640/g, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
         }
 
         // ================= محرك التشفير الآمن SHA-256 =================
@@ -471,6 +625,31 @@
                 }
             },
 
+            // دالة تحديث وحفظ رقم السجل أونلاين وأوفلاين
+            async updateStudentRegisterNum(code, newRegNum) {
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('students', 'readwrite');
+                        const store = tx.objectStore('students');
+                        const getReq = store.get(code);
+                        getReq.onsuccess = () => {
+                            const st = getReq.result;
+                            if (st) {
+                                st.register_num = newRegNum;
+                                store.put(st);
+                            }
+                            resolve(true);
+                        };
+                        tx.onerror = () => reject(tx.error);
+                    });
+                } else {
+                    const { error } = await sbClient.from("students").update({ register_num: newRegNum }).eq("code", code);
+                    if (error) throw error;
+                    return true;
+                }
+            },
+
             async getCapsule(id) {
                 if (this.getMode() === 'offline') {
                     const db = await openLocalDB();
@@ -545,7 +724,6 @@
                 }
 
                 const localPlain = localStorage.getItem('zezo_plain_super_admin') || '';
-
                 let isAuthorized = false;
 
                 if (adminRole && adminRole.password_hash && enteredHash === adminRole.password_hash) {
@@ -761,6 +939,169 @@
                 btn.innerHTML = `<i class="fa-solid fa-floppy-disk text-yellow-300"></i> <span>تسجيل الغياب وتحديث البيانات (Enter)</span>`;
             }
         }
+
+        // ================= 🌟 برمجة الجزء الجديد: استعلام وتعديل السجل 🌟 =================
+        async function onRegGradeSelectChanged(selectedGrade) {
+            const searchInput = document.getElementById("reg-search-input");
+            const badge = document.getElementById("reg-students-count-badge");
+            const detailsCard = document.getElementById("reg-student-details-card");
+            const dropdown = document.getElementById("reg-dropdown-results");
+
+            searchInput.value = "";
+            dropdown.style.display = "none";
+            detailsCard.classList.add("hidden");
+            CURRENT_REG_EDIT_STUDENT = null;
+
+            if (!selectedGrade) {
+                searchInput.disabled = true;
+                badge.innerText = "في انتظار اختيار الصف";
+                return;
+            }
+
+            badge.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري التحميل...`;
+            searchInput.disabled = true;
+
+            try {
+                const data = await ZezoEngine.getStudentsByGrade(selectedGrade);
+                REG_GRADE_STUDENTS = (data || []).filter(s => s.transfer_type !== "محول من");
+                REG_GRADE_STUDENTS.sort((a, b) => (a.name || "").localeCompare(b.name || "", 'ar'));
+
+                badge.innerText = `المقيدين: ${toArabicNum(REG_GRADE_STUDENTS.length)} تلميذ`;
+                searchInput.disabled = false;
+                searchInput.focus();
+            } catch (err) {
+                badge.innerText = "خطأ في التحميل";
+                alert("تعذر جلب تلاميذ هذا الصف: " + err.message);
+            }
+        }
+
+        function onRegSearchInput(rawQuery) {
+            const dropdown = document.getElementById("reg-dropdown-results");
+            const q = normalizeArabic(rawQuery);
+
+            if (!q || REG_GRADE_STUDENTS.length === 0) {
+                dropdown.style.display = "none";
+                return;
+            }
+
+            // تصفية التلاميذ بالبادئة (الحروف الأولى من الاسم أو أي كلمة من الاسم)
+            const matches = REG_GRADE_STUDENTS.filter(s => {
+                const normName = normalizeArabic(s.name);
+                if (normName.startsWith(q)) return true;
+                const words = normName.split(' ');
+                return words.some(w => w.startsWith(q));
+            }).sort((a, b) => {
+                const aStarts = normalizeArabic(a.name).startsWith(q);
+                const bStarts = normalizeArabic(b.name).startsWith(q);
+                if (aStarts && !bStarts) return -1;
+                if (!aStarts && bStarts) return 1;
+                return a.name.localeCompare(b.name, 'ar');
+            }).slice(0, 20);
+
+            if (matches.length === 0) {
+                dropdown.innerHTML = `<div class="p-3 text-center text-slate-400 font-bold text-xs">لا يوجد تلميذ يبدأ اسمه بـ "${rawQuery}" في هذا الصف</div>`;
+            } else {
+                dropdown.innerHTML = matches.map(s => `
+                    <div class="dropdown-item-row" onmousedown="chooseStudentForRegEdit('${s.code}')">
+                        <div>
+                            <span class="text-slate-800 font-black">${s.name}</span>
+                            <span class="text-[11px] text-purple-700 bg-purple-100 px-2 py-0.5 rounded mr-2 font-bold">فصل ${s.class || '-'}</span>
+                        </div>
+                        <div class="text-xs font-mono font-bold text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                            سجل: ${s.register_num || 'فارغ'}
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            dropdown.style.display = "block";
+        }
+
+        function chooseStudentForRegEdit(studentCode) {
+            const student = REG_GRADE_STUDENTS.find(s => s.code === studentCode);
+            if (!student) return;
+
+            CURRENT_REG_EDIT_STUDENT = student;
+
+            document.getElementById("reg-search-input").value = student.name;
+            document.getElementById("reg-dropdown-results").style.display = "none";
+
+            // ملء بيانات الكارت
+            document.getElementById("reg-display-student-name").innerText = student.name;
+            document.getElementById("reg-display-student-code").innerText = `كود: ${(student.code && !student.code.startsWith('TEMP_')) ? student.code : '-'}`;
+            
+            // فصل التلميذ: للعرض فقط وبدون إمكانية التعديل
+            document.getElementById("reg-field-class").value = `فصل ${student.class || '-'}`;
+            
+            // رقم السجل: قابل للتعديل
+            const regField = document.getElementById("reg-field-regnum");
+            regField.value = student.register_num || "";
+
+            // إظهار الكارت والتركيز على خانة رقم السجل
+            const detailsCard = document.getElementById("reg-student-details-card");
+            detailsCard.classList.remove("hidden");
+            
+            setTimeout(() => {
+                regField.focus();
+                regField.select();
+            }, 50);
+        }
+
+        async function saveModifiedRegisterNum() {
+            if (!CURRENT_REG_EDIT_STUDENT) {
+                alert("يرجى اختيار تلميذ أولاً!");
+                return;
+            }
+
+            const regField = document.getElementById("reg-field-regnum");
+            const newRegVal = regField.value.trim();
+            const btn = document.getElementById("btn-save-reg");
+            const btnText = document.getElementById("btn-save-reg-text");
+            const feedback = document.getElementById("reg-feedback-msg");
+
+            if (!newRegVal) {
+                alert("يرجى كتابة رقم السجل المطلوب!");
+                regField.focus();
+                return;
+            }
+
+            btn.disabled = true;
+            btnText.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري حفظ السجل...`;
+
+            try {
+                await ZezoEngine.updateStudentRegisterNum(CURRENT_REG_EDIT_STUDENT.code, newRegVal);
+
+                // تحديث بيانات التلميذ في الذاكرة الحية
+                CURRENT_REG_EDIT_STUDENT.register_num = newRegVal;
+
+                // تحديثه أيضاً في قائمة الرصد السريع إن كان موجوداً
+                const inEntry = currentGradeStudents.find(s => s.code === CURRENT_REG_EDIT_STUDENT.code);
+                if (inEntry) inEntry.register_num = newRegVal;
+
+                feedback.className = "text-center text-xs font-black p-2 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 block";
+                feedback.innerHTML = `<i class="fa-solid fa-circle-check ml-1"></i> تم تحديث رقم السجل للتلميذ (${CURRENT_REG_EDIT_STUDENT.name}) إلى [ ${newRegVal} ] بنجاح!`;
+
+                setTimeout(() => {
+                    feedback.classList.add("hidden");
+                }, 3500);
+
+            } catch (err) {
+                console.error(err);
+                feedback.className = "text-center text-xs font-black p-2 rounded-xl bg-rose-100 text-rose-800 border border-rose-300 block";
+                feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation ml-1"></i> فشل الحفظ: ` + err.message;
+            } finally {
+                btn.disabled = false;
+                btnText.innerHTML = `حفظ وتحديث رقم السجل في السحابة (Enter)`;
+            }
+        }
+
+        // إغلاق قائمة البحث عند النقر خارجها
+        document.addEventListener("click", (e) => {
+            if (!e.target.closest("#reg-search-wrapper")) {
+                const dd = document.getElementById("reg-dropdown-results");
+                if (dd) dd.style.display = "none";
+            }
+        });
 
         // ================= التقارير والإنذارات والمخطط البياني =================
         async function generateReport(type = 'week') {
