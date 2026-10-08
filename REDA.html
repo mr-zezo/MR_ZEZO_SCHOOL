@@ -36,75 +36,84 @@
             display: flex; 
             flex-direction: column; 
             height: 100vh; 
+            height: 100dvh;
             overflow: hidden; 
         }
 
-        /* الشريط العلوي */
+        /* 🌟 الشريط العلوي فائق الضغط للموبايل 🌟 */
         .header { 
             background: var(--primary); 
             color: white; 
-            padding: 10px 14px; 
+            padding: 6px 10px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            z-index: 10; 
+            z-index: 20; 
             flex-shrink: 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-            flex-wrap: wrap;
-            gap: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            gap: 6px;
         }
-        .header-title-box { display: flex; flex-direction: column; }
-        .header h1 { font-size: 15px; font-weight: 900; color: #fcd34d; display: flex; align-items: center; gap: 6px; }
-        .author-badge { font-size: 10px; color: #93c5fd; font-weight: 700; margin-top: -2px; }
+        .header-title-box { display: flex; flex-direction: column; min-width: 0; }
+        .header h1 { font-size: 13px; font-weight: 900; color: #fcd34d; display: flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .author-badge { font-size: 9px; color: #93c5fd; font-weight: 700; margin-top: -2px; }
 
-        .header-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .audit-btn { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; border: none; padding: 7px 11px; border-radius: 8px; font-weight: 900; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3); }
-        .mode-btn { background: #3b82f6; color: white; border: none; padding: 7px 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .header-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+        .audit-btn { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; border: none; padding: 5px 8px; border-radius: 6px; font-weight: 900; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .mode-btn { background: #3b82f6; color: white; border: none; padding: 5px 8px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
         .mode-btn.swap-active { background: var(--secondary); }
-        .save-btn { background: var(--success); color: white; border: none; padding: 7px 12px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+        .save-btn { background: var(--success); color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
 
-        /* منطقة التحكم */
+        /* 🌟 دمج البحث واختيار اليوم في سطر واحد مدمج جداً 🌟 */
         .single-mode-controls { 
             background: white; 
-            padding: 10px 12px; 
-            border-bottom: 2px solid var(--border); 
+            padding: 6px 10px; 
+            border-bottom: 1.5px solid var(--border); 
             display: flex; 
             flex-direction: column; 
-            gap: 8px; 
+            gap: 4px; 
             flex-shrink: 0; 
         }
+        .controls-compact-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+        }
 
-        .search-wrapper { position: relative; width: 100%; }
+        .search-wrapper { position: relative; flex: 1.6; min-width: 0; }
         .search-input { 
             width: 100%; 
-            padding: 10px 12px; 
-            border: 2px solid var(--border); 
+            padding: 6px 10px; 
+            border: 1.5px solid var(--border); 
             border-radius: 8px; 
-            font-size: 15px; 
-            font-weight: bold; 
+            font-size: 13.5px; 
+            font-weight: 900; 
             outline: none; 
             background: #fff; 
+            height: 38px;
         }
         .search-input:focus { border-color: var(--primary); }
 
-        .day-select-row { display: flex; align-items: center; gap: 8px; }
-        .day-select-label { font-size: 12px; font-weight: 900; color: #475569; white-space: nowrap; }
         .day-listbox { 
-            flex-grow: 1; 
-            padding: 9px 12px; 
+            flex: 1; 
+            min-width: 90px;
+            max-width: 130px;
+            padding: 6px 8px; 
             border: 1.5px solid var(--border); 
             border-radius: 8px; 
-            font-size: 14px; 
-            font-weight: bold; 
-            background: #f8fafc; 
-            color: #0f172a; 
+            font-size: 13px; 
+            font-weight: 900; 
+            background: #eff6ff; 
+            color: var(--primary); 
             outline: none;
             cursor: pointer;
+            height: 38px;
+            text-align: center;
         }
 
         .dropdown-results { 
             position: absolute; 
-            top: calc(100% + 4px); 
+            top: 42px; 
             left: 0; 
             right: 0; 
             background: white; 
@@ -112,14 +121,14 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.25); 
             max-height: 220px; 
             overflow-y: auto; 
-            z-index: 2000; 
+            z-index: 2500; 
             display: none; 
-            border: 1.5px solid var(--border); 
+            border: 1.5px solid var(--primary); 
             -webkit-overflow-scrolling: touch;
         }
         .dropdown-item { 
-            padding: 12px; 
-            font-size: 14px; 
+            padding: 9px 12px; 
+            font-size: 13px; 
             font-weight: 700; 
             border-bottom: 1px solid #f1f5f9; 
             cursor: pointer; 
@@ -128,86 +137,91 @@
             align-items: center; 
         }
         .dropdown-item:active { background: #e0f2fe; }
-        .badge-temp { font-size: 10px; background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+        .badge-temp { font-size: 10px; background: #f59e0b; color: white; padding: 2px 5px; border-radius: 4px; font-weight: bold; }
 
-        /* كارت حصر فصول المعلم الأسبوعية */
+        /* شريط إرشادات نحيف */
+        .instruction-bar { 
+            background: #eff6ff; 
+            color: #1d4ed8; 
+            padding: 4px 8px; 
+            text-align: center; 
+            font-size: 10.5px; 
+            font-weight: 800; 
+            border-bottom: 1px solid #bfdbfe; 
+            flex-shrink: 0; 
+            line-height: 1.3;
+        }
+
+        /* 🌟 مساحة التمرير (أصبحت واسعة وتأخذ معظم الشاشة) 🌟 */
+        .content-scrollable { 
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 6px 8px; 
+            padding-bottom: 60px; 
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* 🌟 كارت الحصر الأسبوعي (يتحرك مع التمرير ولا يحجب الشاشة) 🌟 */
         .breakdown-card {
             background: white; 
             border: 1.5px solid #cbd5e1;
-            border-radius: 12px; 
-            padding: 10px 14px; 
-            margin: 6px auto;
-            max-width: 650px;
+            border-radius: 10px; 
+            padding: 8px 10px; 
+            margin-bottom: 8px;
             width: 100%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.03); 
             display: none; 
             flex-direction: column; 
-            gap: 6px;
+            gap: 5px;
         }
         .breakdown-header { 
-            font-size: 12.5px; 
+            font-size: 11.5px; 
             font-weight: 900; 
             color: var(--primary); 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             border-bottom: 1px dashed #cbd5e1; 
-            padding-bottom: 5px; 
+            padding-bottom: 4px; 
         }
-        .breakdown-chips-grid { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .breakdown-chips-grid { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
         .breakdown-badge { 
             background: #f1f5f9; 
-            border: 1.5px solid #cbd5e1; 
+            border: 1px solid #cbd5e1; 
             border-radius: 6px; 
-            padding: 4px 10px; 
-            font-size: 11.5px; 
+            padding: 3px 8px; 
+            font-size: 11px; 
             font-weight: 800; 
             color: #0f172a; 
             display: inline-flex; 
             align-items: center; 
-            gap: 6px; 
+            gap: 5px; 
         }
-        .breakdown-badge b { background: var(--primary); color: white; padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+        .breakdown-badge b { background: var(--primary); color: white; padding: 1px 5px; border-radius: 4px; font-size: 10px; }
         .breakdown-badge.total-badge { background: #ecfdf5; border-color: #10b981; color: #047857; font-weight: 900; }
         .breakdown-badge.total-badge b { background: #10b981; }
 
-        .instruction-bar { 
-            background: #eff6ff; 
-            color: #1d4ed8; 
-            padding: 6px 10px; 
-            text-align: center; 
-            font-size: 11px; 
-            font-weight: 900; 
-            border-bottom: 1px solid #bfdbfe; 
-            flex-shrink: 0; 
-        }
-
-        .content-scrollable { 
-            flex-grow: 1; 
-            overflow-y: auto; 
-            padding: 8px 10px; 
-            padding-bottom: 95px; 
-            -webkit-overflow-scrolling: touch;
-        }
-
-        /* كروت الحصص للوضع الفردي */
-        .single-grid { display: flex; flex-direction: column; gap: 8px; max-width: 650px; margin: 0 auto; }
+        /* كروت الحصص المدمجة والمريحة للموبايل */
+        .single-grid { display: flex; flex-direction: column; gap: 6px; max-width: 600px; margin: 0 auto; }
         .single-slot-card { 
             background: white; 
             border: 1.5px solid var(--border); 
-            border-radius: 10px; 
-            padding: 8px 10px; 
+            border-radius: 8px; 
+            padding: 5px 8px; 
             display: flex; 
-            flex-direction: column;
-            gap: 4px; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
-            transition: 0.2s;
+            flex-direction: column; 
+            gap: 3px; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            transition: 0.15s;
         }
         .single-slot-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 6px;
+            gap: 5px;
             width: 100%;
         }
         .single-slot-card.has-conflict { 
@@ -215,16 +229,16 @@
             background: var(--conflict-bg) !important; 
             box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.25);
         }
-        .period-badge { font-size: 12.5px; font-weight: 900; color: #475569; width: 55px; flex-shrink: 0; text-align: center; }
+        .period-badge { font-size: 12px; font-weight: 900; color: #475569; width: 48px; flex-shrink: 0; text-align: center; }
         .has-conflict .period-badge { color: var(--danger); }
 
-        /* 🌟 1. حقل الفصل الافتراضي (فارغ ونظيف بدون أي خلفية أو Placeholder) 🌟 */
+        /* 🌟 حقل الفصل: أبيض نظيف عند الفراغ، وأزرق ملكي بارز وفاقع عند التسكين فقط 🌟 */
         .inline-class-input {
             flex: 1;
-            min-width: 85px;
+            min-width: 80px;
             border: 1.5px solid #cbd5e1; 
             border-radius: 8px;
-            padding: 6px 8px; 
+            padding: 4px 6px; 
             font-size: 17px; 
             font-weight: 900; 
             text-align: center;
@@ -232,23 +246,20 @@
             outline: none; 
             background: #ffffff; /* أبيض نظيف عند الفراغ */
             direction: ltr;
-            height: 44px;
-            transition: all 0.2s ease;
+            height: 38px;
+            transition: all 0.15s ease;
         }
         .inline-class-input:focus { 
             border-color: var(--primary); 
             background: #ffffff; 
-            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15); 
+            box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.15); 
         }
-
-        /* 🌟 2. تمييز الحصة المسندة فقط بلون أزرق ملكي بارز وفاقع 🌟 */
         .inline-class-input.has-val {
             background: #dbeafe !important; /* لون أزرق بارز ومميز للمسند فقط */
             border: 2px solid #1d4ed8 !important;
             color: #0f2b48 !important;
-            box-shadow: 0 2px 5px rgba(29, 78, 216, 0.2);
+            box-shadow: 0 1px 4px rgba(29, 78, 216, 0.2);
         }
-
         .has-conflict .inline-class-input { 
             border-color: var(--danger) !important; 
             color: var(--danger) !important; 
@@ -257,93 +268,86 @@
 
         /* حقل المادة */
         .inline-subject-select {
-            flex: 1.4;
-            min-width: 120px;
+            flex: 1.3;
+            min-width: 105px;
             border: 1.5px solid var(--border);
             border-radius: 8px;
-            padding: 6px 8px;
-            font-size: 13px;
+            padding: 4px 6px;
+            font-size: 12px;
             font-weight: 900;
             color: #0f2b48;
             outline: none;
             background: #f8fafc;
-            height: 44px;
+            height: 38px;
             cursor: pointer;
             text-align: center;
         }
         .inline-subject-select:focus { border-color: var(--primary); background: #ffffff; }
-        .has-conflict .inline-subject-select { border-color: var(--danger); }
 
         .btn-clear-slot {
             background: #fee2e2; 
             border: 1px solid #fecaca; 
             color: var(--danger);
-            width: 44px; 
-            height: 44px; 
+            width: 38px; 
+            height: 38px; 
             border-radius: 8px; 
             display: flex; 
             align-items: center;
             justify-content: center; 
             cursor: pointer; 
-            font-size: 16px; 
+            font-size: 14px; 
             flex-shrink: 0;
         }
 
         .conflict-alert-text {
             display: none;
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 900;
             color: var(--danger);
             background: rgba(220, 38, 38, 0.1);
-            padding: 3px 8px;
-            border-radius: 5px;
+            padding: 3px 6px;
+            border-radius: 4px;
             border-right: 3px solid var(--danger);
-            margin-top: 2px;
-            line-height: 1.4;
+            line-height: 1.3;
         }
         .has-conflict .conflict-alert-text { display: block; }
 
-        /* وضع التبديل بين معلمين */
-        .swap-controls { padding: 8px 10px; background: white; border-bottom: 2px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex-shrink: 0; }
-        .selector-box { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 10px; padding: 6px 8px; position: relative; }
+        /* وضع التبديل */
+        .swap-controls { padding: 6px 8px; background: white; border-bottom: 1.5px solid var(--border); display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex-shrink: 0; }
+        .selector-box { background: #f8fafc; border: 1.5px solid var(--border); border-radius: 8px; padding: 5px 6px; position: relative; }
         .selector-box.side-a { border-color: #3b82f6; background: #eff6ff; }
         .selector-box.side-b { border-color: #f59e0b; background: #fffbeb; }
-        .selector-title { font-size: 11px; font-weight: 900; text-align: center; display: block; margin-bottom: 4px; }
+        .selector-title { font-size: 10px; font-weight: 900; text-align: center; display: block; margin-bottom: 2px; }
         .side-a .selector-title { color: #1d4ed8; }
         .side-b .selector-title { color: #b45309; }
 
-        .columns-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .teacher-column { display: flex; flex-direction: column; gap: 6px; }
+        .columns-container { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .teacher-column { display: flex; flex-direction: column; gap: 5px; }
         .slot-card { 
             background: white; border: 1.5px solid var(--border); border-radius: 8px; 
-            padding: 6px 8px; display: flex; align-items: center; justify-content: space-between; 
-            min-height: 54px; position: relative; cursor: pointer;
+            padding: 5px 6px; display: flex; align-items: center; justify-content: space-between; 
+            min-height: 48px; position: relative; cursor: pointer;
         }
         .slot-card.empty-slot { background: #f8fafc; border-style: dashed; }
-        .slot-card.is-selected { border-color: var(--selected-glow) !important; background: #fef3c7 !important; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4); }
+        .slot-card.is-selected { border-color: var(--selected-glow) !important; background: #fef3c7 !important; box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.4); }
         .slot-card.has-conflict { background: var(--conflict-bg) !important; border-color: var(--danger) !important; color: var(--danger) !important; }
-        .side-a-card.occupied-slot { border-color: #93c5fd; background: #f0f7ff; }
-        .side-b-card.occupied-slot { border-color: #fde68a; background: #fffdf5; }
         
         .slot-info { display: flex; flex-direction: column; flex-grow: 1; text-align: right; }
-        .slot-period { font-size: 10px; color: #64748b; font-weight: bold; }
-        
-        /* تمييز الفصل في وضع التبديل للمسند فقط */
+        .slot-period { font-size: 9.5px; color: #64748b; font-weight: bold; }
         .slot-class-badge { 
-            font-size: 15px; 
+            font-size: 13.5px; 
             font-weight: 900; 
             color: #0f2b48; 
             background: #dbeafe; 
             border: 1.5px solid #93c5fd; 
-            border-radius: 6px; 
-            padding: 1px 7px; 
+            border-radius: 5px; 
+            padding: 1px 6px; 
             width: fit-content;
-            margin: 2px 0;
         }
         .slot-card.empty-slot .slot-class-badge { background: #f1f5f9; border-color: #cbd5e1; color: #94a3b8; }
-        .slot-subject-txt { font-size: 11px; font-weight: 800; color: #0284c7; }
+        .slot-subject-txt { font-size: 10.5px; font-weight: 800; color: #0284c7; }
 
-        /* رادار التعارض السفلي */
+        /* رادار التعارض السفلي المضغوط */
         .radar-bottom { 
             position: fixed; 
             bottom: 0; 
@@ -351,23 +355,23 @@
             right: 0; 
             background: #0f172a; 
             color: white; 
-            border-top-left-radius: 14px; 
-            border-top-right-radius: 14px; 
+            border-top-left-radius: 12px; 
+            border-top-right-radius: 12px; 
             z-index: 500; 
-            font-size: 12px;
-            box-shadow: 0 -3px 10px rgba(0,0,0,0.25);
+            font-size: 11px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.25);
         }
-        .radar-summary { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
-        .radar-tabs { display: flex; gap: 8px; padding: 4px 14px 8px 14px; border-bottom: 1px solid #334155; }
+        .radar-summary { padding: 7px 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
+        .radar-tabs { display: flex; gap: 6px; padding: 4px 12px 6px 12px; border-bottom: 1px solid #334155; }
         .radar-tab-btn {
             background: #1e293b; color: #94a3b8; border: 1px solid #475569;
-            padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer;
+            padding: 3px 8px; border-radius: 5px; font-size: 10px; font-weight: bold; cursor: pointer;
         }
         .radar-tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
 
-        .radar-details { max-height: 140px; overflow-y: auto; padding: 8px 14px; display: none; flex-direction: column; gap: 5px; }
+        .radar-details { max-height: 120px; overflow-y: auto; padding: 6px 12px; display: none; flex-direction: column; gap: 4px; }
         .radar-details.show { display: flex; }
-        .alert-item { background: rgba(220, 38, 38, 0.35); border-right: 3px solid var(--danger); padding: 5px 8px; border-radius: 4px; font-size: 11px; line-height: 1.4; }
+        .alert-item { background: rgba(220, 38, 38, 0.35); border-right: 3px solid var(--danger); padding: 4px 6px; border-radius: 4px; font-size: 10.5px; line-height: 1.3; }
 
         /* نافذة تقرير سلامة الجدول */
         .modal-overlay {
@@ -376,41 +380,41 @@
         }
         .modal-overlay.active { display: flex; }
         .audit-modal-box {
-            background: #f8fafc; width: 100%; max-width: 900px; border-radius: 18px;
+            background: #f8fafc; width: 100%; max-width: 900px; border-radius: 14px;
             overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.5); display: flex;
             flex-direction: column; max-height: 94vh;
         }
         .audit-modal-header {
             background: linear-gradient(135deg, #0f2b48, #1e3a8a); color: white;
-            padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;
         }
-        .audit-modal-body { padding: 14px; overflow-y: auto; flex-grow: 1; }
+        .audit-modal-body { padding: 10px; overflow-y: auto; flex-grow: 1; }
         
-        .audit-tabs-bar { display: flex; gap: 6px; margin-bottom: 12px; }
+        .audit-tabs-bar { display: flex; gap: 4px; margin-bottom: 10px; }
         .audit-tab-btn {
-            flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid #cbd5e1;
-            background: white; font-weight: 800; font-size: 12.5px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 6px;
+            flex: 1; padding: 8px 4px; border-radius: 8px; border: 1.5px solid #cbd5e1;
+            background: white; font-weight: 800; font-size: 11px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 4px;
         }
         .audit-tab-btn.active {
             background: #0f2b48; color: white; border-color: #0f2b48;
-            box-shadow: 0 4px 10px rgba(15,43,72,0.2);
+            box-shadow: 0 2px 6px rgba(15,43,72,0.2);
         }
 
-        .audit-badge { font-size: 11px; padding: 2px 7px; border-radius: 20px; font-weight: 900; }
+        .audit-badge { font-size: 10px; padding: 2px 6px; border-radius: 20px; font-weight: 900; }
         .audit-badge-danger { background: #fee2e2; color: #b91c1c; }
         .audit-badge-success { background: #dcfce7; color: #15803d; }
 
-        .audit-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 12.5px; background: white; border-radius: 10px; overflow: hidden; }
-        .audit-table th { background: #0f2b48; color: white; padding: 9px 6px; font-weight: 900; }
-        .audit-table td { padding: 8px 6px; border-bottom: 1px solid #e2e8f0; font-weight: 800; }
+        .audit-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 11.5px; background: white; border-radius: 8px; overflow: hidden; }
+        .audit-table th { background: #0f2b48; color: white; padding: 7px 4px; font-weight: 900; }
+        .audit-table td { padding: 6px 4px; border-bottom: 1px solid #e2e8f0; font-weight: 800; }
 
-        .empty-placeholder { text-align: center; color: #64748b; font-size: 13px; font-weight: bold; margin-top: 45px; line-height: 2; }
+        .empty-placeholder { text-align: center; color: #64748b; font-size: 12px; font-weight: bold; margin-top: 35px; line-height: 1.8; }
     </style>
 </head>
 <body>
 
-    <!-- الشريط العلوي -->
+    <!-- 1. الشريط العلوي فائق الضغط -->
     <div class="header">
         <div class="header-title-box">
             <h1 id="app-title"><i class="fa-solid fa-calendar-days"></i> جدول الحصص اليومي</h1>
@@ -418,24 +422,23 @@
         </div>
         <div class="header-actions">
             <button class="audit-btn" onclick="openAuditModal()">
-                <i class="fa-solid fa-clipboard-check"></i> تقرير سلامة الجدول
+                <i class="fa-solid fa-clipboard-check"></i> تقرير السلامة
             </button>
             <button class="mode-btn" id="btn-toggle-mode" onclick="toggleMode()">
-                <i class="fa-solid fa-shuffle"></i> مبدل المعلمين
+                <i class="fa-solid fa-shuffle"></i> تبديل
             </button>
             <button class="save-btn" onclick="saveToCloud()"><i class="fa-solid fa-cloud-arrow-up"></i> حفظ</button>
         </div>
     </div>
 
-    <!-- 1. واجهة المعلم الفردي -->
+    <!-- 2. شريط البحث واليوم مدمجان في سطر واحد لتوفير المساحة -->
     <div id="single-controls-wrapper" class="single-mode-controls">
-        <div class="search-wrapper">
-            <input type="text" class="search-input" id="search-single" placeholder="اكتب الحروف الأولى لاسم المعلم (مثال: ع / عب)..." autocomplete="off" oninput="liveSearchSingle()" onfocus="liveSearchSingle()">
-            <div class="dropdown-results" id="results-single"></div>
-        </div>
-        
-        <div class="day-select-row">
-            <label class="day-select-label" for="day-select-single"><i class="fa-solid fa-calendar-day" style="color:var(--primary);"></i> اختر اليوم:</label>
+        <div class="controls-compact-row">
+            <div class="search-wrapper">
+                <input type="text" class="search-input" id="search-single" placeholder="🔍 اكتب بداية اسم المعلم..." autocomplete="off" oninput="liveSearchSingle()" onfocus="liveSearchSingle()">
+                <div class="dropdown-results" id="results-single"></div>
+            </div>
+            
             <select class="day-listbox" id="day-select-single" onchange="onSingleDaySelect(this.value)">
                 <option value="الاحد" selected>الأحد</option>
                 <option value="الاثنين">الإثنين</option>
@@ -446,13 +449,13 @@
         </div>
     </div>
 
-    <!-- 2. واجهة وضع التبديل بين معلمين -->
+    <!-- واجهة وضع التبديل بين معلمين -->
     <div id="swap-controls-wrapper" class="swap-controls" style="display:none;">
         <div class="selector-box side-a" id="box-a">
             <span class="selector-title">المعلم الأول (أ)</span>
             <input type="text" class="search-input" id="search-a" placeholder="بداية الاسم..." autocomplete="off" oninput="liveSearchSwap('a')" onfocus="liveSearchSwap('a')">
             <div class="dropdown-results" id="results-a"></div>
-            <select class="day-listbox" id="day-a" style="margin-top:5px; padding:6px;" onchange="renderSwapColumns()">
+            <select class="day-listbox" id="day-a" style="margin-top:3px; padding:4px;" onchange="renderSwapColumns()">
                 <option value="الاحد" selected>الأحد</option>
                 <option value="الاثنين">الإثنين</option>
                 <option value="الثلاثاء">الثلاثاء</option>
@@ -465,7 +468,7 @@
             <span class="selector-title">المعلم الثاني (ب)</span>
             <input type="text" class="search-input" id="search-b" placeholder="بداية الاسم..." autocomplete="off" oninput="liveSearchSwap('b')" onfocus="liveSearchSwap('b')">
             <div class="dropdown-results" id="results-b"></div>
-            <select class="day-listbox" id="day-b" style="margin-top:5px; padding:6px;" onchange="renderSwapColumns()">
+            <select class="day-listbox" id="day-b" style="margin-top:3px; padding:4px;" onchange="renderSwapColumns()">
                 <option value="الاحد" selected>الأحد</option>
                 <option value="الاثنين">الإثنين</option>
                 <option value="الثلاثاء">الثلاثاء</option>
@@ -475,38 +478,43 @@
         </div>
     </div>
 
-    <!-- شريط الإرشادات -->
+    <!-- شريط الإرشادات النحيف -->
     <div class="instruction-bar" id="instruction-bar">
         اكتب رقمين في خانة الفصل (مثال: 21 تتحول إلى ٢/١) مع اختيار المادة | 🗑️ لتفريغ الحصة والمادة
     </div>
 
-    <!-- كارت حصر فصول ومواد المعلم المختار خلال الأسبوع -->
-    <div class="breakdown-card" id="breakdown-card">
-        <div class="breakdown-header">
-            <span id="breakdown-title"><i class="fa-solid fa-chart-pie text-blue-600"></i> بيان فصول ومواد المعلم:</span>
-            <span id="breakdown-subtitle"></span>
+    <!-- 🌟 مساحة العرض والتمرير الواسعة 🌟 -->
+    <div class="content-scrollable" id="main-scroll-container">
+        
+        <!-- كارت حصر فصول ومواد المعلم (يتحرك بالسكرول ولا يحجب الشاشة) -->
+        <div class="breakdown-card" id="breakdown-card">
+            <div class="breakdown-header">
+                <span id="breakdown-title"><i class="fa-solid fa-chart-pie text-blue-600"></i> بيان فصول ومواد المعلم:</span>
+                <span id="breakdown-subtitle"></span>
+            </div>
+            <div class="breakdown-chips-grid" id="breakdown-chips-container"></div>
         </div>
-        <div class="breakdown-chips-grid" id="breakdown-chips-container"></div>
+
+        <!-- مساحة كروت الحصص المريحة للتعديل -->
+        <div id="main-content">
+            <div class="empty-placeholder">
+                <i class="fa-solid fa-chalkboard-user" style="font-size:32px; color:var(--primary); margin-bottom:6px;"></i><br>
+                ابحث عن معلم بالأعلى لعرض وتعديل حصصه ومواده.
+            </div>
+        </div>
+
     </div>
 
-    <!-- مساحة عرض الحصص -->
-    <div class="content-scrollable" id="main-content">
-        <div class="empty-placeholder">
-            <i class="fa-solid fa-chalkboard-user" style="font-size:38px; color:var(--primary); margin-bottom:10px;"></i><br>
-            ابحث عن معلم بالأعلى لعرض وتعديل حصصه ومواده ليوم الأحد.
-        </div>
-    </div>
-
-    <!-- رادار التعارض السفلي -->
+    <!-- رادار التعارض السفلي المضغوط -->
     <div class="radar-bottom">
         <div class="radar-summary" onclick="toggleRadar()">
             <span><i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> رادار التعارضات:</span>
-            <span id="radar-badge" style="background:#16a34a; padding:2px 8px; border-radius:10px; font-size:11px;">جدول يوم (الأحد) سليم 100%</span>
+            <span id="radar-badge" style="background:#16a34a; padding:1px 6px; border-radius:10px; font-size:10px;">جدول سليم 100%</span>
         </div>
 
         <div class="radar-tabs" id="radar-tabs-bar" style="display:none;">
             <button class="radar-tab-btn active" id="tab-btn-teacher" onclick="switchRadarTab('teacher')">تعارضات المعلم الحالي</button>
-            <button class="radar-tab-btn" id="tab-btn-school" onclick="switchRadarTab('school')">تعارضات المدرسة بالكامل في هذا اليوم</button>
+            <button class="radar-tab-btn" id="tab-btn-school" onclick="switchRadarTab('school')">تعارضات المدرسة بالكامل</button>
         </div>
 
         <div class="radar-details" id="radar-details"></div>
@@ -516,17 +524,17 @@
     <div class="modal-overlay" id="auditModal" onclick="if(event.target===this) closeAuditModal()">
         <div class="audit-modal-box">
             <div class="audit-modal-header">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-shield-halved text-yellow-300" style="font-size:20px;"></i>
-                    <h2 style="font-size:16px; font-weight:900;">تقرير الفحص الشامل لسلامة وتكامل الجدول المدرسي</h2>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <i class="fa-solid fa-shield-halved text-yellow-300" style="font-size:18px;"></i>
+                    <h2 style="font-size:14px; font-weight:900;">تقرير الفحص الشامل لسلامة وتكامل الجدول المدرسي</h2>
                 </div>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <button onclick="window.print()" class="audit-btn" style="background:#0284c7; padding:5px 12px;"><i class="fa-solid fa-print"></i> طباعة التقرير</button>
-                    <button onclick="closeAuditModal()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer; line-height:1;">&times;</button>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <button onclick="window.print()" class="audit-btn" style="background:#0284c7; padding:4px 10px;"><i class="fa-solid fa-print"></i> طباعة</button>
+                    <button onclick="closeAuditModal()" style="background:none; border:none; color:white; font-size:22px; cursor:pointer; line-height:1;">&times;</button>
                 </div>
             </div>
 
-            <div style="padding:10px 14px 0 14px;">
+            <div style="padding:8px 10px 0 10px;">
                 <div class="audit-tabs-bar">
                     <button class="audit-tab-btn active" id="btn-atab-conflicts" onclick="switchAuditTab('conflicts')">
                         <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> التعارضات (<span id="count-audit-conflicts">٠</span>)
@@ -535,29 +543,29 @@
                         <i class="fa-solid fa-circle-exclamation text-amber-500"></i> الحصص الفارغة (<span id="count-audit-empty">٠</span>)
                     </button>
                     <button class="audit-tab-btn" id="btn-atab-plan" onclick="switchAuditTab('plan')">
-                        <i class="fa-solid fa-list-check text-blue-600"></i> تدقيق خطة المواد للفصول
+                        <i class="fa-solid fa-list-check text-blue-600"></i> فحص الخطة
                     </button>
                 </div>
             </div>
 
             <div class="audit-modal-body">
                 <div id="audit-content-conflicts">
-                    <div style="background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:bold; margin-bottom:10px;">
-                        <i class="fa-solid fa-circle-info"></i> تم استثناء حصص الدين المشتركة بين معلمي الدين الإسلامي والدين المسيحي؛ فلا تُحتسب تعارضاً إطلاقاً.
+                    <div style="background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:bold; margin-bottom:8px;">
+                        <i class="fa-solid fa-circle-info"></i> تم استثناء حصص الدين المشتركة بين معلمي الدين الإسلامي والمسيحي؛ فلا تُحتسب تعارضاً.
                     </div>
                     <div id="audit-conflicts-list"></div>
                 </div>
 
                 <div id="audit-content-empty" style="display:none;">
-                    <div style="background:#fffbeb; border:1px solid #fde68a; color:#92400e; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:bold; margin-bottom:10px;">
-                        <i class="fa-solid fa-clock"></i> <b>القواعد المعتمدة:</b> الصفوف الأولى 6 حصص (والخميس 5) | الصفوف العليا 7 حصص (والثلاثاء 8).
+                    <div style="background:#fffbeb; border:1px solid #fde68a; color:#92400e; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:bold; margin-bottom:8px;">
+                        <i class="fa-solid fa-clock"></i> <b>القواعد:</b> الصفوف الأولى 6 حصص (والخميس 5) | الصفوف العليا 7 حصص (والثلاثاء 8).
                     </div>
                     <div id="audit-empty-list"></div>
                 </div>
 
                 <div id="audit-content-plan" style="display:none;">
-                    <div style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:bold; margin-bottom:10px;">
-                        <i class="fa-solid fa-scale-balanced"></i> يتم فحص الحصص المسندة لكل مادة في كل فصل ومقارنتها بالخطة الدراسية المقررة في الميزانية.
+                    <div style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:bold; margin-bottom:8px;">
+                        <i class="fa-solid fa-scale-balanced"></i> مقارنة الحصص المسندة بالخطة الدراسية المقررة في الميزانية لكل فصل.
                     </div>
                     <div id="audit-plan-list"></div>
                 </div>
@@ -659,8 +667,7 @@
                 return { standard: `${digits[0]}/${digits[1]}`, isReligion: isRel, raw: raw };
             } else if (s.includes('/')) {
                 const parts = s.split('/');
-                const p1 = parts[0].replace(/[^0-9]/g, '');
-                const p2 = parts[1].replace(/[^0-9]/g, '');
+                const p1 = parts[0].replace(/[^0-9]/g, ''), p2 = parts[1].replace(/[^0-9]/g, '');
                 if (p1 && p2) return { standard: `${p1}/${p2}`, isReligion: isRel, raw: raw };
             }
             return null;
@@ -688,7 +695,7 @@
             return teacherDefaultSubject || "";
         }
 
-        // ================= 1. تحميل المعلمين الأساسيين والمؤقتين فقط (استبعاد الأجر نهائياً) =================
+        // ================= تحميل المعلمين الأساسيين والمؤقتين فقط =================
         window.addEventListener('DOMContentLoaded', async () => {
             Swal.fire({ title: 'تحميل بيانات المعلمين الأساسيين والخطة...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
@@ -746,7 +753,7 @@
             }
         });
 
-        // ================= فحص تعارضات اليوم =================
+        // ================= فحص التعارضات =================
         function runSchoolConflictScanForSelectedDay(targetDay = singleDay) {
             const schoolConflicts = [];
             const matrix = {};
@@ -840,15 +847,15 @@
 
             if (schoolCount > 0 || teacherCount > 0) {
                 badge.style.background = "var(--danger)";
-                badge.innerText = `🔴 تم رصد ${toArDigits(schoolCount)} تعارض في يوم (${dayTitle})`;
+                badge.innerText = `🔴 ${toArDigits(schoolCount)} تعارض (${dayTitle})`;
                 tabsBar.style.display = "flex";
             } else {
                 badge.style.background = "var(--success)";
-                badge.innerText = `جدول يوم (${dayTitle}) سليم 100%`;
+                badge.innerText = `جدول (${dayTitle}) سليم 100%`;
                 tabsBar.style.display = "none";
             }
 
-            document.getElementById('tab-btn-school').innerText = `تعارضات المدرسة بالكامل ليوم (${dayTitle})`;
+            document.getElementById('tab-btn-school').innerText = `تعارضات المدرسة بالكامل (${dayTitle})`;
             renderRadarTabContent();
         }
 
@@ -875,7 +882,7 @@
                 }
             } else {
                 if (cachedSchoolWideConflicts.length === 0) {
-                    details.innerHTML = `<div style="text-align:center; color:#4ade80;">جدول يوم (${dayTitle}) خالٍ تماماً من أي تعارض في كافة الحصص.</div>`;
+                    details.innerHTML = `<div style="text-align:center; color:#4ade80;">جدول يوم (${dayTitle}) خالٍ تماماً من أي تعارض.</div>`;
                 } else {
                     details.innerHTML = cachedSchoolWideConflicts.map(c => `
                         <div class="alert-item">
@@ -952,7 +959,7 @@
             renderSingleView();
         }
 
-        // ================= عرض حصر فصول المعلم الأسبوعية =================
+        // ================= كارت حصر فصول المعلم الأسبوعية =================
         function renderTeacherClassesBreakdown(teacher) {
             const card = document.getElementById("breakdown-card");
             const container = document.getElementById("breakdown-chips-container");
@@ -981,39 +988,39 @@
                 }
             });
 
-            title.innerHTML = `<i class="fa-solid fa-chalkboard-user text-blue-600"></i> حصر فصول ومواد المعلم (أ/ ${teacher.short_name || teacher.name}) خلال الأسبوع:`;
-            sub.innerText = `عدد الفصول المسندة: ${Object.keys(classCounts).length} فصل`;
+            title.innerHTML = `<i class="fa-solid fa-chart-pie text-blue-600"></i> حصر فصول (أ/ ${teacher.short_name || teacher.name}):`;
+            sub.innerText = `${Object.keys(classCounts).length} فصل مسند`;
             container.innerHTML = "";
 
             if (totalPeriods === 0) {
-                container.innerHTML = `<span style="font-size:12px; color:#94a3b8; font-weight:800;">لم يتم تسكين أي حصص لهذا المعلم في الجدول الأسبوعي بعد.</span>`;
+                container.innerHTML = `<span style="font-size:11px; color:#94a3b8; font-weight:800;">لم تسكن حصص لهذا المعلم بعد.</span>`;
             } else {
                 Object.keys(classCounts).sort().forEach(clsName => {
                     const badge = document.createElement("div");
                     badge.className = "breakdown-badge";
-                    badge.innerHTML = `<span><b>${clsName}</b></span> <span>عدد: ${toArDigits(classCounts[clsName])} حصة</span>`;
+                    badge.innerHTML = `<span><b>${clsName}</b></span> <span>عدد: ${toArDigits(classCounts[clsName])}</span>`;
                     container.appendChild(badge);
                 });
                 const totalBadge = document.createElement("div");
                 totalBadge.className = "breakdown-badge total-badge";
-                totalBadge.innerHTML = `<span>إجمالي حصص الأسبوع:</span> <b>${toArDigits(totalPeriods)} حصة</b>`;
+                totalBadge.innerHTML = `<span>الإجمالي:</span> <b>${toArDigits(totalPeriods)} حصة</b>`;
                 container.appendChild(totalBadge);
             }
             card.style.display = "flex";
         }
 
-        // ================= 🌟 عرض جدول المعلم الفردي (تمييز الحصص المسندة فقط وبدون كلمة فصل) 🌟 =================
+        // ================= 🌟 عرض جدول المعلم الفردي (الحقل أبيض وينور أزرق للمسند فقط وبدون كلمة فصل) 🌟 =================
         function renderSingleView() {
             const container = document.getElementById("main-content");
             const instruction = document.getElementById("instruction-bar");
             const dayTitle = dayNamesMap[singleDay] || singleDay;
-            instruction.innerHTML = `اكتب رقمين في خانة الحصة (مثال: 21 تتحول تلقائياً إلى ٢/١) مع اختيار المادة | 🗑️ لتفريغ الحصة والمادة`;
+            instruction.innerHTML = `اكتب رقمين في خانة الفصل (مثال: 21 تتحول إلى ٢/١) مع اختيار المادة | 🗑️ للتفريغ`;
 
             if (!singleTeacher) {
                 container.innerHTML = `
                     <div class="empty-placeholder">
-                        <i class="fa-solid fa-chalkboard-user" style="font-size:38px; color:var(--primary); margin-bottom:10px;"></i><br>
-                        ابحث عن معلم بالأعلى لعرض حصصه ومواده ليوم (${dayTitle}).
+                        <i class="fa-solid fa-chalkboard-user" style="font-size:32px; color:var(--primary); margin-bottom:6px;"></i><br>
+                        ابحث عن معلم بالأعلى لعرض وتعديل حصصه ليوم (${dayTitle}).
                     </div>`;
                 cachedCurrentTeacherConflicts = [];
                 updateDayRadarUI();
@@ -1039,7 +1046,7 @@
                         <div class="single-slot-row">
                             <div class="period-badge">حصة ${toArDigits(p)}</div>
                             
-                            <!-- 🌟 خانة الفصل: بيضاء نظيفة ومميزة بلون بارز فقط عند التسكين وبدون كلمة فصل 🌟 -->
+                            <!-- 🌟 حقل الفصل: نظيف تماماً وخلفية بيضاء، ينور أزرق ملكي فقط عند التسكين 🌟 -->
                             <input type="text" 
                                    inputmode="numeric" 
                                    class="inline-class-input ${isAssigned ? 'has-val' : ''}" 
@@ -1074,7 +1081,7 @@
             recalculateCurrentTeacherConflicts();
         }
 
-        // إدخال وتنسيق الفصل وإضافة تمييز اللون فورياً
+        // إدخال الفصل وتلوينه لحظياً
         function handleInlineClassInput(el, teacherId, day, period) {
             let val = toEnDigits(el.value).replace(/[^0-9/dDد]/g, '');
 
@@ -1084,7 +1091,7 @@
 
             el.value = toArDigits(val);
 
-            // تمييز اللون فورا عند وجود قيمة أو إلغائه عند التفريغ
+            // تفعيل اللون الأزرق البارز للمسند فقط وإزالته عند الفراغ
             if (val && val.trim() !== "") {
                 el.classList.add("has-val");
             } else {
@@ -1138,7 +1145,7 @@
             const input = document.getElementById(`input-single-${period}`);
             if (input) {
                 input.value = "";
-                input.classList.remove("has-val"); // إزالة التلوين ليعود أبيض نظيفاً
+                input.classList.remove("has-val"); // إعادة الحقل أبيض نظيفاً
             }
             
             const subSelect = document.getElementById(`select-single-sub-${period}`);
@@ -1174,7 +1181,7 @@
             updateDayRadarUI();
         }
 
-        // ================= وضع التبديل الحر بين معلمين =================
+        // ================= وضع التبديل الحر =================
         function toggleMode() {
             const btn = document.getElementById("btn-toggle-mode");
             const singleControls = document.getElementById("single-controls-wrapper");
@@ -1184,16 +1191,16 @@
 
             if (activeMode === 'single') {
                 activeMode = 'swap';
-                btn.innerHTML = `<i class="fa-solid fa-user"></i> تعديل معلم`;
+                btn.innerHTML = `<i class="fa-solid fa-user"></i> تعديل`;
                 btn.classList.add("swap-active");
-                title.innerHTML = `<i class="fa-solid fa-shuffle"></i> مبدل الحصص الحر`;
+                title.innerHTML = `<i class="fa-solid fa-shuffle"></i> مبدل الحصص`;
                 singleControls.style.display = "none";
                 swapControls.style.display = "grid";
                 if (breakdownCard) breakdownCard.style.display = "none";
                 renderSwapColumns();
             } else {
                 activeMode = 'single';
-                btn.innerHTML = `<i class="fa-solid fa-shuffle"></i> مبدل المعلمين`;
+                btn.innerHTML = `<i class="fa-solid fa-shuffle"></i> تبديل`;
                 btn.classList.remove("swap-active");
                 title.innerHTML = `<i class="fa-solid fa-calendar-days"></i> جدول الحصص اليومي`;
                 singleControls.style.display = "flex";
@@ -1249,8 +1256,8 @@
             if (!teacherA || !teacherB) {
                 container.innerHTML = `
                     <div class="empty-placeholder">
-                        <i class="fa-solid fa-users" style="font-size:36px; color:var(--primary); margin-bottom:10px;"></i><br>
-                        يرجى تحديد المعلم (أ) والمعلم (ب) للبدء في التبديل الحر بين أي حصص.
+                        <i class="fa-solid fa-users" style="font-size:32px; color:var(--primary); margin-bottom:6px;"></i><br>
+                        حدد المعلم (أ) والمعلم (ب) للبدء في التبديل.
                     </div>`;
                 return;
             }
@@ -1299,7 +1306,7 @@
 
             if (selectedSwapSlot) {
                 instruction.classList.add("selecting");
-                instruction.innerHTML = `<i class="fa-solid fa-hand-pointer"></i> حددت حصة ${toArDigits(selectedSwapSlot.period)} .. اضغط الآن على <b>أي حصة أخرى</b> للتبديل فوراً!`;
+                instruction.innerHTML = `<i class="fa-solid fa-hand-pointer"></i> حددت حصة ${toArDigits(selectedSwapSlot.period)} .. اضغط على أي حصة أخرى للتبديل فوراً!`;
             } else {
                 instruction.classList.remove("selecting");
                 instruction.innerHTML = `👈 اضغط على أي حصة لتحديدها، ثم اضغط على أي حصة أخرى للتبديل بينهما.`;
@@ -1498,7 +1505,7 @@
             document.getElementById('count-audit-conflicts').innerText = toArDigits(allConflicts.length);
             const conflictsContainer = document.getElementById('audit-conflicts-list');
             if (allConflicts.length === 0) {
-                conflictsContainer.innerHTML = `<div style="text-align:center; padding:30px; background:#f0fdf4; border-radius:12px; border:2px solid #86efac; color:#15803d; font-size:14px; font-weight:900;"><i class="fa-solid fa-circle-check" style="font-size:28px; margin-bottom:8px; display:block;"></i> جدول المدرسة خالٍ تماماً من أي تعارض طوال أيام الأسبوع 100%!</div>`;
+                conflictsContainer.innerHTML = `<div style="text-align:center; padding:20px; background:#f0fdf4; border-radius:10px; border:1.5px solid #86efac; color:#15803d; font-size:13px; font-weight:900;"><i class="fa-solid fa-circle-check" style="font-size:24px; margin-bottom:6px; display:block;"></i> جدول المدرسة خالٍ من أي تعارض طوال الأسبوع 100%!</div>`;
             } else {
                 conflictsContainer.innerHTML = `
                     <table class="audit-table">
@@ -1507,7 +1514,7 @@
                                 <th>اليوم</th>
                                 <th>الحصة</th>
                                 <th>الفصل</th>
-                                <th style="text-align:right;">المعلمون المتعارضون في الحصة</th>
+                                <th style="text-align:right;">المعلمون المتعارضون</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1561,7 +1568,7 @@
             document.getElementById('count-audit-empty').innerText = toArDigits(allEmptySlots.length);
             const emptyContainer = document.getElementById('audit-empty-list');
             if (allEmptySlots.length === 0) {
-                emptyContainer.innerHTML = `<div style="text-align:center; padding:30px; background:#f0fdf4; border-radius:12px; border:2px solid #86efac; color:#15803d; font-size:14px; font-weight:900;"><i class="fa-solid fa-circle-check" style="font-size:28px; margin-bottom:8px; display:block;"></i> جميع حصص فصول المدرسة مكتملة ومسندة بالكامل ولا يوجد أي حصة فارغة!</div>`;
+                emptyContainer.innerHTML = `<div style="text-align:center; padding:20px; background:#f0fdf4; border-radius:10px; border:1.5px solid #86efac; color:#15803d; font-size:13px; font-weight:900;"><i class="fa-solid fa-circle-check" style="font-size:24px; margin-bottom:6px; display:block;"></i> جميع حصص فصول المدرسة مكتملة ومسندة بالكامل!</div>`;
             } else {
                 emptyContainer.innerHTML = `
                     <table class="audit-table">
@@ -1571,7 +1578,7 @@
                                 <th>الصف</th>
                                 <th>اليوم</th>
                                 <th>الحصة الفارغة</th>
-                                <th>الحد المعتمد لهذا اليوم</th>
+                                <th>نصاب اليوم</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1591,7 +1598,7 @@
 
             // 3. تدقيق خطة المواد
             const planContainer = document.getElementById('audit-plan-list');
-            let planHtml = `<div style="display:flex; flex-direction:column; gap:12px;">`;
+            let planHtml = `<div style="display:flex; flex-direction:column; gap:10px;">`;
 
             allClassesList.forEach(cls => {
                 const gNum = getGradeFromClassName(cls);
@@ -1636,7 +1643,7 @@
                         let badgeStyle = "", statusTxt = "";
                         if (diff < 0) {
                             badgeStyle = "background:#fee2e2; border:1px solid #ef4444; color:#b91c1c;";
-                            statusTxt = `عجز ${toArDigits(Math.abs(diff))} حصة`;
+                            statusTxt = `عجز ${toArDigits(Math.abs(diff))}`;
                             classHasDeficit = true;
                         } else if (diff > 0) {
                             badgeStyle = "background:#dbeafe; border:1px solid #93c5fd; color:#1e40af;";
@@ -1647,24 +1654,24 @@
                         }
 
                         chipsHtml += `
-                            <div style="padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold; display:flex; gap:6px; align-items:center; ${badgeStyle}">
+                            <div style="padding:3px 7px; border-radius:6px; font-size:10.5px; font-weight:bold; display:flex; gap:5px; align-items:center; ${badgeStyle}">
                                 <span>${item.name}:</span>
                                 <b>${toArDigits(assigned)} من ${toArDigits(req)}</b>
-                                <span style="font-size:10px;">(${statusTxt})</span>
+                                <span style="font-size:9.5px;">(${statusTxt})</span>
                             </div>
                         `;
                     }
                 });
 
                 planHtml += `
-                    <div style="background:white; border:1.5px solid ${classHasDeficit ? '#fca5a5' : '#cbd5e1'}; border-radius:10px; padding:10px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
-                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:6px; margin-bottom:8px;">
-                            <span style="font-weight:900; font-size:14px; color:#0f2b48;">فصل ${toArDigits(cls)} (الصف ${gName})</span>
+                    <div style="background:white; border:1.5px solid ${classHasDeficit ? '#fca5a5' : '#cbd5e1'}; border-radius:8px; padding:8px; box-shadow:0 1px 3px rgba(0,0,0,0.02);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:4px; margin-bottom:6px;">
+                            <span style="font-weight:900; font-size:13px; color:#0f2b48;">فصل ${toArDigits(cls)} (الصف ${gName})</span>
                             <span class="${classHasDeficit ? 'audit-badge audit-badge-danger' : 'audit-badge audit-badge-success'}">
-                                ${classHasDeficit ? '⚠️ يوجد مواد بها عجز' : '✔️ الخطة مستوفاة بالكامل'}
+                                ${classHasDeficit ? '⚠️ عجز بمواد الخطة' : '✔️ مستوفاة بالكامل'}
                             </span>
                         </div>
-                        <div style="display:flex; flex-wrap:wrap; gap:6px;">${chipsHtml}</div>
+                        <div style="display:flex; flex-wrap:wrap; gap:4px;">${chipsHtml}</div>
                     </div>
                 `;
             });
