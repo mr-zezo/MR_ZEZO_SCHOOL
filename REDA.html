@@ -50,12 +50,15 @@
             z-index: 10; 
             flex-shrink: 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            flex-wrap: wrap;
+            gap: 8px;
         }
         .header-title-box { display: flex; flex-direction: column; }
         .header h1 { font-size: 15px; font-weight: 900; color: #fcd34d; display: flex; align-items: center; gap: 6px; }
         .author-badge { font-size: 10px; color: #93c5fd; font-weight: 700; margin-top: -2px; }
 
-        .header-actions { display: flex; align-items: center; gap: 6px; }
+        .header-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .audit-btn { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; border: none; padding: 7px 11px; border-radius: 8px; font-weight: 900; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.3); }
         .mode-btn { background: #3b82f6; color: white; border: none; padding: 7px 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
         .mode-btn.swap-active { background: var(--secondary); }
         .save-btn { background: var(--success); color: white; border: none; padding: 7px 12px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
@@ -77,14 +80,13 @@
             padding: 10px 12px; 
             border: 2px solid var(--border); 
             border-radius: 8px; 
-            font-size: 16px; 
+            font-size: 15px; 
             font-weight: bold; 
             outline: none; 
             background: #fff; 
         }
         .search-input:focus { border-color: var(--primary); }
 
-        /* لست بوكس اختيار اليوم */
         .day-select-row { display: flex; align-items: center; gap: 8px; }
         .day-select-label { font-size: 12px; font-weight: 900; color: #475569; white-space: nowrap; }
         .day-listbox { 
@@ -99,9 +101,7 @@
             outline: none;
             cursor: pointer;
         }
-        .day-listbox:focus { border-color: var(--primary); background: #ffffff; }
 
-        /* القائمة المنسدلة للبحث الذكي */
         .dropdown-results { 
             position: absolute; 
             top: calc(100% + 4px); 
@@ -128,9 +128,49 @@
             align-items: center; 
         }
         .dropdown-item:active { background: #e0f2fe; }
-        .badge-contract { font-size: 10px; background: #6366f1; color: white; padding: 2px 6px; border-radius: 4px; }
+        .badge-temp { font-size: 10px; background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
 
-        /* شريط التوجيه */
+        /* كارت حصر فصول المعلم الأسبوعية */
+        .breakdown-card {
+            background: white; 
+            border: 1.5px solid #cbd5e1;
+            border-radius: 12px; 
+            padding: 10px 14px; 
+            margin: 6px auto;
+            max-width: 650px;
+            width: 100%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
+            display: none; 
+            flex-direction: column; 
+            gap: 6px;
+        }
+        .breakdown-header { 
+            font-size: 12.5px; 
+            font-weight: 900; 
+            color: var(--primary); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px dashed #cbd5e1; 
+            padding-bottom: 5px; 
+        }
+        .breakdown-chips-grid { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+        .breakdown-badge { 
+            background: #f1f5f9; 
+            border: 1.5px solid #cbd5e1; 
+            border-radius: 6px; 
+            padding: 4px 10px; 
+            font-size: 11.5px; 
+            font-weight: 800; 
+            color: #0f172a; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+        }
+        .breakdown-badge b { background: var(--primary); color: white; padding: 1px 6px; border-radius: 4px; font-size: 11px; }
+        .breakdown-badge.total-badge { background: #ecfdf5; border-color: #10b981; color: #047857; font-weight: 900; }
+        .breakdown-badge.total-badge b { background: #10b981; }
+
         .instruction-bar { 
             background: #eff6ff; 
             color: #1d4ed8; 
@@ -142,7 +182,6 @@
             flex-shrink: 0; 
         }
 
-        /* الحاوية القابلة للتمرير */
         .content-scrollable { 
             flex-grow: 1; 
             overflow-y: auto; 
@@ -152,7 +191,7 @@
         }
 
         /* كروت الحصص للوضع الفردي */
-        .single-grid { display: flex; flex-direction: column; gap: 8px; max-width: 600px; margin: 0 auto; }
+        .single-grid { display: flex; flex-direction: column; gap: 8px; max-width: 650px; margin: 0 auto; }
         .single-slot-card { 
             background: white; 
             border: 1.5px solid var(--border); 
@@ -168,7 +207,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
+            gap: 6px;
             width: 100%;
         }
         .single-slot-card.has-conflict { 
@@ -176,25 +215,64 @@
             background: var(--conflict-bg) !important; 
             box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.25);
         }
-        .period-badge { font-size: 13px; font-weight: 900; color: #475569; width: 65px; flex-shrink: 0; }
+        .period-badge { font-size: 12.5px; font-weight: 900; color: #475569; width: 55px; flex-shrink: 0; text-align: center; }
         .has-conflict .period-badge { color: var(--danger); }
 
+        /* 🌟 1. حقل الفصل الافتراضي (فارغ ونظيف بدون أي خلفية أو Placeholder) 🌟 */
         .inline-class-input {
-            flex-grow: 1; 
-            border: 1.5px solid var(--border); 
+            flex: 1;
+            min-width: 85px;
+            border: 1.5px solid #cbd5e1; 
             border-radius: 8px;
-            padding: 8px 10px; 
+            padding: 6px 8px; 
             font-size: 17px; 
             font-weight: 900; 
             text-align: center;
-            color: var(--primary); 
+            color: #0f172a; 
             outline: none; 
-            background: #f8fafc; 
+            background: #ffffff; /* أبيض نظيف عند الفراغ */
             direction: ltr;
             height: 44px;
+            transition: all 0.2s ease;
         }
-        .inline-class-input:focus { border-color: var(--primary); background: #ffffff; }
-        .has-conflict .inline-class-input { border-color: var(--danger); color: var(--danger); background: #ffffff; }
+        .inline-class-input:focus { 
+            border-color: var(--primary); 
+            background: #ffffff; 
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.15); 
+        }
+
+        /* 🌟 2. تمييز الحصة المسندة فقط بلون أزرق ملكي بارز وفاقع 🌟 */
+        .inline-class-input.has-val {
+            background: #dbeafe !important; /* لون أزرق بارز ومميز للمسند فقط */
+            border: 2px solid #1d4ed8 !important;
+            color: #0f2b48 !important;
+            box-shadow: 0 2px 5px rgba(29, 78, 216, 0.2);
+        }
+
+        .has-conflict .inline-class-input { 
+            border-color: var(--danger) !important; 
+            color: var(--danger) !important; 
+            background: #fee2e2 !important; 
+        }
+
+        /* حقل المادة */
+        .inline-subject-select {
+            flex: 1.4;
+            min-width: 120px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-size: 13px;
+            font-weight: 900;
+            color: #0f2b48;
+            outline: none;
+            background: #f8fafc;
+            height: 44px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .inline-subject-select:focus { border-color: var(--primary); background: #ffffff; }
+        .has-conflict .inline-subject-select { border-color: var(--danger); }
 
         .btn-clear-slot {
             background: #fee2e2; 
@@ -210,7 +288,6 @@
             font-size: 16px; 
             flex-shrink: 0;
         }
-        .btn-clear-slot:active { background: var(--danger); color: white; }
 
         .conflict-alert-text {
             display: none;
@@ -240,18 +317,33 @@
         .slot-card { 
             background: white; border: 1.5px solid var(--border); border-radius: 8px; 
             padding: 6px 8px; display: flex; align-items: center; justify-content: space-between; 
-            min-height: 52px; position: relative; cursor: pointer;
+            min-height: 54px; position: relative; cursor: pointer;
         }
         .slot-card.empty-slot { background: #f8fafc; border-style: dashed; }
         .slot-card.is-selected { border-color: var(--selected-glow) !important; background: #fef3c7 !important; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.4); }
         .slot-card.has-conflict { background: var(--conflict-bg) !important; border-color: var(--danger) !important; color: var(--danger) !important; }
         .side-a-card.occupied-slot { border-color: #93c5fd; background: #f0f7ff; }
         .side-b-card.occupied-slot { border-color: #fde68a; background: #fffdf5; }
+        
         .slot-info { display: flex; flex-direction: column; flex-grow: 1; text-align: right; }
         .slot-period { font-size: 10px; color: #64748b; font-weight: bold; }
-        .slot-class { font-size: 15px; font-weight: 900; color: #0f172a; }
+        
+        /* تمييز الفصل في وضع التبديل للمسند فقط */
+        .slot-class-badge { 
+            font-size: 15px; 
+            font-weight: 900; 
+            color: #0f2b48; 
+            background: #dbeafe; 
+            border: 1.5px solid #93c5fd; 
+            border-radius: 6px; 
+            padding: 1px 7px; 
+            width: fit-content;
+            margin: 2px 0;
+        }
+        .slot-card.empty-slot .slot-class-badge { background: #f1f5f9; border-color: #cbd5e1; color: #94a3b8; }
+        .slot-subject-txt { font-size: 11px; font-weight: 800; color: #0284c7; }
 
-        /* رادار التعارض السفلي الشامل */
+        /* رادار التعارض السفلي */
         .radar-bottom { 
             position: fixed; 
             bottom: 0; 
@@ -266,7 +358,6 @@
             box-shadow: 0 -3px 10px rgba(0,0,0,0.25);
         }
         .radar-summary { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: bold; }
-        
         .radar-tabs { display: flex; gap: 8px; padding: 4px 14px 8px 14px; border-bottom: 1px solid #334155; }
         .radar-tab-btn {
             background: #1e293b; color: #94a3b8; border: 1px solid #475569;
@@ -277,6 +368,42 @@
         .radar-details { max-height: 140px; overflow-y: auto; padding: 8px 14px; display: none; flex-direction: column; gap: 5px; }
         .radar-details.show { display: flex; }
         .alert-item { background: rgba(220, 38, 38, 0.35); border-right: 3px solid var(--danger); padding: 5px 8px; border-radius: 4px; font-size: 11px; line-height: 1.4; }
+
+        /* نافذة تقرير سلامة الجدول */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15,23,42,0.85); backdrop-filter: blur(5px);
+            display: none; justify-content: center; align-items: center; z-index: 3000; padding: 10px;
+        }
+        .modal-overlay.active { display: flex; }
+        .audit-modal-box {
+            background: #f8fafc; width: 100%; max-width: 900px; border-radius: 18px;
+            overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.5); display: flex;
+            flex-direction: column; max-height: 94vh;
+        }
+        .audit-modal-header {
+            background: linear-gradient(135deg, #0f2b48, #1e3a8a); color: white;
+            padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;
+        }
+        .audit-modal-body { padding: 14px; overflow-y: auto; flex-grow: 1; }
+        
+        .audit-tabs-bar { display: flex; gap: 6px; margin-bottom: 12px; }
+        .audit-tab-btn {
+            flex: 1; padding: 10px; border-radius: 10px; border: 1.5px solid #cbd5e1;
+            background: white; font-weight: 800; font-size: 12.5px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .audit-tab-btn.active {
+            background: #0f2b48; color: white; border-color: #0f2b48;
+            box-shadow: 0 4px 10px rgba(15,43,72,0.2);
+        }
+
+        .audit-badge { font-size: 11px; padding: 2px 7px; border-radius: 20px; font-weight: 900; }
+        .audit-badge-danger { background: #fee2e2; color: #b91c1c; }
+        .audit-badge-success { background: #dcfce7; color: #15803d; }
+
+        .audit-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 12.5px; background: white; border-radius: 10px; overflow: hidden; }
+        .audit-table th { background: #0f2b48; color: white; padding: 9px 6px; font-weight: 900; }
+        .audit-table td { padding: 8px 6px; border-bottom: 1px solid #e2e8f0; font-weight: 800; }
 
         .empty-placeholder { text-align: center; color: #64748b; font-size: 13px; font-weight: bold; margin-top: 45px; line-height: 2; }
     </style>
@@ -290,6 +417,9 @@
             <span class="author-badge"><i class="fa-solid fa-code"></i> فكرة وتطوير: مستر زيزو</span>
         </div>
         <div class="header-actions">
+            <button class="audit-btn" onclick="openAuditModal()">
+                <i class="fa-solid fa-clipboard-check"></i> تقرير سلامة الجدول
+            </button>
             <button class="mode-btn" id="btn-toggle-mode" onclick="toggleMode()">
                 <i class="fa-solid fa-shuffle"></i> مبدل المعلمين
             </button>
@@ -347,31 +477,92 @@
 
     <!-- شريط الإرشادات -->
     <div class="instruction-bar" id="instruction-bar">
-        اكتب رقمين في خانة الحصة (مثال: 21 تتحول تلقائياً إلى ٢/١) | 🗑️ لتفريغ الحصة
+        اكتب رقمين في خانة الفصل (مثال: 21 تتحول إلى ٢/١) مع اختيار المادة | 🗑️ لتفريغ الحصة والمادة
+    </div>
+
+    <!-- كارت حصر فصول ومواد المعلم المختار خلال الأسبوع -->
+    <div class="breakdown-card" id="breakdown-card">
+        <div class="breakdown-header">
+            <span id="breakdown-title"><i class="fa-solid fa-chart-pie text-blue-600"></i> بيان فصول ومواد المعلم:</span>
+            <span id="breakdown-subtitle"></span>
+        </div>
+        <div class="breakdown-chips-grid" id="breakdown-chips-container"></div>
     </div>
 
     <!-- مساحة عرض الحصص -->
     <div class="content-scrollable" id="main-content">
         <div class="empty-placeholder">
             <i class="fa-solid fa-chalkboard-user" style="font-size:38px; color:var(--primary); margin-bottom:10px;"></i><br>
-            ابحث عن معلم بالأعلى لعرض وتعديل حصصه ليوم الأحد.
+            ابحث عن معلم بالأعلى لعرض وتعديل حصصه ومواده ليوم الأحد.
         </div>
     </div>
 
-    <!-- 🌟 رادار التعارضات لليوم المختار فقط 🌟 -->
+    <!-- رادار التعارض السفلي -->
     <div class="radar-bottom">
         <div class="radar-summary" onclick="toggleRadar()">
             <span><i class="fa-solid fa-satellite-dish" style="color:#38bdf8;"></i> رادار التعارضات:</span>
             <span id="radar-badge" style="background:#16a34a; padding:2px 8px; border-radius:10px; font-size:11px;">جدول يوم (الأحد) سليم 100%</span>
         </div>
 
-        <!-- تبويبات التبديل داخل الرادار -->
         <div class="radar-tabs" id="radar-tabs-bar" style="display:none;">
             <button class="radar-tab-btn active" id="tab-btn-teacher" onclick="switchRadarTab('teacher')">تعارضات المعلم الحالي</button>
             <button class="radar-tab-btn" id="tab-btn-school" onclick="switchRadarTab('school')">تعارضات المدرسة بالكامل في هذا اليوم</button>
         </div>
 
         <div class="radar-details" id="radar-details"></div>
+    </div>
+
+    <!-- نافذة تقرير سلامة الجدول -->
+    <div class="modal-overlay" id="auditModal" onclick="if(event.target===this) closeAuditModal()">
+        <div class="audit-modal-box">
+            <div class="audit-modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-shield-halved text-yellow-300" style="font-size:20px;"></i>
+                    <h2 style="font-size:16px; font-weight:900;">تقرير الفحص الشامل لسلامة وتكامل الجدول المدرسي</h2>
+                </div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <button onclick="window.print()" class="audit-btn" style="background:#0284c7; padding:5px 12px;"><i class="fa-solid fa-print"></i> طباعة التقرير</button>
+                    <button onclick="closeAuditModal()" style="background:none; border:none; color:white; font-size:24px; cursor:pointer; line-height:1;">&times;</button>
+                </div>
+            </div>
+
+            <div style="padding:10px 14px 0 14px;">
+                <div class="audit-tabs-bar">
+                    <button class="audit-tab-btn active" id="btn-atab-conflicts" onclick="switchAuditTab('conflicts')">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> التعارضات (<span id="count-audit-conflicts">٠</span>)
+                    </button>
+                    <button class="audit-tab-btn" id="btn-atab-empty" onclick="switchAuditTab('empty')">
+                        <i class="fa-solid fa-circle-exclamation text-amber-500"></i> الحصص الفارغة (<span id="count-audit-empty">٠</span>)
+                    </button>
+                    <button class="audit-tab-btn" id="btn-atab-plan" onclick="switchAuditTab('plan')">
+                        <i class="fa-solid fa-list-check text-blue-600"></i> تدقيق خطة المواد للفصول
+                    </button>
+                </div>
+            </div>
+
+            <div class="audit-modal-body">
+                <div id="audit-content-conflicts">
+                    <div style="background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:bold; margin-bottom:10px;">
+                        <i class="fa-solid fa-circle-info"></i> تم استثناء حصص الدين المشتركة بين معلمي الدين الإسلامي والدين المسيحي؛ فلا تُحتسب تعارضاً إطلاقاً.
+                    </div>
+                    <div id="audit-conflicts-list"></div>
+                </div>
+
+                <div id="audit-content-empty" style="display:none;">
+                    <div style="background:#fffbeb; border:1px solid #fde68a; color:#92400e; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:bold; margin-bottom:10px;">
+                        <i class="fa-solid fa-clock"></i> <b>القواعد المعتمدة:</b> الصفوف الأولى 6 حصص (والخميس 5) | الصفوف العليا 7 حصص (والثلاثاء 8).
+                    </div>
+                    <div id="audit-empty-list"></div>
+                </div>
+
+                <div id="audit-content-plan" style="display:none;">
+                    <div style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; padding:8px 12px; border-radius:8px; font-size:12px; font-weight:bold; margin-bottom:10px;">
+                        <i class="fa-solid fa-scale-balanced"></i> يتم فحص الحصص المسندة لكل مادة في كل فصل ومقارنتها بالخطة الدراسية المقررة في الميزانية.
+                    </div>
+                    <div id="audit-plan-list"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -383,6 +574,7 @@
         let ALL_TEACHERS = [];
         let TEACHERS_MAP = new Map();
         let MODIFIED_IDS = new Set();
+        let SCHOOL_PLAN = {};
 
         let activeMode = 'single';
         let singleTeacher = null;
@@ -392,15 +584,35 @@
         let teacherB = null;
         let selectedSwapSlot = null;
 
-        // حالة الرادار
         let currentRadarTab = 'teacher';
         let cachedCurrentTeacherConflicts = [];
         let cachedSchoolWideConflicts = [];
 
         const dayNamesMap = {"الاحد":"الأحد", "الاثنين":"الإثنين", "الثلاثاء":"الثلاثاء", "الاربعاء":"الأربعاء", "الخميس":"الخميس"};
+        const allWeekDays = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس"];
+
+        const subjectsList = [
+            "لغة عربية", "دين", "دين مسيحى", "رياضيات", "انجليزى",
+            "علوم", "دراسات", "تكنولوجيا", "مهارات", "تربية فنية",
+            "تربية موسيقية", "تربية رياضية", "توكاتسو", "انشطة"
+        ];
 
         const toArDigits = (s) => String(s || "").replace(/[0-9]/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
         const toEnDigits = (s) => String(s || "").replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+
+        const PLAN_SUBJECT_MAP = [
+            { key: "arabic", name: "لغة عربية", kws: ["عرب"] },
+            { key: "religion", name: "دين", kws: ["دين", "اسلام", "مسيح"] },
+            { key: "math", name: "رياضيات", kws: ["رياضيات", "حساب"] },
+            { key: "english", name: "انجليزى", kws: ["انجل", "انجليز"] },
+            { key: "science", name: "علوم", kws: ["علوم"] },
+            { key: "social", name: "دراسات", kws: ["دراس"] },
+            { key: "tech", name: "تكنولوجيا", kws: ["تكنو", "حاسب"] },
+            { key: "skills", name: "مهارات", kws: ["مهار"] },
+            { key: "art", name: "تربية فنية", kws: ["فني", "رسم"] },
+            { key: "pe", name: "تربية رياضية", kws: ["بدني", "العاب", "رياضيه", "رياضية"] },
+            { key: "music", name: "تربية موسيقية", kws: ["موسيقي", "موسيقى"] }
+        ];
 
         function normalizeArabic(text) {
             if (!text) return "";
@@ -415,7 +627,26 @@
                 .toLowerCase();
         }
 
-        // ================= 🌟 تحليل الفصل بدقة مهما كان تنسيقه 🌟 =================
+        function getExpectedDailyPeriodCount(gradeNum, day) {
+            const isLower = (gradeNum <= 3);
+            return isLower ? ((day === "الخميس") ? 5 : 6) : ((day === "الثلاثاء") ? 8 : 7);
+        }
+
+        function getGradeFromClassName(className) {
+            if (!className) return 1;
+            const cleanStr = String(className).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+            const parts = cleanStr.split('/');
+            let p1 = parseInt(parts[1]), p0 = parseInt(parts[0]);
+            if (p1 >= 1 && p1 <= 6) return p1;
+            if (p0 >= 1 && p0 <= 6) return p0;
+            return 1;
+        }
+
+        function getGradeArabicName(gNum) {
+            const map = { 1: "الأول", 2: "الثاني", 3: "الثالث", 4: "الرابع", 5: "الخامس", 6: "السادس" };
+            return map[gNum] || "الأول";
+        }
+
         function parseClassStandard(raw) {
             if (!raw) return null;
             let s = toEnDigits(String(raw)).trim();
@@ -425,27 +656,16 @@
             const digits = s.replace(/[^0-9]/g, '');
 
             if (digits.length >= 2) {
-                return {
-                    standard: `${digits[0]}/${digits[1]}`,
-                    isReligion: isRel,
-                    raw: raw
-                };
+                return { standard: `${digits[0]}/${digits[1]}`, isReligion: isRel, raw: raw };
             } else if (s.includes('/')) {
                 const parts = s.split('/');
                 const p1 = parts[0].replace(/[^0-9]/g, '');
                 const p2 = parts[1].replace(/[^0-9]/g, '');
-                if (p1 && p2) {
-                    return {
-                        standard: `${p1}/${p2}`,
-                        isReligion: isRel,
-                        raw: raw
-                    };
-                }
+                if (p1 && p2) return { standard: `${p1}/${p2}`, isReligion: isRel, raw: raw };
             }
             return null;
         }
 
-        // استخراج الحصة بمرونة تامة للهمزات
         function getTeacherSlot(schedule, targetDay, period) {
             if (!schedule) return "";
             const direct = schedule[`${targetDay}_${period}`];
@@ -461,21 +681,44 @@
             return "";
         }
 
-        // ================= 1. تحميل كافة المعلمين =================
+        function getTeacherSlotSubject(schedule, targetDay, period, teacherDefaultSubject) {
+            if (!schedule) return teacherDefaultSubject || "";
+            const subVal = schedule[`${targetDay}_${period}_sub`];
+            if (subVal && String(subVal).trim() !== "") return String(subVal).trim();
+            return teacherDefaultSubject || "";
+        }
+
+        // ================= 1. تحميل المعلمين الأساسيين والمؤقتين فقط (استبعاد الأجر نهائياً) =================
         window.addEventListener('DOMContentLoaded', async () => {
-            Swal.fire({ title: 'تحميل بيانات المدرسة وفحص التعارضات...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'تحميل بيانات المعلمين الأساسيين والخطة...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                const [resReg, resCon] = await Promise.all([
+                const [resReg, resPlan] = await Promise.all([
                     supabaseClient.from("teachers").select("*"),
-                    supabaseClient.from("contract_teachers").select("*")
+                    supabaseClient.from("system_capsules").select("data").eq("id", "school_plan").maybeSingle()
                 ]);
+
+                if (resPlan.data && resPlan.data.data) {
+                    SCHOOL_PLAN = resPlan.data.data;
+                } else {
+                    SCHOOL_PLAN = {
+                        "الأول": { classes: 6, subjects: { arabic: 11, math: 6, religion: 4, english: 4, pe: 2, art: 2, tokkatsu: 1 } },
+                        "الثاني": { classes: 5, subjects: { arabic: 11, math: 6, religion: 4, english: 4, pe: 2, art: 2, tokkatsu: 1 } },
+                        "الثالث": { classes: 7, subjects: { arabic: 11, math: 6, religion: 4, english: 4, pe: 2, art: 2, tokkatsu: 1 } },
+                        "الرابع": { classes: 8, subjects: { arabic: 7, math: 6, science: 4, social: 4, english: 4, religion: 3, tech: 2, skills: 2, art: 2, pe: 2 } },
+                        "الخامس": { classes: 8, subjects: { arabic: 7, math: 6, science: 4, social: 4, english: 4, religion: 3, tech: 2, skills: 2, art: 2, pe: 2 } },
+                        "السادس": { classes: 8, subjects: { arabic: 7, math: 6, science: 4, social: 4, english: 4, religion: 3, tech: 2, skills: 2, art: 2, pe: 2 } }
+                    };
+                }
 
                 const list = [];
 
                 (resReg.data || []).forEach(t => {
-                    const isOut = (t.emp_status === "معاش" || t.emp_status === "منهي خدمته");
-                    if (!isOut && t.name) {
-                        const uid = `PERM_${t.id || t.code || t.nid || Math.random()}`;
+                    const st = (t.emp_status || "على رأس العمل").trim();
+                    const isOut = ["معاش", "متوفى", "منهي خدمته", "تم نقله"].includes(st);
+                    const isWorker = (t.cadre_job || "").includes("عامل") || (t.cadre_job || "").includes("حارس") || (t.cadre_job || "").includes("خدمات");
+
+                    if (!isWorker && !isOut && t.name && t.name.trim() !== "") {
+                        const uid = `TEA_${t.id || t.code || t.nid || Math.random()}`;
                         list.push({ 
                             id: uid, 
                             db_id: t.id, 
@@ -485,24 +728,8 @@
                             name: t.name, 
                             short_name: t.short_name || t.name,
                             subject: t.subject || "عام", 
-                            schedule: t.schedule || {} 
-                        });
-                    }
-                });
-
-                (resCon.data || []).forEach(t => {
-                    if (t.name && t.name.trim() !== "") {
-                        const uid = `CONT_${t.id || t.nid || t.code || Math.random()}`;
-                        list.push({ 
-                            id: uid, 
-                            db_id: t.id, 
-                            code: t.code, 
-                            nid: t.nid, 
-                            type: 'contract', 
-                            name: t.name, 
-                            short_name: t.short_name || t.name,
-                            subject: t.subject || "عام", 
-                            schedule: t.schedule || {} 
+                            schedule: t.schedule || {},
+                            emp_status: st
                         });
                     }
                 });
@@ -511,46 +738,45 @@
                 ALL_TEACHERS = list;
                 list.forEach(t => TEACHERS_MAP.set(t.id, t));
 
-                // فحص تعارضات اليوم الافتراضي (الأحد)
                 runSchoolConflictScanForSelectedDay(singleDay);
-
                 Swal.close();
             } catch(e) {
                 console.error(e);
-                Swal.fire('خطأ', 'تعذر تحميل بيانات المعلمين من السحابة', 'error');
+                Swal.fire('خطأ', 'تعذر تحميل البيانات من السحابة', 'error');
             }
         });
 
-        // ================= 🌟 2. المحرك الحصري لفحص تعارض اليوم المختار فقط 🌟 =================
+        // ================= فحص تعارضات اليوم =================
         function runSchoolConflictScanForSelectedDay(targetDay = singleDay) {
             const schoolConflicts = [];
             const matrix = {};
 
-            // فحص حصص الـ 8 لليوم المختار فقط
             for (let p = 1; p <= 8; p++) {
                 ALL_TEACHERS.forEach(t => {
                     const rawSlot = getTeacherSlot(t.schedule, targetDay, p);
                     const parsed = parseClassStandard(rawSlot);
 
                     if (parsed) {
+                        const subName = getTeacherSlotSubject(t.schedule, targetDay, p, t.subject);
                         const matrixKey = `${p}_${parsed.standard}`;
                         if (!matrix[matrixKey]) matrix[matrixKey] = [];
                         matrix[matrixKey].push({
                             teacher: t,
-                            parsed: parsed
+                            parsed: parsed,
+                            subject: subName
                         });
                     }
                 });
             }
 
-            // حصر التعارضات في هذا اليوم فقط
             for (let mKey in matrix) {
                 const entries = matrix[mKey];
                 if (entries.length > 1) {
                     const [p, cls] = mKey.split('_');
 
-                    // استثناء معلما الدين إذا كانا فقط معلمان والاثنان دين
-                    const isDualReligion = (entries.length === 2 && entries[0].parsed.isReligion && entries[1].parsed.isReligion);
+                    const hasIslam = entries.some(e => e.subject === "دين" || e.subject.includes("اسلام") || e.parsed.isReligion);
+                    const hasChrist = entries.some(e => e.subject === "دين مسيحى" || e.subject.includes("مسيح"));
+                    const isDualReligion = (entries.length === 2 && hasIslam && hasChrist);
 
                     if (!isDualReligion) {
                         const teacherNames = entries.map(e => `أ / ${e.teacher.short_name || e.teacher.name}`);
@@ -571,12 +797,13 @@
             return schoolConflicts;
         }
 
-        // فحص حصة محددة لمعلم محدد في اليوم المختار
         function checkConflictForSlot(day, period, className, currentTeacherId) {
             const parsed = parseClassStandard(className);
             if (!parsed) return null;
 
             const conflictingTeachers = [];
+            const curTeacher = TEACHERS_MAP.get(String(currentTeacherId));
+            const curSub = curTeacher ? getTeacherSlotSubject(curTeacher.schedule, day, period, curTeacher.subject) : "";
 
             ALL_TEACHERS.forEach(t => {
                 if (String(t.id) === String(currentTeacherId)) return;
@@ -585,8 +812,16 @@
                 const otherParsed = parseClassStandard(otherRaw);
 
                 if (otherParsed && otherParsed.standard === parsed.standard) {
-                    const isDualReligion = (parsed.isReligion && otherParsed.isReligion);
-                    if (!isDualReligion) {
+                    const otherSub = getTeacherSlotSubject(t.schedule, day, period, t.subject);
+
+                    const isRel1_Islam = (curSub === "دين" || curSub.includes("اسلام") || parsed.isReligion);
+                    const isRel1_Christ = (curSub === "دين مسيحى" || curSub.includes("مسيح"));
+                    const isRel2_Islam = (otherSub === "دين" || otherSub.includes("اسلام") || otherParsed.isReligion);
+                    const isRel2_Christ = (otherSub === "دين مسيحى" || otherSub.includes("مسيح"));
+
+                    const isDualRel = (isRel1_Islam && isRel2_Christ) || (isRel1_Christ && isRel2_Islam);
+
+                    if (!isDualRel) {
                         conflictingTeachers.push(`أ / ${t.short_name || t.name}`);
                     }
                 }
@@ -595,7 +830,6 @@
             return conflictingTeachers.length > 0 ? conflictingTeachers.join(' و ') : null;
         }
 
-        // ================= تحديث رادار اليوم المختار =================
         function updateDayRadarUI() {
             const badge = document.getElementById("radar-badge");
             const tabsBar = document.getElementById("radar-tabs-bar");
@@ -661,7 +895,7 @@
             }
         }
 
-        // ================= البحث الذكي ببدايات الحروف =================
+        // ================= البحث بالبدايات =================
         function searchTeachersStrictPrefix(rawQuery) {
             const q = normalizeArabic(rawQuery);
             if (!q) return [];
@@ -689,7 +923,7 @@
 
             const matches = searchTeachersStrictPrefix(query);
             if (matches.length === 0) {
-                box.innerHTML = `<div class="dropdown-item" style="color:#94a3b8;">لا يوجد اسم يبدأ بـ "${query}"</div>`;
+                box.innerHTML = `<div class="dropdown-item" style="color:#94a3b8;">لا يوجد معلم يبدأ اسمه بـ "${query}"</div>`;
             } else {
                 box.innerHTML = matches.map(t => `
                     <div class="dropdown-item" onmousedown="selectSingleTeacher('${t.id}')">
@@ -697,7 +931,7 @@
                             <span>${t.name}</span>
                             <small style="color:#64748b; display:block; font-size:11px;">${t.subject}</small>
                         </div>
-                        ${t.type === 'contract' ? '<span class="badge-contract">أجر</span>' : ''}
+                        ${t.emp_status === 'مؤقت' ? '<span class="badge-temp">مؤقت</span>' : ''}
                     </div>
                 `).join('');
             }
@@ -709,27 +943,77 @@
             document.getElementById("search-single").value = singleTeacher.name;
             document.getElementById("results-single").style.display = 'none';
             renderSingleView();
+            renderTeacherClassesBreakdown(singleTeacher);
         }
 
-        // 🌟 عند تغيير اليوم: إعادة الفحص فوراً لليوم الجديد 🌟
         function onSingleDaySelect(day) {
             singleDay = day;
             runSchoolConflictScanForSelectedDay(singleDay);
             renderSingleView();
         }
 
-        // ================= عرض جدول المعلم الفردي =================
+        // ================= عرض حصر فصول المعلم الأسبوعية =================
+        function renderTeacherClassesBreakdown(teacher) {
+            const card = document.getElementById("breakdown-card");
+            const container = document.getElementById("breakdown-chips-container");
+            const title = document.getElementById("breakdown-title");
+            const sub = document.getElementById("breakdown-subtitle");
+
+            if (!teacher) {
+                card.style.display = "none";
+                return;
+            }
+
+            const schedule = teacher.schedule || {};
+            const classCounts = {};
+            let totalPeriods = 0;
+
+            allWeekDays.forEach(day => {
+                for (let p = 1; p <= 8; p++) {
+                    const raw = getTeacherSlot(schedule, day, p);
+                    const parsed = parseClassStandard(raw);
+                    if (parsed && parsed.standard) {
+                        const subName = getTeacherSlotSubject(schedule, day, p, teacher.subject);
+                        const label = `فصل ${toArDigits(parsed.standard)}` + (subName ? ` (${subName})` : '');
+                        classCounts[label] = (classCounts[label] || 0) + 1;
+                        totalPeriods++;
+                    }
+                }
+            });
+
+            title.innerHTML = `<i class="fa-solid fa-chalkboard-user text-blue-600"></i> حصر فصول ومواد المعلم (أ/ ${teacher.short_name || teacher.name}) خلال الأسبوع:`;
+            sub.innerText = `عدد الفصول المسندة: ${Object.keys(classCounts).length} فصل`;
+            container.innerHTML = "";
+
+            if (totalPeriods === 0) {
+                container.innerHTML = `<span style="font-size:12px; color:#94a3b8; font-weight:800;">لم يتم تسكين أي حصص لهذا المعلم في الجدول الأسبوعي بعد.</span>`;
+            } else {
+                Object.keys(classCounts).sort().forEach(clsName => {
+                    const badge = document.createElement("div");
+                    badge.className = "breakdown-badge";
+                    badge.innerHTML = `<span><b>${clsName}</b></span> <span>عدد: ${toArDigits(classCounts[clsName])} حصة</span>`;
+                    container.appendChild(badge);
+                });
+                const totalBadge = document.createElement("div");
+                totalBadge.className = "breakdown-badge total-badge";
+                totalBadge.innerHTML = `<span>إجمالي حصص الأسبوع:</span> <b>${toArDigits(totalPeriods)} حصة</b>`;
+                container.appendChild(totalBadge);
+            }
+            card.style.display = "flex";
+        }
+
+        // ================= 🌟 عرض جدول المعلم الفردي (تمييز الحصص المسندة فقط وبدون كلمة فصل) 🌟 =================
         function renderSingleView() {
             const container = document.getElementById("main-content");
             const instruction = document.getElementById("instruction-bar");
             const dayTitle = dayNamesMap[singleDay] || singleDay;
-            instruction.innerHTML = `اكتب رقمين في خانة الحصة (مثال: 21 تتحول تلقائياً إلى ٢/١) | 🗑️ لتفريغ الحصة`;
+            instruction.innerHTML = `اكتب رقمين في خانة الحصة (مثال: 21 تتحول تلقائياً إلى ٢/١) مع اختيار المادة | 🗑️ لتفريغ الحصة والمادة`;
 
             if (!singleTeacher) {
                 container.innerHTML = `
                     <div class="empty-placeholder">
                         <i class="fa-solid fa-chalkboard-user" style="font-size:38px; color:var(--primary); margin-bottom:10px;"></i><br>
-                        ابحث عن معلم بالأعلى لعرض حصصه ليوم (${dayTitle}).
+                        ابحث عن معلم بالأعلى لعرض حصصه ومواده ليوم (${dayTitle}).
                     </div>`;
                 cachedCurrentTeacherConflicts = [];
                 updateDayRadarUI();
@@ -740,21 +1024,41 @@
 
             for (let p = 1; p <= 8; p++) {
                 const val = getTeacherSlot(singleTeacher.schedule, singleDay, p);
+                const subVal = getTeacherSlotSubject(singleTeacher.schedule, singleDay, p, singleTeacher.subject);
                 const conf = checkConflictForSlot(singleDay, p, val, singleTeacher.id);
+                const isAssigned = (val && String(val).trim() !== "");
+
+                let subOptionsHtml = `<option value="">- المادة -</option>`;
+                subjectsList.forEach(s => {
+                    const isSel = (subVal === s) ? 'selected' : '';
+                    subOptionsHtml += `<option value="${s}" ${isSel}>${s}</option>`;
+                });
 
                 html += `
                     <div class="single-slot-card ${conf ? 'has-conflict' : ''}" id="card-${p}">
                         <div class="single-slot-row">
                             <div class="period-badge">حصة ${toArDigits(p)}</div>
+                            
+                            <!-- 🌟 خانة الفصل: بيضاء نظيفة ومميزة بلون بارز فقط عند التسكين وبدون كلمة فصل 🌟 -->
                             <input type="text" 
                                    inputmode="numeric" 
-                                   class="inline-class-input" 
+                                   class="inline-class-input ${isAssigned ? 'has-val' : ''}" 
                                    id="input-single-${p}"
-                                   placeholder="فارغ" 
-                                   value="${val ? toArDigits(val) : ''}" 
+                                   placeholder="" 
+                                   value="${isAssigned ? toArDigits(val) : ''}" 
+                                   title="الفصل الدراسي"
                                    oninput="handleInlineClassInput(this, '${singleTeacher.id}', '${singleDay}', ${p})"
                             >
-                            <button class="btn-clear-slot" onclick="clearSlotDirect('${singleTeacher.id}', '${singleDay}', ${p})" title="تفريغ الحصة">
+
+                            <!-- خانة المادة -->
+                            <select class="inline-subject-select"
+                                    id="select-single-sub-${p}"
+                                    title="مادة الحصة"
+                                    onchange="handleInlineSubjectChange(this, '${singleTeacher.id}', '${singleDay}', ${p})">
+                                ${subOptionsHtml}
+                            </select>
+
+                            <button class="btn-clear-slot" onclick="clearSlotDirect('${singleTeacher.id}', '${singleDay}', ${p})" title="تفريغ الحصة والمادة">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
@@ -770,7 +1074,7 @@
             recalculateCurrentTeacherConflicts();
         }
 
-        // إدخال وتعديل الحصة
+        // إدخال وتنسيق الفصل وإضافة تمييز اللون فورياً
         function handleInlineClassInput(el, teacherId, day, period) {
             let val = toEnDigits(el.value).replace(/[^0-9/dDد]/g, '');
 
@@ -780,28 +1084,71 @@
 
             el.value = toArDigits(val);
 
+            // تمييز اللون فورا عند وجود قيمة أو إلغائه عند التفريغ
+            if (val && val.trim() !== "") {
+                el.classList.add("has-val");
+            } else {
+                el.classList.remove("has-val");
+            }
+
             const teacher = TEACHERS_MAP.get(String(teacherId));
             teacher.schedule[`${day}_${period}`] = val;
+
+            const subSelect = document.getElementById(`select-single-sub-${period}`);
+            if (subSelect && !subSelect.value) {
+                if (/[dDد]|دين/i.test(val)) {
+                    subSelect.value = "دين";
+                    teacher.schedule[`${day}_${period}_sub`] = "دين";
+                } else if (teacher.subject && subjectsList.includes(teacher.subject)) {
+                    subSelect.value = teacher.subject;
+                    teacher.schedule[`${day}_${period}_sub`] = teacher.subject;
+                }
+            }
+
             MODIFIED_IDS.add(teacher.id);
 
             runSchoolConflictScanForSelectedDay(singleDay);
             recalculateCurrentTeacherConflicts();
+            renderTeacherClassesBreakdown(singleTeacher);
         }
 
-        // تفريغ الحصة
+        function handleInlineSubjectChange(el, teacherId, day, period) {
+            const subVal = el.value.trim();
+            const teacher = TEACHERS_MAP.get(String(teacherId));
+            
+            if (subVal) {
+                teacher.schedule[`${day}_${period}_sub`] = subVal;
+            } else {
+                delete teacher.schedule[`${day}_${period}_sub`];
+            }
+
+            MODIFIED_IDS.add(teacher.id);
+
+            runSchoolConflictScanForSelectedDay(singleDay);
+            recalculateCurrentTeacherConflicts();
+            renderTeacherClassesBreakdown(singleTeacher);
+        }
+
         function clearSlotDirect(teacherId, day, period) {
             const teacher = TEACHERS_MAP.get(String(teacherId));
             teacher.schedule[`${day}_${period}`] = "";
+            delete teacher.schedule[`${day}_${period}_sub`];
             MODIFIED_IDS.add(teacher.id);
 
             const input = document.getElementById(`input-single-${period}`);
-            if (input) input.value = "";
+            if (input) {
+                input.value = "";
+                input.classList.remove("has-val"); // إزالة التلوين ليعود أبيض نظيفاً
+            }
+            
+            const subSelect = document.getElementById(`select-single-sub-${period}`);
+            if (subSelect) subSelect.value = "";
 
             runSchoolConflictScanForSelectedDay(singleDay);
             recalculateCurrentTeacherConflicts();
+            renderTeacherClassesBreakdown(singleTeacher);
         }
 
-        // تحديث كروت المعلم الحالي
         function recalculateCurrentTeacherConflicts() {
             if (!singleTeacher) return;
 
@@ -833,6 +1180,7 @@
             const singleControls = document.getElementById("single-controls-wrapper");
             const swapControls = document.getElementById("swap-controls-wrapper");
             const title = document.getElementById("app-title");
+            const breakdownCard = document.getElementById("breakdown-card");
 
             if (activeMode === 'single') {
                 activeMode = 'swap';
@@ -841,6 +1189,7 @@
                 title.innerHTML = `<i class="fa-solid fa-shuffle"></i> مبدل الحصص الحر`;
                 singleControls.style.display = "none";
                 swapControls.style.display = "grid";
+                if (breakdownCard) breakdownCard.style.display = "none";
                 renderSwapColumns();
             } else {
                 activeMode = 'single';
@@ -850,6 +1199,7 @@
                 singleControls.style.display = "flex";
                 swapControls.style.display = "none";
                 renderSingleView();
+                renderTeacherClassesBreakdown(singleTeacher);
             }
         }
 
@@ -870,7 +1220,7 @@
                             <span>${t.name}</span>
                             <small style="color:#64748b; display:block; font-size:10px;">${t.subject}</small>
                         </div>
-                        ${t.type === 'contract' ? '<span class="badge-contract">أجر</span>' : ''}
+                        ${t.emp_status === 'مؤقت' ? '<span class="badge-temp">مؤقت</span>' : ''}
                     </div>
                 `).join('');
             }
@@ -913,6 +1263,7 @@
 
             for (let p = 1; p <= 8; p++) {
                 const valA = getTeacherSlot(teacherA.schedule, dayA, p);
+                const subA = getTeacherSlotSubject(teacherA.schedule, dayA, p, teacherA.subject);
                 const confA = checkConflictForSlot(dayA, p, valA, teacherA.id);
                 const isSelectedA = selectedSwapSlot && selectedSwapSlot.teacherId === teacherA.id && selectedSwapSlot.day === dayA && selectedSwapSlot.period == p;
 
@@ -921,11 +1272,13 @@
                          onclick="handleSwapSlotClick('a', '${teacherA.id}', '${dayA}', ${p})">
                         <div class="slot-info">
                             <span class="slot-period">حصة ${toArDigits(p)} ${confA ? '⚠️ تعارض' : ''}</span>
-                            <span class="slot-class">${valA ? toArDigits(valA) : 'فارغ'}</span>
+                            <span class="slot-class-badge">${valA ? toArDigits(valA) : 'فارغ'}</span>
+                            <span class="slot-subject-txt">${subA && valA ? subA : ''}</span>
                         </div>
                     </div>`;
 
                 const valB = getTeacherSlot(teacherB.schedule, dayB, p);
+                const subB = getTeacherSlotSubject(teacherB.schedule, dayB, p, teacherB.subject);
                 const confB = checkConflictForSlot(dayB, p, valB, teacherB.id);
                 const isSelectedB = selectedSwapSlot && selectedSwapSlot.teacherId === teacherB.id && selectedSwapSlot.day === dayB && selectedSwapSlot.period == p;
 
@@ -934,7 +1287,8 @@
                          onclick="handleSwapSlotClick('b', '${teacherB.id}', '${dayB}', ${p})">
                         <div class="slot-info">
                             <span class="slot-period">حصة ${toArDigits(p)} ${confB ? '⚠️ تعارض' : ''}</span>
-                            <span class="slot-class">${valB ? toArDigits(valB) : 'فارغ'}</span>
+                            <span class="slot-class-badge">${valB ? toArDigits(valB) : 'فارغ'}</span>
+                            <span class="slot-subject-txt">${subB && valB ? subB : ''}</span>
                         </div>
                     </div>`;
             }
@@ -955,9 +1309,10 @@
         function handleSwapSlotClick(side, teacherId, day, period) {
             const currentTeacher = TEACHERS_MAP.get(String(teacherId));
             const currentVal = getTeacherSlot(currentTeacher.schedule, day, period);
+            const currentSub = getTeacherSlotSubject(currentTeacher.schedule, day, period, "");
 
             if (!selectedSwapSlot) {
-                selectedSwapSlot = { side, teacherId, day, period, val: currentVal };
+                selectedSwapSlot = { side, teacherId, day, period, val: currentVal, sub: currentSub };
                 renderSwapColumns();
                 return;
             }
@@ -977,6 +1332,9 @@
             firstTeacher.schedule[firstKey] = currentVal;
             secondTeacher.schedule[secondKey] = selectedSwapSlot.val;
 
+            firstTeacher.schedule[`${firstKey}_sub`] = currentSub;
+            secondTeacher.schedule[`${secondKey}_sub`] = selectedSwapSlot.sub;
+
             MODIFIED_IDS.add(firstTeacher.id);
             MODIFIED_IDS.add(secondTeacher.id);
 
@@ -984,7 +1342,7 @@
                 toast: true,
                 position: 'top',
                 icon: 'success',
-                title: `تم تبديل حصة ${toArDigits(selectedSwapSlot.period)} مع حصة ${toArDigits(period)}`,
+                title: `تم تبديل حصة ${toArDigits(selectedSwapSlot.period)} مع حصة ${toArDigits(period)} بمادتها وفصلها`,
                 timer: 1300,
                 showConfirmButton: false
             });
@@ -1009,14 +1367,13 @@
             }
         });
 
-        // ================= الحفظ السحابي لليوم المختار =================
+        // ================= الحفظ السحابي =================
         async function saveToCloud() {
             if (MODIFIED_IDS.size === 0) {
                 Swal.fire({ toast: true, position: 'top', icon: 'info', title: 'لا توجد تعديلات جديدة لحفظها' });
                 return;
             }
 
-            // فحص تعارضات اليوم المختار فقط
             const conflicts = runSchoolConflictScanForSelectedDay(singleDay);
             const dayTitle = dayNamesMap[singleDay] || singleDay;
 
@@ -1047,11 +1404,10 @@
             try {
                 const requests = Array.from(MODIFIED_IDS).map(id => {
                     const t = TEACHERS_MAP.get(String(id));
-                    const table = t.type === 'regular' ? "teachers" : "contract_teachers";
                     
-                    let query = supabaseClient.from(table).update({ schedule: t.schedule });
+                    let query = supabaseClient.from("teachers").update({ schedule: t.schedule });
                     if (t.db_id) query = query.eq("id", t.db_id);
-                    else if (t.code && !String(t.code).startsWith("CON_")) query = query.eq("code", t.code);
+                    else if (t.code) query = query.eq("code", t.code);
                     else if (t.nid) query = query.eq("nid", t.nid);
                     else query = query.eq("name", t.name);
 
@@ -1060,10 +1416,261 @@
 
                 await Promise.all(requests);
                 MODIFIED_IDS.clear();
-                Swal.fire({ icon: 'success', title: 'تم حفظ كافة التعديلات بنجاح!', timer: 1700, showConfirmButton: false });
+                Swal.fire({ icon: 'success', title: 'تم حفظ كافة التعديلات والمواد بنجاح!', timer: 1700, showConfirmButton: false });
             } catch(e) {
                 Swal.fire('خطأ', 'تعذر إتمام الحفظ بالسحابة', 'error');
             }
+        }
+
+        // ================= تقرير سلامة الجدول الشامل =================
+        function openAuditModal() {
+            document.getElementById("auditModal").classList.add("active");
+            runFullSchoolAudit();
+        }
+
+        function closeAuditModal() {
+            document.getElementById("auditModal").classList.remove("active");
+        }
+
+        function switchAuditTab(tab) {
+            document.querySelectorAll('.audit-tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('btn-atab-' + tab).classList.add('active');
+
+            document.getElementById('audit-content-conflicts').style.display = (tab === 'conflicts') ? 'block' : 'none';
+            document.getElementById('audit-content-empty').style.display = (tab === 'empty') ? 'block' : 'none';
+            document.getElementById('audit-content-plan').style.display = (tab === 'plan') ? 'block' : 'none';
+        }
+
+        function runFullSchoolAudit() {
+            const allClassesSet = new Set();
+            allWeekDays.forEach(d => {
+                for (let p = 1; p <= 8; p++) {
+                    ALL_TEACHERS.forEach(t => {
+                        const raw = getTeacherSlot(t.schedule, d, p);
+                        const parsed = parseClassStandard(raw);
+                        if (parsed && parsed.standard) allClassesSet.add(parsed.standard);
+                    });
+                }
+            });
+
+            const allClassesList = Array.from(allClassesSet).sort((a,b) => {
+                const gA = getGradeFromClassName(a), gB = getGradeFromClassName(b);
+                if (gA !== gB) return gA - gB;
+                return a.localeCompare(b, 'ar', { numeric: true });
+            });
+
+            // 1. التعارضات (باستثناء الدين المشترك)
+            const allConflicts = [];
+            allWeekDays.forEach(d => {
+                for (let p = 1; p <= 8; p++) {
+                    const classMatrix = {};
+                    ALL_TEACHERS.forEach(t => {
+                        const raw = getTeacherSlot(t.schedule, d, p);
+                        const parsed = parseClassStandard(raw);
+                        if (parsed) {
+                            const sub = getTeacherSlotSubject(t.schedule, d, p, t.subject);
+                            if (!classMatrix[parsed.standard]) classMatrix[parsed.standard] = [];
+                            classMatrix[parsed.standard].push({ teacher: t, parsed: parsed, subject: sub });
+                        }
+                    });
+
+                    for (let cls in classMatrix) {
+                        const entries = classMatrix[cls];
+                        if (entries.length > 1) {
+                            const hasIslam = entries.some(e => e.subject === "دين" || e.subject.includes("اسلام") || e.parsed.isReligion);
+                            const hasChrist = entries.some(e => e.subject === "دين مسيحى" || e.subject.includes("مسيح"));
+                            const isDualReligion = (entries.length === 2 && hasIslam && hasChrist);
+
+                            if (!isDualReligion) {
+                                allConflicts.push({
+                                    day: d,
+                                    dayName: dayNamesMap[d],
+                                    period: p,
+                                    className: cls,
+                                    teachers: entries.map(e => `أ/ ${e.teacher.short_name || e.teacher.name} (${e.subject || 'عام'})`)
+                                });
+                            }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('count-audit-conflicts').innerText = toArDigits(allConflicts.length);
+            const conflictsContainer = document.getElementById('audit-conflicts-list');
+            if (allConflicts.length === 0) {
+                conflictsContainer.innerHTML = `<div style="text-align:center; padding:30px; background:#f0fdf4; border-radius:12px; border:2px solid #86efac; color:#15803d; font-size:14px; font-weight:900;"><i class="fa-solid fa-circle-check" style="font-size:28px; margin-bottom:8px; display:block;"></i> جدول المدرسة خالٍ تماماً من أي تعارض طوال أيام الأسبوع 100%!</div>`;
+            } else {
+                conflictsContainer.innerHTML = `
+                    <table class="audit-table">
+                        <thead>
+                            <tr>
+                                <th>اليوم</th>
+                                <th>الحصة</th>
+                                <th>الفصل</th>
+                                <th style="text-align:right;">المعلمون المتعارضون في الحصة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${allConflicts.map(c => `
+                                <tr>
+                                    <td class="font-black text-[#1e3a8a]">${c.dayName}</td>
+                                    <td>حصة ${toArDigits(c.period)}</td>
+                                    <td class="font-black text-rose-700 bg-rose-50">${toArDigits(c.className)}</td>
+                                    <td style="text-align:right; font-weight:900; color:#b91c1c;">${c.teachers.join(' ⚡ مع ⚡ ')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            // 2. الحصص الفارغة
+            const allEmptySlots = [];
+            allClassesList.forEach(cls => {
+                const gNum = getGradeFromClassName(cls);
+                const gName = getGradeArabicName(gNum);
+
+                allWeekDays.forEach(d => {
+                    const expectedMax = getExpectedDailyPeriodCount(gNum, d);
+
+                    for (let p = 1; p <= expectedMax; p++) {
+                        let hasTeacher = false;
+                        for (let t of ALL_TEACHERS) {
+                            const raw = getTeacherSlot(t.schedule, d, p);
+                            const parsed = parseClassStandard(raw);
+                            if (parsed && parsed.standard === cls) {
+                                hasTeacher = true;
+                                break;
+                            }
+                        }
+
+                        if (!hasTeacher) {
+                            allEmptySlots.push({
+                                day: d,
+                                dayName: dayNamesMap[d],
+                                period: p,
+                                className: cls,
+                                gradeName: gName,
+                                gradeNum: gNum
+                            });
+                        }
+                    }
+                });
+            });
+
+            document.getElementById('count-audit-empty').innerText = toArDigits(allEmptySlots.length);
+            const emptyContainer = document.getElementById('audit-empty-list');
+            if (allEmptySlots.length === 0) {
+                emptyContainer.innerHTML = `<div style="text-align:center; padding:30px; background:#f0fdf4; border-radius:12px; border:2px solid #86efac; color:#15803d; font-size:14px; font-weight:900;"><i class="fa-solid fa-circle-check" style="font-size:28px; margin-bottom:8px; display:block;"></i> جميع حصص فصول المدرسة مكتملة ومسندة بالكامل ولا يوجد أي حصة فارغة!</div>`;
+            } else {
+                emptyContainer.innerHTML = `
+                    <table class="audit-table">
+                        <thead>
+                            <tr>
+                                <th>الفصل</th>
+                                <th>الصف</th>
+                                <th>اليوم</th>
+                                <th>الحصة الفارغة</th>
+                                <th>الحد المعتمد لهذا اليوم</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${allEmptySlots.map(e => `
+                                <tr>
+                                    <td class="font-black text-amber-900 bg-amber-50">${toArDigits(e.className)}</td>
+                                    <td>الصف ${e.gradeName}</td>
+                                    <td>${e.dayName}</td>
+                                    <td class="font-black text-rose-700">حصة ${toArDigits(e.period)} (بدون معلم)</td>
+                                    <td class="text-slate-500">${toArDigits(getExpectedDailyPeriodCount(e.gradeNum, e.day))} حصص</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            // 3. تدقيق خطة المواد
+            const planContainer = document.getElementById('audit-plan-list');
+            let planHtml = `<div style="display:flex; flex-direction:column; gap:12px;">`;
+
+            allClassesList.forEach(cls => {
+                const gNum = getGradeFromClassName(cls);
+                const gName = getGradeArabicName(gNum);
+                const gradePlan = (SCHOOL_PLAN && SCHOOL_PLAN[gName] && SCHOOL_PLAN[gName].subjects) ? SCHOOL_PLAN[gName].subjects : null;
+
+                if (!gradePlan) return;
+
+                const subjectAssignedCounts = {};
+                allWeekDays.forEach(d => {
+                    const maxP = getExpectedDailyPeriodCount(gNum, d);
+                    for (let p = 1; p <= maxP; p++) {
+                        let slotSubject = null;
+                        for (let t of ALL_TEACHERS) {
+                            const raw = getTeacherSlot(t.schedule, d, p);
+                            const parsed = parseClassStandard(raw);
+                            if (parsed && parsed.standard === cls) {
+                                slotSubject = getTeacherSlotSubject(t.schedule, d, p, t.subject);
+                                break;
+                            }
+                        }
+                        if (slotSubject) {
+                            PLAN_SUBJECT_MAP.forEach(item => {
+                                const normSub = normalizeArabic(slotSubject);
+                                if (item.kws.some(kw => normSub.includes(normalizeArabic(kw)))) {
+                                    subjectAssignedCounts[item.key] = (subjectAssignedCounts[item.key] || 0) + 1;
+                                }
+                            });
+                        }
+                    }
+                });
+
+                let chipsHtml = "";
+                let classHasDeficit = false;
+
+                PLAN_SUBJECT_MAP.forEach(item => {
+                    const req = parseInt(gradePlan[item.key]) || 0;
+                    if (req > 0) {
+                        const assigned = subjectAssignedCounts[item.key] || 0;
+                        const diff = assigned - req;
+
+                        let badgeStyle = "", statusTxt = "";
+                        if (diff < 0) {
+                            badgeStyle = "background:#fee2e2; border:1px solid #ef4444; color:#b91c1c;";
+                            statusTxt = `عجز ${toArDigits(Math.abs(diff))} حصة`;
+                            classHasDeficit = true;
+                        } else if (diff > 0) {
+                            badgeStyle = "background:#dbeafe; border:1px solid #93c5fd; color:#1e40af;";
+                            statusTxt = `زيادة ${toArDigits(diff)}`;
+                        } else {
+                            badgeStyle = "background:#f0fdf4; border:1px solid #86efac; color:#15803d;";
+                            statusTxt = "مستوفى ✔️";
+                        }
+
+                        chipsHtml += `
+                            <div style="padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold; display:flex; gap:6px; align-items:center; ${badgeStyle}">
+                                <span>${item.name}:</span>
+                                <b>${toArDigits(assigned)} من ${toArDigits(req)}</b>
+                                <span style="font-size:10px;">(${statusTxt})</span>
+                            </div>
+                        `;
+                    }
+                });
+
+                planHtml += `
+                    <div style="background:white; border:1.5px solid ${classHasDeficit ? '#fca5a5' : '#cbd5e1'}; border-radius:10px; padding:10px; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:6px; margin-bottom:8px;">
+                            <span style="font-weight:900; font-size:14px; color:#0f2b48;">فصل ${toArDigits(cls)} (الصف ${gName})</span>
+                            <span class="${classHasDeficit ? 'audit-badge audit-badge-danger' : 'audit-badge audit-badge-success'}">
+                                ${classHasDeficit ? '⚠️ يوجد مواد بها عجز' : '✔️ الخطة مستوفاة بالكامل'}
+                            </span>
+                        </div>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px;">${chipsHtml}</div>
+                    </div>
+                `;
+            });
+
+            planHtml += `</div>`;
+            planContainer.innerHTML = planHtml;
         }
     </script>
 </body>
