@@ -1543,7 +1543,7 @@
                     // 1️⃣ معلم واحد في الحصة
                     if(teachersInThisSlot.length === 1) {
                         const item = teachersInThisSlot[0];
-                        inp.value = item.sub || "حصة مسندة";
+                        inp.value = item.sub || " ";
                         inp.title = `مادة: ${item.sub || '-'} | المعلم: ${item.name}`;
                         if (subText) {
                             subText.innerText = item.name;
@@ -1551,7 +1551,7 @@
                         }
 
                         // تتبع إحصاء المادة للفصل
-                        const subName = item.sub || "حصة مسندة";
+                        const subName = item.sub || " ";
                         assignedSubjectsMap[subName] = (assignedSubjectsMap[subName] || 0) + 1;
                         totalClassLessons++;
                     } 
