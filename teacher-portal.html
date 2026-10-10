@@ -23,6 +23,7 @@
             --success: #15803d;          
             --info: #0284c7;             
             --border-color: #cbd5e1;     
+            --contract-color: #4338ca;
         }
 
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
@@ -54,15 +55,35 @@
         #login-section { width: 100%; max-width: 480px; background: white; padding: 30px 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; border-top: 6px solid var(--primary-color); margin-top: 15px; }
         .login-icon { width: 75px; height: 75px; background: #eff6ff; color: var(--primary-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 12px; border: 2px dashed #93c5fd; }
         .login-title { font-size: 20px; font-weight: 900; color: var(--primary-color); margin-bottom: 6px; }
-        .login-subtitle { font-size: 13px; color: #64748b; margin-bottom: 22px; font-weight: 700; line-height: 1.6; }
+        .login-subtitle { font-size: 13px; color: #64748b; margin-bottom: 20px; font-weight: 700; line-height: 1.6; }
         
-        .login-input-group { margin-bottom: 18px; text-align: right; }
+        .login-input-group { margin-bottom: 16px; text-align: right; }
         .login-input-group label { display: block; font-size: 13px; font-weight: 900; color: #334155; margin-bottom: 6px; }
         .login-input-group input { width: 100%; padding: 14px; border: 2px solid #cbd5e1; border-radius: 10px; font-size: 18px; font-weight: 900; text-align: center; outline: none; font-family: Arial, sans-serif; letter-spacing: 2px; transition: 0.2s; direction: ltr; }
         .login-input-group input:focus { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(30, 58, 138, 0.1); }
 
         .btn-login-submit { width: 100%; background: var(--primary-color); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; }
         .btn-login-submit:hover { background: #172554; }
+
+        /* زر الإبلاغ عن مشكلة دخول */
+        .btn-report-issue {
+            background: transparent;
+            border: 1.5px dashed #f59e0b;
+            color: #b45309;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 900;
+            width: 100%;
+            margin-top: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+        .btn-report-issue:hover { background: #fffbeb; }
 
         .security-note { font-size: 11px; color: #64748b; margin-top: 15px; font-weight: 700; line-height: 1.5; background: #f8fafc; padding: 10px 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
 
@@ -77,13 +98,18 @@
         #profile-section { display: none; width: 100%; max-width: 900px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-top: 6px solid var(--primary-color); animation: fadeIn 0.3s ease-in-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .profile-header { display: flex; gap: 20px; align-items: center; background: #f8fafc; padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
-        .avatar-container { width: 110px; height: 110px; flex-shrink: 0; }
+        .profile-header { display: flex; gap: 20px; align-items: center; background: #f8fafc; padding: 18px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; flex-wrap: wrap; }
+        .avatar-container { width: 105px; height: 105px; flex-shrink: 0; }
         .avatar-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-color); background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
         .profile-info { flex-grow: 1; }
         .profile-info h2 { color: var(--primary-color); font-weight: 900; margin-bottom: 4px; font-size: 19px;}
-        .profile-info p { color: var(--danger); font-weight: 900; font-family: Arial; font-size: 15px; margin-bottom: 10px;}
+        .profile-info p { color: var(--danger); font-weight: 900; font-family: Arial; font-size: 15px; margin-bottom: 6px;}
+
+        .teacher-type-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 900; margin-bottom: 8px; }
+        .badge-perm { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+        .badge-temp { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+        .badge-has-overtime { background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; }
 
         .rating-box { display: flex; gap: 15px; align-items: center; background: white; padding: 8px 14px; border-radius: 10px; border: 1px dashed var(--secondary-color); width: max-content;}
         .rating-item { display: flex; flex-direction: column; align-items: center; justify-content: center;}
@@ -103,12 +129,34 @@
         .field-group input { padding: 11px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 14px; font-weight: 900; background: #f8fafc; color: var(--text-main); cursor: not-allowed; outline: none; width: 100%; }
         .highlight-input { border-color: var(--secondary-color) !important; color: var(--danger) !important; background: #fffbeb !important; }
 
+        /* شبكة حصص الأجر والشهور */
+        .months-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1.5px dashed var(--contract-color); }
+        .month-box { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 6px; text-align: center; }
+        .month-label { display: block; font-size: 12px; font-weight: 900; color: var(--contract-color); margin-bottom: 4px; transition: 0.2s; padding: 3px; border-radius: 4px; }
+        .month-label.has-file { color: var(--success); cursor: pointer; background: #dcfce7; border: 1px dashed var(--success); }
+        .month-label.has-file:hover { background: #bbf7d0; transform: translateY(-1px); }
+        .month-box input { width: 100%; padding: 6px; text-align: center; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 900; font-family: Arial; font-size: 15px; outline: none; color: var(--danger); background: #f8fafc; }
+
         .files-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         .btn-view-file { background: var(--info); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;}
         .btn-view-file.empty { background: #94a3b8; cursor: not-allowed; }
         
         .btn-schedule-view { background: linear-gradient(135deg, #16a34a, #15803d); color: white; border: none; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-bottom: 22px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3); transition: 0.2s;}
         .btn-schedule-view:hover { filter: brightness(1.05); }
+
+        /* صندوق الإشعارات والرسائل الواردة */
+        .inbox-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-right: 4px solid var(--primary-color);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .inbox-card.admin-reply { border-right-color: var(--success); background: #f0fdf4; }
+        .inbox-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11.5px; font-weight: 800; color: #64748b; }
+        .inbox-tag { font-size: 11px; padding: 2px 7px; border-radius: 4px; font-weight: 900; background: #e0f2fe; color: #0369a1; }
+        .inbox-text { font-size: 13.5px; font-weight: 800; color: #0f172a; line-height: 1.6; }
 
         .message-box { background: #fffbeb; border: 2px solid #fcd34d; padding: 18px; border-radius: 12px; margin-top: 25px; }
         .message-box h3 { color: var(--secondary-color); font-weight: 900; margin-bottom: 8px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
@@ -118,19 +166,42 @@
 
         #status-msg { display: none; padding: 12px; border-radius: 8px; margin-top: 12px; text-align: center; font-weight: 900; font-size: 13px; }
 
-        /* نافذة الجدول */
+        /* نافذة الجدول ومفتاح العرض للموبايل */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.85); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 8px; }
         .modal-overlay.active { display: flex; }
         .modal-content { background: #f8fafc; width: 100%; max-width: 950px; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); display: flex; flex-direction: column; max-height: 94vh; }
         .modal-header { background: var(--primary-color); color: white; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 12px; overflow-y: auto; }
 
-        /* زر حفظ الجدول */
-        .schedule-actions { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
-        .btn-download-img { background: #0284c7; color: white; border: none; padding: 13px 20px; border-radius: 10px; font-weight: 900; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1; box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3); transition: 0.2s; }
-        .btn-download-img:hover { background: #0369a1; }
+        /* أزرار التبديل الذكية للجدول */
+        .view-switcher-bar { display: flex; gap: 8px; margin-bottom: 12px; background: white; padding: 6px; border-radius: 12px; border: 1.5px solid #cbd5e1; }
+        .view-switch-btn { flex: 1; padding: 8px 10px; border-radius: 8px; border: none; font-size: 12.5px; font-weight: 900; cursor: pointer; background: transparent; color: #475569; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
+        .view-switch-btn.active { background: #1e3a8a; color: white; box-shadow: 0 2px 6px rgba(30, 58, 138, 0.2); }
 
-        /* برواز الجدول المصمم للتصدير كصورة */
+        .schedule-actions { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .btn-download-img { background: #0284c7; color: white; border: none; padding: 11px 18px; border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1; box-shadow: 0 4px 10px rgba(2, 132, 199, 0.3); transition: 0.2s; }
+
+        /* 🌟 بطاقات الأيام التفاعلية الممتازة للموبايل 🌟 */
+        .mobile-days-container { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; }
+        .day-timeline-card { background: white; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 10px 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .day-timeline-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px dashed #cbd5e1; padding-bottom: 6px; margin-bottom: 8px; }
+        .day-timeline-name { font-size: 14px; font-weight: 900; color: var(--primary-color); }
+        .day-timeline-count { font-size: 11px; font-weight: 900; background: #eff6ff; color: #1e40af; padding: 2px 8px; border-radius: 12px; }
+        
+        .timeline-periods-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        @media (max-width: 450px) { .timeline-periods-grid { grid-template-columns: repeat(4, 1fr); } }
+        
+        .timeline-period-box {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 4px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 48px;
+        }
+        .timeline-period-box.has-class { background: #ecfdf5; border-color: #10b981; }
+        .t-p-number { font-size: 10px; font-weight: 800; color: #64748b; margin-bottom: 1px; }
+        .t-p-class { font-size: 13px; font-weight: 900; color: #047857; }
+        .t-p-sub { font-size: 9.5px; font-weight: 800; color: #0369a1; margin-top: 1px; }
+        .t-p-empty { color: #cbd5e1; font-weight: 800; font-size: 14px; }
+
+        /* برواز جدول الصورة المعتمد */
         #schedule-capture-area {
             background: #ffffff;
             border: 4px double #1e3a8a;
@@ -156,24 +227,22 @@
         .schedule-summary-badge { background: #eff6ff; border: 1.5px solid #bfdbfe; color: var(--primary-color); padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 900; display: flex; align-items: center; gap: 6px; }
         .schedule-summary-badge span { color: var(--danger); font-size: 18px; }
 
-        /* تصميم الجدول الواضح */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 10px; border: 1px solid #cbd5e1; margin-bottom: 15px; background: white; }
         .schedule-table { width: 100%; min-width: 650px; border-collapse: collapse; text-align: center; }
         .schedule-table th { background: #1e3a8a; color: white; padding: 10px 4px; font-weight: 900; font-size: 13px; border: 1px solid #334155; }
         .schedule-table td { padding: 6px 3px; border: 1px solid #e2e8f0; vertical-align: middle; }
         
         .day-label { background: #f1f5f9; color: var(--primary-color); font-weight: 900; font-size: 14px; padding: 10px 4px; border-radius: 6px; border-right: 4px solid var(--primary-color); }
-        .class-badge { background: #ecfdf5; color: #065f46; border: 1.5px solid #10b981; padding: 8px 4px; border-radius: 6px; font-weight: 900; font-size: 14px; min-height: 42px; display: flex; align-items: center; justify-content: center; }
+        .class-badge { background: #ecfdf5; color: #065f46; border: 1.5px solid #10b981; padding: 8px 4px; border-radius: 6px; font-weight: 900; font-size: 14px; min-height: 42px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .class-badge small { font-size: 10px; color: #0369a1; font-weight: 800; }
         .free-period { color: #cbd5e1; font-weight: bold; font-size: 16px; min-height: 42px; display: flex; align-items: center; justify-content: center; background: #fafafa; border-radius: 6px; }
 
-        /* قسم الإشراف */
         .supervision-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
         .sup-item { background: #fffbeb; padding: 10px 12px; border-radius: 8px; border: 1px solid #fde68a; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid var(--secondary-color); }
         .sup-item-day { font-size: 14px; font-weight: 900; color: var(--primary-color); display: flex; align-items: center; gap: 6px;}
         .sup-item-role { font-size: 13px; font-weight: 800; color: #1e293b; background: white; padding: 4px 10px; border-radius: 6px; border: 1px solid #e2e8f0; }
         .sup-item-leader { font-size: 12px; font-weight: 800; color: var(--danger); }
 
-        /* برواز وحقوق مستر زيزو */
         .export-footer-frame {
             margin-top: 15px;
             padding-top: 10px;
@@ -199,7 +268,6 @@
         .export-zezo-badge span { color: #fcd34d; font-size: 14px; }
         .export-note { font-size: 11px; font-weight: 800; color: #64748b; }
 
-        /* نافذة معاينة الصورة إذا لم يقم الهاتف بالتنزيل التلقائي */
         #imgPreviewModal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 3000;
             display: none; flex-direction: column; align-items: center; justify-content: center; padding: 15px;
@@ -207,6 +275,15 @@
         #imgPreviewModal.active { display: flex; }
         #imgPreviewModal img { max-width: 100%; max-height: 80vh; border-radius: 10px; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
         .preview-tip { color: #fcd34d; font-size: 14px; font-weight: 900; margin-bottom: 12px; text-align: center; }
+
+        /* نافذة الإبلاغ عن مشكلة الدخول */
+        #issueModal .modal-content { max-width: 480px; }
+        .issue-form-group { margin-bottom: 12px; text-align: right; }
+        .issue-form-group label { display: block; font-size: 12px; font-weight: 900; color: #334155; margin-bottom: 4px; }
+        .issue-form-group input, .issue-form-group select, .issue-form-group textarea {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1.5px solid #cbd5e1;
+            font-size: 13px; font-weight: 800; outline: none; background: white;
+        }
 
         @media (max-width: 768px) {
             .top-navigation { flex-direction: column; text-align: center; }
@@ -222,7 +299,6 @@
 </head>
 <body>
 
-    <!-- تنبيه متصفح الواتساب -->
     <div id="whatsapp-notice">
         <i class="fa-brands fa-whatsapp" style="font-size:16px; color:#16a34a;"></i>
         أنت تتصفح عبر واتساب: إذا واجهت صعوبة في الحفظ اضغط على نقاط القائمة (⋮) أعلى الشاشة واختر <b>« فتح في Chrome »</b>.
@@ -240,7 +316,7 @@
     <div id="login-section">
         <div class="login-icon"><i class="fa-solid fa-fingerprint"></i></div>
         <h2 class="login-title">تسجيل دخول المعلم</h2>
-        <p class="login-subtitle">أدخل الرقم القومي الخاص بك لعرض ملفك والجدول والإشراف.<br><span style="color:var(--danger); font-weight:900;">⚠️ يُربط حساب المعلم تلقائياً بهاتفه لحماية خصوصيته.</span></p>
+        <p class="login-subtitle">أدخل الرقم القومي الخاص بك لعرض ملفك والجدول والإشراف.<br><span style="color:var(--danger); font-weight:900;">(متاحة لمعلمي المدرسة الأساسيين والمؤقتين)</span></p>
         
         <form onsubmit="handleManualLogin(event)">
             <div class="login-input-group">
@@ -251,8 +327,14 @@
                 <i class="fa-solid fa-arrow-right-to-bracket"></i> استعلام ودخول
             </button>
         </form>
+
+        <!-- زر الإبلاغ عن مشكلة الدخول -->
+        <button type="button" class="btn-report-issue" onclick="openLoginIssueModal()">
+            <i class="fa-solid fa-triangle-exclamation"></i> تواجه مشكلة في الدخول؟ أبلغ الإدارة فوراً
+        </button>
+
         <div class="security-note">
-            <i class="fa-solid fa-shield-halved" style="color:var(--primary-color);"></i> يقبل الأرقام العربية والإنجليزية ويمسح المسافات تلقائياً لتسهيل الدخول من الواتساب.
+            <i class="fa-solid fa-shield-halved" style="color:var(--primary-color);"></i> يُربط حساب المعلم بهاتفه الشخصي تلقائياً عند أول دخول لحماية خصوصية بياناته.
         </div>
     </div>
 
@@ -266,6 +348,9 @@
         <div style="background:#fee2e2; color:#991b1b; padding:12px; border-radius:8px; font-weight:900; font-size:13px; margin:20px 0;">
             يرجى مراجعة مسؤول الإحصاء أو مدير المدرسة لفك التجميد.
         </div>
+        <button onclick="openLoginIssueModal()" class="btn-report-issue" style="background:#fff; margin-bottom:10px;">
+            <i class="fa-solid fa-paper-plane"></i> إرسال طلب فك التجميد للإدارة
+        </button>
         <button onclick="logout()" class="btn-logout" style="width:100%; justify-content:center;">
             <i class="fa-solid fa-arrow-rotate-left"></i> العودة لشاشة الدخول
         </button>
@@ -288,6 +373,10 @@
             <div class="profile-info">
                 <h2 id="p_name">اسم المعلم</h2>
                 <p id="p_nid">الرقم القومي</p>
+                <div id="p_badges_container">
+                    <span id="p_type_badge" class="teacher-type-badge badge-perm">معلم أساسي</span>
+                    <span id="p_overtime_badge" class="teacher-type-badge badge-has-overtime" style="display:none;"><i class="fa-solid fa-clock-rotate-left"></i> مسند له حصص أجر إضافية</span>
+                </div>
                 <div class="rating-box">
                     <div class="rating-item">
                         <span>تقييم الأسبوع</span>
@@ -306,6 +395,19 @@
         <button type="button" class="btn-schedule-view" onclick="showTeacherSchedule()">
             <i class="fa-solid fa-calendar-days"></i> استعراض الجدول المدرسي والإشراف وتحميله كصورة
         </button>
+
+        <!-- 🌟 صندوق الرسائل والتعليمات الإدارية الواردة من المدرسة 🌟 -->
+        <div class="data-section" id="teacher-inbox-section">
+            <div class="section-title" style="color:var(--secondary-color);">
+                <i class="fa-solid fa-bell text-amber-500"></i> الرسائل والتعليمات الإدارية الواردة
+                <span id="inbox-badge-count" style="background:#fef3c7; color:#b45309; padding:1px 8px; border-radius:12px; font-size:11px; font-weight:900;">0</span>
+            </div>
+            <div id="teacher-inbox-container">
+                <div style="text-align:center; padding:15px; color:#94a3b8; font-weight:bold; font-size:13px; background:#f8fafc; border-radius:10px; border:1px dashed #cbd5e1;">
+                    لا توجد رسائل واردة من إدارة المدرسة حالياً.
+                </div>
+            </div>
+        </div>
 
         <!-- بيانات شخصية -->
         <div class="data-section">
@@ -357,6 +459,27 @@
             </div>
         </div>
 
+        <!-- قسم حصص الأجر والشهور -->
+        <div class="data-section" id="contract-months-section" style="display: none;">
+            <div class="section-title" style="color:var(--contract-color);">
+                <i class="fa-solid fa-calendar-days"></i> سجل حصص الأجر الشهرية المعتمدة (معين فوق النصاب / أجر)
+            </div>
+            <p style="font-size:12px; color:#64748b; font-weight:bold; margin-bottom:10px;">
+                الشهور التي تم اعتماد استمارتها تظهر باللون الأخضر مع إمكانية تحميل الاستمارة الرسمية مباشرة:
+            </p>
+            <div class="months-grid">
+                <div class="month-box"><label id="lbl_cp_m_sept" class="month-label">سبتمبر</label><input type="number" id="cp_m_sept" readonly></div>
+                <div class="month-box"><label id="lbl_cp_m_oct" class="month-label">أكتوبر</label><input type="number" id="cp_m_oct" readonly></div>
+                <div class="month-box"><label id="lbl_cp_m_nov" class="month-label">نوفمبر</label><input type="number" id="cp_m_nov" readonly></div>
+                <div class="month-box"><label id="lbl_cp_m_dec" class="month-label">ديسمبر</label><input type="number" id="cp_m_dec" readonly></div>
+                <div class="month-box"><label id="lbl_cp_m_jan" class="month-label">يناير</label><input type="number" id="cp_m_jan" readonly></div>
+                <div class="month-box"><label id="lbl_cp_m_feb" class="month-label">فبراير</label><input type="number" id="cp_m_feb" readonly></div>
+                <div class="month-box"><label id="lbl_cp_m_mar" class="month-label">مارس</label><input type="number" id="cp_m_mar" readonly></div>
+                <div class="month-box"><label id="lbl_cp_m_apr" class="month-label">أبريل</label><input type="number" id="cp_m_apr" readonly></div>
+                <div class="month-box"><label id="lbl_cp_m_may" class="month-label">مايو</label><input type="number" id="cp_m_may" readonly></div>
+            </div>
+        </div>
+
         <!-- المرفقات -->
         <div class="data-section">
             <div class="section-title"><i class="fa-solid fa-folder-open"></i> المرفقات والمستندات</div>
@@ -377,23 +500,36 @@
 
     </div>
 
-    <!-- نافذة الجدول المدرسي المطور والمجهز للحفظ كصورة -->
+    <!-- نافذة الجدول المدرسي المطور بنمطي العرض (موبايل + شبكي) -->
     <div class="modal-overlay" id="scheduleModal" onclick="if(event.target.id==='scheduleModal') closeScheduleModal()">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 style="font-size:17px; margin:0;"><i class="fa-solid fa-table-cells"></i> الجدول والإشراف الأسبوعي</h2>
+                <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-table-cells"></i> الجدول والإشراف الأسبوعي</h2>
                 <button onclick="closeScheduleModal()" style="background:none; border:none; color:white; font-size:26px; cursor:pointer; line-height:1;">&times;</button>
             </div>
             
             <div class="modal-body">
                 
-                <div class="schedule-actions">
-                    <button class="btn-download-img" id="btn-save-schedule" onclick="captureScheduleImage()">
-                        <i class="fa-solid fa-camera"></i> حفظ صورة الجدول كاملة في الهاتف 📸
+                <!-- 🌟 مفتاح التبديل الذكي بين عرض الأيام للموبايل والجدول الكامل 🌟 -->
+                <div class="view-switcher-bar">
+                    <button class="view-switch-btn active" id="btn-view-mobile-cards" onclick="switchScheduleView('cards')">
+                        <i class="fa-solid fa-mobile-screen"></i> عرض الأيام المريح (موبايل)
+                    </button>
+                    <button class="view-switch-btn" id="btn-view-full-grid" onclick="switchScheduleView('grid')">
+                        <i class="fa-solid fa-table"></i> عرض الجدول الشبكي الكامل
                     </button>
                 </div>
 
-                <!-- مساحة الجدول المصممة لإنشاء الصورة الرسمية -->
+                <div class="schedule-actions">
+                    <button class="btn-download-img" id="btn-save-schedule" onclick="captureScheduleImage()">
+                        <i class="fa-solid fa-camera"></i> حفظ صورة الجدول الرسمية في الهاتف 📸
+                    </button>
+                </div>
+
+                <!-- 🌟 1. عرض بطاقات الأيام الذكي للموبايل (بدون سكرول أفقي) 🌟 -->
+                <div id="mobile-schedule-cards-view" class="mobile-days-container"></div>
+
+                <!-- 🌟 2. برواز الجدول الشبكي المعتمد للحفظ والطباعة 🌟 -->
                 <div id="schedule-capture-area">
                     
                     <div class="schedule-export-header">
@@ -411,7 +547,7 @@
                         <table class="schedule-table">
                             <thead>
                                 <tr>
-                                    <th style="width: 85px;">اليوم</th>
+                                    <th style="width: 80px;">اليوم</th>
                                     <th>١</th><th>٢</th><th>٣</th><th>٤</th><th>٥</th><th>٦</th><th>٧</th><th>٨</th>
                                 </tr>
                             </thead>
@@ -442,7 +578,55 @@
         </div>
     </div>
 
-    <!-- نافذة بديلة لعرض الصورة في حال منع الهاتف التحميل المباشر -->
+    <!-- 🌟 نافذة الإبلاغ عن مشكلة الدخول 🌟 -->
+    <div class="modal-overlay" id="issueModal" onclick="if(event.target.id==='issueModal') closeLoginIssueModal()">
+        <div class="modal-content">
+            <div class="modal-header" style="background:var(--secondary-color);">
+                <h2 style="font-size:16px; margin:0;"><i class="fa-solid fa-triangle-exclamation"></i> إبلاغ إدارة المدرسة بمشكلة الدخول</h2>
+                <button onclick="closeLoginIssueModal()" style="background:none; border:none; color:white; font-size:26px; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:12.5px; color:#64748b; font-weight:bold; margin-bottom:12px;">
+                    أدخل رقمك القومي وسيتم استرجاع اسمك تلقائياً وإرسال البلاغ لمدير المنظومة لفك البصمة أو تفعيل الحساب فوراً.
+                </p>
+                <div class="issue-form-group">
+                    <label>الرقم القومي الخاص بك:</label>
+                    <div style="display:flex; gap:6px;">
+                        <input type="tel" id="issue_nid" placeholder="14 رقم" maxlength="14" style="direction:ltr; text-align:center; font-family:Arial; font-weight:900;">
+                        <button type="button" onclick="searchTeacherForIssue()" style="background:var(--primary-color); color:white; border:none; padding:8px 14px; border-radius:8px; font-weight:900; font-size:12px; cursor:pointer; white-space:nowrap;">
+                            تحقق بالاسم
+                        </button>
+                    </div>
+                </div>
+
+                <div class="issue-form-group">
+                    <label>اسم المعلم المكتشف:</label>
+                    <input type="text" id="issue_teacher_name" readonly placeholder="سيظهر اسمك هنا تلقائياً..." style="background:#f1f5f9; color:var(--primary-color); font-weight:900;">
+                </div>
+
+                <div class="issue-form-group">
+                    <label>نوع المشكلة التي تواجهها:</label>
+                    <select id="issue_type">
+                        <option value="تم تغيير الهاتف / البصمة مقفلة">تم تغيير الهاتف الشخصي / البصمة مقفلة</option>
+                        <option value="الحساب مجمد أمنياً">الحساب مجمد أمنياً</option>
+                        <option value="الرقم القومي غير مسجل">الرقم القومي يظهر غير مسجل</option>
+                        <option value="مشكلة أخرى">مشكلة فنية أخرى</option>
+                    </select>
+                </div>
+
+                <div class="issue-form-group">
+                    <label>رقم الموبايل للتواصل وملاحظاتك:</label>
+                    <textarea id="issue_notes" rows="2" placeholder="اكتب رقم هاتفك وأي ملاحظة للإدارة..."></textarea>
+                </div>
+
+                <button type="button" class="btn-send" style="background:var(--success);" onclick="submitLoginIssue()">
+                    <i class="fa-solid fa-paper-plane"></i> إرسال البلاغ للإدارة فوراً
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- نافذة المعاينة الاحتياطية للصورة -->
     <div id="imgPreviewModal" onclick="this.classList.remove('active')">
         <div class="preview-tip">
             <i class="fa-solid fa-hand-pointer"></i> تم إنشاء الجدول كاملاً بنجاح!<br>
@@ -457,7 +641,18 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // تنظيف الأرقام من العربية والمسافات
+        const monthsContractList = [
+            { id: "m_sept", name: "سبتمبر" },
+            { id: "m_oct", name: "أكتوبر" },
+            { id: "m_nov", name: "نوفمبر" },
+            { id: "m_dec", name: "ديسمبر" },
+            { id: "m_jan", name: "يناير" },
+            { id: "m_feb", name: "فبراير" },
+            { id: "m_mar", name: "مارس" },
+            { id: "m_apr", name: "أبريل" },
+            { id: "m_may", name: "مايو" }
+        ];
+
         function normalizeDigits(str) {
             if (!str) return '';
             const arabicIndic = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
@@ -517,6 +712,7 @@
         };
 
         let currentTeacher = null;
+        let currentContractData = null;
         let schoolSupervisionData = [];
         let teacherEvaluations = { week: 0, year: 0 };
         let currentDeviceId = null;
@@ -599,18 +795,28 @@
             btn.disabled = false;
         }
 
+        // ================= مصادقة المعلم =================
         async function authenticateAndLoad(nidInput, isAutoLogin, isAdminBypass = false) {
             try {
-                let [resTeacher, resContract] = await Promise.all([
-                    supabaseClient.from('teachers').select('*').eq('nid', nidInput).maybeSingle(),
-                    supabaseClient.from('contract_teachers').select('*').eq('nid', nidInput).maybeSingle()
-                ]);
+                const resTeacher = await supabaseClient
+                    .from('teachers')
+                    .select('*')
+                    .eq('nid', nidInput)
+                    .maybeSingle();
 
-                let teacher = resTeacher.data || resContract.data;
-                let tableName = resTeacher.data ? 'teachers' : (resContract.data ? 'contract_teachers' : null);
+                let teacher = resTeacher.data;
 
                 if (!teacher) {
-                    alert("❌ هذا الرقم القومي غير مسجل بقاعدة بيانات المدرسة!");
+                    alert("❌ عفواً، هذا الحساب غير مصرح له بالدخول!\n\nبوابة المعلم مخصصة للمعلمين الأساسيين والمؤقتين فقط. معلمو الحصة والأجر غير مسجلين بهذه البوابة.");
+                    SafeStorage.removeItem('saved_teacher_nid');
+                    showView('login-section');
+                    return;
+                }
+
+                const empSt = (teacher.emp_status || "على رأس العمل").trim();
+                const isOut = ["معاش", "متوفى", "منهي خدمته", "تم نقله"].includes(empSt);
+                if (isOut) {
+                    alert(`⚠️ لا يمكن الدخول: حالة المعلم مسجلة في المنظومة كـ (${empSt}).`);
                     SafeStorage.removeItem('saved_teacher_nid');
                     showView('login-section');
                     return;
@@ -623,20 +829,22 @@
                         return;
                     }
 
-                    let [chkOtherTeacher, chkOtherContract] = await Promise.all([
-                        supabaseClient.from('teachers').select('nid, name').eq('device_id', currentDeviceId).neq('nid', nidInput).maybeSingle(),
-                        supabaseClient.from('contract_teachers').select('nid, name').eq('device_id', currentDeviceId).neq('nid', nidInput).maybeSingle()
-                    ]);
+                    const chkOther = await supabaseClient
+                        .from('teachers')
+                        .select('nid, name')
+                        .eq('device_id', currentDeviceId)
+                        .neq('nid', nidInput)
+                        .maybeSingle();
 
-                    let boundOtherTeacher = chkOtherTeacher.data || chkOtherContract.data;
+                    let boundOtherTeacher = chkOther.data;
 
                     if (boundOtherTeacher) {
                         const freezeMsg = `محاولة دخول برقم قومي آخر (${nidInput}) من جهاز مسجل للمعلم: ${boundOtherTeacher.name}`;
-                        if (chkOtherTeacher.data) {
-                            await supabaseClient.from('teachers').update({ is_frozen: true, freeze_reason: freezeMsg }).eq('nid', boundOtherTeacher.nid);
-                        } else {
-                            await supabaseClient.from('contract_teachers').update({ is_frozen: true, freeze_reason: freezeMsg }).eq('nid', boundOtherTeacher.nid);
-                        }
+                        await supabaseClient
+                            .from('teachers')
+                            .update({ is_frozen: true, freeze_reason: freezeMsg })
+                            .eq('nid', boundOtherTeacher.nid);
+
                         document.getElementById('frozen-reason-text').innerText = `⚠️ تم تجميد حسابك (${boundOtherTeacher.name}) لمحاولة فتح حساب زميل آخر من نفس الهاتف!`;
                         showView('frozen-view');
                         return;
@@ -644,11 +852,14 @@
 
                     const savedDev = teacher.device_id ? String(teacher.device_id).trim() : "";
                     if (!savedDev || savedDev === "null" || savedDev === "") {
-                        await supabaseClient.from(tableName).update({ 
-                            device_id: currentDeviceId,
-                            is_frozen: false,
-                            freeze_reason: null
-                        }).eq('nid', nidInput);
+                        await supabaseClient
+                            .from('teachers')
+                            .update({ 
+                                device_id: currentDeviceId,
+                                is_frozen: false,
+                                freeze_reason: null
+                            })
+                            .eq('nid', nidInput);
                         teacher.device_id = currentDeviceId;
                     } 
                     else if (savedDev !== currentDeviceId) {
@@ -665,6 +876,15 @@
                 
                 currentTeacher = teacher;
 
+                // فحص الأجر الإضافي
+                const resContract = await supabaseClient
+                    .from('contract_teachers')
+                    .select('*')
+                    .eq('nid', nidInput)
+                    .maybeSingle();
+
+                currentContractData = resContract.data || null;
+
                 const [resSup, resLogs] = await Promise.all([
                     supabaseClient.from("supervision").select("*"),
                     supabaseClient.from("daily_logs").select("*").eq("log_type", "report")
@@ -673,7 +893,8 @@
                 schoolSupervisionData = resSup.data || [];
                 calculateEvaluations(resLogs.data || [], currentTeacher.name);
 
-                populateProfile(currentTeacher);
+                populateProfile(currentTeacher, currentContractData);
+                await loadTeacherMessages(currentTeacher.nid); // جلب الرسائل
                 showView('profile-section');
 
             } catch (err) {
@@ -708,10 +929,23 @@
             teacherEvaluations.year = yearlyScore;
         }
 
-        function populateProfile(data) {
+        // ================= عرض بيانات المعلم =================
+        function populateProfile(data, contractData) {
             document.getElementById("p_name").innerText = data.name || "بدون اسم";
             document.getElementById("p_nid").innerText = data.nid || "";
             document.getElementById("p_photo").src = data.photo || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+
+            const typeBadge = document.getElementById("p_type_badge");
+            const isTemp = (data.emp_status === "مؤقت");
+            typeBadge.innerText = isTemp ? "معلم مؤقت" : "معلم أساسي";
+            typeBadge.className = isTemp ? "teacher-type-badge badge-temp" : "teacher-type-badge badge-perm";
+
+            const overtimeBadge = document.getElementById("p_overtime_badge");
+            if (contractData) {
+                overtimeBadge.style.display = "inline-block";
+            } else {
+                overtimeBadge.style.display = "none";
+            }
 
             document.getElementById("p_eval_week").innerHTML = `<i class="fa-solid fa-star"></i> ${teacherEvaluations.week}`;
             document.getElementById("p_eval_year").innerHTML = `<i class="fa-solid fa-star"></i> ${teacherEvaluations.year}`;
@@ -728,7 +962,7 @@
             document.getElementById("p_specialization").value = data.specialization || "-";
             document.getElementById("p_sci_lit").value = data.sci_lit || "-";
 
-            document.getElementById("p_emp_status").value = data.emp_status || data.status || "-";
+            document.getElementById("p_emp_status").value = data.emp_status || "-";
             document.getElementById("p_cadre_job").value = data.cadre_job || "-";
             document.getElementById("p_hire_date").value = data.hire_date || "-";
             document.getElementById("p_start_date").value = data.start_date || "-";
@@ -738,9 +972,11 @@
 
             document.getElementById("p_teaching_category").value = data.teaching_category || "-";
             document.getElementById("p_subject").value = data.subject || "-";
-            document.getElementById("p_quota").value = data.quota ? data.quota + " حصة" : (data.weekly_quota ? data.weekly_quota + " حصة" : "-");
+            document.getElementById("p_quota").value = data.quota ? data.quota + " حصة" : "-";
             document.getElementById("p_status").value = data.status || "-";
             document.getElementById("p_secondment_days").value = data.secondment_days || "-";
+
+            renderContractMonthsSection(contractData);
 
             const btnNid = document.getElementById("btn-view-nid");
             if(data.nid_pdf) { btnNid.classList.remove("empty"); btnNid.innerHTML = '<i class="fa-solid fa-id-card"></i> عرض بطاقة الرقم القومي'; }
@@ -751,16 +987,102 @@
             else { btnStatus.classList.add("empty"); btnStatus.innerHTML = '<i class="fa-solid fa-xmark"></i> لا يوجد بيان حالة'; }
         }
 
+        function renderContractMonthsSection(contractData) {
+            const section = document.getElementById("contract-months-section");
+            if (!contractData) {
+                section.style.display = "none";
+                return;
+            }
+
+            section.style.display = "block";
+
+            monthsContractList.forEach(m => {
+                const inp = document.getElementById(`cp_${m.id}`);
+                const lbl = document.getElementById(`lbl_cp_${m.id}`);
+                const val = contractData[m.id];
+                const formUrl = contractData[`form_${m.id}`];
+
+                if (inp) {
+                    inp.value = (val !== undefined && val !== null && val !== "") ? val : "";
+                }
+
+                if (lbl) {
+                    if (formUrl) {
+                        lbl.innerHTML = `<i class="fa-solid fa-download"></i> ${m.name}`;
+                        lbl.className = "month-label has-file";
+                        lbl.onclick = () => window.open(formUrl, '_blank');
+                        lbl.title = "اضغط لتحميل استمارة الصرف المعتمدة";
+                    } else {
+                        lbl.innerHTML = m.name;
+                        lbl.className = "month-label";
+                        lbl.onclick = null;
+                        lbl.title = "";
+                    }
+                }
+            });
+        }
+
+        // ================= 🌟 جلب وعرض الرسائل الواردة من الإدارة 🌟 =================
+        async function loadTeacherMessages(nid) {
+            const container = document.getElementById("teacher-inbox-container");
+            const badgeCount = document.getElementById("inbox-badge-count");
+
+            try {
+                // جلب الرسائل من جدول الطلبات (الردود) ومن جدول الرسائل المباشرة إن وجد
+                const [resReqs, resDirect] = await Promise.all([
+                    supabaseClient.from('teacher_requests').select('*').eq('teacher_nid', nid).order('created_at', { ascending: false }),
+                    supabaseClient.from('daily_logs').select('*').eq('id', 'admin_messages').maybeSingle()
+                ]);
+
+                let messages = [];
+
+                // 1. فحص ردود الإدارة على الطلبات
+                (resReqs.data || []).forEach(req => {
+                    if (req.admin_reply && req.admin_reply.trim() !== '') {
+                        messages.push({
+                            title: "رد إدارة المدرسة على طلبك",
+                            text: req.admin_reply,
+                            date: new Date(req.updated_at || req.created_at).toLocaleString('ar-EG'),
+                            type: 'admin-reply'
+                        });
+                    }
+                });
+
+                badgeCount.innerText = messages.length;
+
+                if (messages.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:15px; color:#94a3b8; font-weight:bold; font-size:13px; background:#f8fafc; border-radius:10px; border:1px dashed #cbd5e1;">
+                            لا توجد رسائل واردة من إدارة المدرسة حالياً.
+                        </div>`;
+                } else {
+                    container.innerHTML = messages.map(m => `
+                        <div class="inbox-card ${m.type}">
+                            <div class="inbox-header">
+                                <span class="inbox-tag"><i class="fa-solid fa-reply"></i> ${m.title}</span>
+                                <span><i class="fa-regular fa-clock"></i> ${m.date}</span>
+                            </div>
+                            <div class="inbox-text">${m.text}</div>
+                        </div>
+                    `).join('');
+                }
+
+            } catch (e) {
+                console.warn("خطأ في جلب الرسائل:", e);
+            }
+        }
+
         function openFile(fieldName) {
             if(!currentTeacher || !currentTeacher[fieldName]) return;
             window.open(currentTeacher[fieldName], '_blank');
         }
 
+        // ================= 🌟 استعراض الجدول وتوليد عرض الأيام للموبايل 🌟 =================
         function showTeacherSchedule() {
             if (!currentTeacher) return;
             
             document.getElementById("exp_teacher_name").innerText = `جدول الأستاذ(ة): ${currentTeacher.name}`;
-            document.getElementById("exp_teacher_sub").innerText = `المادة: ${currentTeacher.subject || '-'} | النصاب: ${currentTeacher.quota || currentTeacher.weekly_quota || '-'} حصة`;
+            document.getElementById("exp_teacher_sub").innerText = `المادة: ${currentTeacher.subject || '-'} | النصاب: ${currentTeacher.quota || '-'} حصة`;
 
             const tbody = document.getElementById("schedule-body-view");
             tbody.innerHTML = "";
@@ -770,15 +1092,17 @@
             const schedule = currentTeacher.schedule || {};
             let totalClasses = 0;
 
+            // 1. بناء الجدول الشبكي (للحفظ كصورة)
             days.forEach(day => {
                 let tr = `<tr><td><div class="day-label">${dayNamesAr[day]}</div></td>`;
                 for(let i=1; i<=8; i++) {
                     const key = `${day}_${i}`;
                     const className = schedule[key] || "";
+                    const subName = schedule[`${key}_sub`] ? schedule[`${key}_sub`] : "";
                     
                     if (className) {
                         totalClasses++;
-                        tr += `<td><div class="class-badge">${className}</div></td>`;
+                        tr += `<td><div class="class-badge"><span>${className}</span>${subName ? `<small>(${subName})</small>` : ''}</div></td>`;
                     } else {
                         tr += `<td><div class="free-period">-</div></td>`;
                     }
@@ -789,7 +1113,10 @@
 
             document.getElementById("total-classes-count").innerText = totalClasses;
 
-            // إشراف المعلم
+            // 2. بناء بطاقات الأيام التفاعلية المخصصة للموبايل
+            renderMobileScheduleCards(days, dayNamesAr, schedule);
+
+            // 3. الإشراف
             const supContainer = document.getElementById("supervision-list-view");
             supContainer.innerHTML = "";
 
@@ -826,36 +1153,107 @@
                 supContainer.innerHTML = "<div style='text-align:center; padding:12px; background:#f8fafc; border-radius:8px; color:#64748b; font-weight:bold; border:1px dashed #cbd5e1; font-size:13px;'>لا توجد تكليفات إشراف مدرسي مسجلة لك حالياً.</div>";
             }
 
+            // الافتراضي في الموبايل: عرض البطاقات
+            switchScheduleView('cards');
             document.getElementById("scheduleModal").classList.add("active");
+        }
+
+        // دالة إنشاء بطاقات الأيام المريحة للموبايل
+        function renderMobileScheduleCards(days, dayNamesAr, schedule) {
+            const container = document.getElementById("mobile-schedule-cards-view");
+            container.innerHTML = "";
+
+            days.forEach(day => {
+                let daySlotsHtml = "";
+                let dayClassesCount = 0;
+
+                for(let i=1; i<=8; i++) {
+                    const key = `${day}_${i}`;
+                    const className = schedule[key] || "";
+                    const subName = schedule[`${key}_sub`] || "";
+
+                    if(className) {
+                        dayClassesCount++;
+                        daySlotsHtml += `
+                            <div class="timeline-period-box has-class">
+                                <span class="t-p-number">حصة ${i}</span>
+                                <span class="t-p-class">${className}</span>
+                                ${subName ? `<span class="t-p-sub">${subName}</span>` : ''}
+                            </div>
+                        `;
+                    } else {
+                        daySlotsHtml += `
+                            <div class="timeline-period-box">
+                                <span class="t-p-number">حصة ${i}</span>
+                                <span class="t-p-empty">-</span>
+                            </div>
+                        `;
+                    }
+                }
+
+                container.innerHTML += `
+                    <div class="day-timeline-card">
+                        <div class="day-timeline-header">
+                            <span class="day-timeline-name"><i class="fa-solid fa-calendar-day"></i> يوم ${dayNamesAr[day]}</span>
+                            <span class="day-timeline-count">${dayClassesCount} حصص مسندة</span>
+                        </div>
+                        <div class="timeline-periods-grid">
+                            ${daySlotsHtml}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // التبديل بين عرض البطاقات والجدول الشبكي
+        function switchScheduleView(mode) {
+            const btnCards = document.getElementById("btn-view-mobile-cards");
+            const btnGrid = document.getElementById("btn-view-full-grid");
+            const cardsView = document.getElementById("mobile-schedule-cards-view");
+            const gridArea = document.getElementById("schedule-capture-area");
+
+            if (mode === 'cards') {
+                btnCards.classList.add("active");
+                btnGrid.classList.remove("active");
+                cardsView.style.display = "flex";
+                gridArea.style.display = "none";
+            } else {
+                btnCards.classList.remove("active");
+                btnGrid.classList.add("active");
+                cardsView.style.display = "none";
+                gridArea.style.display = "block";
+            }
         }
 
         function closeScheduleModal() {
             document.getElementById("scheduleModal").classList.remove("active");
         }
 
-        // ================= تصدير وحفظ الجدول كصورة كاملة (حل مشكلة هواتف أندرويد) =================
+        // ================= التقاط وتنزيل صورة الجدول =================
         async function captureScheduleImage() {
             const btn = document.getElementById("btn-save-schedule");
             const targetElement = document.getElementById("schedule-capture-area");
+
+            // إظهار الجدول الشبكي مؤقتاً للتصوير
+            targetElement.style.display = "block";
 
             const originalBtnHtml = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري التقاط الجدول كاملاً...';
             btn.disabled = true;
 
             try {
-                // التقاط الجدول مع فرد العرض كاملاً داخل النسخة المستنسخة دون التأثير على الشاشة
                 const canvas = await html2canvas(targetElement, {
                     scale: 2,
                     useCORS: true,
                     backgroundColor: '#ffffff',
-                    windowWidth: 1000, // محاكاة عرض شاشة واسعة لمنع القص
+                    windowWidth: 1000,
                     onclone: (clonedDoc) => {
                         const clonedArea = clonedDoc.getElementById("schedule-capture-area");
                         if (clonedArea) {
+                            clonedArea.style.display = "block";
                             clonedArea.style.width = "900px";
                             clonedArea.style.maxWidth = "none";
                             
-                            // إزالة شريط التمرير من النسخة المصورة وإظهار كامل الحصص 1 إلى 8
                             const wrappers = clonedArea.querySelectorAll('.table-responsive');
                             wrappers.forEach(w => {
                                 w.style.overflow = "visible";
@@ -874,14 +1272,10 @@
                 const teacherNameSafe = (currentTeacher.name || "معلم").replace(/\s+/g, '_');
                 const fileName = `جدول_${teacherNameSafe}_مستر_زيزو.png`;
 
-                // تحويل لـ Blob لتحميل فائق الاستقرار على أندرويد
                 canvas.toBlob((blob) => {
-                    if (!blob) {
-                        throw new Error("Blob creation failed");
-                    }
+                    if (!blob) throw new Error("فشل إنشاء الصورة");
                     const blobUrl = URL.createObjectURL(blob);
                     
-                    // محاولة التنزيل التلقائي
                     const downloadLink = document.createElement("a");
                     downloadLink.href = blobUrl;
                     downloadLink.download = fileName;
@@ -889,7 +1283,6 @@
                     downloadLink.click();
                     document.body.removeChild(downloadLink);
 
-                    // إظهار نافذة المعاينة الاحتياطية لمستخدمي الواتساب
                     const previewModal = document.getElementById("imgPreviewModal");
                     const previewImg = document.getElementById("previewImageTag");
                     if (previewModal && previewImg) {
@@ -904,6 +1297,85 @@
             } finally {
                 btn.innerHTML = originalBtnHtml;
                 btn.disabled = false;
+                // إعادة العرض لحالته المختارة
+                if (document.getElementById("btn-view-mobile-cards").classList.contains("active")) {
+                    targetElement.style.display = "none";
+                }
+            }
+        }
+
+        // ================= 🌟 نافذة الإبلاغ عن مشكلة الدخول 🌟 =================
+        function openLoginIssueModal() {
+            document.getElementById("issueModal").classList.add("active");
+            const currentEnteredNid = document.getElementById("login_nid") ? document.getElementById("login_nid").value.trim() : "";
+            if (currentEnteredNid) {
+                document.getElementById("issue_nid").value = currentEnteredNid;
+                searchTeacherForIssue();
+            }
+        }
+
+        function closeLoginIssueModal() {
+            document.getElementById("issueModal").classList.remove("active");
+        }
+
+        async function searchTeacherForIssue() {
+            const rawNid = document.getElementById("issue_nid").value.trim();
+            const nid = normalizeDigits(rawNid);
+            const nameField = document.getElementById("issue_teacher_name");
+
+            if (nid.length !== 14) {
+                alert("يرجى إدخال الرقم القومي المكون من 14 رقماً للتحقق!");
+                return;
+            }
+
+            nameField.value = "جاري البحث في قاعدة البيانات...";
+
+            try {
+                const { data } = await supabaseClient
+                    .from("teachers")
+                    .select("name, subject")
+                    .eq("nid", nid)
+                    .maybeSingle();
+
+                if (data && data.name) {
+                    nameField.value = `أ/ ${data.name} (${data.subject || 'معلم'})`;
+                } else {
+                    nameField.value = "غير مسجل في جدول المعلمين الأساسي";
+                }
+            } catch (e) {
+                nameField.value = "تعذر التحقق من الاسم عبر الشبكة";
+            }
+        }
+
+        async function submitLoginIssue() {
+            const nid = normalizeDigits(document.getElementById("issue_nid").value.trim());
+            const detectedName = document.getElementById("issue_teacher_name").value.trim();
+            const issueType = document.getElementById("issue_type").value;
+            const notes = document.getElementById("issue_notes").value.trim();
+
+            if (nid.length !== 14) {
+                alert("الرقم القومي (14 رقماً) مطلوب لإرسال البلاغ!");
+                return;
+            }
+
+            const messageText = `[بلاغ مشكلة دخول: ${issueType}] ${notes || ''}`;
+
+            try {
+                // إدراج الطلب مباشرة في teacher_requests ليظهر في الصفحة الرئيسية
+                const { error } = await supabaseClient.from("teacher_requests").insert([{
+                    teacher_nid: nid,
+                    teacher_name: detectedName || "معلم يواجه مشكلة دخول",
+                    message: messageText,
+                    status: "جديد"
+                }]);
+
+                if (error) throw error;
+
+                alert("✅ تم إرسال بلاغ المشكلة لإدارة المنظومة بنجاح!\nسيتم تدقيق الحالة وفك القفل من الصفحة الرئيسية فوراً.");
+                closeLoginIssueModal();
+
+            } catch (err) {
+                alert("حدث خطأ أثناء الإرسال: " + err.message);
             }
         }
 
@@ -927,7 +1399,8 @@
                 const { error } = await supabaseClient.from('teacher_requests').insert([{
                     teacher_nid: currentTeacher.nid,
                     teacher_name: currentTeacher.name,
-                    message: msg
+                    message: msg,
+                    status: "جديد"
                 }]);
 
                 if (error) throw error;
