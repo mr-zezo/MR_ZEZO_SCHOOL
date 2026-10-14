@@ -374,7 +374,17 @@
 
         const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
         const AGE_DATE_STORAGE_KEY = "ZEZO_PERSISTENT_AGE_CALC_DATE";
-
+         function parseCleanInt(val) {
+            if (!val && val !== 0) return 0;
+            let s = String(val).trim();
+            const arDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            for (let i = 0; i < 10; i++) {
+                s = s.replace(new RegExp(arDigits[i], 'g'), i);
+            }
+            const clean = s.replace(/[^\d]/g, '');
+            const parsed = parseInt(clean, 10);
+            return isNaN(parsed) ? 0 : parsed;
+        }
         // دالة لتوحيد الحروف العربية لتسهيل البحث
         function normalizeArabic(text) {
             if (!text) return "";
