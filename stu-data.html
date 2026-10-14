@@ -389,16 +389,27 @@
         }
 
         // --- محرك الفرز الصارم (ذكور أبجدياً ثم إناث أبجدياً) ---
+        // فرز التلاميذ: بنين أولاً ثم بنات، وداخل كل نوع حسب رقم السجل تصاعدياً
         function sortStudents(arr) {
             return arr.sort((a, b) => {
                 const isMaleA = isMaleStudent(a.gender);
                 const isMaleB = isMaleStudent(b.gender);
                 
-                // 1. الذكور أولاً
+                // 1. الذكور أولاً ثم الإناث
                 if (isMaleA && !isMaleB) return -1;
                 if (!isMaleA && isMaleB) return 1;
                 
-                // 2. الترتيب الأبجدي (أ إلى ي)
+                // 2. الترتيب حسب رقم السجل (register_num) تصاعدياً لضمان بقاء التلميذ الجديد بالأسفل
+                const regA = parseCleanInt(a.register_num);
+                const regB = parseCleanInt(b.register_num);
+                
+                if (regA > 0 && regB > 0) {
+                    return regA - regB;
+                }
+                if (regA > 0 && regB === 0) return -1;
+                if (regA === 0 && regB > 0) return 1;
+                
+                // 3. إذا لم يوجد رقم سجل لأحدهما، نرتب بالاسم أبجدياً
                 const nameA = String(a.name || "").trim();
                 const nameB = String(b.name || "").trim();
                 return nameA.localeCompare(nameB, 'ar');
