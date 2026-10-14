@@ -255,6 +255,19 @@
         const stdGrades = ["KG1", "KG2", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
         const AGE_DATE_STORAGE_KEY = "ZEZO_PERSISTENT_AGE_CALC_DATE";
 
+        // ================= دالة تنظيف وتحويل الأرقام (عربية / إنجليزية) =================
+        function parseCleanInt(val) {
+            if (!val && val !== 0) return 0;
+            let s = String(val).trim();
+            const arDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            for (let i = 0; i < 10; i++) {
+                s = s.replace(new RegExp(arDigits[i], 'g'), i);
+            }
+            const clean = s.replace(/[^\d]/g, '');
+            const parsed = parseInt(clean, 10);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
         function openLocalDB() {
             return new Promise((resolve, reject) => {
                 const req = indexedDB.open(DB_NAME);
@@ -388,8 +401,7 @@
             return g.includes("ذكر") || g.includes("بنين") || g === "1";
         }
 
-        // --- محرك الفرز الصارم (ذكور أبجدياً ثم إناث أبجدياً) ---
-        // فرز التلاميذ: بنين أولاً ثم بنات، وداخل كل نوع حسب رقم السجل تصاعدياً
+        // ================= محرك الترتيب الذكي (يحفظ التلميذ المضاف بالآخر في نهاية القائمة) =================
         function sortStudents(arr) {
             return arr.sort((a, b) => {
                 const isMaleA = isMaleStudent(a.gender);
@@ -399,23 +411,24 @@
                 if (isMaleA && !isMaleB) return -1;
                 if (!isMaleA && isMaleB) return 1;
                 
-                // 2. الترتيب حسب رقم السجل (register_num) تصاعدياً لضمان بقاء التلميذ الجديد بالأسفل
+                // 2. الترتيب حسب رقم السجل (register_num) تصاعدياً (التلميذ المضاف بالآخر يظهر بالأسفل)
                 const regA = parseCleanInt(a.register_num);
                 const regB = parseCleanInt(b.register_num);
                 
                 if (regA > 0 && regB > 0) {
-                    return regA - regB;
+                    if (regA !== regB) return regA - regB;
+                } else if (regA > 0) {
+                    return -1;
+                } else if (regB > 0) {
+                    return 1;
                 }
-                if (regA > 0 && regB === 0) return -1;
-                if (regA === 0 && regB > 0) return 1;
                 
-                // 3. إذا لم يوجد رقم سجل لأحدهما، نرتب بالاسم أبجدياً
+                // 3. إذا لم يوجد رقم سجل، يتم الترتيب أبجدياً
                 const nameA = String(a.name || "").trim();
                 const nameB = String(b.name || "").trim();
                 return nameA.localeCompare(nameB, 'ar');
             });
         }
-        // --------------------------------------------------------
 
         // مطابقة ذكية للصفوف
         function isGradeMatch(studentGrade, selectedGrade) {
@@ -635,7 +648,7 @@
             return oldClass; 
         }
 
-        // 1. جلب وعرض بيانات الصف فورياً
+        // ================= 1. جلب وعرض بيانات الصف فورياً =================
         async function loadStudentData() {
             const g = document.getElementById("grade-filter").value;
             if(!g) return;
@@ -657,7 +670,7 @@
 
                 let arr = data.filter(d => d.transfer_type !== "محول من");
                 
-                // تطبيق الفرز الصارم: ذكور أبجدياً ثم إناث أبجدياً
+                // تطبيق الفرز الذكي برقم السجل (ليبقى التلميذ المضاف بالآخر في نهاية القائمة)
                 arr = sortStudents(arr);
 
                 const fragment = document.createDocumentFragment();
@@ -698,7 +711,7 @@
             });
         }
 
-        // 3. استيراد ملف الإكسيل مع الفرز الفوري
+        // 3. استيراد ملف الإكسيل
         function handleFile(e) {
             const file = e.target.files[0];
             if(!file) return;
@@ -764,7 +777,7 @@
                         });
                     });
 
-                    // تطبيق الفرز الصارم فور الاستيراد من الإكسيل
+                    // تطبيق الترتيب الذكي
                     arr = sortStudents(arr);
 
                     const fragment = document.createDocumentFragment();
@@ -773,20 +786,19 @@
                     const tbody = document.getElementById("table-body");
                     tbody.innerHTML = "";
                     tbody.appendChild(fragment);
-                    alert(`✅ تم استيراد عدد (${arr.length}) تلميذ بنجاح وتطبيق الترتيب (ذكور ثم إناث أبجدياً)! اضغط (حفظ البيانات) لتثبيتهم.`);
+                    alert(`✅ تم استيراد عدد (${arr.length}) تلميذ بنجاح وتطبيق الترتيب الصحيح! اضغط (حفظ البيانات) لتثبيتهم.`);
                 } catch(err) { alert("❌ فشل قراءة الملف: " + err.message); }
                 finally { e.target.value = ''; }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        // 4. إنشاء صف الجدول بدون أي أخطاء نوع بيانات
+        // 4. إنشاء صف الجدول
         function createRowElement(d, i) {
             const tr = document.createElement("tr");
             const isTrans = (d.is_class_transferred == 1 || d.is_class_transferred === "1") ? "1" : "0";
             const flagClass = isTrans === "1" ? "flag-select flag-transferred" : "flag-select flag-stable";
             
-            // تحويل آمن لنص لمنع أي انهيار في startsWith
             let displayCode = String(d.code || '');
             if (displayCode.startsWith('NID_') || displayCode.startsWith('TEMP_')) {
                 displayCode = '';
@@ -942,7 +954,7 @@
             }
         }
 
-        // 7. حفظ وتحديث بيانات التلاميذ في المنظومة
+        // 7. حفظ وتحديث بيانات التلاميذ
         async function saveAllStudents() {
             const g = document.getElementById("grade-filter").value;
             if (!g || g === "ALL") { 
@@ -985,7 +997,7 @@
                 alert("لا توجد أسماء تلاميذ صالحة للحفظ!"); return;
             }
 
-            // تطبيق الفرز الصارم قبل الحفظ في قاعدة البيانات
+            // الفرز برقم السجل لضمان الحفاظ على مواقع التلاميذ
             studentsToSave = sortStudents(studentsToSave);
 
             const btn = document.querySelector('.btn-save');
@@ -994,8 +1006,7 @@
 
             try {
                 await ZezoEngine.upsert("students", studentsToSave, 'code');
-                alert(`✅ تم حفظ وتحديث بيانات (${studentsToSave.length}) تلميذ بنجاح! (تم تطبيق الترتيب: ذكور ثم إناث أبجدياً)`);
-                // إعادة تحميل الجدول لتحديث الأرقام المسلسلة (م) بناءً على الترتيب الجديد
+                alert(`✅ تم حفظ وتحديث بيانات (${studentsToSave.length}) تلميذ بنجاح!`);
                 loadStudentData();
             } catch (err) {
                 alert("❌ حدث خطأ أثناء الحفظ: " + err.message);
@@ -1047,8 +1058,9 @@
                 return;
             }
 
-            // تطبيق الفرز الصارم قبل التصدير للإكسيل
+            // تطبيق الفرز برقم السجل قبل التصدير للإكسيل
             const genderLabel = selectedCols.find(c => c.key === 'gender')?.label;
+            const regLabel = selectedCols.find(c => c.key === 'register_num')?.label;
             const nameLabel = selectedCols.find(c => c.key === 'name')?.label;
             const indexLabel = selectedCols.find(c => c.key === 'index')?.label;
 
@@ -1059,12 +1071,17 @@
                 if (isMaleA && !isMaleB) return -1;
                 if (!isMaleA && isMaleB) return 1;
                 
+                if (regLabel) {
+                    const regA = parseCleanInt(a[regLabel]);
+                    const regB = parseCleanInt(b[regLabel]);
+                    if (regA > 0 && regB > 0 && regA !== regB) return regA - regB;
+                }
+
                 const nameA = nameLabel ? String(a[nameLabel] || "").trim() : "";
                 const nameB = nameLabel ? String(b[nameLabel] || "").trim() : "";
                 return nameA.localeCompare(nameB, 'ar');
             });
 
-            // إعادة ترقيم عمود (م) ليكون متسلسلاً بشكل صحيح في ملف الإكسيل
             if (indexLabel) {
                 data.forEach((row, idx) => { row[indexLabel] = idx + 1; });
             }
@@ -1165,7 +1182,6 @@
                     let rawGUp = rawG.toUpperCase();
                     let g = null;
                     
-                    // يجب فحص KG أولاً حتى لا يختلط KG1 مع الصف الأول (1)
                     if(rawGUp.includes("KG1") || rawGUp.includes("كيجي 1") || rawGUp === "KG 1") g = "KG1";
                     else if(rawGUp.includes("KG2") || rawGUp.includes("كيجي 2") || rawGUp === "KG 2") g = "KG2";
                     else if(rawG.includes("1") || rawG.includes("الاول") || rawG.includes("الأول")) g = "الأول";
