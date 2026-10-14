@@ -440,7 +440,7 @@
     <!-- منطقة عرض الأوراق للطباعة والمعاينة -->
     <div id="print-area" class="w-full flex flex-col items-center justify-center mt-4"></div>
 
-    <script>
+   <script>
         // إعدادات المحرك المزدوج
         const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
@@ -457,6 +457,19 @@
             "الخامس":7, "الصف الخامس":7, "السادس":8, "الصف السادس":8
         };
 
+        // دالة تنظيف وتحويل الأرقام (عربية / إنجليزية) إلى عدد صحيح سليم
+        function parseCleanInt(val) {
+            if (!val && val !== 0) return 0;
+            let s = String(val).trim();
+            const arDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            for (let i = 0; i < 10; i++) {
+                s = s.replace(new RegExp(arDigits[i], 'g'), i);
+            }
+            const clean = s.replace(/[^\d]/g, '');
+            const parsed = parseInt(clean, 10);
+            return isNaN(parsed) ? 0 : parsed;
+        }
+
         function cleanCode(code) {
             if (!code) return "";
             const strCode = String(code).trim();
@@ -470,7 +483,6 @@
             return String(num).replace(/[0-9]/g, w => arabicDigits[w]);
         }
 
-        // دالة تنظيف واستخراج رقم الفصل لاسم الملف فقط (لأن الويندوز يرفض السلاش / في أسماء الملفات)
         function cleanClassNumber(cls, grade) {
             if (!cls) return "";
             let s = String(cls).trim();
@@ -494,15 +506,28 @@
             return s;
         }
 
-        // ================== دوال الفرز الصارم (ذكور أبجدياً ثم إناث أبجدياً) ==================
         function isMaleStudent(gender) {
             if (!gender) return false;
             const g = String(gender).trim();
             return g.includes("ذكر") || g.includes("بنين") || g === "1";
         }
 
+        // ================= دالة الفرز المعتمدة على مسلسل/سجل الفصل أولاً لمنع ترحيل الدرجات =================
         function sortStudentsStrict(arr) {
             return arr.sort((a, b) => {
+                // 1. الترتيب برقم المسلسل/السجل في الفصل تصاعدياً (التلميذ المضاف بالآخر يثبت في ذيل القائمة)
+                const regA = parseCleanInt(a.register_num);
+                const regB = parseCleanInt(b.register_num);
+
+                if (regA > 0 && regB > 0) {
+                    if (regA !== regB) return regA - regB;
+                } else if (regA > 0) {
+                    return -1;
+                } else if (regB > 0) {
+                    return 1;
+                }
+
+                // 2. كاحتياط في حال عدم وجود أرقام مسلسلات: بنين أولاً ثم بنات أبجدياً
                 const isMaleA = isMaleStudent(a.gender);
                 const isMaleB = isMaleStudent(b.gender);
 
@@ -668,8 +693,6 @@
                 s.transfer_type !== "محول من"
             );
 
-            sortStudentsStrict(studentsList);
-
             setTimeout(() => {
                 area.innerHTML = "";
                 let uniqueClasses = targetCls === "all" ? [...new Set(studentsList.map(s => String(s.class).trim()))].sort((a,b)=>a.localeCompare(b,'ar',{numeric:true})) : [targetCls];
@@ -682,6 +705,9 @@
                 uniqueClasses.forEach(cName => {
                     const classList = studentsList.filter(s => String(s.class).trim() === cName);
                     if (classList.length === 0) return;
+
+                    // تطبيق الترتيب بمسلسل وسجل الفصل لكل فصل على حدة
+                    sortStudentsStrict(classList);
 
                     if (type === 'list') {
                         area.appendChild(buildStandardList(grade, cName, classList));
@@ -770,9 +796,12 @@
                     let cB = b.class ? String(b.class).trim() : "";
                     if (cA !== cB) return cA.localeCompare(cB, 'ar', { numeric: true });
 
+                    const regA = parseCleanInt(a.register_num);
+                    const regB = parseCleanInt(b.register_num);
+                    if (regA > 0 && regB > 0 && regA !== regB) return regA - regB;
+
                     const isMaleA = isMaleStudent(a.gender);
                     const isMaleB = isMaleStudent(b.gender);
-
                     if (isMaleA && !isMaleB) return -1;
                     if (!isMaleA && isMaleB) return 1;
 
@@ -788,7 +817,7 @@
             }, 80);
         }
 
-        // ================== دالة ترحيل 5 سلوك لقالب الإكسيل (xlsm) ==================
+        // ================== دالة ترحيل 5 سلوك لقالب الإكسيل (xlsm) متطابقة مع كشف الفصل ==================
         async function exportToExcel() {
             const grade = document.getElementById("grade-select").value;
             const targetCls = document.getElementById("class-select").value;
@@ -804,6 +833,7 @@
                 s.transfer_type !== "محول من"
             );
             
+            // ترتيب تلاميذ الفصل بمسلسل وسجل الفصل الثابت
             sortStudentsStrict(studentsList);
 
             if (studentsList.length === 0) {
@@ -815,20 +845,17 @@
             area.innerHTML = "<h3 class='no-print' style='text-align:center; margin-top:30px; color:#15803d; font-weight:800;'><i class='fa-solid fa-spinner fa-spin'></i> جاري ترحيل البيانات وتجهيز ملف الإكسيل (xlsm)...</h3>";
 
             try {
-                // 1. جلب قالب الإكسيل الأصلي
                 const templateUrl = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/agm.xlsm";
                 const response = await fetch(templateUrl);
                 if (!response.ok) throw new Error("تعذر تحميل قالب الإكسيل من السيرفر!");
                 const arrayBuffer = await response.arrayBuffer();
 
-                // 2. فتح القالب بمكتبة XlsxPopulate
                 const workbook = await XlsxPopulate.fromDataAsync(arrayBuffer);
                 const sheet = workbook.sheet(0);
 
-                // 3. كتابة الفصل في الخلية AL1 زى ما هو بالفورمات تماماً (مثل 4/1)
                 sheet.cell("AL1").value(String(targetCls).trim());
 
-                // 4. كتابة أسماء التلاميذ من 1 إلى 26 في النطاق C6 إلى C31
+                // كتابة التلاميذ من 1 إلى 26 في C6:C31 بنفس تسلسل الكشف الورقي
                 for (let i = 0; i < 26; i++) {
                     let cell = sheet.cell(`C${6 + i}`);
                     if (studentsList[i]) {
@@ -838,7 +865,7 @@
                     }
                 }
 
-                // 5. كتابة أسماء التلاميذ من 27 إلى 52 في النطاق C39 إلى C64
+                // كتابة التلاميذ من 27 إلى 52 في C39:C64 (والتلميذ رقم 41 ينزل في موضعه بالأسفل تماماً)
                 for (let i = 0; i < 26; i++) {
                     let studentIndex = i + 26;
                     let cell = sheet.cell(`C${39 + i}`);
@@ -849,13 +876,11 @@
                     }
                 }
 
-                // 6. تجهيز اسم الملف بالصيغة المطلوبة (مثال: اجمالى الصف الأول فصل 1.xlsm)
                 let cleanGrade = grade.startsWith("الصف ") ? grade : ("الصف " + grade);
                 if (grade.startsWith("KG")) cleanGrade = grade;
                 const cleanCls = cleanClassNumber(targetCls, grade);
                 const fileName = `اجمالى ${cleanGrade} فصل ${cleanCls}.xlsm`;
 
-                // 7. إنشاء الملف وتنزيله لجهاز المستخدم
                 const blob = await workbook.outputAsync();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement("a");
@@ -866,7 +891,7 @@
                 document.body.removeChild(a);
                 window.URL.revokeObjectURL(url);
 
-                area.innerHTML = `<h3 class='no-print' style='text-align:center; margin-top:30px; color:#15803d; font-weight:800;'><i class='fa-solid fa-circle-check'></i> تم بنجاح ترحيل وتنزيل ملف: (${fileName})</h3>`;
+                area.innerHTML = `<h3 class='no-print' style='text-align:center; margin-top:30px; color:#15803d; font-weight:800;'><i class='fa-solid fa-circle-check'></i> تم بنجاح ترحيل وتنزيل ملف: (${fileName}) دون أي ترحيل في الأسماء.</h3>`;
 
             } catch (err) {
                 console.error("خطأ الترحيل:", err);
@@ -931,7 +956,6 @@
             } return html;
         }
 
-        /* كشوف الصحة الأصلية */
         function buildHealthPage1(grade, clsName, students) {
             const sheet = document.createElement("div"); sheet.className = "a4-sheet show-preview";
             sheet.innerHTML = `
@@ -958,7 +982,6 @@
             } return html;
         }
 
-        /* ================= كشوف فحص النظر (عيون أطفالنا) ================= */
         function buildEyePage1(grade, clsName, students) {
             const sheet = document.createElement("div"); sheet.className = "a4-sheet show-preview";
             sheet.innerHTML = `
@@ -1032,7 +1055,6 @@
             } return html;
         }
 
-        /* دفاتر 5 سلوك */
         function buildBehaviorPage(grade, clsName, students, monthIdx, year, pageNum) {
             const sheet = document.createElement("div");
             sheet.className = "a3-sheet show-preview";
