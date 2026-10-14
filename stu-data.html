@@ -246,7 +246,7 @@
     <!-- التوقيع -->
     <div class="zizo-signature">منظومة مستر زيزو لإدارة بيانات المدرسة © 2026/2027</div>
 
-    <script>
+   <script>
         const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -255,7 +255,7 @@
         const stdGrades = ["KG1", "KG2", "الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
         const AGE_DATE_STORAGE_KEY = "ZEZO_PERSISTENT_AGE_CALC_DATE";
 
-        // ================= دالة تنظيف وتحويل الأرقام (عربية / إنجليزية) =================
+        // ================= 1. دالة تنظيف وتحويل الأرقام (عربية / إنجليزية) =================
         function parseCleanInt(val) {
             if (!val && val !== 0) return 0;
             let s = String(val).trim();
@@ -401,20 +401,21 @@
             return g.includes("ذكر") || g.includes("بنين") || g === "1";
         }
 
-        // ================= محرك الترتيب الذكي (يحفظ التلميذ المضاف بالآخر في نهاية القائمة) =================
+        // ================= 2. محرك الترتيب الذكي المعتمد على الفصل ورقم المسلسل =================
+        // يرتب بحسب الفصل أولاً، ثم بحسب رقم السجل تصاعدياً (دون إجبار البنين على التقدم لو كان التلميذ في ذيل الفصل)
         function sortStudents(arr) {
             return arr.sort((a, b) => {
-                const isMaleA = isMaleStudent(a.gender);
-                const isMaleB = isMaleStudent(b.gender);
-                
-                // 1. الذكور أولاً ثم الإناث
-                if (isMaleA && !isMaleB) return -1;
-                if (!isMaleA && isMaleB) return 1;
-                
-                // 2. الترتيب حسب رقم السجل (register_num) تصاعدياً (التلميذ المضاف بالآخر يظهر بالأسفل)
+                // 1. فرز بالفصل لتجميع كل فصل معاً
+                const clsA = String(a.class || "").trim();
+                const clsB = String(b.class || "").trim();
+                if (clsA !== clsB) {
+                    return clsA.localeCompare(clsB, 'ar', { numeric: true });
+                }
+
+                // 2. داخل نفس الفصل: الترتيب برقم السجل / المسلسل تصاعدياً
                 const regA = parseCleanInt(a.register_num);
                 const regB = parseCleanInt(b.register_num);
-                
+
                 if (regA > 0 && regB > 0) {
                     if (regA !== regB) return regA - regB;
                 } else if (regA > 0) {
@@ -422,8 +423,13 @@
                 } else if (regB > 0) {
                     return 1;
                 }
-                
-                // 3. إذا لم يوجد رقم سجل، يتم الترتيب أبجدياً
+
+                // 3. كحل أخير إذا لم تتوفر أرقام سجلات: بنين أولاً ثم بنات أبجدياً
+                const isMaleA = isMaleStudent(a.gender);
+                const isMaleB = isMaleStudent(b.gender);
+                if (isMaleA && !isMaleB) return -1;
+                if (!isMaleA && isMaleB) return 1;
+
                 const nameA = String(a.name || "").trim();
                 const nameB = String(b.name || "").trim();
                 return nameA.localeCompare(nameB, 'ar');
@@ -648,12 +654,12 @@
             return oldClass; 
         }
 
-        // ================= 1. جلب وعرض بيانات الصف فورياً =================
+        // ================= 3. جلب وعرض بيانات الصف =================
         async function loadStudentData() {
             const g = document.getElementById("grade-filter").value;
             if(!g) return;
             const tbody = document.getElementById("table-body");
-            tbody.innerHTML = "<tr><td colspan='18' style='text-align:center; padding:50px; font-weight:800; color:#1e3a8a;'><i class='fa-solid fa-spinner fa-spin text-xl'></i> جاري استرجاع وفرز بيانات الصف (" + g + ")...</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='18' style='text-align:center; padding:50px; font-weight:800; color:#1e3a8a;'><i class='fa-solid fa-spinner fa-spin text-xl'></i> جاري استرجاع بيانات الصف (" + g + ")...</td></tr>";
             document.getElementById("search-student").value = ""; 
             
             const refDate = document.getElementById("age-calc-date").value || getSavedAgeCalcDate();
@@ -670,7 +676,7 @@
 
                 let arr = data.filter(d => d.transfer_type !== "محول من");
                 
-                // تطبيق الفرز الذكي برقم السجل (ليبقى التلميذ المضاف بالآخر في نهاية القائمة)
+                // الترتيب الذكي المعتمد على الفصل ورقم المسلسل/السجل
                 arr = sortStudents(arr);
 
                 const fragment = document.createDocumentFragment();
@@ -699,7 +705,7 @@
             }
         }
 
-        // 2. البحث الفوري داخل الجدول
+        // 4. البحث الفوري داخل الجدول
         function filterTableByName() {
             const input = document.getElementById("search-student").value.toLowerCase();
             const rows = document.querySelectorAll("#table-body tr");
@@ -711,7 +717,7 @@
             });
         }
 
-        // 3. استيراد ملف الإكسيل
+        // ================= 5. استيراد ملف الإكسيل مع اعتماد الترتيب كما هو بدون أي فرز =================
         function handleFile(e) {
             const file = e.target.files[0];
             if(!file) return;
@@ -750,7 +756,9 @@
                         let finalDmj = (rawDmj === "دمج" || rawDmj === "نعم") ? "دمج" : "";
                         let tType = row.transfer_type || row["الانتماء"] || "أساسي";
                         let cls = row.class || row["الفصل"] || "";
-                        let reg = row.register_num || row["السجل"] || "";
+                        
+                        // اعتماد رقم السجل كما ورد في الإكسيل، وإذا كان فارغاً نعتمد ترتيب السطر في الشيت تلقائياً
+                        let reg = row.register_num || row["السجل"] || row["مسلسل"] || row["م"] || (idx + 1);
 
                         let isTrans = row.is_class_transferred || row["نقل فصل"] || row["تم نقله"] || 0;
                         isTrans = (isTrans == 1 || isTrans === "1" || isTrans === "نعم") ? 1 : 0;
@@ -777,23 +785,21 @@
                         });
                     });
 
-                    // تطبيق الترتيب الذكي
-                    arr = sortStudents(arr);
-
+                    // ⚠️ تم إلغاء أي فرز أبجدي هنا: يتم اعتماد ترتيب شيت الإكسيل بالكامل كما هو!
                     const fragment = document.createDocumentFragment();
                     arr.forEach((s, i) => fragment.appendChild(createRowElement(s, i + 1)));
 
                     const tbody = document.getElementById("table-body");
                     tbody.innerHTML = "";
                     tbody.appendChild(fragment);
-                    alert(`✅ تم استيراد عدد (${arr.length}) تلميذ بنجاح وتطبيق الترتيب الصحيح! اضغط (حفظ البيانات) لتثبيتهم.`);
+                    alert(`✅ تم استيراد عدد (${arr.length}) تلميذ بنجاح مع اعتماد ترتيب أسطر الإكسيل كما هي بالكامل دون أي تغيير! اضغط (حفظ البيانات) لتثبيتهم.`);
                 } catch(err) { alert("❌ فشل قراءة الملف: " + err.message); }
                 finally { e.target.value = ''; }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        // 4. إنشاء صف الجدول
+        // 6. إنشاء صف الجدول
         function createRowElement(d, i) {
             const tr = document.createElement("tr");
             const isTrans = (d.is_class_transferred == 1 || d.is_class_transferred === "1") ? "1" : "0";
@@ -845,7 +851,7 @@
             return tr;
         }
 
-        // 5. تحديد الكل ناجح
+        // 7. تحديد الكل ناجح
         function markVisibleAsPass() {
             const rows = document.querySelectorAll("#table-body tr");
             let count = 0;
@@ -861,7 +867,7 @@
             else alert("جميع التلاميذ الظاهرين محددة نتيجتهم بالفعل!");
         }
 
-        // 6. الترحيل الذكي الشامل للصف
+        // 8. الترحيل الذكي الشامل للصف
         async function promoteStudents() {
             const currentGrade = document.getElementById("grade-filter").value;
             if (!currentGrade || currentGrade === "ALL") { 
@@ -872,7 +878,7 @@
             if(rows.length === 0 || rows[0].cells.length < 2) return;
 
             let missingCount = 0;
-            const nextGradeMap = {"KG1":"KG2", "KG2":"الأول", "الأول":"الثاني", "الثاني":"الثالث", "الثالث":"الرابع", "الرابع":"الخامس", "الخامس":"السادس", "السادس":"خريج"};
+            const nextGradeMap = {"KG1":"KG2", "KG2":"الأول", "الأول":"الثاني", "الثاني":"الثالث", "الثالث":"الرابع", "الخامس":"السادس", "السادس":"خريج"};
 
             rows.forEach(row => {
                 if(row.cells.length > 2 && !row.querySelector('[data-field="result"]').value) {
@@ -954,7 +960,7 @@
             }
         }
 
-        // 7. حفظ وتحديث بيانات التلاميذ
+        // ================= 9. حفظ وتحديث بيانات التلاميذ كما هي في الجدول =================
         async function saveAllStudents() {
             const g = document.getElementById("grade-filter").value;
             if (!g || g === "ALL") { 
@@ -997,16 +1003,13 @@
                 alert("لا توجد أسماء تلاميذ صالحة للحفظ!"); return;
             }
 
-            // الفرز برقم السجل لضمان الحفاظ على مواقع التلاميذ
-            studentsToSave = sortStudents(studentsToSave);
-
             const btn = document.querySelector('.btn-save');
             const oldText = btn.innerHTML;
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ في السحابة...`;
 
             try {
                 await ZezoEngine.upsert("students", studentsToSave, 'code');
-                alert(`✅ تم حفظ وتحديث بيانات (${studentsToSave.length}) تلميذ بنجاح!`);
+                alert(`✅ تم حفظ وتحديث بيانات (${studentsToSave.length}) تلميذ بنجاح مع الحفاظ على الترتيب الدقيق!`);
                 loadStudentData();
             } catch (err) {
                 alert("❌ حدث خطأ أثناء الحفظ: " + err.message);
@@ -1015,7 +1018,7 @@
             }
         }
 
-        // 8. تصدير مخصص لإكسيل
+        // ================= 10. تصدير مخصص لإكسيل مع الحفاظ التام على ترتيب الشاشة =================
         function customExportToExcel() {
             const rows = document.querySelectorAll("#table-body tr");
             if(rows.length === 0 || rows[0].cells.length < 2) {
@@ -1058,34 +1061,6 @@
                 return;
             }
 
-            // تطبيق الفرز برقم السجل قبل التصدير للإكسيل
-            const genderLabel = selectedCols.find(c => c.key === 'gender')?.label;
-            const regLabel = selectedCols.find(c => c.key === 'register_num')?.label;
-            const nameLabel = selectedCols.find(c => c.key === 'name')?.label;
-            const indexLabel = selectedCols.find(c => c.key === 'index')?.label;
-
-            data.sort((a, b) => {
-                const isMaleA = genderLabel ? isMaleStudent(a[genderLabel]) : false;
-                const isMaleB = genderLabel ? isMaleStudent(b[genderLabel]) : false;
-                
-                if (isMaleA && !isMaleB) return -1;
-                if (!isMaleA && isMaleB) return 1;
-                
-                if (regLabel) {
-                    const regA = parseCleanInt(a[regLabel]);
-                    const regB = parseCleanInt(b[regLabel]);
-                    if (regA > 0 && regB > 0 && regA !== regB) return regA - regB;
-                }
-
-                const nameA = nameLabel ? String(a[nameLabel] || "").trim() : "";
-                const nameB = nameLabel ? String(b[nameLabel] || "").trim() : "";
-                return nameA.localeCompare(nameB, 'ar');
-            });
-
-            if (indexLabel) {
-                data.forEach((row, idx) => { row[indexLabel] = idx + 1; });
-            }
-
             try {
                 const ws = XLSX.utils.json_to_sheet(data);
                 if(!ws['!views']) ws['!views'] = [];
@@ -1101,7 +1076,7 @@
             }
         }
 
-        // 9. الإحصاء السريع
+        // 11. الإحصاء السريع
         function toggleModal(show) {
             const modal = document.getElementById('statsModal');
             if(show) {
@@ -1153,7 +1128,7 @@
             });
         }
 
-        // 10. اعتماد كبسولة الإحصاء الشاملة
+        // 12. اعتماد كبسولة الإحصاء الشاملة
         async function generateMasterCapsule() {
             const btn = document.querySelector('.btn-golden');
             const oldText = btn.innerHTML;
