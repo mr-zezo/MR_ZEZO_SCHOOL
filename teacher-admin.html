@@ -1,0 +1,1370 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لوحة تحكم بوابة المعلم - منظومة مستر زيزو</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary: #0f2b48;
+            --secondary: #d97706;
+            --bg: #f1f5f9;
+            --danger: #be123c;
+            --success: #16a34a;
+            --info: #0284c7;
+        }
+
+        * { font-family: 'Cairo', sans-serif; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg); color: #0f172a; min-height: 100vh; padding-bottom: 40px; }
+        
+        .card-3d { background: #ffffff; border: 1px solid #e2e8f0; border-bottom: 4px solid #cbd5e1; border-radius: 16px; transition: all 0.2s ease; }
+        .card-3d:hover { border-bottom-color: #94a3b8; }
+        .btn-3d { border-bottom: 3px solid rgba(0,0,0,0.25); transition: all 0.1s ease; touch-action: manipulation; }
+        .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
+
+        .dev-badge { 
+            background: rgba(255, 255, 255, 0.08); color: #fff; padding: 5px 18px; border-radius: 50px; 
+            font-size: 12px; font-weight: 800; border: 1px solid rgba(255,255,255,0.2); 
+            display: flex; align-items: center; gap: 10px; 
+        }
+        .dev-badge span { color: #fcd34d; font-weight: 900; }
+
+        .stat-mini { padding: 10px 14px; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #e2e8f0; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+        .stat-mini .num { font-size: 22px; font-weight: 900; line-height: 1.1; }
+        .stat-mini .lbl { font-size: 11px; color: #64748b; font-weight: 800; }
+
+        .tab-btn { flex: 1; padding: 11px 8px; border-radius: 12px; font-size: 12.5px; font-weight: 900; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .tab-btn.active { background: #0f2b48; color: #fff; border-color: #0f2b48; box-shadow: 0 4px 12px rgba(15,43,72,0.25); }
+
+        .section-box { display: none; }
+        .section-box.active { display: block; animation: fadeIn 0.25s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .teacher-row {
+            display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+            background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px;
+            margin-bottom: 8px; transition: 0.15s;
+        }
+        .teacher-row:hover { border-color: #0f2b48; box-shadow: 0 4px 12px rgba(15,43,72,0.06); }
+
+        .badge { padding: 2px 8px; border-radius: 6px; font-size: 10.5px; font-weight: 900; display: inline-flex; align-items: center; gap: 4px; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-amber { background: #fef3c7; color: #92400e; }
+        .badge-purple { background: #ede9fe; color: #5b21b6; }
+        .badge-gray { background: #f1f5f9; color: #64748b; }
+
+        .action-icon {
+            width: 34px; height: 34px; border-radius: 9px; border: none;
+            display: inline-flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 13.5px; transition: 0.15s; color: #fff;
+        }
+        .action-icon:hover { transform: scale(1.08); }
+        .act-purple { background: #7c3aed; }
+        .act-amber { background: #d97706; }
+        .act-green { background: #16a34a; }
+        .act-red { background: #be123c; }
+        .act-blue { background: #0284c7; }
+        .act-slate { background: #475569; }
+
+        .message-card {
+            background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px;
+            padding: 12px; margin-bottom: 10px; border-right: 4px solid #0284c7;
+        }
+        .message-card.reply { border-right-color: #16a34a; background: #f0fdf4; }
+        .message-card.issue { border-right-color: #e11d48; background: #fef2f2; }
+        .message-card.broadcast { border-right-color: #7c3aed; }
+
+        .msg-header { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+        .msg-sender { font-size: 13px; font-weight: 900; color: #0f2b48; }
+        .msg-date { font-size: 11px; color: #64748b; font-weight: 700; }
+        .msg-body { font-size: 13px; font-weight: 800; color: #334155; line-height: 1.6; background: #f8fafc; padding: 8px 10px; border-radius: 8px; margin-bottom: 8px; white-space: pre-wrap; word-break: break-word; }
+
+        .input-search {
+            width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1;
+            font-size: 13px; font-weight: 800; outline: none; background: #fff;
+        }
+        .input-search:focus { border-color: #0f2b48; box-shadow: 0 0 0 3px rgba(15,43,72,0.1); }
+
+        .filter-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+        .filter-pill { padding: 5px 12px; border-radius: 20px; background: #f1f5f9; border: 1.5px solid #cbd5e1; font-size: 11.5px; font-weight: 900; cursor: pointer; color: #475569; }
+        .filter-pill.active { background: #0f2b48; color: #fff; border-color: #0f2b48; }
+
+        .checkbox-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 20px; background: #f1f5f9;
+            border: 1.5px solid #cbd5e1; font-size: 12px; font-weight: 800;
+            cursor: pointer; transition: 0.15s; color: #334155;
+        }
+        .checkbox-pill.checked { background: #0f2b48; color: #fff; border-color: #0f2b48; }
+        .checkbox-pill input { display: none; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 12px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: #fff; width: 100%; max-width: 520px; border-radius: 18px; overflow: hidden; max-height: 92vh; display: flex; flex-direction: column; box-shadow: 0 25px 60px rgba(0,0,0,0.5); }
+        .modal-head { background: #0f2b48; color: #fff; padding: 13px 18px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-head h3 { font-size: 15px; font-weight: 900; margin: 0; }
+        .modal-body { padding: 16px; overflow-y: auto; flex: 1; }
+
+        .progress-bar { height: 8px; background: #e2e8f0; border-radius: 20px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #16a34a, #059669); transition: 0.3s; }
+        .empty-state { text-align: center; padding: 35px 15px; color: #94a3b8; font-weight: 800; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <!-- ═══════════ Header ═══════════ -->
+    <header class="bg-[#0f2b48] text-white p-3.5 sm:p-4 shadow-lg border-b-4 border-amber-500 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-blue-600/30 border border-blue-400/40 flex items-center justify-center text-yellow-300 text-xl shrink-0">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-base font-black leading-tight">لوحة تحكم بوابة المعلم</h1>
+                    <p class="text-[11px] text-blue-200">إدارة البصمات والأجهزة • التجميد • الرسائل • بلاغات الدخول</p>
+                </div>
+            </div>
+
+            <div class="dev-badge hidden md:flex">
+                <i class="fa-solid fa-medal text-yellow-300"></i>
+                إعداد وتطوير &nbsp;|&nbsp; <span>أ/ عبدالعزيز لولح</span> &nbsp;|&nbsp; ( مستر زيزو )
+            </div>
+
+            <div class="flex items-center gap-2">
+                <span id="mode-badge" class="text-[11px] px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full font-black">جاري الفحص...</span>
+                <button onclick="fetchEverything(true)" class="btn-3d px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-black">
+                    <i class="fa-solid fa-arrows-rotate text-yellow-300"></i> تحديث
+                </button>
+                <a href="index.html" class="btn-3d px-3 py-1.5 bg-blue-700 hover:bg-blue-600 rounded-lg text-xs font-black">
+                    <i class="fa-solid fa-house"></i> الرئيسية
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-3 space-y-3.5">
+
+        <!-- ═══════════ العدادات والإحصائيات ═══════════ -->
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+            <div class="stat-mini border-r-4 border-r-blue-600">
+                <div><div class="lbl">إجمالي المعلمين</div><div class="num text-blue-900" id="st-total">٠</div></div>
+                <i class="fa-solid fa-users text-blue-300 text-2xl"></i>
+            </div>
+            <div class="stat-mini border-r-4 border-r-purple-600">
+                <div><div class="lbl">مربوط بهاتف</div><div class="num text-purple-900" id="st-bound">٠</div></div>
+                <i class="fa-solid fa-fingerprint text-purple-300 text-2xl"></i>
+            </div>
+            <div class="stat-mini border-r-4 border-r-amber-500">
+                <div><div class="lbl">مجمّد أمنياً</div><div class="num text-amber-900" id="st-frozen">٠</div></div>
+                <i class="fa-solid fa-user-lock text-amber-300 text-2xl"></i>
+            </div>
+            <div class="stat-mini border-r-4 border-r-rose-600">
+                <div><div class="lbl">محظور نهائياً</div><div class="num text-rose-900" id="st-banned">٠</div></div>
+                <i class="fa-solid fa-ban text-rose-300 text-2xl"></i>
+            </div>
+            <div class="stat-mini border-r-4 border-r-emerald-600">
+                <div><div class="lbl">بلاغات ورسائل واردة</div><div class="num text-emerald-800" id="st-msgs">٠</div></div>
+                <i class="fa-solid fa-envelope-open-text text-emerald-300 text-2xl"></i>
+            </div>
+        </div>
+
+        <!-- ═══════════ إجراءات سريعة ═══════════ -->
+        <div class="card-3d p-3 flex flex-wrap gap-2 items-center justify-between">
+            <div class="text-xs font-black text-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-bolt text-amber-500"></i> إجراءات إدارية جماعية:
+            </div>
+            <div class="flex gap-2 flex-wrap">
+                <button onclick="unbindAllDevices()" class="btn-3d px-3.5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-xs font-black flex items-center gap-1.5">
+                    <i class="fa-solid fa-link-slash"></i> فك ربط جميع البصمات
+                </button>
+                <button onclick="unfreezeAll()" class="btn-3d px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-black flex items-center gap-1.5">
+                    <i class="fa-solid fa-lock-open"></i> فك تجميد الكل وتصفير الأجهزة
+                </button>
+                <button onclick="clearAllBans()" class="btn-3d px-3.5 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg text-xs font-black flex items-center gap-1.5">
+                    <i class="fa-solid fa-unlock"></i> رفع الحظر عن الجميع
+                </button>
+            </div>
+        </div>
+
+        <!-- ═══════════ التبويبات ═══════════ -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <button class="tab-btn active" data-tab="teachers" onclick="switchTab('teachers')">
+                <i class="fa-solid fa-chalkboard-user"></i> إدارة المعلمين والبصمات
+            </button>
+            <button class="tab-btn" data-tab="send" onclick="switchTab('send')">
+                <i class="fa-solid fa-paper-plane"></i> إرسال رسائل وتوجيهات
+            </button>
+            <button class="tab-btn" data-tab="inbox" onclick="switchTab('inbox')">
+                <i class="fa-solid fa-inbox"></i> الوارد وبلاغات الدخول <span id="inbox-count" class="badge badge-red">٠</span>
+            </button>
+            <button class="tab-btn" data-tab="sent" onclick="switchTab('sent')">
+                <i class="fa-solid fa-bullhorn"></i> الرسائل المرسلة وتتبعها
+            </button>
+        </div>
+
+        <!-- ═══════════ القسم 1: إدارة المعلمين ═══════════ -->
+        <section id="sec-teachers" class="section-box active">
+            <div class="card-3d p-3.5">
+                <div class="flex flex-wrap gap-2 items-center mb-3">
+                    <div class="flex-1 min-w-[220px]">
+                        <input type="text" id="teacher-search" class="input-search" placeholder="🔍 ابحث بالاسم أو الرقم القومي أو المادة..." oninput="renderTeachersList()">
+                    </div>
+                    <div class="filter-pills">
+                        <div class="filter-pill active" data-filter="all" onclick="setTeacherFilter('all')">الكل</div>
+                        <div class="filter-pill" data-filter="bound" onclick="setTeacherFilter('bound')">مربوط بهاتف</div>
+                        <div class="filter-pill" data-filter="unbound" onclick="setTeacherFilter('unbound')">بدون هاتف</div>
+                        <div class="filter-pill" data-filter="frozen" onclick="setTeacherFilter('frozen')">مجمّد</div>
+                        <div class="filter-pill" data-filter="banned" onclick="setTeacherFilter('banned')">محظور</div>
+                    </div>
+                </div>
+
+                <div id="teachers-list-container">
+                    <div class="empty-state"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block"></i> جاري تحميل بيانات المعلمين...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════ القسم 2: إرسال الرسائل الإدارية ═══════════ -->
+        <section id="sec-send" class="section-box">
+            <div class="card-3d p-4">
+                <div class="text-sm font-black text-[#0f2b48] border-b border-slate-200 pb-2 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-paper-plane text-blue-600"></i> إرسال رسالة وتوجيه إداري للمعلمين (تظهر في بوابتهم)
+                </div>
+
+                <label class="block text-xs font-black text-slate-700 mb-1.5">نوع الاستهداف:</label>
+                <div class="flex gap-2 flex-wrap mb-3">
+                    <label class="checkbox-pill checked" onclick="selectTargetType(this,'all')">
+                        <input type="radio" name="targetType" value="all" checked>
+                        <i class="fa-solid fa-users"></i> جميع معلمي المدرسة
+                    </label>
+                    <label class="checkbox-pill" onclick="selectTargetType(this,'group')">
+                        <input type="radio" name="targetType" value="group">
+                        <i class="fa-solid fa-layer-group"></i> مجموعة محددة (مادة / فئة)
+                    </label>
+                    <label class="checkbox-pill" onclick="selectTargetType(this,'specific')">
+                        <input type="radio" name="targetType" value="specific">
+                        <i class="fa-solid fa-user-check"></i> معلمون معينون بالاسم
+                    </label>
+                </div>
+
+                <div id="group-controls" class="hidden mb-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                    <label class="block text-xs font-black text-blue-900 mb-1.5">تحديد المجموعة المستهدفة:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select id="group-type" class="input-search" onchange="renderGroupValueOptions()">
+                            <option value="subject">حسب مادة التدريس</option>
+                            <option value="category">حسب فئة التدريس (فصل / تخصص)</option>
+                            <option value="status">حسب حالة المعلم (على رأس العمل / مؤقت)</option>
+                        </select>
+                        <select id="group-value" class="input-search" onchange="renderGroupMembers()"></select>
+                    </div>
+                    <div id="group-members-preview" class="mt-2 text-xs font-black text-blue-800"></div>
+                </div>
+
+                <div id="specific-controls" class="hidden mb-3 p-3 bg-purple-50 rounded-xl border border-purple-200">
+                    <label class="block text-xs font-black text-purple-900 mb-1.5">اختر المعلمين المطلوب مراسلتهم:</label>
+                    <input type="text" id="specific-search" class="input-search mb-2" placeholder="ابحث باسم المعلم لإضافته..." oninput="renderSpecificList()">
+                    <div id="specific-list" class="max-h-60 overflow-y-auto border border-purple-200 rounded-xl p-2 bg-white"></div>
+                    <div id="specific-count" class="mt-2 text-xs font-black text-purple-800">تم اختيار: ٠ معلم</div>
+                </div>
+
+                <label class="block text-xs font-black text-slate-700 mb-1.5 mt-2">نص الرسالة أو التوجيه:</label>
+                <textarea id="broadcast-text" class="input-search" rows="4" placeholder="اكتب نص الرسالة الإدارية هنا..." style="resize:vertical;"></textarea>
+
+                <div class="mt-2 flex flex-wrap gap-1.5">
+                    <button class="filter-pill" onclick="insertTemplate('برجاء سرعة تحديث البيانات الخاصة بكم بالبوابة ومراجعة بيان الحالة.')">تحديث البيانات</button>
+                    <button class="filter-pill" onclick="insertTemplate('برجاء الالتزام التام بالجدول المدرسي المعتمد ومواعيد الإشراف اليومي.')">الالتزام بالجدول</button>
+                    <button class="filter-pill" onclick="insertTemplate('مرحباً بكم في بوابة المعلم لمنظومة مدرسة الشهيد أشرف حبيب للعام الدراسي ٢٠٢٦ / ٢٠٢٧.')">ترحيب</button>
+                    <button class="filter-pill" onclick="insertTemplate('يرجى المرور على شئون العاملين لاستلام بيان الحالة المحدث.')">بيان الحالة</button>
+                </div>
+
+                <button onclick="sendBroadcast()" id="btn-send-broadcast" class="btn-3d w-full mt-4 py-3 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white font-black rounded-xl text-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-paper-plane text-yellow-300"></i> إرسال التوجيه الآن
+                </button>
+            </div>
+        </section>
+
+        <!-- ═══════════ القسم 3: الوارد وبلاغات الدخول ═══════════ -->
+        <section id="sec-inbox" class="section-box">
+            <div class="card-3d p-4">
+                <div class="flex justify-between items-center border-b border-slate-200 pb-2 mb-3 flex-wrap gap-2">
+                    <div class="text-sm font-black text-[#0f2b48] flex items-center gap-2">
+                        <i class="fa-solid fa-inbox text-rose-600"></i> الطلبات وبلاغات مشاكل الدخول الواردة من المعلمين
+                    </div>
+                    <div class="filter-pills">
+                        <div class="filter-pill active" data-inbox-filter="all" onclick="setInboxFilter('all')">الكل</div>
+                        <div class="filter-pill" data-inbox-filter="new" onclick="setInboxFilter('new')">جديد (قيد الانتظار)</div>
+                        <div class="filter-pill" data-inbox-filter="resolved" onclick="setInboxFilter('resolved')">تم الرد والإنجاز</div>
+                        <div class="filter-pill" data-inbox-filter="login" onclick="setInboxFilter('login')">بلاغات مشاكل الدخول</div>
+                    </div>
+                </div>
+                <div id="inbox-container">
+                    <div class="empty-state"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block"></i> جاري جلب الرسائل...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════ القسم 4: الرسائل المرسلة وتتبع القراءة ═══════════ -->
+        <section id="sec-sent" class="section-box">
+            <div class="card-3d p-4">
+                <div class="text-sm font-black text-[#0f2b48] border-b border-slate-200 pb-2 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn text-purple-600"></i> سجل الرسائل المُرسلة ونسب وتفاصيل القراءة
+                </div>
+                <div id="sent-container">
+                    <div class="empty-state"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block"></i> جاري التحميل...</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ═══════════ مودال الرد على رسالة أو بلاغ ═══════════ -->
+    <div class="modal-overlay" id="replyModal">
+        <div class="modal-content">
+            <div class="modal-head">
+                <h3><i class="fa-solid fa-reply"></i> الرد الإداري على المعلم</h3>
+                <button onclick="closeModal('replyModal')" class="bg-white/20 hover:bg-white/30 w-8 h-8 rounded-lg text-white text-lg">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="message-card reply mb-3">
+                    <div class="msg-sender" id="reply-from-name">-</div>
+                    <div class="msg-body" id="reply-original-text">-</div>
+                </div>
+                <label class="block text-xs font-black text-slate-700 mb-1.5">رد الإدارة (سيظهر في صندوق رسائل المعلم ببوابته):</label>
+                <textarea id="reply-text" class="input-search" rows="3" placeholder="اكتب الرد الرسمي هنا..." style="resize:vertical;"></textarea>
+                <input type="hidden" id="reply-req-id">
+                
+                <div class="flex gap-2 mt-3">
+                    <button onclick="submitReply()" class="btn-3d flex-1 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-black rounded-xl text-xs sm:text-sm">
+                        <i class="fa-solid fa-check"></i> حفظ وإرسال الرد
+                    </button>
+                    <button onclick="unbindFromReplyModal()" class="btn-3d px-3 py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-black rounded-xl text-xs flex items-center gap-1" title="فك ربط هاتف المعلم مباشرة لحل مشكلة الدخول">
+                        <i class="fa-solid fa-link-slash"></i> فك بصمة الهاتف
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ مودال إرسال رسالة لمعلم فردي ═══════════ -->
+    <div class="modal-overlay" id="sendToOneModal">
+        <div class="modal-content">
+            <div class="modal-head">
+                <h3><i class="fa-solid fa-paper-plane"></i> إرسال رسالة خاصة للمعلم</h3>
+                <button onclick="closeModal('sendToOneModal')" class="bg-white/20 hover:bg-white/30 w-8 h-8 rounded-lg text-white text-lg">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="text-xs font-black text-slate-700 mb-1">المستلم:</div>
+                <div class="p-2.5 bg-blue-50 rounded-xl border border-blue-200 mb-3 text-xs sm:text-sm font-black text-blue-900" id="send-to-teacher-name">-</div>
+                <label class="block text-xs font-black text-slate-700 mb-1.5">نص التوجيه / الرسالة:</label>
+                <textarea id="send-one-text" class="input-search" rows="4" placeholder="اكتب الرسالة الخاصة..."></textarea>
+                <input type="hidden" id="send-one-nid">
+                <button onclick="submitSendToOne()" class="btn-3d w-full mt-3 py-2.5 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white font-black rounded-xl text-sm">
+                    <i class="fa-solid fa-paper-plane text-yellow-300"></i> إرسال للمعلم الآن
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ═══════════════════════════════════════════════════════════
+           1. الإعدادات وقاعدة البيانات الموحدة
+           ═══════════════════════════════════════════════════════════ */
+        const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
+        const DB_VERSION = 2;
+
+        const BROADCAST_LOG_ID = "admin_broadcast_messages_v1";
+        const BAN_LOG_ID = "banned_teachers_v1";
+
+        let TEACHERS = [];
+        let BANS = [];
+        let BROADCASTS = [];
+        let INCOMING = [];
+        
+        let currentFilter = 'all';
+        let currentInboxFilter = 'all';
+        let selectedSpecificNids = new Set();
+
+        const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
+        const esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+        /* ═══════════════════════════════════════════════════════════
+           2. دعم النمطين السحابي والمحلي (Online / Offline)
+           ═══════════════════════════════════════════════════════════ */
+        function getAppMode() {
+            return localStorage.getItem('ZEZO_APP_MODE') || 'online';
+        }
+
+        function openLocalDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('teachers')) db.createObjectStore('teachers', { keyPath: 'nid' });
+                    if (!db.objectStoreNames.contains('daily_logs')) db.createObjectStore('daily_logs', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('teacher_requests')) db.createObjectStore('teacher_requests', { keyPath: 'id', autoIncrement: true });
+                };
+            });
+        }
+
+        const ZezoEngine = {
+            async getAllTeachers() {
+                if (getAppMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve) => {
+                        const tx = db.transaction('teachers', 'readonly');
+                        const req = tx.objectStore('teachers').getAll();
+                        req.onsuccess = () => resolve(req.result || []);
+                        req.onerror = () => resolve([]);
+                    });
+                } else {
+                    const { data, error } = await sbClient.from('teachers').select('*');
+                    if (error) {
+                        console.error("خطأ جلب المعلمين:", error);
+                        throw error;
+                    }
+                    return data || [];
+                }
+            },
+
+            async updateTeacher(nid, updateFields) {
+                if (getAppMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('teachers', 'readwrite');
+                        const store = tx.objectStore('teachers');
+                        const req = store.get(nid);
+                        req.onsuccess = () => {
+                            let rec = req.result;
+                            if (rec) {
+                                Object.assign(rec, updateFields);
+                                store.put(rec);
+                            }
+                            resolve(true);
+                        };
+                        tx.onerror = () => reject(tx.error);
+                    });
+                } else {
+                    const { error } = await sbClient.from('teachers').update(updateFields).eq('nid', nid);
+                    if (error) throw error;
+                    return true;
+                }
+            },
+
+            async getDailyLog(logId) {
+                if (getAppMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve) => {
+                        const tx = db.transaction('daily_logs', 'readonly');
+                        const req = tx.objectStore('daily_logs').get(logId);
+                        req.onsuccess = () => resolve(req.result ? req.result.data : null);
+                        req.onerror = () => resolve(null);
+                    });
+                } else {
+                    try {
+                        const { data } = await sbClient.from('daily_logs').select('data').eq('id', logId).maybeSingle();
+                        return data ? data.data : null;
+                    } catch(e) {
+                        return null;
+                    }
+                }
+            },
+
+            async upsertDailyLog(logId, dataObj, logType = 'system') {
+                if (getAppMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('daily_logs', 'readwrite');
+                        tx.objectStore('daily_logs').put({ id: logId, log_type: logType, data: dataObj, updated_at: new Date().toISOString() });
+                        tx.oncomplete = () => resolve(true);
+                        tx.onerror = () => reject(tx.error);
+                    });
+                } else {
+                    const { error } = await sbClient.from('daily_logs').upsert({
+                        id: logId,
+                        log_type: logType,
+                        data: dataObj,
+                        updated_at: new Date().toISOString()
+                    });
+                    if (error) throw error;
+                    return true;
+                }
+            },
+
+            async getTeacherRequests() {
+                if (getAppMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve) => {
+                        const tx = db.transaction('teacher_requests', 'readonly');
+                        const req = tx.objectStore('teacher_requests').getAll();
+                        req.onsuccess = () => resolve((req.result || []).reverse());
+                        req.onerror = () => resolve([]);
+                    });
+                } else {
+                    try {
+                        const { data, error } = await sbClient.from('teacher_requests').select('*').order('created_at', { ascending: false }).limit(300);
+                        if (error) {
+                            console.warn("تنبيه جلب teacher_requests:", error);
+                            return [];
+                        }
+                        return data || [];
+                    } catch(e) {
+                        return [];
+                    }
+                }
+            },
+
+            async updateTeacherRequest(id, fields) {
+                if (getAppMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('teacher_requests', 'readwrite');
+                        const store = tx.objectStore('teacher_requests');
+                        const req = store.get(Number(id) || id);
+                        req.onsuccess = () => {
+                            let rec = req.result;
+                            if (rec) {
+                                Object.assign(rec, fields);
+                                store.put(rec);
+                            }
+                            resolve(true);
+                        };
+                        tx.onerror = () => reject(tx.error);
+                    });
+                } else {
+                    let { error } = await sbClient.from('teacher_requests').update(fields).eq('id', id);
+
+                    if (error && error.message && error.message.includes('admin_reply')) {
+                        console.warn("⚠️ عمود admin_reply غير موجود، جاري الحفظ داخل خانة message كحل بديل...");
+                        const replyContent = fields.admin_reply || '';
+                        
+                        const { data: oldReq } = await sbClient.from('teacher_requests').select('message').eq('id', id).maybeSingle();
+                        const combinedMsg = (oldReq && oldReq.message ? oldReq.message : '') + `\n\n[رد الإدارة]: ${replyContent}`;
+                        
+                        const res2 = await sbClient.from('teacher_requests').update({
+                            message: combinedMsg,
+                            status: fields.status || 'منجز'
+                        }).eq('id', id);
+
+                        if (res2.error) throw res2.error;
+                        return true;
+                    }
+
+                    if (error) throw error;
+                    return true;
+                }
+            }
+        };
+
+        /* ═══════════════════════════════════════════════════════════
+           3. التحميل وبدء التشغيل
+           ═══════════════════════════════════════════════════════════ */
+        window.addEventListener('DOMContentLoaded', () => {
+            updateModeBadge();
+            fetchEverything();
+        });
+
+        function updateModeBadge() {
+            const mode = getAppMode();
+            const b = document.getElementById('mode-badge');
+            if (mode === 'offline') {
+                b.className = "text-[11px] px-3 py-1 bg-amber-100 text-amber-800 border border-amber-300 rounded-full font-black";
+                b.innerHTML = '<i class="fa-solid fa-laptop"></i> وضع محلي (أوفلاين)';
+            } else {
+                b.className = "text-[11px] px-3 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full font-black";
+                b.innerHTML = '<i class="fa-solid fa-wifi"></i> متصل بالسحابة';
+            }
+        }
+
+        async function fetchEverything(isManual = false) {
+            if (isManual) Swal.fire({ title: 'جاري تحديث البيانات...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const teachersData = await ZezoEngine.getAllTeachers().catch(e => { console.error(e); return []; });
+                const broadcastLog = await ZezoEngine.getDailyLog(BROADCAST_LOG_ID).catch(() => null);
+                const banLog = await ZezoEngine.getDailyLog(BAN_LOG_ID).catch(() => null);
+                const requestsData = await ZezoEngine.getTeacherRequests().catch(() => []);
+
+                TEACHERS = (teachersData || []).filter(t => {
+                    const st = (t.emp_status || "على رأس العمل").trim();
+                    return !["معاش", "متوفى", "تم نقله", "منهي خدمته"].includes(st);
+                });
+
+                BROADCASTS = (broadcastLog && Array.isArray(broadcastLog.messages)) ? broadcastLog.messages : [];
+                BANS = (banLog && Array.isArray(banLog.list)) ? banLog.list : [];
+                INCOMING = requestsData || [];
+
+                renderStats();
+                renderTeachersList();
+                renderGroupValueOptions();
+                renderSpecificList();
+                renderInbox();
+                renderSent();
+
+                if (isManual) Swal.fire({ icon: 'success', title: 'تم التحديث بنجاح', timer: 1200, showConfirmButton: false });
+            } catch (err) {
+                console.error("خطأ عام في fetchEverything:", err);
+                Swal.fire('خطأ في الاتصال', 'حدث خطأ أثناء تحميل البيانات: ' + err.message, 'error');
+            }
+        }
+
+        function isBound(t) { return t.device_id && String(t.device_id).trim() !== '' && t.device_id !== 'null'; }
+        function isBanned(nid) { return BANS.some(b => String(b.nid) === String(nid)); }
+
+        function renderStats() {
+            const total = TEACHERS.length;
+            const bound = TEACHERS.filter(isBound).length;
+            const frozen = TEACHERS.filter(t => t.is_frozen === true).length;
+            const banned = BANS.length;
+            const unread = INCOMING.filter(r => r.status === 'جديد' || !r.status).length;
+
+            document.getElementById('st-total').innerText = toAr(total);
+            document.getElementById('st-bound').innerText = toAr(bound);
+            document.getElementById('st-frozen').innerText = toAr(frozen);
+            document.getElementById('st-banned').innerText = toAr(banned);
+            document.getElementById('st-msgs').innerText = toAr(unread);
+            document.getElementById('inbox-count').innerText = toAr(unread);
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+            document.querySelectorAll('.section-box').forEach(s => s.classList.remove('active'));
+            document.getElementById('sec-' + tab).classList.add('active');
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           5. قائمة المعلمين وإدارتهم
+           ═══════════════════════════════════════════════════════════ */
+        function setTeacherFilter(f) {
+            currentFilter = f;
+            document.querySelectorAll('#sec-teachers .filter-pill').forEach(p => p.classList.toggle('active', p.dataset.filter === f));
+            renderTeachersList();
+        }
+
+        function renderTeachersList() {
+            const q = (document.getElementById('teacher-search').value || '').trim().toLowerCase();
+            const container = document.getElementById('teachers-list-container');
+
+            let list = TEACHERS.slice();
+
+            if (currentFilter === 'bound') list = list.filter(isBound);
+            else if (currentFilter === 'unbound') list = list.filter(t => !isBound(t));
+            else if (currentFilter === 'frozen') list = list.filter(t => t.is_frozen === true);
+            else if (currentFilter === 'banned') list = list.filter(t => isBanned(t.nid));
+
+            if (q) {
+                list = list.filter(t =>
+                    (t.name || '').toLowerCase().includes(q) ||
+                    String(t.nid || '').includes(q) ||
+                    (t.subject || '').toLowerCase().includes(q) ||
+                    String(t.code || '').includes(q)
+                );
+            }
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-user-slash text-3xl mb-2 block"></i> لا يوجد معلمون مطابقون لمعايير البحث</div>`;
+                return;
+            }
+
+            let html = `<div class="text-xs font-black text-slate-500 mb-2">إجمالي المطابقين: ${toAr(list.length)} معلم</div>`;
+
+            list.forEach(t => {
+                const bound = isBound(t);
+                const frozen = t.is_frozen === true;
+                const banned = isBanned(t.nid);
+
+                const statusBadge = banned
+                    ? '<span class="badge badge-gray"><i class="fa-solid fa-ban"></i> محظور</span>'
+                    : frozen
+                        ? '<span class="badge badge-red"><i class="fa-solid fa-user-lock"></i> مجمّد</span>'
+                        : '<span class="badge badge-green"><i class="fa-solid fa-circle-check"></i> نشط</span>';
+
+                const bindBadge = bound
+                    ? '<span class="badge badge-purple"><i class="fa-solid fa-fingerprint"></i> هاتف مسجل</span>'
+                    : '<span class="badge badge-gray"><i class="fa-solid fa-link-slash"></i> بدون هاتف</span>';
+
+                const freezeInfo = (frozen && t.freeze_reason)
+                    ? `<div class="w-full mt-1.5 text-[11px] font-bold text-rose-800 bg-rose-50 p-2 rounded-lg border border-rose-200"><i class="fa-solid fa-triangle-exclamation"></i> <b>سبب التجميد:</b> ${esc(t.freeze_reason)}</div>`
+                    : '';
+
+                html += `
+                    <div class="teacher-row flex-wrap" data-nid="${esc(t.nid)}">
+                        <div class="flex-1 min-w-[200px]">
+                            <div class="font-black text-sm text-[#0f2b48]">${esc(t.name)}</div>
+                            <div class="text-[11px] font-mono font-bold text-slate-500 mt-0.5">
+                                ${esc(t.nid)} • مادة: ${esc(t.subject || 'عام')} • ${esc(t.emp_status || 'على رأس العمل')}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            ${statusBadge}
+                            ${bindBadge}
+                        </div>
+                        <div class="teacher-actions flex gap-1.5">
+                            <button class="action-icon act-purple" title="فك ربط هاتف المعلم" onclick="unbindDeviceByNid('${esc(t.nid)}')"><i class="fa-solid fa-link-slash"></i></button>
+                            ${frozen
+                                ? `<button class="action-icon act-green" title="فك التجميد الأمني" onclick="unfreezeTeacherByNid('${esc(t.nid)}')"><i class="fa-solid fa-lock-open"></i></button>`
+                                : `<button class="action-icon act-amber" title="تجميد الحساب أمنياً" onclick="freezeTeacherByNid('${esc(t.nid)}')"><i class="fa-solid fa-lock"></i></button>`
+                            }
+                            ${banned
+                                ? `<button class="action-icon act-green" title="رفع الحظر" onclick="unbanTeacherByNid('${esc(t.nid)}')"><i class="fa-solid fa-unlock"></i></button>`
+                                : `<button class="action-icon act-slate" title="حظر من دخول البوابة" onclick="banTeacherByNid('${esc(t.nid)}')"><i class="fa-solid fa-ban"></i></button>`
+                            }
+                            <button class="action-icon act-blue" title="إرسال رسالة خاصة للمعلم" onclick="openSendToOneByNid('${esc(t.nid)}')"><i class="fa-solid fa-paper-plane"></i></button>
+                        </div>
+                        ${freezeInfo}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           6. العمليات على بصمة الهاتف والتجميد
+           ═══════════════════════════════════════════════════════════ */
+        async function unbindDeviceByNid(nid) {
+            const t = TEACHERS.find(x => String(x.nid) === String(nid));
+            const name = t ? t.name : nid;
+
+            const r = await Swal.fire({
+                title: 'فك ربط بصمة الهاتف',
+                html: `هل تريد فك ربط بصمة الجهاز للمعلم:<br><b style="color:#0f2b48">${esc(name)}</b>؟<br><small style="color:#64748b">سيتمكن المعلم من ربط هاتفه الجديد تلقائياً عند أول دخول قادم.</small>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، فك الربط',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#7c3aed'
+            });
+            if (!r.isConfirmed) return;
+
+            try {
+                await ZezoEngine.updateTeacher(nid, { device_id: null });
+                if (t) t.device_id = null;
+                renderStats();
+                renderTeachersList();
+                Swal.fire({ icon: 'success', title: 'تم فك الربط', text: `تم فك بصمة المعلم ${name} بنجاح.`, timer: 1500, showConfirmButton: false });
+            } catch (e) { Swal.fire('خطأ', e.message, 'error'); }
+        }
+
+        async function unbindAllDevices() {
+            const bound = TEACHERS.filter(isBound);
+            if (bound.length === 0) { Swal.fire('معلومة', 'لا يوجد أي بصمات هواتف مربوطة حالياً.', 'info'); return; }
+
+            const r = await Swal.fire({
+                title: '⚠️ تحذير فك الجميع',
+                html: `هل أنت متأكد من فك ربط <b>جميع هواتف المعلمين</b> (${toAr(bound.length)} معلماً)؟<br><small>سيحتاج كل معلم لربط هاتفه من جديد عند الدخول القادم.</small>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، فك الكل',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#be123c'
+            });
+            if (!r.isConfirmed) return;
+
+            Swal.fire({ title: 'جاري فك الربط...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                if (getAppMode() === 'offline') {
+                    for (let t of bound) {
+                        await ZezoEngine.updateTeacher(t.nid, { device_id: null });
+                        t.device_id = null;
+                    }
+                } else {
+                    await sbClient.from('teachers').update({ device_id: null }).not('device_id', 'is', null);
+                    TEACHERS.forEach(t => t.device_id = null);
+                }
+                renderStats();
+                renderTeachersList();
+                Swal.fire({ icon: 'success', title: 'تم فك جميع البصمات بنجاح', timer: 1500, showConfirmButton: false });
+            } catch (e) { Swal.fire('خطأ', e.message, 'error'); }
+        }
+
+        async function freezeTeacherByNid(nid) {
+            const t = TEACHERS.find(x => String(x.nid) === String(nid));
+            const name = t ? t.name : nid;
+
+            const r = await Swal.fire({
+                title: 'تجميد حساب المعلم',
+                input: 'text',
+                inputLabel: `سبب التجميد للأستاذ (${name}):`,
+                inputValue: 'تجميد أمني من لوحة التحكم',
+                showCancelButton: true,
+                confirmButtonText: 'تجميد الحساب',
+                confirmButtonColor: '#d97706'
+            });
+            if (!r.isConfirmed) return;
+
+            const reason = r.value || 'تجميد إداري مؤقت';
+            try {
+                await ZezoEngine.updateTeacher(nid, { is_frozen: true, freeze_reason: reason });
+                if (t) { t.is_frozen = true; t.freeze_reason = reason; }
+                renderStats();
+                renderTeachersList();
+                Swal.fire({ icon: 'success', title: 'تم تجميد الحساب', timer: 1400, showConfirmButton: false });
+            } catch (e) { Swal.fire('خطأ', e.message, 'error'); }
+        }
+
+        async function unfreezeTeacherByNid(nid) {
+            const t = TEACHERS.find(x => String(x.nid) === String(nid));
+            const name = t ? t.name : nid;
+
+            const r = await Swal.fire({
+                title: 'فك التجميد الأمني',
+                html: `سيتم فك تجميد حساب المعلم <b>${esc(name)}</b> وتصفير بصمة هاتفه ليتمكن من ربط جهازه النظيف.<br>متابعة؟`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، فك التجميد وتصفير الجهاز',
+                confirmButtonColor: '#16a34a'
+            });
+            if (!r.isConfirmed) return;
+
+            try {
+                await ZezoEngine.updateTeacher(nid, { is_frozen: false, freeze_reason: null, device_id: null });
+                if (t) { t.is_frozen = false; t.freeze_reason = null; t.device_id = null; }
+                renderStats();
+                renderTeachersList();
+                Swal.fire({ icon: 'success', title: 'تم فك التجميد وتصفير الجهاز', timer: 1500, showConfirmButton: false });
+            } catch (e) { Swal.fire('خطأ', e.message, 'error'); }
+        }
+
+        async function unfreezeAll() {
+            const frozen = TEACHERS.filter(t => t.is_frozen === true);
+            if (frozen.length === 0) { Swal.fire('معلومة', 'لا يوجد أي حسابات مجمّدة حالياً.', 'info'); return; }
+
+            const r = await Swal.fire({
+                title: 'فك تجميد جميع الحسابات',
+                html: `سيتم فك تجميد <b>${toAr(frozen.length)}</b> حساب وتصفير بصمات أجهزتهم للبدء من جديد. تأكيد؟`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، فك الكل',
+                confirmButtonColor: '#16a34a'
+            });
+            if (!r.isConfirmed) return;
+
+            Swal.fire({ title: 'جاري فك التجميد...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                if (getAppMode() === 'offline') {
+                    for (let t of frozen) {
+                        await ZezoEngine.updateTeacher(t.nid, { is_frozen: false, freeze_reason: null, device_id: null });
+                        t.is_frozen = false; t.freeze_reason = null; t.device_id = null;
+                    }
+                } else {
+                    await sbClient.from('teachers').update({ is_frozen: false, freeze_reason: null, device_id: null }).eq('is_frozen', true);
+                    TEACHERS.forEach(t => {
+                        if (t.is_frozen) { t.is_frozen = false; t.freeze_reason = null; t.device_id = null; }
+                    });
+                }
+                renderStats();
+                renderTeachersList();
+                Swal.fire({ icon: 'success', title: 'تم فك جميع التجميدات بنجاح', timer: 1500, showConfirmButton: false });
+            } catch (e) { Swal.fire('خطأ', e.message, 'error'); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           7. الحظر ورفع الحظر
+           ═══════════════════════════════════════════════════════════ */
+        async function saveBans() {
+            await ZezoEngine.upsertDailyLog(BAN_LOG_ID, { list: BANS }, 'system');
+        }
+
+        async function banTeacherByNid(nid) {
+            const t = TEACHERS.find(x => String(x.nid) === String(nid));
+            const name = t ? t.name : nid;
+
+            const r = await Swal.fire({
+                title: '🚫 حظر المعلم من البوابة',
+                html: `سيتم منع المعلم <b>${esc(name)}</b> من الدخول لبوابة المعلم نهائياً.<br><small>يمكنك رفع الحظر في أي وقت.</small>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، احظر',
+                confirmButtonColor: '#be123c'
+            });
+            if (!r.isConfirmed) return;
+
+            if (BANS.some(b => String(b.nid) === String(nid))) return;
+            BANS.push({ nid: String(nid), name: name, bannedAt: new Date().toISOString() });
+
+            try {
+                await saveBans();
+                renderStats();
+                renderTeachersList();
+                Swal.fire({ icon: 'success', title: 'تم تفعيل الحظر', timer: 1400, showConfirmButton: false });
+            } catch (e) { Swal.fire('خطأ', e.message, 'error'); }
+        }
+
+        async function unbanTeacherByNid(nid) {
+            const t = TEACHERS.find(x => String(x.nid) === String(nid));
+            const name = t ? t.name : nid;
+
+            const r = await Swal.fire({
+                title: 'رفع الحظر',
+                html: `هل تريد رفع الحظر عن الأستاذ(ة): <b>${esc(name)}</b>؟`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، ارفع الحظر',
+                confirmButtonColor: '#16a34a'
+            });
+            if (!r.isConfirmed) return;
+
+            BANS = BANS.filter(b => String(b.nid) !== String(nid));
+            try {
+                await saveBans();
+                renderStats();
+                renderTeachersList();
+                Swal.fire({ icon: 'success', title: 'تم رفع الحظر بنجاح', timer: 1400, showConfirmButton: false });
+            } catch (e) { Swal.fire('خطأ', e.message, 'error'); }
+        }
+
+        async function clearAllBans() {
+            if (BANS.length === 0) { Swal.fire('معلومة', 'لا يوجد أي حظر مفعّل حالياً.', 'info'); return; }
+
+            const r = await Swal.fire({
+                title: 'رفع الحظر عن الجميع',
+                text: `سيتم إلغاء الحظر عن ${BANS.length} معلم. متابعة؟`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم',
+                confirmButtonColor: '#be123c'
+            });
+            if (!r.isConfirmed) return;
+
+            BANS = [];
+            try {
+                await saveBans();
+                renderStats();
+                renderTeachersList();
+                Swal.fire({ icon: 'success', title: 'تم رفع الحظر عن الجميع', timer: 1400, showConfirmButton: false });
+            } catch (e) { Swal.fire('خطأ', e.message, 'error'); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           8. الرسائل والتوجيهات الإدارية
+           ═══════════════════════════════════════════════════════════ */
+        function selectTargetType(el, type) {
+            document.querySelectorAll('input[name="targetType"]').forEach(r => r.checked = false);
+            el.querySelector('input[type="radio"]').checked = true;
+            document.querySelectorAll('.checkbox-pill').forEach(p => p.classList.remove('checked'));
+            el.classList.add('checked');
+
+            document.getElementById('group-controls').classList.toggle('hidden', type !== 'group');
+            document.getElementById('specific-controls').classList.toggle('hidden', type !== 'specific');
+
+            if (type === 'group') renderGroupMembers();
+        }
+
+        function insertTemplate(text) {
+            document.getElementById('broadcast-text').value = text;
+        }
+
+        function renderGroupValueOptions() {
+            const type = document.getElementById('group-type').value;
+            const valueSelect = document.getElementById('group-value');
+            let values = new Set();
+
+            if (type === 'subject') TEACHERS.forEach(t => t.subject && values.add(t.subject));
+            else if (type === 'category') TEACHERS.forEach(t => t.teaching_category && values.add(t.teaching_category));
+            else if (type === 'status') TEACHERS.forEach(t => t.emp_status && values.add(t.emp_status));
+
+            valueSelect.innerHTML = Array.from(values).sort().map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+            renderGroupMembers();
+        }
+
+        function getGroupMembers() {
+            const type = document.getElementById('group-type').value;
+            const value = document.getElementById('group-value').value;
+            if (!value) return [];
+
+            return TEACHERS.filter(t => {
+                if (type === 'subject') return (t.subject || '') === value;
+                if (type === 'category') return (t.teaching_category || '') === value;
+                if (type === 'status') return (t.emp_status || '') === value;
+                return false;
+            });
+        }
+
+        function renderGroupMembers() {
+            const members = getGroupMembers();
+            document.getElementById('group-members-preview').innerHTML = `<i class="fa-solid fa-users"></i> إجمالي المستهدفين: <b>${toAr(members.length)}</b> معلماً`;
+        }
+
+        function renderSpecificList() {
+            const q = (document.getElementById('specific-search').value || '').trim().toLowerCase();
+            let list = TEACHERS.slice();
+            if (q) list = list.filter(t => (t.name || '').toLowerCase().includes(q) || String(t.nid || '').includes(q));
+            list = list.slice(0, 100);
+
+            const container = document.getElementById('specific-list');
+            if (list.length === 0) {
+                container.innerHTML = '<div class="empty-state text-xs">لا يوجد معلمون مطابقون</div>';
+            } else {
+                container.innerHTML = list.map(t => {
+                    const checked = selectedSpecificNids.has(String(t.nid));
+                    return `
+                        <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0">
+                            <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleSpecific('${esc(t.nid)}')">
+                            <span class="text-xs font-black text-[#0f2b48] flex-1">${esc(t.name)}</span>
+                            <span class="text-[11px] text-slate-500 font-mono">${esc(t.nid)}</span>
+                        </label>
+                    `;
+                }).join('');
+            }
+            document.getElementById('specific-count').innerHTML = `<i class="fa-solid fa-user-check"></i> تم اختيار: <b>${toAr(selectedSpecificNids.size)}</b> معلماً`;
+        }
+
+        function toggleSpecific(nid) {
+            if (selectedSpecificNids.has(String(nid))) selectedSpecificNids.delete(String(nid));
+            else selectedSpecificNids.add(String(nid));
+            renderSpecificList();
+        }
+
+        async function sendBroadcast() {
+            const text = document.getElementById('broadcast-text').value.trim();
+            if (!text) { Swal.fire('تنبيه', 'يرجى كتابة نص الرسالة الإدارية.', 'warning'); return; }
+
+            const targetType = document.querySelector('input[name="targetType"]:checked')?.value || 'all';
+            let targetNids = [];
+            let targetDescription = '';
+
+            if (targetType === 'all') {
+                targetNids = ['*'];
+                targetDescription = `جميع المعلمين (${toAr(TEACHERS.length)})`;
+            } else if (targetType === 'group') {
+                const members = getGroupMembers();
+                if (members.length === 0) { Swal.fire('تنبيه', 'لا يوجد أعضاء في المجموعة المحددة.', 'warning'); return; }
+                targetNids = members.map(m => String(m.nid));
+                targetDescription = `${document.getElementById('group-value').value} (${toAr(members.length)})`;
+            } else {
+                if (selectedSpecificNids.size === 0) { Swal.fire('تنبيه', 'يرجى اختيار معلم واحد على الأقل.', 'warning'); return; }
+                targetNids = Array.from(selectedSpecificNids);
+                targetDescription = `معلمون محددون (${toAr(targetNids.length)})`;
+            }
+
+            const r = await Swal.fire({
+                title: 'تأكيد الإرسال',
+                html: `سيتم إرسال الرسالة إلى:<br><b>${esc(targetDescription)}</b>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'إرسال التوجيه',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#0f2b48'
+            });
+            if (!r.isConfirmed) return;
+
+            const btn = document.getElementById('btn-send-broadcast');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الإرسال...';
+
+            const messageObj = {
+                id: 'MSG_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+                text: text,
+                targetType: targetType,
+                targetNids: targetNids,
+                targetDescription: targetDescription,
+                createdAt: new Date().toISOString(),
+                readBy: []
+            };
+
+            BROADCASTS.unshift(messageObj);
+
+            try {
+                await ZezoEngine.upsertDailyLog(BROADCAST_LOG_ID, { messages: BROADCASTS }, 'broadcast');
+
+                document.getElementById('broadcast-text').value = '';
+                selectedSpecificNids.clear();
+                renderSpecificList();
+                renderSent();
+
+                Swal.fire({ icon: 'success', title: 'تم إرسال الرسالة بنجاح!', text: `استهدفت: ${targetDescription}`, timer: 1800, showConfirmButton: false });
+            } catch (e) {
+                BROADCASTS.shift();
+                Swal.fire('خطأ', e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane text-yellow-300"></i> إرسال التوجيه الآن';
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           9. إرسال رسالة خاصة لمعلم محدد
+           ═══════════════════════════════════════════════════════════ */
+        function openSendToOneByNid(nid) {
+            const t = TEACHERS.find(x => String(x.nid) === String(nid));
+            const name = t ? t.name : 'معلم';
+
+            document.getElementById('send-to-teacher-name').innerText = `أ/ ${name} (${nid})`;
+            document.getElementById('send-one-nid').value = nid;
+            document.getElementById('send-one-text').value = '';
+            document.getElementById('sendToOneModal').classList.add('active');
+        }
+
+        async function submitSendToOne() {
+            const nid = document.getElementById('send-one-nid').value;
+            const t = TEACHERS.find(x => String(x.nid) === String(nid));
+            const name = t ? t.name : 'معلم';
+            const text = document.getElementById('send-one-text').value.trim();
+
+            if (!text) { Swal.fire('تنبيه', 'يرجى كتابة نص الرسالة.', 'warning'); return; }
+
+            const messageObj = {
+                id: 'MSG_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+                text: text,
+                targetType: 'specific',
+                targetNids: [String(nid)],
+                targetDescription: `أ/ ${name}`,
+                createdAt: new Date().toISOString(),
+                readBy: []
+            };
+
+            BROADCASTS.unshift(messageObj);
+
+            try {
+                await ZezoEngine.upsertDailyLog(BROADCAST_LOG_ID, { messages: BROADCASTS }, 'broadcast');
+
+                if (getAppMode() === 'online') {
+                    await sbClient.from('teacher_requests').insert([{
+                        teacher_nid: nid,
+                        teacher_name: name,
+                        message: "رسالة إدارية خاصة من إدارة المدرسة",
+                        admin_reply: text,
+                        status: "منجز",
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    }]);
+                }
+
+                closeModal('sendToOneModal');
+                renderSent();
+                Swal.fire({ icon: 'success', title: 'تم إرسال الرسالة للمعلم', timer: 1400, showConfirmButton: false });
+            } catch (e) {
+                BROADCASTS.shift();
+                Swal.fire('خطأ', e.message, 'error');
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           10. صندوق الوارد وبلاغات الدخول
+           ═══════════════════════════════════════════════════════════ */
+        function setInboxFilter(f) {
+            currentInboxFilter = f;
+            document.querySelectorAll('#sec-inbox .filter-pill').forEach(p => p.classList.toggle('active', p.dataset.inboxFilter === f));
+            renderInbox();
+        }
+
+        function renderInbox() {
+            const container = document.getElementById('inbox-container');
+            let list = INCOMING.slice();
+
+            if (currentInboxFilter === 'new') list = list.filter(r => r.status === 'جديد' || !r.status);
+            else if (currentInboxFilter === 'resolved') list = list.filter(r => r.status === 'منجز');
+            else if (currentInboxFilter === 'login') list = list.filter(r => (r.message || '').includes('بلاغ مشكلة دخول'));
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-inbox text-3xl mb-2 block"></i> لا توجد طلبات أو بلاغات مطابقة</div>`;
+                return;
+            }
+
+            container.innerHTML = list.map(r => {
+                const isIssue = (r.message || '').includes('بلاغ مشكلة دخول');
+                const isResolved = r.status === 'منجز';
+                const cls = isIssue ? 'issue' : (isResolved ? 'reply' : '');
+                const dateStr = r.created_at ? new Date(r.created_at).toLocaleString('ar-EG') : '-';
+                
+                const badge = isResolved
+                    ? '<span class="badge badge-green">تم الرد والإنجاز</span>'
+                    : (isIssue ? '<span class="badge badge-red">بلاغ دخول عاجل</span>' : '<span class="badge badge-amber">قيد الانتظار</span>');
+
+                return `
+                    <div class="message-card ${cls}" id="card-req-${r.id}">
+                        <div class="msg-header">
+                            <div class="msg-sender"><i class="fa-solid fa-user"></i> أ/ ${esc(r.teacher_name || 'معلم')}</div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                ${badge}
+                                <span class="msg-date"><i class="fa-regular fa-clock"></i> ${dateStr}</span>
+                            </div>
+                        </div>
+                        <div class="text-[11px] font-mono font-bold text-slate-500 mb-1">الرقم القومي: ${esc(r.teacher_nid || 'غير محدد')}</div>
+                        <div class="msg-body">${esc(r.message || '')}</div>
+                        ${r.admin_reply ? `<div class="p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-bold text-emerald-900 mb-2"><b><i class="fa-solid fa-reply"></i> رد الإدارة:</b> ${esc(r.admin_reply)}</div>` : ''}
+                        
+                        <div class="flex gap-2 flex-wrap pt-1">
+                            <button onclick="openReplyModalById(${r.id})" class="btn-3d px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-black flex items-center gap-1">
+                                <i class="fa-solid fa-reply"></i> رد رسمي
+                            </button>
+                            ${r.teacher_nid ? `
+                                <button onclick="unbindDeviceByNid('${esc(r.teacher_nid)}')" class="btn-3d px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-lg text-xs font-black flex items-center gap-1">
+                                    <i class="fa-solid fa-link-slash"></i> فك بصمة الهاتف
+                                </button>
+                                <button onclick="openSendToOneByNid('${esc(r.teacher_nid)}')" class="btn-3d px-3 py-1.5 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-lg text-xs font-black flex items-center gap-1">
+                                    <i class="fa-solid fa-paper-plane"></i> رسالة خاصة
+                                </button>
+                            ` : ''}
+                            ${!isResolved ? `
+                                <button onclick="markResolvedById(${r.id})" class="btn-3d px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white rounded-lg text-xs font-black flex items-center gap-1">
+                                    <i class="fa-solid fa-check-double"></i> إغلاق الطلب
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openReplyModalById(reqId) {
+            const item = INCOMING.find(x => String(x.id) === String(reqId));
+            if (!item) return;
+
+            document.getElementById('reply-req-id').value = item.id;
+            document.getElementById('reply-from-name').innerText = `أ/ ${item.teacher_name || 'معلم'} (${item.teacher_nid || ''})`;
+            document.getElementById('reply-original-text').innerText = item.message || '';
+            document.getElementById('reply-text').value = item.admin_reply || '';
+            document.getElementById('replyModal').classList.add('active');
+        }
+
+        async function submitReply() {
+            const id = document.getElementById('reply-req-id').value;
+            const reply = document.getElementById('reply-text').value.trim();
+            if (!reply) { Swal.fire('تنبيه', 'يرجى كتابة نص الرد.', 'warning'); return; }
+
+            try {
+                await ZezoEngine.updateTeacherRequest(id, {
+                    admin_reply: reply,
+                    status: 'منجز',
+                    updated_at: new Date().toISOString()
+                });
+
+                const item = INCOMING.find(x => String(x.id) === String(id));
+                if (item) { item.admin_reply = reply; item.status = 'منجز'; }
+
+                closeModal('replyModal');
+                renderInbox();
+                renderStats();
+                Swal.fire({ icon: 'success', title: 'تم إرسال الرد للمعلم', timer: 1400, showConfirmButton: false });
+            } catch (e) { Swal.fire('خطأ', e.message, 'error'); }
+        }
+
+        async function unbindFromReplyModal() {
+            const id = document.getElementById('reply-req-id').value;
+            const item = INCOMING.find(x => String(x.id) === String(id));
+            if (!item || !item.teacher_nid) { Swal.fire('تنبيه', 'الرقم القومي غير متوفر في هذا البلاغ.', 'warning'); return; }
+            await unbindDeviceByNid(item.teacher_nid);
+        }
+
+        async function markResolvedById(id) {
+            try {
+                await ZezoEngine.updateTeacherRequest(id, { status: 'منجز', updated_at: new Date().toISOString() });
+                const item = INCOMING.find(x => String(x.id) === String(id));
+                if (item) item.status = 'منجز';
+                renderInbox();
+                renderStats();
+            } catch (e) { Swal.fire('خطأ', e.message, 'error'); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           11. تتبع الرسائل المرسلة ونسب القراءة
+           ═══════════════════════════════════════════════════════════ */
+        function renderSent() {
+            const container = document.getElementById('sent-container');
+            if (BROADCASTS.length === 0) {
+                container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-paper-plane text-3xl mb-2 block"></i> لم يتم إرسال أي رسائل بعد</div>`;
+                return;
+            }
+
+            container.innerHTML = BROADCASTS.map(m => {
+                const isAll = (m.targetNids || []).includes('*');
+                const totalTargets = isAll ? TEACHERS.length : (m.targetNids || []).length;
+                const readCount = (m.readBy || []).length;
+                const percent = totalTargets > 0 ? Math.round((readCount / totalTargets) * 100) : 0;
+                const dateStr = m.createdAt ? new Date(m.createdAt).toLocaleString('ar-EG') : '-';
+
+                const readers = (m.readBy || []).map(nid => {
+                    const t = TEACHERS.find(x => String(x.nid) === String(nid));
+                    return t ? t.name : nid;
+                });
+
+                const unreaders = isAll
+                    ? TEACHERS.filter(t => !(m.readBy || []).includes(String(t.nid))).map(t => t.name)
+                    : (m.targetNids || []).filter(nid => !(m.readBy || []).includes(String(nid))).map(nid => {
+                        const t = TEACHERS.find(x => String(x.nid) === String(nid));
+                        return t ? t.name : nid;
+                    });
+
+                return `
+                    <div class="message-card broadcast">
+                        <div class="msg-header">
+                            <div class="msg-sender"><i class="fa-solid fa-bullhorn text-purple-700"></i> ${esc(m.targetDescription || 'توجيه إداري')}</div>
+                            <span class="msg-date"><i class="fa-regular fa-clock"></i> ${dateStr}</span>
+                        </div>
+                        <div class="msg-body" style="white-space: pre-wrap;">${esc(m.text || '')}</div>
+
+                        <div class="text-xs font-black text-slate-700 mb-1">
+                            نسبة القراءة: <b class="text-emerald-700 font-mono">${toAr(percent)}%</b> (${toAr(readCount)} من ${toAr(totalTargets)} معلماً)
+                        </div>
+                        <div class="progress-bar mb-3"><div class="progress-fill" style="width:${percent}%"></div></div>
+
+                        <details class="text-xs">
+                            <summary class="cursor-pointer font-black text-blue-800 hover:text-blue-900">
+                                <i class="fa-solid fa-list-check"></i> تفاصيل أسماء المعلمين (${toAr(readCount)} قرأوا)
+                            </summary>
+                            <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div class="p-2 bg-emerald-50 rounded-lg border border-emerald-200">
+                                    <div class="font-black text-emerald-800 mb-1"><i class="fa-solid fa-eye"></i> قرأوا (${toAr(readers.length)}):</div>
+                                    <div class="text-[11px] text-emerald-900 leading-relaxed">${readers.length ? readers.map(esc).join(' ، ') : 'لا أحد حتى الآن'}</div>
+                                </div>
+                                <div class="p-2 bg-rose-50 rounded-lg border border-rose-200">
+                                    <div class="font-black text-rose-800 mb-1"><i class="fa-solid fa-eye-slash"></i> لم يقرأوا (${toAr(unreaders.length)}):</div>
+                                    <div class="text-[11px] text-rose-900 leading-relaxed">${unreaders.length ? unreaders.map(esc).join(' ، ') : 'الجميع قرأ الرسالة'}</div>
+                                </div>
+                            </div>
+                        </details>
+
+                        <div class="mt-2.5 flex justify-end">
+                            <button onclick="deleteBroadcastById('${m.id}')" class="btn-3d px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white rounded-lg text-xs font-black">
+                                <i class="fa-solid fa-trash"></i> حذف الرسالة
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function deleteBroadcastById(id) {
+            const r = await Swal.fire({
+                title: 'حذف الرسالة',
+                text: 'هل أنت متأكد من حذف هذه الرسالة من سجلات المعلمين؟',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'حذف',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#be123c'
+            });
+            if (!r.isConfirmed) return;
+
+            BROADCASTS = BROADCASTS.filter(m => m.id !== id);
+            try {
+                await ZezoEngine.upsertDailyLog(BROADCAST_LOG_ID, { messages: BROADCASTS }, 'broadcast');
+                renderSent();
+            } catch (e) { Swal.fire('خطأ', e.message, 'error'); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════
+           12. إغلاق النوافذ المنبثقة
+           ═══════════════════════════════════════════════════════════ */
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+    </script>
+</body>
+</html>
