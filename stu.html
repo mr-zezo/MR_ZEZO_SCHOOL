@@ -15,6 +15,9 @@
     <!-- مكتبة التقاط الشاشة -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+    <!-- مكتبة التنبيهات الذكية SweetAlert2 (هذه التي كانت مفقودة وتوقف الزر) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         :root {
             --primary: #0f2b48; --dark: #0f172a; --bg: #f1f5f9; 
@@ -264,7 +267,13 @@
         <!-- السن مقسم إلى (يوم - شهر - سنة) بدقة تامة -->
         <div class="grid-3">
             <div><label>تاريخ الميلاد</label><input type="text" id="dob" class="readonly-field" readonly></div>
-            <div><label>النوع</label><input type="text" id="gender" class="readonly-field" readonly></div>
+            <div>
+                <label>النوع</label>
+                <select id="gender" style="background:#f1f5f9; border-color:#cbd5e1; font-weight:900; color:var(--primary);">
+                    <option value="ذكر">ذكر</option>
+                    <option value="أنثى">أنثى</option>
+                </select>
+            </div>
             <div>
                 <label><i class="fa-solid fa-calendar-check text-green-600"></i> السن (يوم - شهر - سنة)</label>
                 <div class="age-container">
@@ -374,26 +383,8 @@
 
         const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
         const AGE_DATE_STORAGE_KEY = "ZEZO_PERSISTENT_AGE_CALC_DATE";
-         function parseCleanInt(val) {
-            if (!val && val !== 0) return 0;
-            let s = String(val).trim();
-            const arDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
-            for (let i = 0; i < 10; i++) {
-                s = s.replace(new RegExp(arDigits[i], 'g'), i);
-            }
-            const clean = s.replace(/[^\d]/g, '');
-            const parsed = parseInt(clean, 10);
-            return isNaN(parsed) ? 0 : parsed;
-        }
-        // دالة لتوحيد الحروف العربية لتسهيل البحث
-        function normalizeArabic(text) {
-            if (!text) return "";
-            return text.replace(/[أإآ]/g, 'ا')
-                       .replace(/ى/g, 'ي')
-                       .replace(/ة/g, 'ه');
-        }
 
-        // دالة تنظيف وتحويل أي رقم (عربي أو إنجليزي) إلى عدد صحيح سليم
+        // دالة تنظيف وتحويل الأرقام (عربية / إنجليزية) إلى عدد صحيح سليم
         function parseCleanInt(val) {
             if (!val && val !== 0) return 0;
             let s = String(val).trim();
@@ -404,6 +395,13 @@
             const clean = s.replace(/[^\d]/g, '');
             const parsed = parseInt(clean, 10);
             return isNaN(parsed) ? 0 : parsed;
+        }
+
+        function normalizeArabic(text) {
+            if (!text) return "";
+            return text.replace(/[أإآ]/g, 'ا')
+                       .replace(/ى/g, 'ي')
+                       .replace(/ة/g, 'ه');
         }
 
         function openLocalDB() {
@@ -1005,7 +1003,12 @@
             document.getElementById("search-results").style.display = "none";
             
             document.getElementById("dob").value = data.dob || "";
-            document.getElementById("gender").value = data.gender || "";
+            
+            // إصلاح مشكلة النوع: تعيين القيمة للقائمة المنسدلة بدلاً من حقل نصي
+            const genderSelect = document.getElementById("gender");
+            if (genderSelect) {
+                genderSelect.value = data.gender || "ذكر";
+            }
 
             if (data.age_year != null && data.age_year !== "") {
                 document.getElementById("age_day").value = data.age_day != null ? data.age_day : "";
@@ -1083,7 +1086,7 @@
             if (!name) { alert("⚠️ يرجى كتابة اسم التلميذ رباعياً!"); return; }
             if (!gradeVal) { alert("⚠️ يرجى اختيار الصف الدراسي أولاً!"); return; }
             if (!className) { alert("⚠️ يرجى اختيار الفصل الدراسي!"); return; }
-            if (!genderVal) { alert("⚠️ يرجى التأكد من استخراج النوع (ذكر/أنثى) من الرقم القومي!"); return; }
+            if (!genderVal) { alert("⚠️ يرجى التأكد من اختيار النوع (ذكر/أنثى)!"); return; }
 
             if (nid && nid.length === 14) {
                 const exists = await ZezoEngine.checkNidExists(nid);
@@ -1344,7 +1347,10 @@
             document.getElementById("national_id").value = "";
             document.getElementById("register_num").value = "";
             document.getElementById("dob").value = "";
-            document.getElementById("gender").value = "";
+            
+            // إعادة تعيين النوع إلى القيمة الافتراضية
+            const genderSelect = document.getElementById("gender");
+            if (genderSelect) genderSelect.value = "ذكر";
             
             document.getElementById("age_day").value = "";
             document.getElementById("age_month").value = "";
