@@ -367,7 +367,7 @@
         </div>
     </div>
 
-    <script>
+   <script>
         const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -381,6 +381,19 @@
             return text.replace(/[أإآ]/g, 'ا')
                        .replace(/ى/g, 'ي')
                        .replace(/ة/g, 'ه');
+        }
+
+        // دالة تنظيف وتحويل أي رقم (عربي أو إنجليزي) إلى عدد صحيح سليم
+        function parseCleanInt(val) {
+            if (!val && val !== 0) return 0;
+            let s = String(val).trim();
+            const arDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            for (let i = 0; i < 10; i++) {
+                s = s.replace(new RegExp(arDigits[i], 'g'), i);
+            }
+            const clean = s.replace(/[^\d]/g, '');
+            const parsed = parseInt(clean, 10);
+            return isNaN(parsed) ? 0 : parsed;
         }
 
         function openLocalDB() {
@@ -439,7 +452,6 @@
                 }
             },
 
-            // دالة البحث المعدلة لتدعم البحث في كل الصفوف إذا لم يتم تحديد صف
             async searchStudents(val, grade, limit = 20) {
                 const cleanVal = normalizeArabic(val.trim());
                 if (!cleanVal) return [];
@@ -455,17 +467,14 @@
                         req.onerror = () => reject(req.error);
                     });
                     
-                    // فلترة بالصف فقط إذا تم تحديد صف
                     if (grade && grade !== "") {
                         allStudents = allStudents.filter(s => (s.grade || '').trim() === grade.trim());
                     }
                 } else {
-                    // في الأونلاين
                     let query = sbClient
                         .from('students')
                         .select('code, name, grade, class');
                     
-                    // إضافة فلتر الصف فقط إذا تم تحديد صف
                     if (grade && grade !== "") {
                         query = query.eq('grade', grade);
                     }
@@ -483,21 +492,16 @@
                     const originalName = s.name || '';
                     const normName = normalizeArabic(originalName);
                     
-                    // إذا كان الاسم يبدأ بنفس الحروف
                     if (normName.startsWith(cleanVal)) {
                         startsWith.push(s);
-                    } 
-                    // إذا كان الاسم يحتوي على الحروف في المنتصف
-                    else if (normName.includes(cleanVal)) {
+                    } else if (normName.includes(cleanVal)) {
                         contains.push(s);
                     }
                 });
                 
-                // ترتيب أبجدي للنتائج
                 startsWith.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
                 contains.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
                 
-                // دمج القائمتين (الأولوية لمن يبدأ بالحرف) وقص العدد لـ 20
                 return [...startsWith, ...contains].slice(0, limit);
             },
 
@@ -514,7 +518,7 @@
                         req.onerror = () => reject(req.error);
                     });
                 } else {
-                    const { data, error } = await sbClient.from('students').select('class, gender, register_num, grade').eq('grade', grade);
+                    const { data, error } = await sbClient.from('students').select('*').eq('grade', grade);
                     if (error) throw error;
                     return data || [];
                 }
@@ -532,6 +536,27 @@
                 } else {
                     const { error } = await sbClient.from('students').upsert(record, { onConflict: 'code' });
                     if (error) throw error;
+                    return true;
+                }
+            },
+
+            async upsertStudentsBatch(records) {
+                if (this.getMode() === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve, reject) => {
+                        const tx = db.transaction('students', 'readwrite');
+                        const store = tx.objectStore('students');
+                        records.forEach(r => store.put(r));
+                        tx.oncomplete = () => resolve(true);
+                        tx.onerror = () => reject(tx.error);
+                    });
+                } else {
+                    const chunkSize = 200;
+                    for (let i = 0; i < records.length; i += chunkSize) {
+                        const chunk = records.slice(i, i + chunkSize);
+                        const { error } = await sbClient.from('students').upsert(chunk, { onConflict: 'code' });
+                        if (error) throw error;
+                    }
                     return true;
                 }
             },
@@ -642,7 +667,6 @@
                 badge.innerHTML = '<i class="fa-solid fa-globe"></i> متصل بالسحابة (أونلاين)';
             }
 
-            // تعيين القيمة الافتراضية على "جميع الصفوف" للبحث العام
             document.getElementById("grade_level").value = "";
 
             await fetchSchoolInfo();
@@ -685,7 +709,7 @@
 
             if (!grade) {
                 updateClassFieldStyle();
-                return; // لا تقم بتوليد فصول إذا لم يتم اختيار صف
+                return; 
             }
 
             let count = 0;
@@ -740,6 +764,9 @@
                 }
             }
             updateClassFieldStyle();
+            if (!isExistingStudent) {
+                calculateNextRegisterNumber();
+            }
         }
 
         function updateClassFieldStyle() {
@@ -755,33 +782,29 @@
             }
         }
 
+        // ================= حساب رقم السجل التلقائي بناءً على الفصل المختار =================
         async function calculateNextRegisterNumber() {
             const grade = document.getElementById("grade_level").value;
-            const gender = document.getElementById("gender").value;
+            const className = document.getElementById("class_name").value;
 
-            if (!grade || !gender) return;
-
-            const isMale = (gender === "ذكر");
-            const minRange = isMale ? 1 : 201;
-            const maxRange = isMale ? 200 : 400;
+            if (!grade) return;
 
             try {
                 const data = await ZezoEngine.getStudentsByGrade(grade);
+                
+                // البحث في تلاميذ نفس الفصل المحدد
+                let targetStudents = className 
+                    ? data.filter(s => String(s.class || '').trim() === className.trim() && s.transfer_type !== "محول من")
+                    : data.filter(s => s.transfer_type !== "محول من");
+
                 let highestNum = 0;
-                if (data && data.length > 0) {
-                    data.filter(s => s.gender === gender).forEach(st => {
-                        const num = parseInt(st.register_num);
-                        if (!isNaN(num) && num >= minRange && num <= maxRange) {
-                            if (num > highestNum) highestNum = num;
-                        }
-                    });
-                }
+                targetStudents.forEach(st => {
+                    const num = parseCleanInt(st.register_num);
+                    if (num > highestNum) highestNum = num;
+                });
 
-                let nextNum = (highestNum === 0) ? minRange : (highestNum + 1);
-
-                if (nextNum > maxRange) {
-                    alert(`⚠️ تحذير: تجاوز رقم السجل الحد الأقصى المخصص (${maxRange}) لهذا النوع في الصف ${grade}!`);
-                }
+                // الرقم التالي = أعلى رقم بالفصل + 1
+                let nextNum = highestNum > 0 ? (highestNum + 1) : (targetStudents.length + 1);
 
                 const regInput = document.getElementById("register_num");
                 regInput.value = nextNum;
@@ -873,10 +896,10 @@
                     const isHigh = stats.total > 45;
                     tableHtml += `
                         <tr>
-                            <td style="font-weight:900; color:var(--primary); font-size:14px;"><i class="fa-solid fa-door-open" style="margin-left:4px; color:#64748b;"></i> فصل ${cName}</td>
-                            <td style="color:#0284c7;">${toArabicNum(stats.boys)}</td>
-                            <td style="color:#e11d48;">${toArabicNum(stats.girls)}</td>
-                            <td style="font-size:15px; font-weight:900;">${toArabicNum(stats.total)}</td>
+                            <td style="font-weight:900; color:var(--primary); font-size:15px;"><i class="fa-solid fa-door-open" style="margin-left:4px; color:#64748b;"></i> فصل ${cName}</td>
+                            <td style="color:#0284c7; font-weight:800;">${toArabicNum(stats.boys)}</td>
+                            <td style="color:#e11d48; font-weight:800;">${toArabicNum(stats.girls)}</td>
+                            <td style="font-size:16px; font-weight:900;">${toArabicNum(stats.total)}</td>
                             <td>
                                 <span class="density-badge ${isHigh ? 'density-high' : 'density-normal'}">
                                     ${stats.total === 0 ? 'فارغ' : (isHigh ? 'كثافة مرتفعة' : 'كثافة معتدلة')}
@@ -895,7 +918,6 @@
             }
         }
 
-        // دالة البحث الذكي المعدلة
         async function smartSearchByName(val) {
             const resBox = document.getElementById("search-results");
             const cleanVal = val.trim();
@@ -904,11 +926,9 @@
                 return; 
             }
 
-            // جلب الصف المختار حالياً (قد يكون فارغاً للبحث في كل الصفوف)
             const currentGrade = document.getElementById("grade_level").value;
 
             try {
-                // تمرير قيمة البحث، الصف المختار، والحد الأقصى 20
                 const data = await ZezoEngine.searchStudents(cleanVal, currentGrade, 20);
 
                 resBox.innerHTML = "";
@@ -920,15 +940,14 @@
                 data.forEach((d, idx) => {
                     const item = document.createElement("div");
                     item.className = "result-item";
-                    // إظهار الصف والفصل في نتيجة البحث لتمييز الطلاب عند البحث العام
                     item.innerHTML = `
                         <span><strong>${idx + 1}.</strong> ${d.name}</span> 
                         <span class="result-item-badge"><i class="fa-solid fa-graduation-cap"></i> ${d.grade || 'غير محدد'} / ${d.class || 'غير محدد'}</span>
                     `;
                     item.onclick = () => {
                         fetchStudentByCode(d.code);
-                        document.getElementById("student_name").value = d.name; // تحديث حقل الإدخال بالاسم المختار
-                        resBox.style.display = "none"; // إخفاء القائمة بعد الاختيار
+                        document.getElementById("student_name").value = d.name; 
+                        resBox.style.display = "none"; 
                     };
                     resBox.appendChild(item);
                 });
@@ -947,7 +966,6 @@
             }
         }
 
-        // ================= تعبئة بيانات البطاقة بدقة تامة =================
         function populateCard(code, data) {
             isExistingStudent = true;
             currentStudentData = data;
@@ -964,7 +982,6 @@
             document.getElementById("national_id").value = data.nid || "";
             document.getElementById("register_num").value = data.register_num || "";
             
-            // تعيين الصف وتحديث الفصول بناءً عليه
             document.getElementById("grade_level").value = data.grade || "الأول";
             updateClassDropdown(data.class);
 
@@ -977,17 +994,14 @@
             
             document.getElementById("search-results").style.display = "none";
             
-            // جلب الميلاد والنوع من القاعدة مباشرة
             document.getElementById("dob").value = data.dob || "";
             document.getElementById("gender").value = data.gender || "";
 
-            // جلب السن من القاعدة مباشرة (يوم - شهر - سنة)
             if (data.age_year != null && data.age_year !== "") {
                 document.getElementById("age_day").value = data.age_day != null ? data.age_day : "";
                 document.getElementById("age_month").value = data.age_month != null ? data.age_month : "";
                 document.getElementById("age_year").value = data.age_year != null ? data.age_year : "";
             } else if (data.dob) {
-                // حساب احتياطي لو السن مش متسجل في القاعدة
                 const refDateStr = localStorage.getItem(AGE_DATE_STORAGE_KEY) || "2026-10-01";
                 const parts = calculateAccurateAgeParts(data.dob, refDateStr);
                 document.getElementById("age_day").value = parts.d;
@@ -1047,23 +1061,192 @@
             document.getElementById("absModal").classList.add("active");
         }
 
+        // ================= دالة الإضافة الذكية مع التخيير الصريح =================
         async function saveNew() { 
             isExistingStudent = false;
+            const name = document.getElementById("student_name").value.trim();
+            const gradeVal = document.getElementById("grade_level").value;
+            const className = document.getElementById("class_name").value;
+            const genderVal = document.getElementById("gender").value;
             const nid = document.getElementById("national_id").value.trim();
-            
-            if (nid) {
+
+            if (!name) { alert("⚠️ يرجى كتابة اسم التلميذ رباعياً!"); return; }
+            if (!gradeVal) { alert("⚠️ يرجى اختيار الصف الدراسي أولاً!"); return; }
+            if (!className) { alert("⚠️ يرجى اختيار الفصل الدراسي!"); return; }
+            if (!genderVal) { alert("⚠️ يرجى التأكد من استخراج النوع (ذكر/أنثى) من الرقم القومي!"); return; }
+
+            if (nid && nid.length === 14) {
                 const exists = await ZezoEngine.checkNidExists(nid);
                 if (exists) {
-                    alert("❌ هذا الرقم القومي مسجل لتلميذ آخر بالفعل في المنظومة!");
+                    alert("❌ هذا الرقم القومي مسجل بالفعل لتلميذ آخر في المنظومة!");
                     return;
                 }
             }
 
-            if (confirm("هل أنت متأكد من إضافة هذا التلميذ كطالب جديد بالمنظومة؟")) {
-                const success = await processSave("تم الإضافة بنجاح");
+            const result = await Swal.fire({
+                title: 'تحديد طريقة تسكين وترقيم التلميذ',
+                html: `
+                    <div style="text-align: right; font-size: 14px; line-height: 1.8; color: #334155;">
+                        أنت بصدد إضافة التلميذ: <b style="color: #1e3a8a;">${name}</b><br>
+                        الصف: <b>${gradeVal}</b> | الفصل: <b>${className}</b><br><br>
+                        <b>اختر طريقة التسكين المطلوبة في القوائم وسجل القيد:</b>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                showDenyButton: true,
+                confirmButtonText: '<i class="fa-solid fa-list-ol"></i> إضافة في آخر القيد (في ذيل الفصل تحت الجميع)',
+                denyButtonText: '<i class="fa-solid fa-arrow-down-a-z"></i> فك التجميد وإعادة الترتيب الأبجدي للفصل',
+                cancelButtonText: 'إلغاء الأمر',
+                confirmButtonColor: '#16a34a',
+                denyButtonColor: '#d97706',
+                cancelButtonColor: '#64748b',
+                width: '620px'
+            });
+
+            if (result.isConfirmed) {
+                await handleAddStudentAtEnd();
+            } else if (result.isDenied) {
+                await handleAddStudentAlphabetically();
+            }
+        }
+
+        // --- 1. التسكين في ذيل الفصل تحت الجميع (لا يغير ترتيب أي تلميذ أو بنت سابقة) ---
+        async function handleAddStudentAtEnd() {
+            const gradeVal = document.getElementById("grade_level").value;
+            const className = document.getElementById("class_name").value;
+
+            Swal.fire({ title: 'جاري الحساب والتسكين في نهاية الفصل...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const allGradeStudents = await ZezoEngine.getStudentsByGrade(gradeVal);
+                
+                // تصفية تلاميذ هذا الفصل المحدد لاستخراج أعلى رقم موجود في الفصل ككل (بنين وبنات)
+                const classStudents = allGradeStudents.filter(st => 
+                    String(st.class || '').trim() === className.trim() && 
+                    st.transfer_type !== "محول من"
+                );
+
+                let highestNum = 0;
+                classStudents.forEach(st => {
+                    const num = parseCleanInt(st.register_num);
+                    if (num > highestNum) {
+                        highestNum = num;
+                    }
+                });
+
+                // الرقم الجديد = أعلى رقم موجود في هذا الفصل + 1
+                let nextRegisterNum = highestNum > 0 ? (highestNum + 1) : (classStudents.length + 1);
+                document.getElementById("register_num").value = nextRegisterNum;
+
+                const success = await processSave(`تمت إضافة التلميذ في نهاية كشف فصل (${className}) برقم (${nextRegisterNum})`);
                 if (success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'تم التسكين في ذيل القائمة بنجاح',
+                        html: `
+                            تم الحفاظ على أرقام جميع تلاميذ فصل <b>(${className})</b> دون أي ترحيل.<br>
+                            وأخذ التلميذ الجديد المسلسل: <b style="color:#15803d; font-size:22px;">(${nextRegisterNum})</b> في أسفل الكشف تحت الجميع.
+                        `,
+                        confirmButtonColor: '#16a34a'
+                    });
                     resetFormFields();
                 }
+            } catch (err) {
+                Swal.fire('خطأ', 'فشلت الإضافة: ' + err.message, 'error');
+            }
+        }
+
+        // --- 2. فك التجميد وإعادة الترتيب الأبجدي لتلاميذ الفصل المحدد ---
+        async function handleAddStudentAlphabetically() {
+            const gradeVal = document.getElementById("grade_level").value;
+            const className = document.getElementById("class_name").value;
+            const genderVal = document.getElementById("gender").value;
+            let code = document.getElementById("student_code").value.trim();
+            const nid = document.getElementById("national_id").value.trim();
+            const name = document.getElementById("student_name").value.trim();
+
+            if (!code) {
+                code = nid ? `NID_${nid}` : `TEMP_${Math.random().toString(36).substr(2, 9)}`;
+            }
+
+            Swal.fire({ title: 'جاري فك التجميد وإعادة الترتيب الأبجدي لتلاميذ الفصل...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const allGradeStudents = await ZezoEngine.getStudentsByGrade(gradeVal);
+                
+                const yVal = document.getElementById("age_year").value;
+                const mVal = document.getElementById("age_month").value;
+                const dVal = document.getElementById("age_day").value;
+                const compositeAge = (yVal !== "" && mVal !== "" && dVal !== "") ? `${yVal} سنة و ${mVal} شهر و ${dVal} يوم` : "";
+
+                const newStudentObj = {
+                    code: code,
+                    name: name,
+                    nid: nid,
+                    dob: document.getElementById("dob").value,
+                    gender: genderVal,
+                    age_day: dVal,
+                    age_month: mVal,
+                    age_year: yVal,
+                    age_october: compositeAge,
+                    grade: gradeVal,
+                    class: className,
+                    is_class_transferred: isStudentClassTransferred,
+                    status: document.getElementById("status").value,
+                    religion: document.getElementById("religion").value,
+                    father_mobile: document.getElementById("father_mobile").value.trim(),
+                    dmj: document.getElementById("dmj").value.trim(),
+                    transfer_type: document.getElementById("transfer_type").value,
+                    social_status: document.getElementById("social_status").value
+                };
+
+                // تصفية تلاميذ هذا الفصل وإضافة التلميذ الجديد
+                let classStudents = allGradeStudents.filter(s => 
+                    String(s.class || '').trim() === className.trim() && 
+                    s.code !== code && 
+                    s.transfer_type !== "محول من"
+                );
+                classStudents.push(newStudentObj);
+
+                let boys = classStudents.filter(s => s.gender === "ذكر")
+                    .sort((a, b) => (a.name || "").localeCompare(b.name || "", 'ar'));
+                
+                let girls = classStudents.filter(s => s.gender !== "ذكر")
+                    .sort((a, b) => (a.name || "").localeCompare(b.name || "", 'ar'));
+
+                let updatedRecords = [];
+                let assignedNewNum = "";
+                let counter = 1;
+
+                boys.forEach(b => {
+                    b.register_num = String(counter);
+                    if (b.code === code) assignedNewNum = counter;
+                    updatedRecords.push(b);
+                    counter++;
+                });
+
+                girls.forEach(g => {
+                    g.register_num = String(counter);
+                    if (g.code === code) assignedNewNum = counter;
+                    updatedRecords.push(g);
+                    counter++;
+                });
+
+                await ZezoEngine.upsertStudentsBatch(updatedRecords);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم فك التجميد وإعادة الترتيب بنجاح',
+                    html: `تم إعادة الترتيب الأبجدي لتلاميذ فصل (${className}) بنجاح.<br>رقم سجل التلميذ الجديد في مكانه الأبجدي: <b>${assignedNewNum}</b>`,
+                    confirmButtonColor: '#16a34a'
+                });
+
+                resetFormFields();
+                updateGradeCount();
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ', 'فشلت عملية إعادة الترتيب: ' + err.message, 'error');
             }
         }
 
@@ -1104,11 +1287,14 @@
             const dVal = document.getElementById("age_day").value;
             const compositeAge = (yVal !== "" && mVal !== "" && dVal !== "") ? `${yVal} سنة و ${mVal} شهر و ${dVal} يوم` : "";
 
+            const rawReg = document.getElementById("register_num").value.trim();
+            const cleanRegNum = parseCleanInt(rawReg);
+
             const dataToSave = {
                 code: code, 
                 name: name, 
                 nid: nid,
-                register_num: document.getElementById("register_num").value.trim(),
+                register_num: cleanRegNum > 0 ? String(cleanRegNum) : rawReg,
                 dob: document.getElementById("dob").value, 
                 gender: document.getElementById("gender").value,
                 
@@ -1161,7 +1347,6 @@
             document.getElementById("status").value = "منقول";
             document.getElementById("religion").value = "مسلم";
             
-            // نترك الصف كما هو لتسهيل الإدخال المتتالي
             updateClassDropdown();
             
             origStudentClass = "";
@@ -1201,7 +1386,6 @@
                 const gender = (parseInt(nid.charAt(12)) % 2 === 0) ? "أنثى" : "ذكر";
                 document.getElementById("gender").value = gender;
                 
-                // حساب السن فقط إذا كان تلميذاً جديداً (لمنع تغيير سن التلميذ المحفوظ في القاعدة)
                 if (!isExistingStudent) {
                     const refDateStr = localStorage.getItem(AGE_DATE_STORAGE_KEY) || "2026-10-01";
                     const parts = calculateAccurateAgeParts(dobVal, refDateStr);
