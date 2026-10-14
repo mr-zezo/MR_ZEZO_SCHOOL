@@ -218,7 +218,7 @@
 
     </div>
 
-    <script>
+   <script>
         const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -229,6 +229,19 @@
 
         let ALL_STUDENTS = [];
         let TEMPLATE_ARRAY_BUFFER = null;
+
+        // دالة تنظيف وتحويل أي رقم (عربي أو إنجليزي) إلى عدد صحيح سليم
+        function parseCleanInt(val) {
+            if (!val && val !== 0) return 0;
+            let s = String(val).trim();
+            const arDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            for (let i = 0; i < 10; i++) {
+                s = s.replace(new RegExp(arDigits[i], 'g'), i);
+            }
+            const clean = s.replace(/[^\d]/g, '');
+            const parsed = parseInt(clean, 10);
+            return isNaN(parsed) ? 0 : parsed;
+        }
 
         function openLocalDB() {
             return new Promise((resolve, reject) => {
@@ -255,7 +268,7 @@
                         const store = tx.objectStore('students');
                         const req = store.getAll();
                         req.onsuccess = () => resolve(req.result || []);
-                        req.onerror = () => reject(req.error);
+                        req.onerror = () => resolve([]);
                     });
                 } else {
                     let allData = [];
@@ -343,7 +356,6 @@
             subSelect.innerHTML = '<option value="" disabled selected>-- اختر المادة --</option>';
             let subjects = ["لغة عربية", "تربية دينية", "رياضيات", "لغة إنجليزية"];
             
-            // إضافة المواد الأساسية والأنشطة للصفوف الرابع والخامس والسادس
             if (selectedGrade === "الرابع" || selectedGrade === "الخامس" || selectedGrade === "السادس") {
                 subjects.push("علوم", "دراسات اجتماعية", "تكنولوجيا", "مهارات", "تربية فنية", "تربية موسيقية");
             }
@@ -443,6 +455,7 @@
             }
         }
 
+        // ================= دالة فرز تلاميذ الفصل المعتمدة على مسلسل الفصل تصاعدياً =================
         function getClassStudents(grade, className) {
             let list = ALL_STUDENTS.filter(s => 
                 normalizeGrade(s.grade) === grade && 
@@ -450,6 +463,19 @@
             );
 
             list.sort((a, b) => {
+                // 1. الفرز برقم المسلسل/السجل في الفصل تصاعدياً (التلميذ المضاف بالآخر يثبت في نهاية الكشف)
+                const regA = parseCleanInt(a.register_num);
+                const regB = parseCleanInt(b.register_num);
+
+                if (regA > 0 && regB > 0) {
+                    if (regA !== regB) return regA - regB;
+                } else if (regA > 0) {
+                    return -1;
+                } else if (regB > 0) {
+                    return 1;
+                }
+
+                // 2. كاحتياط في حال عدم وجود أرقام مسلسلات: بنين أولاً ثم بنات أبجدياً
                 const aMale = isMale(a.gender);
                 const bMale = isMale(b.gender);
                 if (aMale && !bMale) return -1;
@@ -470,7 +496,7 @@
         }
 
         // =========================================================================
-        // محرك تعديل خلايا الإكسيل بالـ XML مع الحفاظ على التنسيقات
+        // محرك تعديل خلايا الإكسيل بالـ XML مع الحفاظ التام على التنسيقات
         // =========================================================================
         function updateCellInXml(xmlDoc, cellRef, textValue) {
             const NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
@@ -562,13 +588,14 @@
         }
 
         // =========================================================================
-        // العملية الكبرى: الترحيل + تفعيل الحساب التلقائي لكافة المعادلات
+        // الترحيل المتطابق مع الكشف الورقي دون أي ترحيل بالدرجات
         // =========================================================================
         async function processAndExportAssessmentSheet() {
             const grade = document.getElementById('grade-select').value;
             const cls = document.getElementById('class-select').value;
             const subject = document.getElementById('subject-select').value;
 
+            // استخراج تلاميذ الفصل بالترتيب الثابت
             const students = getClassStudents(grade, cls);
 
             if (students.length === 0) {
@@ -597,9 +624,7 @@
                 const parser = new DOMParser();
                 const serializer = new XMLSerializer();
 
-                // ========================================================
                 // 1. ورقة العمل: taq
-                // ========================================================
                 const taqPath = sheetPaths["taq"] || "xl/worksheets/sheet1.xml";
                 if (zip.file(taqPath)) {
                     let xmlStr = await zip.file(taqPath).async("text");
@@ -614,7 +639,7 @@
                         updateCellInXml(xmlDoc, cellRef, students[i] ? students[i].name : "");
                     }
 
-                    // 26:50 في C36:C60
+                    // 26:50 في C36:C60 (والتلميذ رقم 41 ينزل في موضعه الصحيح تماماً)
                     for (let i = 0; i < 25; i++) {
                         const cellRef = `C${36 + i}`;
                         const stuIndex = 25 + i;
@@ -624,9 +649,7 @@
                     zip.file(taqPath, serializer.serializeToString(xmlDoc));
                 }
 
-                // ========================================================
                 // 2. ورقة العمل: GEAB
-                // ========================================================
                 const geabPath = sheetPaths["GEAB"] || "xl/worksheets/sheet2.xml";
                 if (zip.file(geabPath)) {
                     let xmlStr = await zip.file(geabPath).async("text");
@@ -644,9 +667,7 @@
                     zip.file(geabPath, serializer.serializeToString(xmlDoc));
                 }
 
-                // ========================================================
                 // 3. ورقة العمل: CONT
-                // ========================================================
                 const contPath = sheetPaths["CONT"] || "xl/worksheets/sheet3.xml";
                 if (zip.file(contPath)) {
                     let xmlStr = await zip.file(contPath).async("text");
@@ -671,9 +692,7 @@
                     zip.file(contPath, serializer.serializeToString(xmlDoc));
                 }
 
-                // ========================================================
                 // إعادة حساب كافة المعادلات فور الفتح تلقائياً
-                // ========================================================
                 if (zip.file("xl/workbook.xml")) {
                     let wbXmlStr = await zip.file("xl/workbook.xml").async("text");
                     let wbDoc = parser.parseFromString(wbXmlStr, "text/xml");
@@ -692,9 +711,6 @@
                     zip.file("xl/workbook.xml", serializer.serializeToString(wbDoc));
                 }
 
-                // ========================================================
-                // تنزيل الملف النهائي
-                // ========================================================
                 const cleanCls = cleanClassForFilename(cls);
                 const finalFileName = `${subject} الصف ${grade} فصل ${cleanCls}.xlsm`;
 
@@ -705,7 +721,7 @@
 
                 saveAs(outputBlob, finalFileName);
 
-                showStatus(`✅ تم ترحيل (${students.length}) تلميذ بنجاح وتفعيل المعادلات التلقائية بالملف: ${finalFileName}`, "success");
+                showStatus(`✅ تم ترحيل (${students.length}) تلميذ بنجاح مطابقين تماماً للكشف الورقي بالملف: ${finalFileName}`, "success");
 
             } catch (err) {
                 console.error(err);
