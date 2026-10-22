@@ -12,13 +12,15 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- مكتبات Supabase و Chart.js و ExcelJS و XLSX و html2canvas -->
+    <!-- مكتبات Supabase و Chart.js و XlsxPopulate و XLSX و html2canvas و SweetAlert2 و JSZip -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx-populate/1.21.0/xlsx-populate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         :root { 
@@ -79,7 +81,7 @@
         .card-danger { border-bottom: 4px solid var(--danger); background: #fef2f2; } .card-danger .kpi-value { color: var(--danger); }
         .card-info { border-bottom: 4px solid var(--primary); } .card-info .kpi-value { color: var(--primary); }
 
-        .chart-container { display: none; width: 100%; height: 340px; margin-bottom: 15px; background: white; padding: 12px; border-radius: 14px; border: 1px solid #e2e8f0; }
+        .chart-container { display: none; width: 100%; height: 380px; margin-bottom: 15px; background: white; padding: 15px; border-radius: 16px; border: 1.5px solid #cbd5e1; position: relative;}
 
         /* جدول تقارير الغياب */
         .report-table { width: 100%; border-collapse: collapse; text-align: center; border: 1px solid #cbd5e1; }
@@ -91,47 +93,44 @@
         .bg-warn1 { background: var(--warn1); color: black; } 
         .bg-warn2 { background: var(--warn2); } 
         .bg-danger { background: var(--danger); }
+        .bg-black { background: #000000; color: white; }
 
         /* القائمة المنسدلة للبحث بالبادئة */
         .dropdown-results-box {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-            max-height: 240px;
-            overflow-y: auto;
-            z-index: 2500;
-            display: none;
-            border: 2px solid #7c3aed;
-            -webkit-overflow-scrolling: touch;
+            position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25); max-height: 240px; overflow-y: auto; z-index: 2500;
+            display: none; border: 2px solid #7c3aed; -webkit-overflow-scrolling: touch;
         }
         .dropdown-item-row {
-            padding: 10px 14px;
-            font-size: 13px;
-            font-weight: 800;
-            border-bottom: 1px solid #f1f5f9;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: 0.15s;
+            padding: 10px 14px; font-size: 13px; font-weight: 800; border-bottom: 1px solid #f1f5f9;
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: 0.15s;
         }
-        .dropdown-item-row:hover, .dropdown-item-row:active {
-            background: #f5f3ff;
-            color: #6d28d9;
-        }
+        .dropdown-item-row:hover, .dropdown-item-row:active { background: #f5f3ff; color: #6d28d9; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
         
+        /* ================= تنسيقات كشف الإنذارات المجمع للطباعة (A4 طولي) ================= */
+        #printable-warnings-list { display: none; }
         @media print {
+            @page { size: A4 portrait; margin: 10mm; }
             body { background: white !important; padding: 0 !important; }
             .no-print, .top-navigation, .tabs-container, .report-controls, .dashboard-kpi, .chart-container { display: none !important; }
             .content-box { box-shadow: none !important; border: none !important; padding: 0 !important; width: 100% !important; }
             .hide-on-print { display: none !important; }
             .report-table { font-size: 11pt !important; width: 100% !important; }
+
+            body.print-warnings-mode .app-container { display: none !important; }
+            body.print-warnings-mode #printable-warnings-list {
+                display: block !important; width: 100%; background: white; color: black; direction: rtl; padding: 0;
+            }
+            .pw-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px double #000; padding-bottom: 10px; margin-bottom: 15px; }
+            .pw-header-right { text-align: right; font-weight: 900; font-size: 13px; line-height: 1.4; }
+            .pw-header-center { text-align: center; }
+            .pw-header-center h2 { font-size: 16px; font-weight: 900; margin-bottom: 5px; border: 2px solid #000; padding: 5px 15px; border-radius: 8px; }
+            .pw-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+            .pw-table th, .pw-table td { border: 1.5px solid #000; padding: 6px 4px; text-align: center; font-weight: 900; font-size: 12px; }
+            .pw-table th { background-color: #e2e8f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .pw-footer { display: flex; justify-content: space-between; font-weight: 900; font-size: 14px; padding: 0 40px; margin-top: 30px; }
         }
 
         @media (max-width: 768px) {
@@ -160,25 +159,21 @@
                     جاري الفحص...
                 </span>
 
-                <!-- زر دخول المدير العام -->
                 <button type="button" id="btn-admin-unlock" class="btn-3d px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl text-xs flex items-center gap-1 shadow cursor-pointer" onclick="loginAdmin()">
                     <i class="fa-solid fa-user-shield text-yellow-300"></i> دخول المدير العام
                 </button>
 
-                <!-- زر الرئيسية: مخفي تماماً بشكل افتراضي ولا يظهر إلا للمدير العام بعد التحقق -->
                 <a href="index.html" class="btn-3d px-3.5 py-1.5 bg-blue-700 hover:bg-blue-600 text-white font-bold rounded-xl text-xs md:text-sm flex items-center gap-1.5 shadow" id="btn-home" style="display: none !important;">
                     <i class="fa-solid fa-house"></i> الرئيسية
                 </a>
             </div>
         </nav>
 
-        <!-- 2. أزرار التبويبات المنسقة (مع زر الجزء الجديد) -->
+        <!-- 2. أزرار التبويبات المنسقة -->
         <div class="tabs-container no-print">
             <button class="tab-btn active" onclick="switchTab('entry')"><i class="fa-solid fa-keyboard text-blue-600"></i> الرصد السريع</button>
             <button class="tab-btn" onclick="switchTab('reg-edit')"><i class="fa-solid fa-address-book text-purple-600"></i> استعلام وتعديل السجل</button>
             <button class="tab-btn" onclick="switchTab('reports')"><i class="fa-solid fa-chart-line text-emerald-600"></i> التحليل والإنذارات</button>
-            
-            <!-- تبويب إعدادات التواريخ: مخفي تماماً ولا يفتح إلا للمدير العام -->
             <button class="tab-btn" id="tab-settings-btn" style="display: none !important;" onclick="switchTab('settings')"><i class="fa-solid fa-gear text-amber-600"></i> إعدادات الخريطة الزمنية</button>
         </div>
 
@@ -317,7 +312,7 @@
                     <div id="reg-dropdown-results" class="dropdown-results-box"></div>
                 </div>
 
-                <!-- 3. كارت تفاصيل التلميذ المحدد (الفصل غير قابل للتعديل + رقم السجل قابل للتعديل) -->
+                <!-- 3. كارت تفاصيل التلميذ المحدد -->
                 <div id="reg-student-details-card" class="hidden p-4 bg-purple-50/60 border-2 border-purple-200 rounded-2xl space-y-3.5 animate-fade-in">
                     
                     <div class="flex items-center justify-between border-b border-purple-200/80 pb-2">
@@ -329,7 +324,6 @@
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <!-- فصل التلميذ: للعرض فقط وبدون إمكانية التعديل -->
                         <div>
                             <label class="block text-xs font-black text-slate-600 mb-1 flex items-center gap-1">
                                 <i class="fa-solid fa-lock text-slate-400"></i> فصل التلميذ (للعرض فقط):
@@ -341,7 +335,6 @@
                                    title="فصل التلميذ مقفل للقراءة فقط ولا يمكن تعديله من هنا">
                         </div>
 
-                        <!-- رقم السجل: قابل للتعديل والإدخال الفوري -->
                         <div>
                             <label class="block text-xs font-black text-purple-900 mb-1 flex items-center gap-1">
                                 <i class="fa-solid fa-pen-to-square text-purple-600"></i> رقم السجل (قابل للتعديل):
@@ -354,7 +347,6 @@
                         </div>
                     </div>
 
-                    <!-- زر حفظ وتحديث السجل -->
                     <button type="button" 
                             id="btn-save-reg" 
                             onclick="saveModifiedRegisterNum()" 
@@ -396,21 +388,20 @@
                         </button>
                     </div>
 
-                    <!-- مجموعة 2: المنحنى البياني -->
-                    <div class="flex items-center gap-1.5">
-                        <button onclick="generateSchoolChart('term1')" class="btn-3d px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow">
-                            <i class="fa-solid fa-chart-area text-teal-200"></i> منحنى ت 1
-                        </button>
-                        <button onclick="generateSchoolChart('term2')" class="btn-3d px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow">
-                            <i class="fa-solid fa-chart-area text-teal-200"></i> منحنى ت 2
-                        </button>
-                    </div>
-
-                    <!-- مجموعة 3: المخرجات والإنذارات -->
-                    <div class="flex items-center gap-1.5">
-                        <button id="btn-bulk-download" onclick="downloadBulkWarnings()" style="display:none;" class="btn-3d px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow" title="تنزيل شيتات الإنذارات المستحقة لهذا الأسبوع">
+                    <!-- مجموعة 2: المخرجات والإنذارات -->
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <button id="btn-bulk-download" onclick="downloadBulkWarnings()" style="display:none;" class="btn-3d px-3 py-1.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow" title="تنزيل شيتات الإنذارات المستحقة لهذا الأسبوع لجميع المستحقين">
                             <i class="fa-solid fa-file-arrow-down text-yellow-300"></i> إنذارات الأسبوع
                         </button>
+
+                        <button id="btn-print-warnings-list" onclick="printWarningsList()" style="display:none;" class="btn-3d px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow" title="طباعة كشف مجمع لتوقيع أولياء الأمور لجميع صفوف المدرسة">
+                            <i class="fa-solid fa-list-check text-rose-200"></i> كشف التوقيعات
+                        </button>
+
+                        <button id="btn-warnings-log" onclick="exportAllWarningsLog()" class="btn-3d px-3 py-1.5 bg-orange-700 hover:bg-orange-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow" title="سجل مجمع بأسماء المستحقين للإنذارات وتاريخ الاستحقاق لجميع تلاميذ المدرسة">
+                            <i class="fa-solid fa-book-open-reader text-orange-200"></i> سجل الإنذارات الشامل
+                        </button>
+
                         <button onclick="exportReportToExcel()" class="btn-3d px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow">
                             <i class="fa-solid fa-file-excel"></i> إكسيل
                         </button>
@@ -421,6 +412,43 @@
                             <i class="fa-solid fa-print text-yellow-400"></i> طباعة
                         </button>
                     </div>
+                </div>
+
+                <!-- 🌟 لوحة تحكم شاشة عرض المقارنات الذكية بالأعمدة 🌟 -->
+                <div class="bg-gradient-to-r from-slate-50 to-blue-50 border-2 border-blue-200 p-3 rounded-2xl flex flex-wrap items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs font-black text-[#0f2b48] flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-column text-amber-500 text-base"></i> شاشة عرض المقارنات:
+                        </span>
+
+                        <select id="chart-comp-type" onchange="onChartModeChange()" class="p-2 bg-white border border-slate-300 rounded-xl text-xs font-black text-slate-800 outline-none">
+                            <option value="grades">مقارنة نسب الحضور بين الصفوف (الأول - السادس)</option>
+                            <option value="classes">مقارنة فصول صف محدد</option>
+                            <option value="weeks">تتبع المنحنى الأسبوعي</option>
+                        </select>
+
+                        <select id="chart-time-scope" onchange="onChartTimeScopeChange()" class="p-2 bg-white border border-slate-300 rounded-xl text-xs font-black text-slate-800 outline-none">
+                            <option value="term1">الترم الأول كاملاً</option>
+                            <option value="term2">الترم الثاني كاملاً</option>
+                            <option value="week">أسبوع محدد...</option>
+                        </select>
+
+                        <select id="chart-target-week" onchange="renderInteractiveChart()" class="p-2 bg-white border border-slate-300 rounded-xl text-xs font-black text-slate-800 outline-none" style="display:none;"></select>
+
+                        <select id="chart-target-grade" onchange="onChartGradeChange()" class="p-2 bg-white border border-slate-300 rounded-xl text-xs font-black text-slate-800 outline-none" style="display:none;">
+                            <option value="الأول">الصف الأول</option><option value="الثاني">الصف الثاني</option>
+                            <option value="الثالث">الصف الثالث</option><option value="الرابع">الصف الرابع</option>
+                            <option value="الخامس">الصف الخامس</option><option value="السادس">الصف السادس</option>
+                        </select>
+
+                        <select id="chart-target-class" onchange="renderInteractiveChart()" class="p-2 bg-white border border-slate-300 rounded-xl text-xs font-black text-slate-800 outline-none" style="display:none;">
+                            <option value="all">كل فصول الصف</option>
+                        </select>
+                    </div>
+
+                    <button onclick="renderInteractiveChart()" class="btn-3d px-4 py-2 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-arrows-rotate text-yellow-300"></i> عرض الأعمدة والمقارنة
+                    </button>
                 </div>
 
                 <!-- كروت مؤشرات الإنذار -->
@@ -500,6 +528,44 @@
 
     </div>
 
+    <!-- حاوية طباعة كشف الإنذارات المجمع (A4 طولي) -->
+    <div id="printable-warnings-list">
+        <div class="pw-header">
+            <div class="pw-header-right">
+                <div>محافظة المنوفية</div>
+                <div>إدارة الشهداء التعليمية</div>
+                <div>مدرسة الشهيد أشرف حبيب الابتدائية</div>
+            </div>
+            <div class="pw-header-center">
+                <h2>كشف بأسماء التلاميذ المستحقين لإنذارات الغياب</h2>
+                <div style="font-weight: 900; font-size: 14px; margin-top: 5px;">
+                    <span id="pw-grade"></span> &nbsp;|&nbsp; <span id="pw-week"></span>
+                </div>
+            </div>
+            <div style="width: 150px;"></div>
+        </div>
+
+        <table class="pw-table">
+            <thead>
+                <tr>
+                    <th style="width: 40px;">م</th>
+                    <th style="width: 220px;">اسم التلميذ</th>
+                    <th style="width: 60px;">الصف</th>
+                    <th style="width: 60px;">الفصل</th>
+                    <th style="width: 80px;">أيام الغياب</th>
+                    <th style="width: 100px;">نوع الإنذار</th>
+                    <th>توقيع ولي الأمر بالعلم</th>
+                </tr>
+            </thead>
+            <tbody id="pw-tbody"></tbody>
+        </table>
+
+        <div class="pw-footer">
+            <div>شئون الطلبة: ..............................</div>
+            <div>مدير المدرسة: ..............................</div>
+        </div>
+    </div>
+
     <script>
         // إعدادات المحرك المزدوج (Online Supabase + Offline IndexedDB)
         const SUPABASE_URL = 'https://xgsyktjoerrymqoutqcb.supabase.co';
@@ -514,20 +580,19 @@
         
         let weekDatesMap = {};
         let currentGradeStudents = [];
+        let ALL_STUDENTS_CACHE = [];
         let myChart = null; 
         let isAdminUnlocked = false; 
 
-        // متغيرات الجزء الجديد (تعديل رقم السجل)
         let REG_GRADE_STUDENTS = [];
         let CURRENT_REG_EDIT_STUDENT = null;
 
         function toArabicNum(num) {
             if (num === 0) return "٠";
-            if (!num) return "-";
+            if (!num && num !== 0) return "-";
             return String(num).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w]);
         }
 
-        // توحيد الحروف للبحث الدقيق بالبادئة
         function normalizeArabic(text) {
             if (!text) return "";
             return String(text)
@@ -541,7 +606,6 @@
                 .toLowerCase();
         }
 
-        // ================= محرك التشفير الآمن SHA-256 =================
         async function hashSHA256(text) {
             const msgBuffer = new TextEncoder().encode(text.trim());
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -595,9 +659,19 @@
                         req.onerror = () => reject(req.error);
                     });
                 } else {
-                    const { data, error } = await sbClient.from("students").select("absences, transfer_type");
-                    if (error) throw error;
-                    return data || [];
+                    let allData = [];
+                    let start = 0;
+                    const step = 1000;
+                    let hasMore = true;
+                    while (hasMore) {
+                        const { data, error } = await sbClient.from("students").select("code, name, grade, class, absences, transfer_type").range(start, start + step - 1);
+                        if (error) throw error;
+                        if (!data || data.length === 0) break;
+                        allData = allData.concat(data);
+                        start += step;
+                        if (data.length < step) hasMore = false;
+                    }
+                    return allData;
                 }
             },
 
@@ -625,7 +699,6 @@
                 }
             },
 
-            // دالة تحديث وحفظ رقم السجل أونلاين وأوفلاين
             async updateStudentRegisterNum(code, newRegNum) {
                 if (this.getMode() === 'offline') {
                     const db = await openLocalDB();
@@ -694,8 +767,21 @@
             }
 
             populateWeekSelects();
+            populateChartWeekSelect();
             await loadSettings();
+            
+            ZezoEngine.getAllStudents().then(data => {
+                ALL_STUDENTS_CACHE = data || [];
+            });
         });
+
+        function populateChartWeekSelect() {
+            const wSelect = document.getElementById("chart-target-week");
+            wSelect.innerHTML = "";
+            for (let i = 0; i < 30; i++) {
+                wSelect.innerHTML += `<option value="W${i+1}">الأسبوع ${arabicWeeks[i]}</option>`;
+            }
+        }
 
         // ================= التحقق المشفر الآمن للمدير العام =================
         async function loginAdmin() {
@@ -940,7 +1026,7 @@
             }
         }
 
-        // ================= 🌟 برمجة الجزء الجديد: استعلام وتعديل السجل 🌟 =================
+        // ================= 🌟 الجزء الجديد: استعلام وتعديل رقم السجل 🌟 =================
         async function onRegGradeSelectChanged(selectedGrade) {
             const searchInput = document.getElementById("reg-search-input");
             const badge = document.getElementById("reg-students-count-badge");
@@ -984,7 +1070,6 @@
                 return;
             }
 
-            // تصفية التلاميذ بالبادئة (الحروف الأولى من الاسم أو أي كلمة من الاسم)
             const matches = REG_GRADE_STUDENTS.filter(s => {
                 const normName = normalizeArabic(s.name);
                 if (normName.startsWith(q)) return true;
@@ -1026,18 +1111,14 @@
             document.getElementById("reg-search-input").value = student.name;
             document.getElementById("reg-dropdown-results").style.display = "none";
 
-            // ملء بيانات الكارت
             document.getElementById("reg-display-student-name").innerText = student.name;
             document.getElementById("reg-display-student-code").innerText = `كود: ${(student.code && !student.code.startsWith('TEMP_')) ? student.code : '-'}`;
             
-            // فصل التلميذ: للعرض فقط وبدون إمكانية التعديل
             document.getElementById("reg-field-class").value = `فصل ${student.class || '-'}`;
             
-            // رقم السجل: قابل للتعديل
             const regField = document.getElementById("reg-field-regnum");
             regField.value = student.register_num || "";
 
-            // إظهار الكارت والتركيز على خانة رقم السجل
             const detailsCard = document.getElementById("reg-student-details-card");
             detailsCard.classList.remove("hidden");
             
@@ -1071,10 +1152,8 @@
             try {
                 await ZezoEngine.updateStudentRegisterNum(CURRENT_REG_EDIT_STUDENT.code, newRegVal);
 
-                // تحديث بيانات التلميذ في الذاكرة الحية
                 CURRENT_REG_EDIT_STUDENT.register_num = newRegVal;
 
-                // تحديثه أيضاً في قائمة الرصد السريع إن كان موجوداً
                 const inEntry = currentGradeStudents.find(s => s.code === CURRENT_REG_EDIT_STUDENT.code);
                 if (inEntry) inEntry.register_num = newRegVal;
 
@@ -1095,7 +1174,6 @@
             }
         }
 
-        // إغلاق قائمة البحث عند النقر خارجها
         document.addEventListener("click", (e) => {
             if (!e.target.closest("#reg-search-wrapper")) {
                 const dd = document.getElementById("reg-dropdown-results");
@@ -1107,6 +1185,7 @@
         async function generateReport(type = 'week') {
             document.getElementById("chart-wrapper").style.display = "none"; 
             document.getElementById("btn-bulk-download").style.display = "none"; 
+            document.getElementById("btn-print-warnings-list").style.display = "none";
             
             const grade = document.getElementById("rep-grade").value;
             const week = document.getElementById("rep-week").value;
@@ -1170,6 +1249,10 @@
                                 actionBtn = `<button class="btn-3d px-2 py-1 bg-rose-700 hover:bg-rose-800 text-white font-extrabold rounded-lg text-xs flex items-center gap-1 shadow" data-name="${s.name}" data-grade="${grade}" data-abs="${currentTotal}" data-level="3" onclick="downloadWarningExcel('${s.name}', '${grade}', ${currentTotal}, 3)"><i class="fa-solid fa-file-excel"></i> خطر</button>`;
                                 hasWarnings = true;
                             }
+                            else if (previousTotal >= 15) {
+                                badge = "<span class='badge bg-black'>منقطع (تجاوز الإنذارات)</span>";
+                                actionBtn = "<span style='color:#94a3b8; font-size:11px;'>لا يوجد إجراء</span>";
+                            }
 
                             tbody.innerHTML += `<tr class="data-row">
                                 <td>${toArabicNum(i++)}</td>
@@ -1185,7 +1268,14 @@
                         }
                     });
 
-                    if (hasWarnings) document.getElementById("btn-bulk-download").style.display = "flex";
+                    if (hasWarnings) {
+                        document.getElementById("btn-bulk-download").style.display = "flex";
+                        document.getElementById("btn-print-warnings-list").style.display = "flex";
+                    } else {
+                        document.getElementById("btn-bulk-download").style.display = "none";
+                        document.getElementById("btn-print-warnings-list").style.display = "none";
+                    }
+
                     if (i === 1) tbody.innerHTML = "<tr><td colspan='9' style='color:#16a34a; font-weight:bold; padding:30px;'>🎉 مثالي! لا يوجد أي غياب مسجل لهذا الصف في هذا الأسبوع.</td></tr>";
                 } 
                 else {
@@ -1288,59 +1378,60 @@
             });
         }
 
-        // ================= تنزيل شيتات الإنذار الرسمية =================
+        // ================= تنزيل شيتات الإنذار الرسمية عبر XlsxPopulate لحفظ الماكرو =================
         async function downloadWarningExcel(studentName, grade, absenceDays, warningLevel) {
             try {
                 document.body.style.cursor = 'wait';
                 
                 let url = "";
-                if (warningLevel === 1) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHONE.xlsx";
-                else if (warningLevel === 2) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHTWO.xlsx";
-                else if (warningLevel === 3) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHTHREE.xlsx";
+                if (warningLevel === 1) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHONE.xlsm";
+                else if (warningLevel === 2) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHTWO.xlsm";
+                else if (warningLevel === 3) url = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/GHTHREE.xlsm";
 
                 const response = await fetch(url);
+                if (!response.ok) throw new Error("تعذر تحميل قالب الإنذار من السيرفر.");
                 const arrayBuffer = await response.arrayBuffer();
 
-                const workbook = new ExcelJS.Workbook();
-                await workbook.xlsx.load(arrayBuffer);
-                const worksheet = workbook.worksheets[0]; 
+                const workbook = await XlsxPopulate.fromDataAsync(arrayBuffer);
+                const sheet = workbook.sheet(0);
 
-                worksheet.getCell('P7').value = grade.replace("الصف ", "").trim();
+                const cleanGrade = grade.replace("الصف ", "").trim();
+                sheet.cell('P7').value(cleanGrade);
 
                 if (warningLevel === 1) {
-                    worksheet.getCell('H7').value = studentName;
-                    worksheet.getCell('I9').value = studentName;
-                    worksheet.getCell('H22').value = studentName;
-                    worksheet.getCell('E10').value = absenceDays;
+                    sheet.cell('H7').value(studentName);
+                    sheet.cell('I9').value(studentName);
+                    sheet.cell('H22').value(studentName);
+                    sheet.cell('E10').value(absenceDays);
                 } else if (warningLevel === 2) {
-                    worksheet.getCell('H7').value = studentName;
-                    worksheet.getCell('J7').value = studentName;
-                    worksheet.getCell('H22').value = studentName;
-                    worksheet.getCell('M10').value = absenceDays;
+                    sheet.cell('H7').value(studentName);
+                    sheet.cell('J7').value(studentName);
+                    sheet.cell('H22').value(studentName);
+                    sheet.cell('M10').value(absenceDays);
                 } else if (warningLevel === 3) {
-                    worksheet.getCell('H7').value = studentName;
-                    worksheet.getCell('M9').value = studentName;
-                    worksheet.getCell('H22').value = studentName;
-                    worksheet.getCell('G10').value = absenceDays;
+                    sheet.cell('H7').value(studentName);
+                    sheet.cell('M9').value(studentName);
+                    sheet.cell('H22').value(studentName);
+                    sheet.cell('G10').value(absenceDays);
                 }
 
-                const buffer = await workbook.xlsx.writeBuffer();
-                const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-                saveAs(blob, `إنذار_${warningLevel}_${studentName}.xlsx`);
+                const blob = await workbook.outputAsync();
+                saveAs(blob, `إنذار_${warningLevel}_${studentName}.xlsm`);
 
                 document.body.style.cursor = 'default';
             } catch (error) {
                 console.error("خطأ في تنزيل الإنذار:", error);
-                alert("❌ حدث خطأ أثناء تحميل ملف الإنذار.");
+                alert("❌ حدث خطأ أثناء تحميل ملف الإنذار: " + error.message);
                 document.body.style.cursor = 'default';
             }
         }
 
+        // ================= تنزيل الإنذارات الفردية دفعة واحدة لجميع مستحقي الأسبوع =================
         async function downloadBulkWarnings() {
             const rows = document.querySelectorAll(".data-row");
             let count = 0;
             
-            if (!confirm("هل ترغب في تنزيل جميع خطابات الإنذار المستحقة لهذا الأسبوع؟")) return;
+            if (!confirm("هل ترغب في تنزيل جميع خطابات الإنذار المستحقة لهذا الأسبوع لجميع المستحقين؟")) return;
 
             for (let r of rows) {
                 if (r.style.display !== "none") {
@@ -1363,6 +1454,88 @@
             else alert(`🎉 تم استخراج وتحميل (${count}) إنذار بنجاح!`);
         }
 
+        // ================= سجل الإنذارات الشامل للمدرسة (شيت إكسيل مجمع للمتابعة) =================
+        async function exportAllWarningsLog() {
+            Swal.fire({ title: 'جاري حصر وتتبع الإنذارات على مستوى المدرسة...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                let reportData = [];
+                let serial = 1;
+
+                const gradeOrder = {"الأول":1, "الثاني":2, "الثالث":3, "الرابع":4, "الخامس":5, "السادس":6};
+                let sortedStudents = [...ALL_STUDENTS_CACHE].sort((a, b) => {
+                    let gA = gradeOrder[a.grade] || 99;
+                    let gB = gradeOrder[b.grade] || 99;
+                    if (gA !== gB) return gA - gB;
+                    let cA = a.class ? String(a.class).trim() : "";
+                    let cB = b.class ? String(b.class).trim() : "";
+                    if (cA !== cB) return cA.localeCompare(cB, 'ar', { numeric: true });
+                    return (a.name||"").localeCompare((b.name||""), 'ar');
+                });
+
+                sortedStudents.forEach(s => {
+                    if (s.transfer_type === "محول من") return;
+
+                    let absData = typeof s.absences === 'string' ? JSON.parse(s.absences || '{}') : (s.absences || {});
+                    let cumulativeAbs = 0;
+                    
+                    let w1 = "-", w2 = "-", w3 = "-";
+
+                    for (let i = 1; i <= 30; i++) {
+                        let wKey = 'W' + i;
+                        if (absData[wKey]) {
+                            cumulativeAbs += parseInt(absData[wKey]);
+                        }
+
+                        if (cumulativeAbs >= 6 && w1 === "-") w1 = `الأسبوع ${arabicWeeks[i-1]}`;
+                        if (cumulativeAbs >= 11 && w2 === "-") w2 = `الأسبوع ${arabicWeeks[i-1]}`;
+                        if (cumulativeAbs >= 15 && w3 === "-") w3 = `الأسبوع ${arabicWeeks[i-1]}`;
+                    }
+
+                    if (w1 !== "-") {
+                        reportData.push({
+                            "م": serial++,
+                            "اسم التلميذ": s.name,
+                            "الصف": s.grade,
+                            "الفصل": s.class || "-",
+                            "إجمالي الغياب": cumulativeAbs,
+                            "استحقاق الإنذار الأول (6 أيام)": w1,
+                            "استحقاق الإنذار الثاني (11 يوم)": w2,
+                            "استحقاق إنذار الفصل (15 يوم)": w3
+                        });
+                    }
+                });
+
+                if (reportData.length === 0) {
+                    Swal.fire('تنبيه', 'لا يوجد أي تلاميذ مستحقين للإنذارات في المدرسة حتى الآن.', 'info');
+                    return;
+                }
+
+                const ws = XLSX.utils.json_to_sheet(reportData);
+                if(!ws['!views']) ws['!views'] = [];
+                ws['!views'].push({ rightToLeft: true });
+                
+                ws['!cols'] = [
+                    { wch: 5 },  
+                    { wch: 35 }, 
+                    { wch: 10 }, 
+                    { wch: 10 }, 
+                    { wch: 15 }, 
+                    { wch: 30 }, 
+                    { wch: 30 }, 
+                    { wch: 30 }  
+                ];
+
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "سجل الإنذارات الشامل");
+                XLSX.writeFile(wb, `سجل_الإنذارات_الشامل_للمدرسة.xlsx`);
+
+                Swal.close();
+            } catch (err) {
+                Swal.fire('خطأ', 'حدث خطأ أثناء إنشاء السجل: ' + err.message, 'error');
+            }
+        }
+
         function exportReportToExcel() {
             const table = document.getElementById("data-table");
             if (!table || table.querySelectorAll("tbody tr.data-row").length === 0) {
@@ -1374,83 +1547,330 @@
             XLSX.writeFile(wb, `${repTitle}.xlsx`);
         }
 
-        async function generateSchoolChart(term) {
+        // ================= 🌟 شاشة عرض المقارنات الذكية بالأعمدة والأرقام 🌟 =================
+        function onChartModeChange() {
+            const mode = document.getElementById("chart-comp-type").value;
+            const gradeBox = document.getElementById("chart-target-grade");
+            const classBox = document.getElementById("chart-target-class");
+
+            if (mode === 'classes') {
+                gradeBox.style.display = "inline-block";
+                classBox.style.display = "inline-block";
+                onChartGradeChange();
+            } else if (mode === 'weeks') {
+                gradeBox.style.display = "inline-block";
+                classBox.style.display = "inline-block";
+                onChartGradeChange();
+            } else {
+                gradeBox.style.display = "none";
+                classBox.style.display = "none";
+            }
+            renderInteractiveChart();
+        }
+
+        function onChartTimeScopeChange() {
+            const scope = document.getElementById("chart-time-scope").value;
+            const weekBox = document.getElementById("chart-target-week");
+            weekBox.style.display = (scope === 'week') ? 'inline-block' : 'none';
+            renderInteractiveChart();
+        }
+
+        function onChartGradeChange() {
+            const grade = document.getElementById("chart-target-grade").value;
+            const classSelect = document.getElementById("chart-target-class");
+            classSelect.innerHTML = '<option value="all">كل فصول الصف</option>';
+
+            const studentsInGrade = ALL_STUDENTS_CACHE.filter(s => s.grade === grade && s.transfer_type !== "محول من");
+            const uniqueClasses = [...new Set(studentsInGrade.map(s => String(s.class || '').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar',{numeric:true}));
+
+            uniqueClasses.forEach(c => {
+                classSelect.innerHTML += `<option value="${c}">فصل ${c}</option>`;
+            });
+            renderInteractiveChart();
+        }
+
+        // بلجن كتابة النسبة المئوية فوق كل عمود بشكل أنيق وواضح
+        const barValuePlugin = {
+            id: 'barValuePlugin',
+            afterDatasetsDraw: (chart) => {
+                const { ctx, data } = chart;
+                ctx.save();
+                ctx.font = 'bold 12.5px Cairo';
+                ctx.fillStyle = '#0f2b48';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+
+                chart.getDatasetMeta(0).data.forEach((bar, index) => {
+                    const value = data.datasets[0].data[index];
+                    if (value !== null && value !== undefined && !isNaN(value)) {
+                        ctx.fillText(`%${toArabicNum(value)}`, bar.x, bar.y - 4);
+                    }
+                });
+                ctx.restore();
+            }
+        };
+
+        // بلجن العلامة المائية في خلفية المخطط
+        const watermarkPlugin = {
+            id: 'watermark',
+            beforeDraw: (chart) => {
+                const ctx = chart.ctx;
+                ctx.save();
+                ctx.font = 'bold 32px Cairo';
+                ctx.fillStyle = 'rgba(15, 43, 72, 0.06)';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.translate(chart.width / 2, chart.height / 2);
+                ctx.rotate(-Math.PI / 8);
+                ctx.fillText('إعداد وتصميم: مستر زيزو', 0, 0);
+                ctx.restore();
+            }
+        };
+
+        function calculateAttendancePercent(studentsList, weeksList) {
+            if (!studentsList || studentsList.length === 0) return 0;
+            const totalPossible = studentsList.length * weeksList.length * 5;
+            if (totalPossible === 0) return 0;
+
+            let totalAbs = 0;
+            studentsList.forEach(s => {
+                let absData = typeof s.absences === 'string' ? JSON.parse(s.absences || '{}') : (s.absences || {});
+                weeksList.forEach(wKey => {
+                    if (absData[wKey]) totalAbs += parseInt(absData[wKey]);
+                });
+            });
+
+            return (((totalPossible - totalAbs) / totalPossible) * 100).toFixed(1);
+        }
+
+        function renderInteractiveChart() {
             document.getElementById("kpi-dashboard").style.display = "none";
             document.getElementById("data-table").style.display = "none";
             document.getElementById("btn-bulk-download").style.display = "none";
-            document.getElementById("report-title").innerText = "⏳ جاري سحب وتحليل نسب حضور المدرسة بالكامل...";
-            
-            const isTerm1 = term === "term1";
-            const startW = isTerm1 ? 1 : 18;
-            const endW = isTerm1 ? 17 : 30;
-            
-            try {
-                const data = await ZezoEngine.getAllStudents();
-                let weeklyData = [];
-                let labels = [];
+            document.getElementById("btn-print-warnings-list").style.display = "none";
 
-                for (let w = startW; w <= endW; w++) {
-                    labels.push('أسبوع ' + toArabicNum(isTerm1 ? w : w-17));
-                    let weekAbs = 0;
-                    let activeStudents = 0;
-                    
-                    (data || []).forEach(s => {
-                        if (s.transfer_type !== "محول من") {
-                            activeStudents++;
-                            let absData = typeof s.absences === 'string' ? JSON.parse(s.absences || '{}') : (s.absences || {});
-                            if (absData['W'+w]) weekAbs += parseInt(absData['W'+w]);
-                        }
-                    });
+            const compType = document.getElementById("chart-comp-type").value;
+            const timeScope = document.getElementById("chart-time-scope").value;
+            const specificWeek = document.getElementById("chart-target-week").value;
+            const selectedGrade = document.getElementById("chart-target-grade").value;
+            const selectedClass = document.getElementById("chart-target-class").value;
 
-                    const totalPossible = activeStudents * 5;
-                    const percent = totalPossible === 0 ? 0 : (((totalPossible - weekAbs) / totalPossible) * 100);
-                    weeklyData.push(percent.toFixed(1));
+            let targetWeeks = [];
+            let scopeTitle = "";
+
+            if (timeScope === 'term1') {
+                for (let i = 1; i <= 17; i++) targetWeeks.push('W' + i);
+                scopeTitle = "الترم الأول كاملاً";
+            } else if (timeScope === 'term2') {
+                for (let i = 18; i <= 30; i++) targetWeeks.push('W' + i);
+                scopeTitle = "الترم الثاني كاملاً";
+            } else {
+                targetWeeks = [specificWeek];
+                const wIdx = parseInt(specificWeek.replace('W','')) - 1;
+                scopeTitle = `الأسبوع ${arabicWeeks[wIdx]}`;
+            }
+
+            let labels = [];
+            let values = [];
+            let chartMainTitle = "";
+
+            const activeStudents = ALL_STUDENTS_CACHE.filter(s => s.transfer_type !== "محول من");
+
+            // 1. مقارنة الصفوف
+            if (compType === 'grades') {
+                chartMainTitle = `مقارنة نسب حضور الصفوف الدراسية (${scopeTitle})`;
+                const standardGrades = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
+
+                standardGrades.forEach(g => {
+                    const gradeStudents = activeStudents.filter(s => s.grade === g);
+                    const pct = calculateAttendancePercent(gradeStudents, targetWeeks);
+                    labels.push(`الصف ${g}`);
+                    values.push(parseFloat(pct));
+                });
+            }
+            // 2. مقارنة فصول صف محدد
+            else if (compType === 'classes') {
+                chartMainTitle = `مقارنة نسب حضور فصول الصف ${selectedGrade} (${scopeTitle})`;
+                const gradeStudents = activeStudents.filter(s => s.grade === selectedGrade);
+                const uniqueClasses = [...new Set(gradeStudents.map(s => String(s.class || '').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ar',{numeric:true}));
+
+                uniqueClasses.forEach(c => {
+                    const classStudents = gradeStudents.filter(s => String(s.class).trim() === c);
+                    const pct = calculateAttendancePercent(classStudents, targetWeeks);
+                    labels.push(`فصل ${c}`);
+                    values.push(parseFloat(pct));
+                });
+            }
+            // 3. المنحنى الزمني للأسابيع
+            else {
+                let targetScopeStudents = activeStudents;
+                let targetTitle = "المدرسة بالكامل";
+
+                if (selectedGrade) {
+                    targetScopeStudents = targetScopeStudents.filter(s => s.grade === selectedGrade);
+                    targetTitle = `الصف ${selectedGrade}`;
+                    if (selectedClass !== 'all') {
+                        targetScopeStudents = targetScopeStudents.filter(s => String(s.class).trim() === selectedClass);
+                        targetTitle += ` - فصل ${selectedClass}`;
+                    }
                 }
 
-                document.getElementById("report-title").innerText = `المنحنى الزمني العام لنسب حضور المدرسة - الترم ${isTerm1?'الأول':'الثاني'}`;
-                document.getElementById("chart-wrapper").style.display = "block";
+                chartMainTitle = `المنحنى الزمني الأسبوعي لـ (${targetTitle}) - ${scopeTitle}`;
 
-                const ctx = document.getElementById('schoolChart').getContext('2d');
-                if (myChart) myChart.destroy();
+                targetWeeks.forEach(wKey => {
+                    const wIdx = parseInt(wKey.replace('W','')) - 1;
+                    const pct = calculateAttendancePercent(targetScopeStudents, [wKey]);
+                    labels.push(`أسبوع ${toArabicNum(wIdx + 1)}`);
+                    values.push(parseFloat(pct));
+                });
+            }
 
-                let gradient = ctx.createLinearGradient(0, 0, 0, 320);
-                gradient.addColorStop(0, 'rgba(15, 43, 72, 0.4)'); 
-                gradient.addColorStop(1, 'rgba(15, 43, 72, 0.0)');
+            // تلوين ذكي للأعمدة حسب نسبة الحضور
+            const bgColors = values.map(v => v >= 90 ? 'rgba(16, 185, 129, 0.85)' : (v >= 80 ? 'rgba(245, 158, 11, 0.85)' : 'rgba(225, 29, 72, 0.85)'));
+            const borderColors = values.map(v => v >= 90 ? '#059669' : (v >= 80 ? '#d97706' : '#be123c'));
 
-                myChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'نسبة الحضور العامة (%)',
-                            data: weeklyData,
-                            borderColor: '#0f2b48',
-                            backgroundColor: gradient,
-                            borderWidth: 3,
-                            pointBackgroundColor: '#d97706',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            fill: true,
-                            tension: 0.35 
-                        }]
+            document.getElementById("report-title").innerText = chartMainTitle;
+            document.getElementById("chart-wrapper").style.display = "block";
+
+            const ctx = document.getElementById('schoolChart').getContext('2d');
+            if (myChart) myChart.destroy();
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'نسبة الحضور (%)',
+                        data: values,
+                        backgroundColor: bgColors,
+                        borderColor: borderColors,
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        barPercentage: 0.65
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            titleFont: { family: 'Cairo', weight: 'bold' },
+                            bodyFont: { family: 'Cairo', weight: 'bold' },
+                            callbacks: { label: (ctx) => `نسبة الحضور: %${toArabicNum(ctx.raw)}` }
+                        }
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { labels: { font: { family: 'Cairo', size: 13, weight: 'bold' } } },
-                            tooltip: { titleFont: { family: 'Cairo' }, bodyFont: { family: 'Cairo' } }
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 110,
+                            ticks: { font: { family: 'Cairo', weight: 'bold' }, callback: v => v <= 100 ? `%${toArabicNum(v)}` : '' }
                         },
-                        scales: {
-                            y: { min: 50, max: 100, ticks: { font: { family: 'Cairo', weight: 'bold' }, callback: function(val) { return val + '%'; } } },
-                            x: { ticks: { font: { family: 'Cairo', weight: 'bold' } } }
+                        x: {
+                            ticks: { font: { family: 'Cairo', weight: '900', size: 12 } }
+                        }
+                    }
+                },
+                plugins: [barValuePlugin, watermarkPlugin]
+            });
+        }
+
+        // ================= طباعة كشف الإنذارات المجمع لتوقيع أولياء الأمور (A4 طولي) =================
+        async function printWarningsList() {
+            const week = document.getElementById("rep-week").value;
+            const weekText = document.getElementById("rep-week").options[document.getElementById("rep-week").selectedIndex].text;
+
+            Swal.fire({ title: 'جاري تجميع كشف الإنذارات لجميع صفوف المدرسة...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const allStudents = ALL_STUDENTS_CACHE;
+                let warningsData = [];
+                const wNum = parseInt(week.replace('W',''));
+                const startW = wNum <= 17 ? 1 : 18; 
+
+                allStudents.forEach(s => {
+                    if (s.transfer_type === "محول من") return;
+
+                    let absData = typeof s.absences === 'string' ? JSON.parse(s.absences || '{}') : (s.absences || {});
+                    const absThisWeek = absData[week] ? parseInt(absData[week]) : 0;
+                    
+                    if (absThisWeek > 0) {
+                        let previousTotal = 0;
+                        let currentTotal = 0;
+
+                        for (let w = startW; w <= wNum; w++) {
+                            let wAbs = absData['W'+w] ? parseInt(absData['W'+w]) : 0;
+                            if (w < wNum) previousTotal += wAbs;
+                            currentTotal += wAbs;
+                        }
+
+                        let level = 0;
+                        if (previousTotal < 6 && currentTotal >= 6) level = 1;
+                        else if (previousTotal < 11 && currentTotal >= 11) level = 2;
+                        else if (previousTotal < 15 && currentTotal >= 15) level = 3;
+
+                        if (level > 0) {
+                            warningsData.push({
+                                name: s.name,
+                                grade: s.grade,
+                                cls: s.class,
+                                abs: currentTotal,
+                                level: level
+                            });
                         }
                     }
                 });
+
+                if (warningsData.length === 0) {
+                    Swal.fire('تنبيه', 'لا يوجد تلاميذ مستحقين للإنذار في المدرسة بالكامل لهذا الأسبوع.', 'info');
+                    return;
+                }
+
+                // الترتيب: الصف -> الفصل -> الاسم
+                const gradeOrder = {"الأول":1, "الثاني":2, "الثالث":3, "الرابع":4, "الخامس":5, "السادس":6};
+                warningsData.sort((a, b) => {
+                    let gA = gradeOrder[a.grade] || 99;
+                    let gB = gradeOrder[b.grade] || 99;
+                    if (gA !== gB) return gA - gB;
+
+                    let cA = a.cls ? String(a.cls).trim() : "";
+                    let cB = b.cls ? String(b.cls).trim() : "";
+                    if (cA !== cB) return cA.localeCompare(cB, 'ar', { numeric: true });
+
+                    return a.name.localeCompare(b.name, 'ar');
+                });
+
+                let tbodyHtml = "";
+                warningsData.forEach((item, index) => {
+                    let levelText = item.level === 1 ? "إنذار أول" : (item.level === 2 ? "إنذار ثاني" : "إنذار فصل (خطر)");
+                    tbodyHtml += `
+                        <tr>
+                            <td>${toArabicNum(index + 1)}</td>
+                            <td style="text-align: right; padding-right: 10px;">${item.name}</td>
+                            <td>${item.grade}</td>
+                            <td>${toArabicNum(item.cls)}</td>
+                            <td>${toArabicNum(item.abs)}</td>
+                            <td>${levelText}</td>
+                            <td></td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById("pw-grade").innerText = "جميع الصفوف الدراسية";
+                document.getElementById("pw-week").innerText = weekText;
+                document.getElementById("pw-tbody").innerHTML = tbodyHtml;
+
+                Swal.close();
+
+                document.body.classList.add('print-warnings-mode');
+                window.print();
+                
+                setTimeout(() => {
+                    document.body.classList.remove('print-warnings-mode');
+                }, 1000);
+
             } catch (err) {
-                alert("❌ خطأ في رسم المنحنى البياني: " + err.message);
+                Swal.fire('خطأ', 'حدث خطأ أثناء تجميع الكشف: ' + err.message, 'error');
             }
         }
 
