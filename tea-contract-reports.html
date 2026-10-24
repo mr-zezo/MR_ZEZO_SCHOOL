@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>كشف استحقاق حصص الأجر - منظومة مستر زيزو</title>
+    
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- مكتبات Supabase و Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- ستايل ديناميكي للتحكم في اتجاه الورقة A4 أثناء الطباعة -->
+    <style id="dynamic-page-style">
+        @page { size: A4 landscape; margin: 6mm 5mm; }
+    </style>
+
+    <style>
+        :root { 
+            --primary: #0f2b48; 
+            --primary-light: #1e3a8a;
+            --dark: #0f172a; 
+            --bg: #f1f5f9; 
+            --contract: #4338ca;
+            --success: #15803d; 
+            --danger: #be123c;
+            --warning: #d97706;
+
+            /* المتغيرات الحية لمقاسات الكشف */
+            --rep-row-height: 33px;
+            --rep-font-size: 12.5px;
+            --rep-header-font-size: 11.5px;
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); color: #1e293b; padding: 10px 14px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+
+        .app-container { width: 100%; max-width: 1400px; margin: 0 auto; }
+
+        .card-3d { background: #ffffff; border: 1px solid #cbd5e1; border-bottom: 4px solid #94a3b8; border-radius: 16px; transition: all 0.2s ease; }
+        .btn-3d { border-bottom: 3px solid rgba(0,0,0,0.25); transition: all 0.1s ease; touch-action: manipulation; }
+        .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
+
+        /* تنسيقات الجدول مع الرؤوس المتجاوبة متعددة الأسطر */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1.5px solid #cbd5e1; background: white; }
+        .report-table { width: 100%; border-collapse: collapse; text-align: center; }
+        
+        .report-table th { 
+            background-color: #0f2b48; 
+            color: white; 
+            padding: 5px 2px; 
+            font-size: var(--rep-header-font-size); 
+            font-weight: 900; 
+            border: 1px solid #334155; 
+            line-height: 1.25;
+            vertical-align: middle;
+            white-space: normal; /* يسمح بالنصوص تحت بعضها تلقائياً */
+        }
+        
+        .report-table td { 
+            padding: 3px 2px; 
+            border: 1px solid #cbd5e1; 
+            font-size: var(--rep-font-size); 
+            font-weight: 800; 
+            color: #0f172a; 
+            height: var(--rep-row-height); 
+            white-space: nowrap; 
+            vertical-align: middle;
+        }
+        .report-table tr:nth-child(even) { background-color: #f8fafc; }
+        .report-table tr:hover { background-color: #eff6ff; }
+
+        .col-highlight { background-color: #ecfdf5 !important; color: #047857 !important; font-weight: 900; }
+        .col-money { background-color: #fefce8 !important; color: #854d0e !important; font-weight: 900; }
+        .col-abs { background-color: #fef2f2 !important; color: #991b1b !important; font-weight: 900; }
+
+        /* شارات فئات الأجر */
+        .badge-cat { padding: 2px 5px; border-radius: 5px; font-size: 10px; font-weight: 900; display: inline-block; white-space: nowrap; }
+        .cat-over-60 { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .cat-over-quota { background: #ede9fe; color: #5b21b6; border: 1px solid #ddd6fe; }
+        .cat-under-60 { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+
+        /* وضع الضغط في ورقة واحدة للطباعة */
+        body.fit-one-page {
+            --rep-row-height: 25px !important;
+            --rep-font-size: 10.5px !important;
+            --rep-header-font-size: 10px !important;
+        }
+        body.fit-one-page .report-table th,
+        body.fit-one-page .report-table td {
+            padding: 1px 1.5px !important;
+            height: 25px !important;
+        }
+        body.fit-one-page .badge-cat {
+            font-size: 9px !important;
+            padding: 1px 3px !important;
+        }
+
+        /* نافذة المودال */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 12px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: #fff; width: 100%; max-width: 800px; border-radius: 18px; overflow: hidden; max-height: 92vh; display: flex; flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .modal-head { background: #0f2b48; color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 16px; overflow-y: auto; }
+
+        /* ================= أمر الطباعة الرسمي A4 ================= */
+        @media print {
+            body { background: white !important; padding: 0 !important; width: 100% !important; }
+            .no-print { display: none !important; }
+            .app-container { max-width: 100% !important; width: 100% !important; margin: 0 !important; }
+            .table-responsive { border: none !important; overflow: visible !important; }
+            .report-table { border: 2.5px solid #000 !important; width: 100% !important; min-width: 100% !important; }
+            .report-table th, .report-table td { border: 1px solid #000 !important; }
+            .report-table th { background: #e2e8f0 !important; color: #000 !important; font-weight: 900 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-signatures { display: flex !important; justify-content: space-between; margin-top: 15px; padding: 0 20px; font-weight: 900; font-size: 12px; page-break-inside: avoid; }
+            .sheet-print-header { display: flex !important; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 8px; page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container space-y-3">
+        
+        <!-- 1. الشريط العلوي الموحد -->
+        <nav class="w-full no-print bg-[#0f2b48] text-white p-3 md:p-4 rounded-2xl shadow-lg flex flex-wrap justify-between items-center gap-3 border-b-4 border-indigo-600">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-indigo-600/30 border border-indigo-400/40 rounded-xl text-yellow-300 text-xl shrink-0">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm md:text-base font-black text-white leading-tight">كشوف استحقاق وصرف حصص الأجر المعتمدة</h1>
+                    <p class="text-[11px] text-blue-200 font-bold">مدرسة الشهيد أشرف حبيب الابتدائية • إدارة الشهداء التعليمية</p>
+                </div>
+            </div>
+
+            <div class="hidden lg:flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full text-xs font-bold text-slate-200">
+                <i class="fa-solid fa-medal text-yellow-400"></i>
+                <span>إعداد وتطوير:</span>
+                <span class="text-amber-300 font-black">أ/ عبدالعزيز لولح (مستر زيزو)</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <a href="tea-contract.html" class="btn-3d px-3 py-1.5 bg-indigo-800 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-table-list"></i> بيانات الأجر
+                </a>
+                <a href="index.html" class="btn-3d px-3.5 py-1.5 bg-blue-700 hover:bg-blue-600 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-house"></i> الرئيسية
+                </a>
+            </div>
+        </nav>
+
+        <!-- 2. المؤشرات المالية السريعة -->
+        <div class="no-print grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            <div class="card-3d p-2.5 bg-white border-r-4 border-r-indigo-600 flex justify-between items-center">
+                <div>
+                    <div class="text-[11px] text-slate-500 font-black">المعلمون المستحقون</div>
+                    <div id="kpi-count" class="text-xl font-black text-indigo-950 mt-0.5">٠</div>
+                </div>
+                <i class="fa-solid fa-users text-indigo-200 text-2xl"></i>
+            </div>
+            <div class="card-3d p-2.5 bg-white border-r-4 border-r-emerald-600 flex justify-between items-center">
+                <div>
+                    <div class="text-[11px] text-slate-500 font-black">إجمالي الحصص المستحقة</div>
+                    <div id="kpi-classes" class="text-xl font-black text-emerald-800 mt-0.5">٠</div>
+                </div>
+                <i class="fa-solid fa-calendar-check text-emerald-200 text-2xl"></i>
+            </div>
+            <div class="card-3d p-2.5 bg-white border-r-4 border-r-amber-500 flex justify-between items-center">
+                <div>
+                    <div class="text-[11px] text-slate-500 font-black">إجمالي المبلغ (٣٥.٨٠ ج)</div>
+                    <div id="kpi-money" class="text-xl font-black text-amber-900 mt-0.5">٠ ج.م</div>
+                </div>
+                <i class="fa-solid fa-coins text-amber-200 text-2xl"></i>
+            </div>
+            <div class="card-3d p-2.5 bg-white border-r-4 border-r-rose-600 flex justify-between items-center">
+                <div>
+                    <div class="text-[11px] text-slate-500 font-black">إجمالي أيام الغياب</div>
+                    <div id="kpi-absences" class="text-xl font-black text-rose-800 mt-0.5">٠ يوم</div>
+                </div>
+                <i class="fa-solid fa-user-xmark text-rose-200 text-2xl"></i>
+            </div>
+        </div>
+
+        <!-- 3. إحصاء الحصص والمبالغ حسب مواد التدريس -->
+        <div class="no-print card-3d p-3 bg-white space-y-2">
+            <div class="flex items-center justify-between border-b pb-1.5">
+                <span class="text-xs font-black text-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-chart-pie text-indigo-600"></i> حصر نصاب ومستحقات المواد للشهر المختار:
+                </span>
+                <span class="text-[10px] text-slate-400 font-bold">تحديث فوري مع تغيير الشهر</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2" id="subjects-stats-grid"></div>
+        </div>
+
+        <!-- 4. شريط أدوات التحكم والطباعة المتطورة -->
+        <div class="no-print card-3d p-3 bg-white flex flex-wrap justify-between items-center gap-2.5">
+            
+            <!-- اختيار الشهر -->
+            <div class="flex items-center gap-2">
+                <label class="text-xs font-black text-indigo-950 flex items-center gap-1">
+                    <i class="fa-solid fa-calendar-days text-indigo-600"></i> الشهر:
+                </label>
+                <select id="month-selector" onchange="renderReportTable()" class="p-2 bg-indigo-50/80 border-2 border-indigo-400 rounded-xl font-black text-xs md:text-sm text-indigo-950 outline-none cursor-pointer focus:border-indigo-600">
+                    <option value="m_sept">شهر سبتمبر</option>
+                    <option value="m_oct" selected>شهر أكتوبر</option>
+                    <option value="m_nov">شهر نوفمبر</option>
+                    <option value="m_dec">شهر ديسمبر</option>
+                    <option value="m_jan">شهر يناير</option>
+                    <option value="m_feb">شهر فبراير</option>
+                    <option value="m_mar">شهر مارس</option>
+                    <option value="m_apr">شهر أبريل</option>
+                    <option value="m_may">شهر مايو</option>
+                </select>
+            </div>
+
+            <!-- خيار اتجاه الطباعة السريع (أفقي / طولي) -->
+            <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <label class="text-xs font-black text-slate-700 px-1"><i class="fa-solid fa-print text-slate-500"></i> الاتجاه:</label>
+                <button type="button" id="btn-orient-landscape" onclick="setPrintOrientation('landscape')" class="px-2.5 py-1 text-xs font-black rounded-lg bg-indigo-900 text-white shadow-sm transition">
+                    <i class="fa-solid fa-arrows-left-right"></i> بالعرض (أفقي)
+                </button>
+                <button type="button" id="btn-orient-portrait" onclick="setPrintOrientation('portrait')" class="px-2.5 py-1 text-xs font-black rounded-lg text-slate-700 hover:bg-slate-200 transition">
+                    <i class="fa-solid fa-arrows-up-down"></i> بالطول (عمودي)
+                </button>
+            </div>
+
+            <!-- خيار ضغط الورقة الواحدة -->
+            <label class="flex items-center gap-1.5 bg-amber-50 border border-amber-300 px-3 py-1.5 rounded-xl cursor-pointer text-xs font-black text-amber-900 hover:bg-amber-100 transition" title="ضغط مقاسات الجدول والخطوط ليجتمع الكشف كاملاً في صفحة واحدة دون انقسام">
+                <input type="checkbox" id="chk-fit-one-page" onchange="toggleFitOnePage(this.checked)" class="w-4 h-4 accent-amber-600 rounded">
+                <span>⚡ ضغط الكشف في ورقة واحدة</span>
+            </label>
+
+            <!-- حقل البحث -->
+            <div class="relative w-44">
+                <i class="fa-solid fa-magnifying-glass absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" id="search-input" oninput="filterReportTable()" placeholder="بحث بالاسم أو القومي..." class="w-full pr-7 pl-2 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold outline-none focus:border-indigo-600">
+            </div>
+
+            <!-- أزرار الإجراءات -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+                <button onclick="openConfigModal()" class="btn-3d px-3 py-2 bg-indigo-900 hover:bg-indigo-800 text-white rounded-xl text-xs font-black flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-sliders text-yellow-300"></i> ضبط الأعمدة
+                </button>
+                <button onclick="exportReportToExcel()" class="btn-3d px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-file-excel text-emerald-200"></i> إكسيل
+                </button>
+                <button onclick="window.print()" class="btn-3d px-4 py-2 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-print text-yellow-400"></i> طباعة الكشف
+                </button>
+            </div>
+        </div>
+
+        <!-- 5. ورقة الكشف الرسمي المطبوع -->
+        <div class="card-3d p-3.5 bg-white space-y-2">
+            
+            <!-- ترويسة الطباعة الرسمية -->
+            <div class="sheet-print-header hidden">
+                <div style="text-align: right; font-size: 11px; font-weight: 900; line-height: 1.3;">
+                    <div>وزارة التربية والتعليم والتعليم الفني</div>
+                    <div>مديرية التربية والتعليم بالمنوفية</div>
+                    <div>إدارة الشهداء التعليمية</div>
+                    <div>مدرسة الشهيد أشرف حبيب الابتدائية</div>
+                </div>
+
+                <div style="text-align: center;">
+                    <h2 style="font-size: 14px; font-weight: 900; color: #000; border: 2px solid #000; padding: 3px 14px; border-radius: 8px;" id="print-sheet-title">
+                        كشف حصر المستحقين لصرف حصص الأجر
+                    </h2>
+                    <div style="font-size: 11px; font-weight: 800; margin-top: 3px;">
+                        للعام الدراسي ٢٠٢٦ / ٢٠٢٧ م
+                    </div>
+                </div>
+
+                <div style="text-align: left; font-size: 11px; font-weight: 800; border: 1px dashed #000; padding: 3px 8px; border-radius: 6px;">
+                    <div>سعر الحصة: <b>٣٥.٨٠ ج</b></div>
+                    <div>تاريخ التقرير: <span id="print-date"></span></div>
+                    <div>الاتجاه: <span id="lbl-print-mode" class="font-black text-indigo-900">أفقي</span></div>
+                </div>
+            </div>
+
+            <!-- جدول الكشف الرئيسي مع العناوين متعددة الأسطر لتقليص العرض -->
+            <div class="table-responsive">
+                <table class="report-table" id="main-report-table">
+                    <thead>
+                        <tr>
+                            <th data-col="col-m" style="width: 32px;">م</th>
+                            <th data-col="col-name" style="width: 195px; text-align: right; padding-right: 6px;">الاسم الرباعي</th>
+                            <th data-col="col-cat" style="width: 90px;">فئة<br>الأجر</th>
+                            <th data-col="col-nid" style="width: 120px;">الرقم القومي<br>(١٤ رقم)</th>
+                            <th data-col="col-qual" style="width: 105px;">المؤهل<br>الدراسي</th>
+                            <th data-col="col-subj" style="width: 95px;">مادة<br>التدريس</th>
+                            <th data-col="col-quota" style="width: 65px;">النصاب<br>الأسبوعي</th>
+                            <th data-col="col-abs" style="width: 55px;">أيام<br>الغياب</th>
+                            <th data-col="col-classes" style="width: 65px;" class="col-highlight">حصص<br>الشهر</th>
+                            <th data-col="col-money" style="width: 80px;" class="col-money">المبلغ<br>المستحق</th>
+                            <th data-col="col-mobile" style="width: 95px;">رقم<br>الموبايل</th>
+                            <th data-col="col-sig" style="width: 95px;">توقيع المعلم<br>بالعلم</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-tbody">
+                        <tr>
+                            <td colspan="12" class="py-10 text-slate-400 font-bold text-center">
+                                <i class="fa-solid fa-spinner fa-spin text-xl mb-2 block"></i> جاري الاتصال بالسحابة وتحميل بيانات المستحقين...
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tfoot id="report-tfoot" class="font-black bg-slate-100 border-t-2 border-t-slate-800"></tfoot>
+                </table>
+            </div>
+
+            <!-- التوقيعات والاعتماد الرسمي للطباعة -->
+            <div class="print-signatures hidden">
+                <div style="text-align: center;">مسئول إحصاء / سجل الأجر<br><br>........................................</div>
+                <div style="text-align: center;">شئون العاملين<br><br>........................................</div>
+                <div style="text-align: center;">الموجه المالي والإداري<br><br>........................................</div>
+                <div style="text-align: center;">يعتمد / مدير المدرسة<br><br>........................................</div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- 6. نافذة ضبط المقاسات وعرض الأعمدة -->
+    <div class="modal-overlay" id="configModal" onclick="if(event.target===this) closeConfigModal()">
+        <div class="modal-content">
+            <div class="modal-head">
+                <h3 class="text-sm font-black flex items-center gap-2 text-white">
+                    <i class="fa-solid fa-sliders text-yellow-300"></i> لوحة التحكم في مقاسات وعرض وإخفاء أعمدة الكشف
+                </h3>
+                <button onclick="closeConfigModal()" class="text-white text-2xl font-bold hover:text-rose-300">&times;</button>
+            </div>
+            <div class="modal-body space-y-3.5 text-xs font-bold">
+                
+                <!-- إعدادات الطباعة السريعة في المودال -->
+                <div class="p-3 bg-indigo-50/60 border border-indigo-200 rounded-xl space-y-2">
+                    <div class="font-black text-indigo-950 text-xs">خيارات تجهيز الورقة والطباعة:</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-600 mb-1">اتجاه الطباعة المعتمد:</label>
+                            <select id="cfg-orient-select" onchange="setPrintOrientation(this.value)" class="w-full p-2 bg-white border border-slate-300 rounded-lg font-bold">
+                                <option value="landscape">طباعة بالعرض (A4 Landscape)</option>
+                                <option value="portrait">طباعة بالطول (A4 Portrait)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center pt-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="cfg-chk-fit" onchange="document.getElementById('chk-fit-one-page').checked = this.checked; toggleFitOnePage(this.checked);" class="w-4 h-4 accent-indigo-600">
+                                <span class="font-black text-indigo-900">ضغط وملاءمة في ورقة واحدة</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- إعدادات الخطوط والارتفاعات -->
+                <div class="p-3 bg-slate-50 border rounded-xl space-y-3">
+                    <div class="font-black text-slate-800 text-xs border-b pb-1">١. التحكم في الخطوط وارتفاع الصفوف:</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-slate-600 mb-1">ارتفاع الصف (<span id="lbl-row-h">33px</span>):</label>
+                            <input type="range" min="22" max="55" value="33" id="rng-row-h" oninput="updateConfigProp('--rep-row-height', this.value, 'lbl-row-h', 'px')" class="w-full accent-indigo-600">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 mb-1">خط البيانات (<span id="lbl-font-sz">12.5px</span>):</label>
+                            <input type="range" min="9" max="16" step="0.5" value="12.5" id="rng-font-sz" oninput="updateConfigProp('--rep-font-size', this.value, 'lbl-font-sz', 'px')" class="w-full accent-indigo-600">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 mb-1">خط العناوين (<span id="lbl-head-sz">11.5px</span>):</label>
+                            <input type="range" min="8.5" max="15" step="0.5" value="11.5" id="rng-head-sz" oninput="updateConfigProp('--rep-header-font-size', this.value, 'lbl-head-sz', 'px')" class="w-full accent-indigo-600">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- التحكم في إظهار وعرض كل عمود -->
+                <div class="p-3 bg-slate-50 border rounded-xl space-y-2">
+                    <div class="font-black text-slate-800 text-xs border-b pb-1">٢. التحكم في إظهار وعرض الأعمدة:</div>
+                    <div class="space-y-2 max-h-56 overflow-y-auto pr-1" id="columns-config-container"></div>
+                </div>
+
+                <div class="flex gap-2 pt-2 border-t">
+                    <button onclick="saveConfigToStorage()" class="btn-3d flex-1 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk"></i> حفظ وتثبيت الإعدادات
+                    </button>
+                    <button onclick="resetDefaultConfig()" class="btn-3d px-3.5 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-xl font-black text-xs">
+                        استعادة الافتراضي
+                    </button>
+                    <button onclick="closeConfigModal()" class="px-3.5 py-2 bg-slate-200 text-slate-700 rounded-xl font-black text-xs">
+                        إغلاق
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- المحرك البرمجي والربط السحابي -->
+    <script>
+        const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const PRICE_PER_CLASS = 35.80; // السعر الرسمي للحصة
+        let TEACHERS_CACHE = [];
+
+        const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
+
+        // مصفوفة الأعمدة المضغوطة لتلائم الورقة الواحدة
+        const COLUMNS_DEF = [
+            { key: "col-m", name: "مسلسل (م)", defaultWidth: 32, visible: true },
+            { key: "col-name", name: "الاسم الرباعي", defaultWidth: 195, visible: true },
+            { key: "col-cat", name: "فئة الأجر", defaultWidth: 90, visible: true },
+            { key: "col-nid", name: "الرقم القومي", defaultWidth: 120, visible: true },
+            { key: "col-qual", name: "المؤهل الدراسي", defaultWidth: 105, visible: true },
+            { key: "col-subj", name: "مادة التدريس", defaultWidth: 95, visible: true },
+            { key: "col-quota", name: "النصاب الأسبوعي", defaultWidth: 65, visible: true },
+            { key: "col-abs", name: "أيام الغياب", defaultWidth: 55, visible: true },
+            { key: "col-classes", name: "حصص الشهر المستحقة", defaultWidth: 65, visible: true },
+            { key: "col-money", name: "المبلغ المستحق", defaultWidth: 80, visible: true },
+            { key: "col-mobile", name: "رقم الموبايل", defaultWidth: 95, visible: true },
+            { key: "col-sig", name: "توقيع المعلم بالعلم", defaultWidth: 95, visible: true }
+        ];
+
+        let CURRENT_CONFIG = {};
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('print-date').innerText = new Date().toLocaleDateString('ar-EG');
+            loadConfig();
+            buildConfigModalUI();
+            await loadTeachersFromDatabase();
+        });
+
+        // ================= 1. التحكم في اتجاه الطباعة وضغط الصفحة =================
+        function setPrintOrientation(orient) {
+            const styleEl = document.getElementById('dynamic-page-style');
+            const btnLandscape = document.getElementById('btn-orient-landscape');
+            const btnPortrait = document.getElementById('btn-orient-portrait');
+            const lblPrintMode = document.getElementById('lbl-print-mode');
+            const cfgSelect = document.getElementById('cfg-orient-select');
+
+            if (cfgSelect) cfgSelect.value = orient;
+
+            if (orient === 'portrait') {
+                styleEl.innerHTML = `@page { size: A4 portrait !important; margin: 5mm 4mm !important; }`;
+                document.body.classList.add('print-portrait');
+                document.body.classList.remove('print-landscape');
+                
+                btnPortrait.className = "px-2.5 py-1 text-xs font-black rounded-lg bg-indigo-900 text-white shadow-sm transition";
+                btnLandscape.className = "px-2.5 py-1 text-xs font-black rounded-lg text-slate-700 hover:bg-slate-200 transition";
+                lblPrintMode.innerText = "عمودي (طولي)";
+            } else {
+                styleEl.innerHTML = `@page { size: A4 landscape !important; margin: 6mm 5mm !important; }`;
+                document.body.classList.add('print-landscape');
+                document.body.classList.remove('print-portrait');
+
+                btnLandscape.className = "px-2.5 py-1 text-xs font-black rounded-lg bg-indigo-900 text-white shadow-sm transition";
+                btnPortrait.className = "px-2.5 py-1 text-xs font-black rounded-lg text-slate-700 hover:bg-slate-200 transition";
+                lblPrintMode.innerText = "أفقي (عرضي)";
+            }
+
+            CURRENT_CONFIG['print_orientation'] = orient;
+        }
+
+        function toggleFitOnePage(enable) {
+            document.body.classList.toggle('fit-one-page', enable);
+            const cfgChk = document.getElementById('cfg-chk-fit');
+            if (cfgChk) cfgChk.checked = enable;
+            CURRENT_CONFIG['fit_one_page'] = enable;
+        }
+
+        // ================= 2. إدارة الترتيب الإداري =================
+        function getPayRateRank(payRateStr) {
+            const s = String(payRateStr || "").trim();
+            if (s.includes("فوق سن") || s.includes("فوق 60") || s.includes("فوق سن (60)")) return 1;
+            if (s.includes("فوق النصاب") || s.includes("معين")) return 2;
+            if (s.includes("دون سن") || s.includes("تحت سن") || s.includes("دون 60")) return 3;
+            return 4;
+        }
+
+        function getPayRateBadge(payRateStr) {
+            const rank = getPayRateRank(payRateStr);
+            if (rank === 1) return `<span class="badge-cat cat-over-60">فوق سن 60</span>`;
+            if (rank === 2) return `<span class="badge-cat cat-over-quota">فوق النصاب</span>`;
+            if (rank === 3) return `<span class="badge-cat cat-under-60">دون سن 60</span>`;
+            return `<span class="badge-cat bg-slate-100 text-slate-700">${payRateStr || '-'}</span>`;
+        }
+
+        // ================= 3. جلب البيانات من السحابة =================
+        async function loadTeachersFromDatabase() {
+            try {
+                const { data, error } = await sbClient.from("contract_teachers").select("*");
+                if (error) throw error;
+                TEACHERS_CACHE = data || [];
+                renderReportTable();
+            } catch (err) {
+                console.error("خطأ جلب البيانات:", err);
+                try {
+                    const req = indexedDB.open("MR_ZEZO_SCHOOL_OFFLINE_DB");
+                    req.onsuccess = (e) => {
+                        const db = e.target.result;
+                        if (db.objectStoreNames.contains("contract_teachers")) {
+                            const tx = db.transaction("contract_teachers", "readonly");
+                            const getReq = tx.objectStore("contract_teachers").getAll();
+                            getReq.onsuccess = () => {
+                                TEACHERS_CACHE = getReq.result || [];
+                                renderReportTable();
+                            };
+                        }
+                    };
+                } catch(e) {
+                    document.getElementById('report-tbody').innerHTML = `<tr><td colspan="12" class="p-6 text-rose-700 font-black">❌ تعذر تحميل البيانات: ${err.message}</td></tr>`;
+                }
+            }
+        }
+
+        // ================= 4. توليد الكشف =================
+        function renderReportTable() {
+            const monthKey = document.getElementById('month-selector').value;
+            const monthName = document.getElementById('month-selector').options[document.getElementById('month-selector').selectedIndex].text;
+            const tbody = document.getElementById('report-tbody');
+            const tfoot = document.getElementById('report-tfoot');
+            const searchVal = (document.getElementById('search-input').value || '').trim().toLowerCase();
+
+            document.getElementById('print-sheet-title').innerText = `كشف حصر المستحقين لصرف حصص الأجر عن (${monthName}) ٢٠٢٦ / ٢٠٢٧ م`;
+
+            let eligibleList = [];
+            const subjectsStats = {};
+
+            // التصفية: إدراج أي معلم له حصص مسجلة بالشهر المختار > 0
+            TEACHERS_CACHE.forEach(t => {
+                const monthClasses = parseInt(t[monthKey]) || 0;
+
+                if (monthClasses > 0) {
+                    if (searchVal) {
+                        const matchName = (t.name || '').toLowerCase().includes(searchVal);
+                        const matchNid = String(t.nid || '').includes(searchVal);
+                        if (!matchName && !matchNid) return;
+                    }
+
+                    eligibleList.push(t);
+
+                    const subName = (t.subject || 'بدون مادة').trim();
+                    if (!subjectsStats[subName]) {
+                        subjectsStats[subName] = { count: 0, weekly: 0, monthly: 0, money: 0 };
+                    }
+                    subjectsStats[subName].count++;
+                    subjectsStats[subName].weekly += (parseInt(t.weekly_quota) || 0);
+                    subjectsStats[subName].monthly += monthClasses;
+                    subjectsStats[subName].money += (monthClasses * PRICE_PER_CLASS);
+                }
+            });
+
+            // الترتيب: 1. فوق سن 60 -> 2. فوق النصاب -> 3. دون سن 60 -> أبجدياً
+            eligibleList.sort((a, b) => {
+                const rankA = getPayRateRank(a.pay_rate);
+                const rankB = getPayRateRank(b.pay_rate);
+                if (rankA !== rankB) return rankA - rankB;
+                return (a.name || "").localeCompare((b.name || ""), 'ar');
+            });
+
+            let sumClasses = 0;
+            let sumMoney = 0;
+            let sumAbsences = 0;
+            let html = "";
+            let serial = 1;
+
+            eligibleList.forEach(t => {
+                const monthClasses = parseInt(t[monthKey]) || 0;
+                
+                let absDaysCount = 0;
+                if (t.absences && Array.isArray(t.absences[monthKey])) {
+                    absDaysCount = t.absences[monthKey].length;
+                }
+
+                const totalAmount = (monthClasses * PRICE_PER_CLASS);
+
+                sumClasses += monthClasses;
+                sumMoney += totalAmount;
+                sumAbsences += absDaysCount;
+
+                html += `
+                    <tr>
+                        <td data-col="col-m">${toAr(serial++)}</td>
+                        <td data-col="col-name" style="text-align: right; padding-right: 6px; font-weight: 900; color: #0f2b48;">${t.name || '-'}</td>
+                        <td data-col="col-cat">${getPayRateBadge(t.pay_rate)}</td>
+                        <td data-col="col-nid" class="font-mono font-bold text-xs">${t.nid || '-'}</td>
+                        <td data-col="col-qual">${t.qualification || '-'}</td>
+                        <td data-col="col-subj" class="font-bold text-blue-900">${t.subject || '-'}</td>
+                        <td data-col="col-quota">${toAr(t.weekly_quota || 0)}</td>
+                        <td data-col="col-abs" class="${absDaysCount > 0 ? 'col-abs' : ''}">${toAr(absDaysCount)}</td>
+                        <td data-col="col-classes" class="col-highlight">${toAr(monthClasses)}</td>
+                        <td data-col="col-money" class="col-money">${totalAmount > 0 ? totalAmount.toFixed(2) + ' ج' : '-'}</td>
+                        <td data-col="col-mobile" class="font-mono text-xs">${t.mobile || '-'}</td>
+                        <td data-col="col-sig"></td>
+                    </tr>
+                `;
+            });
+
+            if (html === "") {
+                tbody.innerHTML = `<tr><td colspan="12" class="py-8 text-amber-800 bg-amber-50 font-black">لا توجد حصص مسجلة أو مستحقة لأي معلم في ${monthName}.</td></tr>`;
+                tfoot.innerHTML = "";
+            } else {
+                tbody.innerHTML = html;
+                tfoot.innerHTML = `
+                    <tr>
+                        <td data-col="col-m"></td>
+                        <td data-col="col-name" colspan="2" class="py-2 text-right pr-4 font-black">الإجمــــالي العــــام:</td>
+                        <td data-col="col-cat"></td>
+                        <td data-col="col-nid"></td>
+                        <td data-col="col-qual"></td>
+                        <td data-col="col-subj"></td>
+                        <td data-col="col-quota">-</td>
+                        <td data-col="col-abs" class="text-rose-800 font-black">${toAr(sumAbsences)} يوم</td>
+                        <td data-col="col-classes" class="text-emerald-800 font-black text-sm">${toAr(sumClasses)} حصة</td>
+                        <td data-col="col-money" class="text-amber-900 font-black text-sm">${sumMoney.toFixed(2)} ج.م</td>
+                        <td data-col="col-mobile"></td>
+                        <td data-col="col-sig"></td>
+                    </tr>
+                `;
+            }
+
+            document.getElementById('kpi-count').innerText = toAr(eligibleList.length);
+            document.getElementById('kpi-classes').innerText = toAr(sumClasses) + " حصة";
+            document.getElementById('kpi-money').innerText = sumMoney.toFixed(2) + " ج.م";
+            document.getElementById('kpi-absences').innerText = toAr(sumAbsences) + " يوم";
+
+            renderSubjectStatsCards(subjectsStats);
+            applyConfigToDOM();
+        }
+
+        // ================= 5. رسم كروت إحصاء المواد =================
+        function renderSubjectStatsCards(statsObj) {
+            const container = document.getElementById('subjects-stats-grid');
+            container.innerHTML = "";
+
+            const subjects = Object.keys(statsObj).sort();
+            if (subjects.length === 0) {
+                container.innerHTML = `<div class="col-span-full text-slate-400 text-xs py-2 text-center">لا توجد حصص مسندة للمواد في هذا الشهر.</div>`;
+                return;
+            }
+
+            subjects.forEach(sub => {
+                const s = statsObj[sub];
+                container.innerHTML += `
+                    <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                        <div class="flex justify-between items-center border-b pb-1">
+                            <span class="font-black text-[#0f2b48] text-xs">${sub}</span>
+                            <span class="text-[10px] bg-indigo-100 text-indigo-900 px-1.5 py-0.5 rounded font-black">${toAr(s.count)} معلم</span>
+                        </div>
+                        <div class="flex justify-between text-[11px] text-slate-600 font-bold">
+                            <span>أسبوعي: <b>${toAr(s.weekly)}</b></span>
+                            <span class="text-emerald-700">شهري: <b>${toAr(s.monthly)}</b></span>
+                        </div>
+                        <div class="text-[10px] font-black text-amber-800 text-left pt-0.5 border-t border-dashed">
+                            ${s.money.toFixed(1)} ج.م
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function filterReportTable() {
+            renderReportTable();
+        }
+
+        // ================= 6. إدارة المقاسات والأعمدة =================
+        function openConfigModal() {
+            document.getElementById('configModal').classList.add('active');
+        }
+
+        function closeConfigModal() {
+            document.getElementById('configModal').classList.remove('active');
+        }
+
+        function buildConfigModalUI() {
+            const container = document.getElementById('columns-config-container');
+            container.innerHTML = "";
+
+            COLUMNS_DEF.forEach(col => {
+                const savedCol = (CURRENT_CONFIG.columns && CURRENT_CONFIG.columns[col.key]) ? CURRENT_CONFIG.columns[col.key] : col;
+                const isChecked = savedCol.visible !== false;
+                const widthVal = savedCol.width || col.defaultWidth;
+
+                container.innerHTML += `
+                    <div class="flex items-center justify-between p-2 bg-white border border-slate-200 rounded-lg gap-2">
+                        <label class="flex items-center gap-2 cursor-pointer w-40">
+                            <input type="checkbox" id="chk-${col.key}" ${isChecked ? 'checked' : ''} onchange="toggleColumnVisibility('${col.key}', this.checked)" class="w-4 h-4 accent-indigo-600">
+                            <span class="text-xs font-black text-slate-800">${col.name}</span>
+                        </label>
+                        <div class="flex items-center gap-2 flex-1">
+                            <span class="text-[10px] text-slate-400">العرض:</span>
+                            <input type="range" min="30" max="250" value="${widthVal}" id="rng-${col.key}" oninput="updateColumnWidth('${col.key}', this.value)" class="flex-1 accent-indigo-600">
+                            <span id="lbl-${col.key}" class="w-12 text-left font-mono text-xs text-indigo-900">${widthVal}px</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function updateConfigProp(prop, val, labelId, unit) {
+            document.documentElement.style.setProperty(prop, val + unit);
+            document.getElementById(labelId).innerText = val + unit;
+            CURRENT_CONFIG[prop] = val + unit;
+        }
+
+        function updateColumnWidth(colKey, width) {
+            document.getElementById(`lbl-${colKey}`).innerText = width + 'px';
+            if (!CURRENT_CONFIG.columns) CURRENT_CONFIG.columns = {};
+            if (!CURRENT_CONFIG.columns[colKey]) CURRENT_CONFIG.columns[colKey] = {};
+            CURRENT_CONFIG.columns[colKey].width = parseInt(width);
+            applyConfigToDOM();
+        }
+
+        function toggleColumnVisibility(colKey, isVisible) {
+            if (!CURRENT_CONFIG.columns) CURRENT_CONFIG.columns = {};
+            if (!CURRENT_CONFIG.columns[colKey]) CURRENT_CONFIG.columns[colKey] = {};
+            CURRENT_CONFIG.columns[colKey].visible = isVisible;
+            applyConfigToDOM();
+        }
+
+        function applyConfigToDOM() {
+            if (CURRENT_CONFIG['--rep-row-height']) document.documentElement.style.setProperty('--rep-row-height', CURRENT_CONFIG['--rep-row-height']);
+            if (CURRENT_CONFIG['--rep-font-size']) document.documentElement.style.setProperty('--rep-font-size', CURRENT_CONFIG['--rep-font-size']);
+            if (CURRENT_CONFIG['--rep-header-font-size']) document.documentElement.style.setProperty('--rep-header-font-size', CURRENT_CONFIG['--rep-header-font-size']);
+
+            COLUMNS_DEF.forEach(col => {
+                const conf = (CURRENT_CONFIG.columns && CURRENT_CONFIG.columns[col.key]) ? CURRENT_CONFIG.columns[col.key] : col;
+                const isVisible = conf.visible !== false;
+                const width = conf.width || col.defaultWidth;
+
+                const cells = document.querySelectorAll(`[data-col="${col.key}"]`);
+                cells.forEach(el => {
+                    el.style.display = isVisible ? "" : "none";
+                    if (isVisible && width) {
+                        el.style.width = width + "px";
+                        el.style.minWidth = width + "px";
+                    }
+                });
+            });
+        }
+
+        function saveConfigToStorage() {
+            localStorage.setItem("ZEZO_CONTRACT_REPORT_CONFIG", JSON.stringify(CURRENT_CONFIG));
+            closeConfigModal();
+            alert("✅ تم حفظ وتثبيت إعدادات الجدول ومقاساته بنجاح!");
+        }
+
+        function loadConfig() {
+            const saved = localStorage.getItem("ZEZO_CONTRACT_REPORT_CONFIG");
+            if (saved) {
+                try {
+                    CURRENT_CONFIG = JSON.parse(saved);
+                    if (CURRENT_CONFIG['--rep-row-height']) document.getElementById('rng-row-h').value = parseInt(CURRENT_CONFIG['--rep-row-height']);
+                    if (CURRENT_CONFIG['--rep-font-size']) document.getElementById('rng-font-sz').value = parseFloat(CURRENT_CONFIG['--rep-font-size']);
+                    if (CURRENT_CONFIG['--rep-header-font-size']) document.getElementById('rng-head-sz').value = parseFloat(CURRENT_CONFIG['--rep-header-font-size']);
+                    if (CURRENT_CONFIG['print_orientation']) setPrintOrientation(CURRENT_CONFIG['print_orientation']);
+                    if (CURRENT_CONFIG['fit_one_page']) {
+                        document.getElementById('chk-fit-one-page').checked = true;
+                        toggleFitOnePage(true);
+                    }
+                } catch(e) {}
+            }
+            applyConfigToDOM();
+        }
+
+        function resetDefaultConfig() {
+            localStorage.removeItem("ZEZO_CONTRACT_REPORT_CONFIG");
+            CURRENT_CONFIG = {};
+            document.getElementById('rng-row-h').value = 33;
+            document.getElementById('rng-font-sz').value = 12.5;
+            document.getElementById('rng-head-sz').value = 11.5;
+            document.getElementById('lbl-row-h').innerText = '33px';
+            document.getElementById('lbl-font-sz').innerText = '12.5px';
+            document.getElementById('lbl-head-sz').innerText = '11.5px';
+            document.getElementById('chk-fit-one-page').checked = false;
+            toggleFitOnePage(false);
+            setPrintOrientation('landscape');
+            buildConfigModalUI();
+            applyConfigToDOM();
+            alert("تمت استعادة المقاسات الافتراضية.");
+        }
+
+        // ================= 7. تصدير إكسيل مع تنظيف العناوين المزدوجة =================
+        function exportReportToExcel() {
+            const table = document.getElementById("main-report-table");
+            const monthName = document.getElementById('month-selector').options[document.getElementById('month-selector').selectedIndex].text;
+            
+            const cloneTable = table.cloneNode(true);
+            
+            // استبعاد الأعمدة المخفية
+            COLUMNS_DEF.forEach(col => {
+                const conf = (CURRENT_CONFIG.columns && CURRENT_CONFIG.columns[col.key]) ? CURRENT_CONFIG.columns[col.key] : col;
+                if (conf.visible === false) {
+                    cloneTable.querySelectorAll(`[data-col="${col.key}"]`).forEach(el => el.remove());
+                }
+            });
+
+            // تنظيف النزول لسطر جديد في عناوين الإكسيل
+            cloneTable.querySelectorAll('th, td').forEach(cell => {
+                cell.innerText = cell.innerText.replace(/\r?\n|\r/g, ' ').replace(/\s+/g, ' ').trim();
+            });
+
+            const wb = XLSX.utils.table_to_book(cloneTable, { raw: true });
+            if (!wb.Sheets[wb.SheetNames[0]]['!views']) wb.Sheets[wb.SheetNames[0]]['!views'] = [];
+            wb.Sheets[wb.SheetNames[0]]['!views'].push({ rightToLeft: true });
+            
+            XLSX.writeFile(wb, `كشف_استحقاق_حصص_الأجر_${monthName}.xlsx`);
+        }
+    </script>
+</body>
+</html>
