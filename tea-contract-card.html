@@ -6,9 +6,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- ExcelJS & Supabase -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <!-- Supabase, JSZip & FileSaver (المكتبات الرسمية المعتمدة لملفات الماكرو) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <style>
         /* ================= نظام الألوان الموحد ================= */
@@ -32,22 +33,13 @@
 
         /* ================= الشريط العلوي والتنقل ================= */
         .top-navigation { width: 100%; max-width: 1150px; background: var(--primary-color); padding: 10px 20px; border-radius: 10px; color: white; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); flex-wrap: wrap; gap: 10px; border-bottom: 4px solid var(--contract); }
-        
         .nav-title { font-size: 17px; font-weight: 900; color: #e2e8f0; display: flex; align-items: center; gap: 10px; }
         
         .dev-badge { 
-            background: rgba(255, 255, 255, 0.1); 
-            backdrop-filter: blur(5px);
-            color: #fff; 
-            padding: 6px 25px; 
-            border-radius: 50px; 
-            font-size: 13px; 
-            font-weight: 900; 
-            border: 1px solid rgba(255,255,255,0.2); 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-            display: flex; 
-            align-items: center; 
-            gap: 15px; 
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(5px); color: #fff; 
+            padding: 6px 25px; border-radius: 50px; font-size: 13px; font-weight: 900; 
+            border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
+            display: flex; align-items: center; gap: 15px; 
         }
         .dev-badge span { color: #fcd34d; font-size: 14px; }
         
@@ -96,7 +88,6 @@
         .btn-view-file { background: var(--contract); color: white; border: none; padding: 10px 15px; font-family: 'Cairo'; font-weight: 900; font-size: 13px; cursor: pointer; flex-grow: 1; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
         .btn-view-file:hover { background: #312e81; }
         .btn-view-file.empty { background: #94a3b8; color: #f1f5f9; cursor: not-allowed; }
-        .btn-view-file.empty:hover { background: #94a3b8; }
         .btn-upload-file { background: var(--secondary-color); color: white; border: none; padding: 10px 15px; cursor: pointer; font-size: 16px; border-right: 2px solid rgba(0,0,0,0.1); transition: 0.2s; }
         .btn-upload-file:hover { background: #b45309; }
 
@@ -120,10 +111,10 @@
         .modal-content { background: var(--bg-color); width: 100%; max-width: 950px; border-radius: 15px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
         .modal-header { background: var(--primary-color); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .modal-body { padding: 15px; overflow-y: auto; flex-grow: 1; }
-        .modal-footer { padding: 15px; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: center; gap: 15px; }
+        .modal-footer { padding: 15px; background: white; border-top: 1px solid #e2e8f0; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
 
-        .abs-top-bar { display: flex; gap: 15px; align-items: center; background: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #e2e8f0; flex-wrap: wrap; }
-        .teacher-selector { flex-grow: 1; min-width: 250px; }
+        .abs-top-bar { display: flex; gap: 15px; align-items: flex-end; background: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; border: 1px solid #e2e8f0; flex-wrap: wrap; }
+        .teacher-selector { flex-grow: 1; min-width: 220px; }
         .teacher-selector label { font-size: 12px; font-weight: 900; color: var(--primary-color); display: block; margin-bottom: 5px; }
         .teacher-selector select { width: 100%; padding: 8px; border-radius: 6px; border: 2px solid var(--primary-color); font-weight: 900; font-size: 14px; outline: none; background: #f5f3ff; color: var(--text-main); cursor: pointer; }
         
@@ -304,7 +295,6 @@
             <button type="button" class="btn-action btn-update" onclick="saveTeacher('update')"><i class="fa-solid fa-user-check"></i> حفظ التعديلات</button>
             
             <button type="button" class="btn-action btn-schedule" onclick="openScheduleModal()"><i class="fa-solid fa-table-cells"></i> الجدول والاستمارة</button>
-            <button type="button" class="btn-action btn-abs" onclick="openAbsenceModal()"><i class="fa-solid fa-calendar-check"></i> سجل الغياب</button>
             
             <button type="button" class="btn-action btn-calc" onclick="openPeriodSettingsModal()"><i class="fa-solid fa-cloud"></i> إعداد فترة الحساب</button>
             
@@ -351,8 +341,8 @@
         </div>
     </div>
 
-    <!-- نافذة الغياب -->
-    <div class="modal-overlay" id="absModal" onclick="if(event.target.id==='absModal') document.getElementById('absModal').classList.remove('active')">
+    <!-- نافذة الغياب (بـ z-index أعلى لتظهر فوق الجدول) -->
+    <div class="modal-overlay" id="absModal" style="z-index: 2100;" onclick="if(event.target.id==='absModal') document.getElementById('absModal').classList.remove('active')">
         <div class="modal-content">
             <div class="modal-header">
                 <h2 style="font-size:15px; margin:0;"><i class="fa-solid fa-calendar-check"></i> سجل غياب معلمي الأجر</h2>
@@ -379,9 +369,9 @@
         </div>
     </div>
 
-    <!-- نافذة الجدول المدرسي المدمجة -->
+    <!-- نافذة الجدول المدرسي المدمجة المطورة -->
     <div class="modal-overlay" id="scheduleModal" onclick="if(event.target.id==='scheduleModal') document.getElementById('scheduleModal').classList.remove('active')">
-        <div class="modal-content" style="max-width: 1000px;">
+        <div class="modal-content" style="max-width: 1050px;">
             <div class="modal-header">
                 <h2 style="font-size:15px; margin:0;"><i class="fa-solid fa-table-cells"></i> جدول حصص معلم الأجر وتوليد الاستمارة السحابية</h2>
                 <button onclick="document.getElementById('scheduleModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
@@ -402,6 +392,14 @@
                             <option value="m_mar">مارس</option><option value="m_apr">أبريل</option><option value="m_may">مايو</option>
                         </select>
                     </div>
+                    <!-- زر تسجيل الغياب المضاف في نفس النافذة -->
+                    <button type="button" class="btn-action btn-abs" style="width:auto; height:38px; padding:0 16px; white-space:nowrap; background:#0f172a;" onclick="openAbsenceFromScheduleModal()" title="تسجيل وتعديل أيام غياب هذا المعلم">
+                        <i class="fa-solid fa-calendar-check text-yellow-300"></i> تسجيل الغياب
+                    </button>
+                    <!-- زر استيراد الجدول المدرسي المعتمد -->
+                    <button type="button" class="btn-action" style="width:auto; height:38px; padding:0 16px; white-space:nowrap; background:#7c3aed;" onclick="importOfficialSchedule()" title="استيراد الجدول المعتمد من صفحة الجدول المدرسي العام">
+                        <i class="fa-solid fa-file-import text-yellow-300"></i> استيراد الجدول الرسمي
+                    </button>
                 </div>
 
                 <div class="sch-info-banner" id="sch-info-banner">
@@ -436,8 +434,14 @@
                 </table>
             </div>
             <div class="modal-footer">
-                <button class="btn-action btn-excel-gen" id="btn-master-save" style="width:auto; padding:12px 40px;" onclick="processScheduleAndExcel()">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> حفظ الجدول وتوليد الاستمارة وتحميلها
+                <!-- زر حفظ الجدول فقط -->
+                <button class="btn-action btn-update" id="btn-save-schedule-only" style="width:auto; padding:12px 30px; font-size:14px;" onclick="saveScheduleOnly()">
+                    <i class="fa-solid fa-floppy-disk text-yellow-300"></i> حفظ الجدول فقط
+                </button>
+
+                <!-- زر حفظ الجدول وتوليد الاستمارة وتحميلها -->
+                <button class="btn-action btn-excel-gen" id="btn-master-save" style="width:auto; padding:12px 30px; font-size:14px;" onclick="processScheduleAndExcel()">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> حفظ وتوليد الاستمارة وتحميلها
                 </button>
             </div>
             <div id="excel-status" style="display:none; text-align:center; padding:10px; font-weight:bold; color:var(--danger);">جاري المعالجة والرفع للسحابة... يرجى الانتظار.</div>
@@ -557,43 +561,85 @@
 
         async function fetchAllTeachers() {
             try {
-                const { data, error } = await supabaseClient.from("contract_teachers").select("*");
-                if (error) throw error;
+                let { data, error } = await supabaseClient.from("contract_teachers").select("*");
                 
-                allTeachers = data || []; 
-                allTeachers.forEach(t => t.id = t.nid); 
-                allTeachers.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
-                
-                const absSelect = document.getElementById("abs-teacher-select");
-                absSelect.innerHTML = '<option value="" disabled selected>اختر المعلم...</option>';
-                allTeachers.forEach(t => { absSelect.innerHTML += `<option value="${t.nid}">${t.name}</option>`; });
+                // دعم إضافي: إذا تعذر الجلب أو كانت السحابة بطيئة، نبحث في قاعدة البيانات المحلية (IndexedDB)
+                if (error || !data || data.length === 0) {
+                    try {
+                        const localDBReq = indexedDB.open("MR_ZEZO_SCHOOL_OFFLINE_DB");
+                        localDBReq.onsuccess = (e) => {
+                            const db = e.target.result;
+                            if (db.objectStoreNames.contains("contract_teachers")) {
+                                const tx = db.transaction("contract_teachers", "readonly");
+                                const storeReq = tx.objectStore("contract_teachers").getAll();
+                                storeReq.onsuccess = () => {
+                                    if (storeReq.result && storeReq.result.length > 0) {
+                                        applyLoadedTeachers(storeReq.result);
+                                    }
+                                };
+                            }
+                        };
+                    } catch(err){}
+                }
 
-                const schSelect = document.getElementById("schedule-teacher-select");
-                schSelect.innerHTML = '<option value="" disabled selected>اختر المعلم...</option>';
-                allTeachers.forEach(t => { if(t.status === "يعمل" || !t.status) schSelect.innerHTML += `<option value="${t.nid}">${t.name}</option>`; });
-            } catch(e) { console.error("خطأ في جلب البيانات: ", e); }
+                if (error) throw error;
+                applyLoadedTeachers(data || []);
+            } catch(e) { 
+                console.error("خطأ في جلب البيانات: ", e); 
+            }
         }
 
-        function showAllTeachers() {
+        function applyLoadedTeachers(data) {
+            allTeachers = data || []; 
+            allTeachers.forEach(t => t.id = t.nid); 
+            allTeachers.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
+            
+            const absSelect = document.getElementById("abs-teacher-select");
+            if (absSelect) {
+                absSelect.innerHTML = '<option value="" disabled selected>اختر المعلم...</option>';
+                allTeachers.forEach(t => { absSelect.innerHTML += `<option value="${t.nid}">${t.name}</option>`; });
+            }
+
+            const schSelect = document.getElementById("schedule-teacher-select");
+            if (schSelect) {
+                schSelect.innerHTML = '<option value="" disabled selected>اختر المعلم...</option>';
+                allTeachers.forEach(t => { if(t.status === "يعمل" || !t.status) schSelect.innerHTML += `<option value="${t.nid}">${t.name}</option>`; });
+            }
+        }
+
+        async function showAllTeachers() {
             const resBox = document.getElementById("search-results");
             resBox.innerHTML = "";
+            
+            // محاولة جلب فورية إذا كانت القائمة فارغة
             if (allTeachers.length === 0) {
-                resBox.innerHTML = "<div class='result-item'>جاري تحميل البيانات...</div>";
-            } else {
-                allTeachers.forEach(t => {
-                    const item = document.createElement("div");
-                    item.className = "result-item";
-                    item.innerHTML = `<span>${t.name}</span> <small style="color:${t.status==='موقوف'?'red':'green'}">(${t.status || 'يعمل'})</small>`;
-                    item.onclick = () => populateCard(t);
-                    resBox.appendChild(item);
-                });
+                resBox.innerHTML = "<div class='result-item'>جاري تحميل البيانات من السحابة...</div>";
+                resBox.style.display = "block";
+                await fetchAllTeachers();
+                if (allTeachers.length === 0) {
+                    resBox.innerHTML = "<div class='result-item' style='color:red;'>لم يتم العثور على أي معلم مسجل!</div>";
+                    return;
+                }
             }
+
+            resBox.innerHTML = "";
+            allTeachers.forEach(t => {
+                const item = document.createElement("div");
+                item.className = "result-item";
+                item.innerHTML = `<span>${t.name}</span> <small style="color:${t.status==='موقوف'?'red':'green'}">(${t.status || 'يعمل'})</small>`;
+                item.onclick = () => populateCard(t);
+                resBox.appendChild(item);
+            });
             resBox.style.display = "block";
         }
 
-        function filterTeachers(val) {
+        async function filterTeachers(val) {
             const resBox = document.getElementById("search-results");
             if (!val.trim()) { showAllTeachers(); return; }
+
+            if (allTeachers.length === 0) {
+                await fetchAllTeachers();
+            }
 
             const normalizedSearch = normalizeArabicSearch(val);
             const spacelessSearch = normalizedSearch.replace(/\s/g, ""); 
@@ -665,9 +711,8 @@
                             const link = document.createElement('a');
                             link.href = URL.createObjectURL(blob);
                             
-                            // تنزيل باسم المعلم فقط وبدون شرطات
                             const cleanName = (data.name || 'معلم').trim().replace(/\s+/g, ' ');
-                            link.download = `${cleanName}.xlsx`;
+                            link.download = `${cleanName}.xlsm`;
                             
                             document.body.appendChild(link);
                             link.click();
@@ -697,7 +742,7 @@
             try { 
                 const { error } = await supabaseClient.from("contract_teachers").upsert(formData, { onConflict: 'nid' });
                 if(error) throw error;
-                showStatus("✅ تم الحفظ", "success"); 
+                showStatus("✅ تم الحفظ بنجاح", "success"); 
                 fetchAllTeachers(); 
             } catch(e) { alert(e.message); }
         }
@@ -777,6 +822,17 @@
             } 
         }
 
+        function openAbsenceFromScheduleModal() {
+            const id = document.getElementById("schedule-teacher-select").value;
+            if(!id) {
+                alert("يرجى اختيار المعلم أولاً!");
+                return;
+            }
+            document.getElementById("abs-teacher-select").value = id;
+            switchTeacherInAbsenceModal(id);
+            document.getElementById("absModal").classList.add("active");
+        }
+
         function switchTeacherInAbsenceModal(id) { 
             const t = allTeachers.find(x => x.id === id); 
             if(!t) return; 
@@ -816,9 +872,13 @@
         }
 
         async function saveAbsenceToCloud() { 
+            const teacher = allTeachers.find(t => t.id === activeAbsenceTeacherId);
+            if(teacher) {
+                teacher.absences = activeAbsenceData;
+            }
             await supabaseClient.from("contract_teachers").update({ absences: activeAbsenceData }).eq("nid", String(activeAbsenceTeacherId)); 
-            alert("✅ تم الحفظ"); 
-            fetchAllTeachers(); 
+            alert("✅ تم حفظ سجل الغياب بنجاح"); 
+            calculateLiveSchedule(); 
         }
 
         // ================= الجدول المدرسي =================
@@ -872,6 +932,9 @@
                 const sch = teacher[`schedule_${checkMonth}`];
                 if(sch && Object.keys(sch).length > 0) { savedSchedule = sch; break; } 
             }
+            if(!savedSchedule && teacher.schedule) {
+                savedSchedule = teacher.schedule;
+            }
             if(!savedSchedule) savedSchedule = {};
 
             document.querySelectorAll('.sch-input').forEach(inp => { 
@@ -884,6 +947,109 @@
             calculateLiveSchedule();
         }
 
+        // ================= استيراد الجدول الرسمي المعتمد =================
+        async function importOfficialSchedule() {
+            const id = document.getElementById("schedule-teacher-select").value;
+            if(!id) {
+                alert("يرجى اختيار المعلم أولاً لاستيراد جدوله!");
+                return;
+            }
+            const teacher = allTeachers.find(t => t.id === id);
+            if(!teacher) return;
+
+            const btn = event.currentTarget;
+            const origHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الاستيراد...`;
+            btn.disabled = true;
+
+            try {
+                let officialSchedule = null;
+
+                const { data: contractRec } = await supabaseClient
+                    .from("contract_teachers")
+                    .select("schedule")
+                    .eq("nid", String(id))
+                    .maybeSingle();
+
+                if(contractRec && contractRec.schedule && Object.keys(contractRec.schedule).length > 0) {
+                    officialSchedule = contractRec.schedule;
+                }
+
+                if(!officialSchedule || Object.keys(officialSchedule).length === 0) {
+                    const { data: regRec } = await supabaseClient
+                        .from("teachers")
+                        .select("schedule")
+                        .or(`nid.eq.${id},name.eq.${teacher.name}`)
+                        .maybeSingle();
+
+                    if(regRec && regRec.schedule && Object.keys(regRec.schedule).length > 0) {
+                        officialSchedule = regRec.schedule;
+                    }
+                }
+
+                if(!officialSchedule || Object.keys(officialSchedule).length === 0) {
+                    if (teacher.schedule && Object.keys(teacher.schedule).length > 0) {
+                        officialSchedule = teacher.schedule;
+                    }
+                }
+
+                if(typeof officialSchedule === 'string') {
+                    try { officialSchedule = JSON.parse(officialSchedule); } catch(e){}
+                }
+
+                if(!officialSchedule || Object.keys(officialSchedule).length === 0) {
+                    alert(`⚠️ لم يتم العثور على جدول رسمي مسجل للأستاذ (${teacher.name}) في صفحة الجدول المدرسي العام!\nتأكد من تسكين حصصه أولاً في الجدول العام.`);
+                    return;
+                }
+
+                document.querySelectorAll('.sch-input').forEach(inp => inp.value = "");
+
+                let importedCount = 0;
+
+                const getSlotValue = (sched, day, period) => {
+                    const normDay = day.replace(/[أإآ]/g, 'ا').trim();
+                    for (let key in sched) {
+                        if (key.includes('_sub')) continue;
+                        const normKey = key.replace(/[أإآ]/g, 'ا').trim();
+                        if (normKey === `${normDay}_${period}` || normKey === `${normDay} ${period}` || normKey === `${normDay}-${period}`) {
+                            return sched[key];
+                        }
+                    }
+                    if (sched[day] && typeof sched[day] === 'object') return sched[day][period] || sched[day][String(period)];
+                    if (sched[normDay] && typeof sched[normDay] === 'object') return sched[normDay][period] || sched[normDay][String(period)];
+                    return "";
+                };
+
+                document.querySelectorAll('.sch-input').forEach(inp => {
+                    const day = inp.getAttribute("data-day");
+                    const session = inp.getAttribute("data-session");
+                    
+                    let val = getSlotValue(officialSchedule, day, session);
+
+                    if(val && String(val).trim() !== "") {
+                        inp.value = String(val).trim();
+                        importedCount++;
+                    }
+                });
+
+                calculateLiveSchedule();
+
+                if (importedCount > 0) {
+                    alert(`✅ تم بنجاح استيراد الجدول المدرسي الرسمي المعتمد!\nتم استرجاع (${importedCount}) حصة للأستاذ (${teacher.name}).\nاضغط على (حفظ الجدول فقط) لتثبيته لهذا الشهر.`);
+                } else {
+                    alert(`⚠️ تم العثور على سجل الجدول للأستاذ (${teacher.name}) ولكنه فارغ (0 حصة)!\nيرجى التأكد من تسكين الفصول له في شاشة "الجدول العام الشامل".`);
+                }
+
+            } catch(err) {
+                console.error("خطأ استيراد الجدول:", err);
+                alert("❌ حدث خطأ أثناء استيراد الجدول: " + err.message);
+            } finally {
+                btn.innerHTML = origHtml;
+                btn.disabled = false;
+            }
+        }
+
+        // ================= محرك الحساب الدقيق =================
         function calculateLiveSchedule() {
             const id = document.getElementById("schedule-teacher-select").value; 
             const teacher = allTeachers.find(t => t.id === id);
@@ -902,8 +1068,8 @@
             document.getElementById("info-period-dates").innerText = `${formatArDate(currentSettings.startDate)} إلى ${formatArDate(currentSettings.endDate)}`;
             document.getElementById("info-holidays-count").innerText = (currentSettings.holidays || []).length;
             
-            const absCount = (teacher.absences && teacher.absences[targetMonthField]) ? teacher.absences[targetMonthField].length : 0;
-            document.getElementById("info-absences-count").innerText = absCount;
+            const absList = (teacher.absences && teacher.absences[targetMonthField]) ? teacher.absences[targetMonthField].map(Number) : [];
+            document.getElementById("info-absences-count").innerText = absList.length;
 
             LIVE_WEEKLY_QUOTA = 0; let classesPerDay = {};
             document.querySelectorAll('.sch-input').forEach(inp => { 
@@ -917,8 +1083,6 @@
             const st = parseLocalDate(currentSettings.startDate), en = parseLocalDate(currentSettings.endDate);
             let freqPerDay = {}, totalGross = 0, holDed = 0, absDed = 0;
             let curr = new Date(st);
-            
-            const jsMonthMap = { 8: "m_sept", 9: "m_oct", 10: "m_nov", 11: "m_dec", 0: "m_jan", 1: "m_feb", 2: "m_mar", 3: "m_apr", 4: "m_may" };
 
             while(curr <= en) {
                 const arDay = jsDaysMap[curr.getDay()];
@@ -929,12 +1093,10 @@
                 const daily = classesPerDay[arDay] || 0;
                 if(daily > 0) {
                     totalGross += daily;
-                    if(isHol) holDed += daily;
-                    else {
-                        const loopMonthId = jsMonthMap[curr.getMonth()];
-                        if(teacher.absences && teacher.absences[loopMonthId] && teacher.absences[loopMonthId].map(Number).includes(curr.getDate())) {
-                            absDed += daily;
-                        }
+                    if(isHol) {
+                        holDed += daily;
+                    } else if(absList.includes(curr.getDate())) {
+                        absDed += daily;
                     }
                 }
                 curr.setDate(curr.getDate() + 1);
@@ -955,7 +1117,126 @@
             document.getElementById("trk-money").innerText = `${(LIVE_NET_CLASSES * 35.80).toFixed(2)} ج.م`;
         }
 
-        // ================= حفظ الجدول + الإكسيل + التنزيل على الجهاز والرفع للسحابة =================
+        // ================= زر حفظ الجدول فقط =================
+        async function saveScheduleOnly() {
+            const id = document.getElementById("schedule-teacher-select").value;
+            const targetMonthField = document.getElementById("schedule-month-select").value;
+            const targetMonthName = getMonthNameOnly(document.getElementById("schedule-month-select"));
+            
+            if(!id) { alert("اختر المعلم أولاً!"); return; }
+
+            const teacher = allTeachers.find(t => t.id === id);
+            const btn = document.getElementById('btn-save-schedule-only');
+            const origHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...`;
+            btn.disabled = true;
+
+            try {
+                let scheduleData = {};
+                document.querySelectorAll('.sch-input').forEach(inp => { 
+                    const val = inp.value.trim(); 
+                    const key = `${inp.getAttribute("data-day")}_${inp.getAttribute("data-session")}`; 
+                    scheduleData[key] = val; 
+                });
+
+                const scheduleKey = `schedule_${targetMonthField}`;
+                
+                const { error } = await supabaseClient.from("contract_teachers").update({
+                    [scheduleKey]: scheduleData,
+                    schedule: scheduleData,
+                    weekly_quota: LIVE_WEEKLY_QUOTA,
+                    [targetMonthField]: LIVE_NET_CLASSES
+                }).eq("nid", String(id));
+
+                if(error) throw error;
+
+                if(teacher) {
+                    teacher[scheduleKey] = scheduleData;
+                    teacher.schedule = scheduleData;
+                    teacher.weekly_quota = LIVE_WEEKLY_QUOTA;
+                    teacher[targetMonthField] = LIVE_NET_CLASSES;
+                }
+                if(currentDocId === id) {
+                    document.getElementById('weekly_quota_input').value = LIVE_WEEKLY_QUOTA;
+                    const mInput = document.getElementById(targetMonthField);
+                    if(mInput) mInput.value = LIVE_NET_CLASSES;
+                }
+
+                alert(`✅ تم بنجاح حفظ جدول الحصص لشهر (${targetMonthName}) في السحابة!\nالنصاب الأسبوعي: ${LIVE_WEEKLY_QUOTA} حصة | الصافي: ${LIVE_NET_CLASSES} حصة.`);
+
+            } catch(e) {
+                console.error("خطأ في حفظ الجدول:", e);
+                alert("❌ حدث خطأ أثناء الحفظ: " + e.message);
+            } finally {
+                btn.innerHTML = origHtml;
+                btn.disabled = false;
+            }
+        }
+
+        // =========================================================================
+        // 🌟 محرك حقن البيانات في ملف الماكرو .xlsm بواسطة JSZip كما في taq-export 🌟
+        // =========================================================================
+        function setCellInXml(xmlDoc, cellRef, val) {
+            const NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+            const rowNum = parseInt(cellRef.replace(/[^0-9]/g, ''));
+            let sheetData = xmlDoc.getElementsByTagName("sheetData")[0];
+            if (!sheetData) return;
+
+            let rows = sheetData.getElementsByTagName("row");
+            let targetRow = null;
+
+            for (let i = 0; i < rows.length; i++) {
+                if (rows[i].getAttribute("r") == rowNum) {
+                    targetRow = rows[i];
+                    break;
+                }
+            }
+
+            if (!targetRow) {
+                targetRow = xmlDoc.createElementNS(NS, "row");
+                targetRow.setAttribute("r", String(rowNum));
+                sheetData.appendChild(targetRow);
+            }
+
+            let cells = targetRow.getElementsByTagName("c");
+            let targetCell = null;
+
+            for (let i = 0; i < cells.length; i++) {
+                if (cells[i].getAttribute("r") === cellRef) {
+                    targetCell = cells[i];
+                    break;
+                }
+            }
+
+            if (!targetCell) {
+                targetCell = xmlDoc.createElementNS(NS, "c");
+                targetCell.setAttribute("r", cellRef);
+                targetRow.appendChild(targetCell);
+            }
+
+            while (targetCell.firstChild) targetCell.removeChild(targetCell.firstChild);
+
+            if (val === "" || val === null || val === undefined) {
+                targetCell.removeAttribute("t");
+                return;
+            }
+
+            // إذا كان رقماً صحيحاً خالصاً يُسجل كقيمة رقمية، وغير ذلك يسجل كنص inlineStr
+            if (typeof val === "number" || (!isNaN(val) && String(val).trim() !== "" && !String(val).includes("/") && !String(val).includes("-"))) {
+                targetCell.removeAttribute("t");
+                let v = xmlDoc.createElementNS(NS, "v");
+                v.textContent = String(val);
+                targetCell.appendChild(v);
+            } else {
+                targetCell.setAttribute("t", "inlineStr");
+                let isElem = xmlDoc.createElementNS(NS, "is");
+                let tElem = xmlDoc.createElementNS(NS, "t");
+                tElem.textContent = String(val);
+                isElem.appendChild(tElem);
+                targetCell.appendChild(isElem);
+            }
+        }
+
         async function processScheduleAndExcel() {
             const id = document.getElementById("schedule-teacher-select").value;
             const targetMonthField = document.getElementById("schedule-month-select").value;
@@ -972,7 +1253,7 @@
             
             masterBtn.disabled = true; 
             statusBox.style.display = "block";
-            statusBox.innerText = "1. جاري قراءة القالب وتعبئة بيانات الاستمارة...";
+            statusBox.innerText = "1. جاري قراءة قالب الماكرو وتعبئة بيانات الاستمارة...";
 
             try {
                 let scheduleData = {};
@@ -983,28 +1264,45 @@
                 });
                 const scheduleKey = `schedule_${targetMonthField}`;
 
-                const templateUrl = "https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/stcv27.xlsx";
+                // تحميل ملف القالب stcv3.xlsm
+                const templateUrl = `https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/stcv3.xlsm?nocache=${new Date().getTime()}`;
                 const response = await fetch(templateUrl);
-                const workbook = new ExcelJS.Workbook();
-                await workbook.xlsx.load(await response.arrayBuffer());
-                const ws = workbook.getWorksheet(1);
+                
+                if (!response.ok) {
+                    throw new Error("ملف القالب (stcv3.xlsm) غير موجود في السحابة. يرجى التأكد من الرابط.");
+                }
 
-                // البيانات الأساسية
-                ws.getCell('Q1').value = targetMonthName;
-                ws.getCell('W1').value = teacher.pay_rate || "مؤقت دون سن (60)";
-                ws.getCell('R3').value = teacher.name || "";
-                ws.getCell('U5').value = teacher.nid || "";
-                ws.getCell('R7').value = teacher.subject || "";
+                const arrayBuffer = await response.arrayBuffer();
+
+                // فتح ملف الـ XLSM بأمان تام بواسطة JSZip
+                const zip = await JSZip.loadAsync(arrayBuffer);
+                
+                // تحديد ملف الورقة الأولى sheet1.xml
+                let targetSheetPath = "xl/worksheets/sheet1.xml";
+                if (!zip.file(targetSheetPath)) {
+                    const sheetFiles = Object.keys(zip.files).filter(p => p.startsWith("xl/worksheets/sheet") && p.endsWith(".xml"));
+                    if (sheetFiles.length > 0) targetSheetPath = sheetFiles[0];
+                }
+
+                const sheetXmlStr = await zip.file(targetSheetPath).async("text");
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(sheetXmlStr, "application/xml");
+
+                // تعبئة البيانات الأساسية في الورقة
+                setCellInXml(xmlDoc, 'Q1', targetMonthName);
+                setCellInXml(xmlDoc, 'W1', teacher.pay_rate || "مؤقت دون سن (60)");
+                setCellInXml(xmlDoc, 'R3', teacher.name || "");
+                setCellInXml(xmlDoc, 'U5', teacher.nid || "");
+                setCellInXml(xmlDoc, 'R7', teacher.subject || "");
                 
                 const startD = parseLocalDate(currentSettings.startDate);
                 const year = startD.getFullYear();
-                ws.getCell('B11').value = `جدول الحصص الاسبوعى خلال شهر : ${targetMonthName} لسنة ${year}`;
-                ws.getCell('T11').value = formatArDate(currentSettings.startDate);
-                ws.getCell('AA11').value = formatArDate(currentSettings.endDate);
-                
-                ws.getCell('AA10').value = LIVE_NET_CLASSES;
+                setCellInXml(xmlDoc, 'B11', `جدول الحصص الاسبوعى خلال شهر : ${targetMonthName} لسنة ${year}`);
+                setCellInXml(xmlDoc, 'T11', formatArDate(currentSettings.startDate));
+                setCellInXml(xmlDoc, 'AA11', formatArDate(currentSettings.endDate));
+                setCellInXml(xmlDoc, 'AA10', LIVE_NET_CLASSES);
 
-                // تعبئة الجدول الدراسي (شامل الـ 8 حصص كاملة)
+                // تعبئة جدول الحصص الأسبوعي
                 const sessionCols = ['J', 'L', 'N', 'P', 'R', 'T', 'V', 'X'];
                 const scheduleRows = { "الاحد": 13, "الاثنين": 14, "الثلاثاء": 15, "الاربعاء": 16, "الخميس": 17 };
                 let classesPerDay = {};
@@ -1014,34 +1312,46 @@
                     for(let i=1; i<=8; i++) { 
                         const val = scheduleData[`${day}_${i}`]; 
                         if(val && sessionCols[i-1]) { 
-                            ws.getCell(`${sessionCols[i-1]}${scheduleRows[day]}`).value = val; 
+                            setCellInXml(xmlDoc, `${sessionCols[i-1]}${scheduleRows[day]}`, val); 
                             rowTot++; 
                         } 
                     }
                     classesPerDay[day] = rowTot; 
-                    if(rowTot > 0) ws.getCell(`Z${scheduleRows[day]}`).value = rowTot;
+                    if(rowTot > 0) setCellInXml(xmlDoc, `Z${scheduleRows[day]}`, rowTot);
                 });
 
                 // تعبئة أيام الغياب
                 const absDaysCols = ['F', 'I', 'L', 'O', 'R', 'U', 'X'];
-                const absArray = (teacher.absences && teacher.absences[targetMonthField]) ? teacher.absences[targetMonthField] : [];
+                const absArray = (teacher.absences && teacher.absences[targetMonthField]) ? teacher.absences[targetMonthField].map(Number) : [];
                 
-                absDaysCols.forEach(col => { ws.getCell(`${col}19`).value = ""; ws.getCell(`${col}20`).value = ""; });
-                ws.getCell('AA20').value = "";
+                absDaysCols.forEach(col => { 
+                    setCellInXml(xmlDoc, `${col}19`, ""); 
+                    setCellInXml(xmlDoc, `${col}20`, ""); 
+                });
+                setCellInXml(xmlDoc, 'AA20', "");
                 
                 if(absArray.length > 0) {
-                    let targetMonthIndex = monthIndexMap[targetMonthField] !== undefined ? monthIndexMap[targetMonthField] : startD.getMonth();
-                    let targetYear = startD.getFullYear();
-                    if (targetMonthIndex < 8 && startD.getMonth() >= 8) {
-                        targetYear += 1;
-                    }
-
+                    const endDate = parseLocalDate(currentSettings.endDate);
                     absArray.slice(0, 7).forEach((dayNum, index) => {
-                        const absDateObj = new Date(targetYear, targetMonthIndex, dayNum);
-                        ws.getCell(`${absDaysCols[index]}19`).value = jsDaysMap[absDateObj.getDay()];
-                        ws.getCell(`${absDaysCols[index]}20`).value = `${targetMonthIndex + 1}/${dayNum}`;
+                        let matchedDate = null;
+                        let searchD = new Date(startD);
+                        while(searchD <= endDate) {
+                            if(searchD.getDate() === dayNum) {
+                                matchedDate = new Date(searchD);
+                                break;
+                            }
+                            searchD.setDate(searchD.getDate() + 1);
+                        }
+                        if(!matchedDate) {
+                            let targetMonthIndex = monthIndexMap[targetMonthField] !== undefined ? monthIndexMap[targetMonthField] : startD.getMonth();
+                            let targetYear = startD.getFullYear();
+                            if (targetMonthIndex < 8 && startD.getMonth() >= 8) targetYear += 1;
+                            matchedDate = new Date(targetYear, targetMonthIndex, dayNum);
+                        }
+                        setCellInXml(xmlDoc, `${absDaysCols[index]}19`, jsDaysMap[matchedDate.getDay()]);
+                        setCellInXml(xmlDoc, `${absDaysCols[index]}20`, `${matchedDate.getMonth() + 1}/${matchedDate.getDate()}`);
                     });
-                    ws.getCell('AA20').value = absArray.length;
+                    setCellInXml(xmlDoc, 'AA20', absArray.length);
                 }
 
                 // تعبئة أسابيع الشهر
@@ -1050,15 +1360,12 @@
                 let currentWeekIndex = 0; let weekTotals = [0,0,0,0,0];
                 let currentDate = new Date(startD); const endDate = parseLocalDate(currentSettings.endDate);
                 const holidayDates = currentSettings.holidays || [];
-                const jsMonthMap = { 8: "m_sept", 9: "m_oct", 10: "m_nov", 11: "m_dec", 0: "m_jan", 1: "m_feb", 2: "m_mar", 3: "m_apr", 4: "m_may" };
 
                 while(currentDate <= endDate) {
                     const arabicDayName = jsDaysMap[currentDate.getDay()];
                     const dateString = getLocalDateString(currentDate);
                     let isHoliday = holidayDates.includes(dateString);
-                    
-                    const loopMonthId = jsMonthMap[currentDate.getMonth()];
-                    let isAbsence = (teacher.absences && teacher.absences[loopMonthId] && teacher.absences[loopMonthId].map(Number).includes(currentDate.getDate()));
+                    let isAbsence = (!isHoliday && absArray.includes(currentDate.getDate()));
 
                     if(currentDate.getDay() === 0 && currentDate > startD && currentWeekIndex < 4) { 
                         currentWeekIndex++; 
@@ -1067,8 +1374,8 @@
                         const classesToday = classesPerDay[arabicDayName] || 0;
                         if(classesToday > 0) {
                             const row = dayRows[arabicDayName];
-                            ws.getCell(`${weekCols[currentWeekIndex].d}${row}`).value = `${currentDate.getDate()} / ${currentDate.getMonth()+1}`;
-                            ws.getCell(`${weekCols[currentWeekIndex].c}${row}`).value = classesToday;
+                            setCellInXml(xmlDoc, `${weekCols[currentWeekIndex].d}${row}`, `${currentDate.getDate()} / ${currentDate.getMonth()+1}`);
+                            setCellInXml(xmlDoc, `${weekCols[currentWeekIndex].c}${row}`, classesToday);
                             weekTotals[currentWeekIndex] += classesToday;
                         }
                     }
@@ -1076,39 +1383,50 @@
                 }
 
                 const weekTotalCols = ['F28', 'L28', 'R28', 'X28', 'AD28'];
-                weekTotals.forEach((tot, idx) => { if(tot > 0) ws.getCell(weekTotalCols[idx]).value = tot; });
-                ws.getCell('L29').value = LIVE_NET_CLASSES + " فقط لا غير";
-                ws.getCell('B32').value = `نقر نحن الموقعون أدناه أن عدد الحصص في المدة المذكورة هي (${tafqeet(LIVE_NET_CLASSES)}) حصة فقط لا غير.`;
-                ws.views = [{ rightToLeft: true }];
+                weekTotals.forEach((tot, idx) => { if(tot > 0) setCellInXml(xmlDoc, weekTotalCols[idx], tot); });
+                setCellInXml(xmlDoc, 'L29', LIVE_NET_CLASSES + " فقط لا غير");
+                setCellInXml(xmlDoc, 'B32', `نقر نحن الموقعون أدناه أن عدد الحصص في المدة المذكورة هي (${tafqeet(LIVE_NET_CLASSES)}) حصة فقط لا غير.`);
 
-                const totalRows = ws.rowCount;
-                if (totalRows >= 42) { ws.spliceRows(42, totalRows - 41); }
+                // حفظ التعديلات داخل الـ XML
+                const serializer = new XMLSerializer();
+                zip.file(targetSheetPath, serializer.serializeToString(xmlDoc));
+
+                // تفعيل خاصية fullCalcOnLoad لإعادة حساب المعادلات تلقائياً عند فتح الإكسيل
+                if (zip.file("xl/workbook.xml")) {
+                    let wbXmlStr = await zip.file("xl/workbook.xml").async("text");
+                    let wbDoc = parser.parseFromString(wbXmlStr, "application/xml");
+                    const NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+
+                    let calcPr = wbDoc.getElementsByTagName("calcPr")[0];
+                    if (!calcPr) {
+                        calcPr = wbDoc.createElementNS(NS, "calcPr");
+                        wbDoc.documentElement.appendChild(calcPr);
+                    }
+                    calcPr.setAttribute("calcMode", "auto");
+                    calcPr.setAttribute("fullCalcOnLoad", "1");
+                    calcPr.setAttribute("forceFullCalculation", "1");
+
+                    zip.file("xl/workbook.xml", serializer.serializeToString(wbDoc));
+                }
 
                 statusBox.innerText = "2. جاري تجهيز الملف وتنزيله إلى جهازك...";
 
-                const buffer = await workbook.xlsx.writeBuffer();
-                const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-                
-                // ===== التنزيل باسم المعلم فقط وبدون شرطات فاصلة =====
-                const downloadUrl = URL.createObjectURL(blob);
-                const downloadLink = document.createElement('a');
-                downloadLink.href = downloadUrl;
-                
+                // إنشاء ملف الـ XLSM دون مساس بالماكرو
+                const finalBlob = await zip.generateAsync({
+                    type: "blob",
+                    mimeType: "application/vnd.ms-excel.sheet.macroEnabled.12"
+                });
+
                 const cleanName = (teacher.name || "معلم").trim().replace(/\s+/g, ' ');
-                downloadLink.download = `${cleanName}.xlsx`;
-                
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
-                setTimeout(() => URL.revokeObjectURL(downloadUrl), 2000);
+                saveAs(finalBlob, `${cleanName}.xlsm`);
 
                 statusBox.innerText = "3. جاري حفظ النسخة السحابية وتحديث البطاقة...";
 
-                const safeFileName = `form_${targetMonthField}_${new Date().getTime()}.xlsx`;
+                const safeFileName = `form_${targetMonthField}_${new Date().getTime()}.xlsm`;
                 const filePath = `contract_forms/${teacher.nid}/${safeFileName}`;
 
-                const { data: uploadData, error } = await supabaseClient.storage.from('uploads').upload(filePath, blob, { upsert: true });
-                if (error) throw error;
+                const { error: uploadError } = await supabaseClient.storage.from('uploads').upload(filePath, finalBlob, { upsert: true });
+                if (uploadError) throw uploadError;
 
                 const { data: publicUrlData } = supabaseClient.storage.from('uploads').getPublicUrl(filePath);
                 const publicUrl = publicUrlData.publicUrl;
@@ -1116,6 +1434,7 @@
                 const formKey = `form_${targetMonthField}`;
                 await supabaseClient.from("contract_teachers").update({ 
                     [scheduleKey]: scheduleData, 
+                    schedule: scheduleData,
                     weekly_quota: LIVE_WEEKLY_QUOTA, 
                     [targetMonthField]: LIVE_NET_CLASSES,
                     [formKey]: publicUrl 
@@ -1123,7 +1442,7 @@
 
                 await fetchAllTeachers(); 
                 
-                alert(`✅ اكتملت العملية بنجاح!\n- تم تنزيل الاستمارة باسم (${cleanName}.xlsx) على جهازك.\n- تم حفظ النسخة في السحابة لشهر ${targetMonthName}.`);
+                alert(`✅ اكتملت العملية بنجاح!\n- تم تنزيل الاستمارة باسم (${cleanName}.xlsm) بصيغة ماكرو سليمة.\n- تم حفظ النسخة في السحابة لشهر ${targetMonthName}.`);
                 document.getElementById('scheduleModal').classList.remove('active');
                 
                 if(currentDocId === id) {
@@ -1132,7 +1451,8 @@
                 }
 
             } catch (e) { 
-                alert("❌ خطأ أثناء العملية: " + e.message); 
+                console.error(e);
+                alert("❌ خطأ أثناء العملية: \n" + e.message); 
             } finally { 
                 masterBtn.disabled = false; 
                 statusBox.style.display = "none"; 
