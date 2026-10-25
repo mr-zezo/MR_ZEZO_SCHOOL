@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>منظومة حوافز المعلمين - مدرسة الشهيد أشرف حبيب</title>
+    
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- مكتبات Supabase & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* ================= بالة الألوان الملكية الفاخرة (بدون اللون الأخضر) ================= */
+        :root { 
+            --primary: #0f2b48;          /* كحلي داكن ملكي */
+            --primary-light: #1e3a8a;    /* أزرق نيلي */
+            --royal-blue: #2563eb;       /* أزرق ملكي */
+            --ice-blue: #eff6ff;         /* ثلجي مريح */
+            --gold: #d97706;             /* ذهبي عنبري رصين */
+            --gold-light: #fffbeb;       
+            --dark: #0f172a;             
+            --bg: #f8fafc;               
+            --surface: #ffffff;          
+            --border-soft: #e2e8f0;      
+            --border-strong: #cbd5e1;    
+            --danger: #be123c;           
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { 
+            background-color: var(--bg); 
+            color: var(--dark); 
+            padding: 12px 18px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding-bottom: 50px; 
+            min-height: 100vh; 
+        }
+
+        /* الشريط العلوي */
+        .top-navigation { 
+            width: 100%; max-width: 1250px; 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); 
+            padding: 13px 22px; 
+            border-radius: 16px; 
+            color: white; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 16px; 
+            box-shadow: 0 4px 15px rgba(15, 43, 72, 0.15); 
+            flex-wrap: wrap; gap: 12px; 
+            border-bottom: 3.5px solid var(--gold); 
+        }
+        .nav-title { font-size: 16px; font-weight: 900; color: #f8fafc; display: flex; align-items: center; gap: 10px; }
+        
+        .dev-badge { 
+            background: rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(6px); 
+            color: #fff; 
+            padding: 5px 18px; 
+            border-radius: 50px; 
+            font-size: 12px; 
+            font-weight: 900; 
+            border: 1px solid rgba(255,255,255,0.25); 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        .dev-badge span { color: #fcd34d; font-size: 13px; }
+
+        .btn-nav { 
+            text-decoration: none; 
+            color: white; 
+            background: #334155; 
+            padding: 6px 16px; 
+            border-radius: 10px; 
+            font-size: 12.5px; 
+            font-weight: 900; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            transition: 0.2s; 
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .btn-nav:hover { background: #1e293b; transform: translateY(-1px); }
+
+        /* التخطيط العام */
+        .main-layout { display: flex; width: 100%; max-width: 1250px; gap: 16px; align-items: flex-start; }
+        .card-container { 
+            flex-grow: 1; 
+            background: var(--surface); 
+            padding: 22px; 
+            border-radius: 18px; 
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.03); 
+            border: 1px solid var(--border-soft); 
+            border-top: 4.5px solid var(--primary); 
+        }
+        .side-actions { 
+            width: 260px; 
+            background: var(--surface); 
+            padding: 16px; 
+            border-radius: 18px; 
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.03); 
+            border: 1px solid var(--border-soft); 
+            border-top: 4.5px solid var(--primary-light); 
+            position: sticky; top: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+        }
+
+        /* شريط اختيار المستحقين المطور */
+        .eligible-select-bar {
+            background: var(--ice-blue); 
+            border: 1.5px solid #bfdbfe; 
+            padding: 12px 16px; 
+            border-radius: 14px; 
+            margin-bottom: 18px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            gap: 12px;
+        }
+
+        /* أزرار التنقل السريع ❯ / ❮ */
+        .btn-step-nav {
+            background: var(--primary); 
+            color: #fcd34d; 
+            border: 1px solid var(--primary-light);
+            width: 36px; height: 38px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .btn-step-nav:hover { background: var(--primary-light); color: white; transform: scale(1.05); }
+
+        .search-input-field {
+            width: 100%;
+            padding: 7px 12px;
+            border-radius: 8px;
+            border: 1.5px solid #93c5fd;
+            font-size: 13.5px;
+            font-weight: 900;
+            outline: none;
+            background: #ffffff;
+            color: var(--primary);
+            height: 38px;
+        }
+        .search-input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.12); }
+
+        .select-eligible-sync { display: none; }
+
+        /* القائمة المنسدلة للبحث الفوري بالبادئة */
+        .dropdown-results { 
+            position: absolute; 
+            top: 42px; 
+            left: 0; 
+            right: 0; 
+            background: white; 
+            border-radius: 10px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25); 
+            max-height: 230px; 
+            overflow-y: auto; 
+            z-index: 2500; 
+            display: none; 
+            border: 2px solid var(--primary); 
+            -webkit-overflow-scrolling: touch;
+        }
+        .dropdown-item { 
+            padding: 9px 12px; 
+            font-size: 13px; 
+            font-weight: 800; 
+            border-bottom: 1px solid #f1f5f9; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            color: var(--primary);
+            transition: 0.15s;
+        }
+        .dropdown-item:hover, .dropdown-item:active { background: #dbeafe; color: #1e3a8a; }
+
+        .btn-manage-eligible {
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 9px 16px; 
+            border-radius: 8px; 
+            font-weight: 900; 
+            font-size: 12px; 
+            cursor: pointer;
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            box-shadow: 0 3px 8px rgba(15, 43, 72, 0.2); 
+            transition: 0.2s;
+            height: 38px;
+        }
+        .btn-manage-eligible:hover { background: var(--primary-light); transform: translateY(-1px); }
+
+        .btn-roster-print {
+            background: linear-gradient(135deg, #0f2b48, #1e3a8a);
+            color: #fcd34d;
+            border: 1.5px solid #d97706;
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-weight: 900;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 3px 8px rgba(217, 119, 6, 0.2);
+            transition: 0.2s;
+            height: 38px;
+        }
+        .btn-roster-print:hover { background: #1e3a8a; transform: translateY(-1px); color: white; }
+
+        /* بطاقة بيانات المعلم */
+        .teacher-info-card {
+            background: #f8fafc; 
+            border: 1.5px solid var(--border-strong); 
+            border-radius: 14px;
+            padding: 16px 20px; 
+            margin-bottom: 16px;
+        }
+        .teacher-info-grid {
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+            gap: 12px;
+        }
+        .info-cell { display: flex; flex-direction: column; gap: 3px; }
+        .info-cell-title { font-size: 11.5px; font-weight: 800; color: #64748b; }
+        .info-cell-value { font-size: 14px; font-weight: 900; color: var(--primary); }
+        
+        .info-badge-cadre { 
+            background: #eff6ff; 
+            color: #1e40af; 
+            border: 1px solid #bfdbfe;
+            padding: 2px 10px; 
+            border-radius: 6px; 
+            width: fit-content; 
+            font-weight: 900;
+        }
+        .info-badge-degree {
+            background: #fffbeb; 
+            color: #b45309; 
+            border: 1px solid #fde68a;
+            padding: 2px 10px; 
+            border-radius: 6px; 
+            width: fit-content; 
+            font-weight: 900;
+        }
+
+        /* كروت التتبع والإحصاء السريع */
+        .kpi-tracker-grid {
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px; 
+            margin-bottom: 16px;
+        }
+        .kpi-card {
+            background: white; 
+            border: 1px solid var(--border-strong); 
+            border-bottom: 4px solid var(--border-strong);
+            border-radius: 14px; 
+            padding: 12px 10px; 
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+        }
+        .kpi-card.kpi-quota { border-bottom-color: #3b82f6; }
+        .kpi-card.kpi-weekly { border-bottom-color: #6366f1; }
+        .kpi-card.kpi-month-classes { border-bottom-color: #0284c7; }
+        .kpi-card.kpi-abs { border-bottom-color: var(--danger); }
+        .kpi-card.kpi-attend { 
+            border-bottom-color: var(--gold); 
+            background: var(--gold-light); 
+            border-color: #fde68a;
+        }
+
+        .kpi-label { font-size: 11px; font-weight: 800; color: #64748b; margin-bottom: 4px; display: block; }
+        .kpi-val { font-size: 19px; font-weight: 900; color: var(--primary); }
+
+        /* شريط حصر وتفصيل الفصول أعلى الجدول */
+        .classes-breakdown-bar {
+            background: #f8fafc;
+            border: 1.5px solid var(--border-strong);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .breakdown-chip {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+            font-weight: 900;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .breakdown-chip b {
+            background: #1e3a8a;
+            color: white;
+            padding: 1px 6px;
+            border-radius: 5px;
+            font-size: 11px;
+        }
+        .breakdown-total-chip {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+            font-weight: 900;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 8px;
+            margin-right: auto;
+        }
+
+        /* جدول الحصص */
+        .table-responsive { 
+            width: 100%; 
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch; 
+            border-radius: 14px; 
+            border: 1.5px solid var(--border-strong); 
+            margin-bottom: 20px; 
+            background: white; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .schedule-table { width: 100%; border-collapse: collapse; text-align: center; background: white; min-width: 650px; }
+        .schedule-table th, .schedule-table td { border: 1px solid var(--border-soft); padding: 4px; font-weight: 900; font-size: 13.5px; }
+        .schedule-table thead th { background: var(--primary); color: white; padding: 10px; font-size: 13px; border: 1px solid #1e3a8a; }
+        .schedule-table td:first-child, .schedule-table th:first-child { background: #f8fafc; width: 100px; border-left: 2px solid var(--primary); color: var(--primary); font-weight: 900; }
+
+        .sch-input { 
+            width: 100%; padding: 7px 4px; border: 1px solid transparent; text-align: center; 
+            font-weight: 900; font-size: 15px; outline: none; background: transparent; 
+            color: var(--dark); font-family: 'Arial', sans-serif;
+            border-radius: 6px;
+            transition: all 0.15s;
+        }
+        .sch-input:focus { background: #fffbeb; border-color: var(--gold); }
+        
+        .sch-input.has-val { 
+            background: var(--ice-blue); 
+            color: #1e40af !important; 
+            border: 1.5px solid #93c5fd;
+            font-weight: 900; 
+        }
+
+        /* أزرار الإجراءات الجانبية */
+        .btn-action { 
+            border: none; 
+            padding: 11px; 
+            border-radius: 10px; 
+            font-weight: 900; 
+            font-size: 13px; 
+            cursor: pointer; 
+            color: white; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px; 
+            width: 100%; 
+            transition: all 0.15s; 
+            border-bottom: 3px solid rgba(0,0,0,0.2);
+        }
+        .btn-action:active { transform: translateY(2px); border-bottom-width: 1px; }
+        
+        .btn-save-all { background: var(--primary); }
+        .btn-save-all:hover { background: var(--primary-light); }
+
+        .btn-import-official { background: #4f46e5; }
+        .btn-import-official:hover { background: #4338ca; }
+
+        .btn-open-abs { background: #334155; }
+        .btn-open-abs:hover { background: #1e293b; }
+
+        .btn-clear-view { background: #64748b; }
+        .btn-clear-view:hover { background: #475569; }
+
+        /* النوافذ المنبثقة */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: white; width: 100%; max-width: 850px; border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+        .modal-head { background: var(--primary); color: white; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 3.5px solid var(--gold); }
+        .modal-body { padding: 18px; overflow-y: auto; }
+
+        .teachers-checklist-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; }
+        .teachers-checklist-table th { background: #f8fafc; padding: 10px; font-weight: 900; color: var(--primary); border-bottom: 2px solid var(--border-strong); }
+        .teachers-checklist-table td { padding: 8px; border-bottom: 1px solid var(--border-soft); font-weight: 800; }
+        .teachers-checklist-table tr:hover { background: #f1f5f9; }
+
+        .btn-toggle-status { 
+            padding: 5px 14px; border-radius: 20px; font-size: 11.5px; font-weight: 900; 
+            cursor: pointer; transition: all 0.15s; 
+        }
+        .btn-status-selected { 
+            background: #eff6ff; 
+            color: #1d4ed8; 
+            border: 1.5px solid #93c5fd;
+        }
+        .btn-status-unselected { 
+            background: #fef2f2; 
+            color: var(--danger); 
+            border: 1.5px solid #fecaca; 
+        }
+
+        /* ================= كشف حافز التدريس الرسمي للطباعة ================= */
+        #printable-roster-area { display: none; }
+        
+        @media print {
+            @page { size: A4 portrait; margin: 8mm 6mm; }
+            body { background: white !important; padding: 0 !important; width: 100% !important; }
+            .no-print, nav, .main-layout, .modal-overlay { display: none !important; }
+            #printable-roster-area {
+                display: block !important;
+                width: 100%;
+                background: white;
+                color: black;
+                direction: rtl;
+            }
+        }
+
+        @media (max-width: 850px) {
+            .main-layout { flex-direction: column; }
+            .side-actions { width: 100%; position: static; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. الشريط العلوي الفاخر -->
+    <nav class="top-navigation no-print">
+        <div class="nav-title">
+            <i class="fa-solid fa-coins text-yellow-300"></i>
+            <span>منظومة حوافز المعلمين والأنصبة الإضافية</span>
+        </div>
+
+        <div class="dev-badge">
+            <i class="fa-solid fa-medal text-yellow-300"></i>
+            إعداد وتطوير &nbsp;|&nbsp; <span>أ/ عبدالعزيز لولح</span> &nbsp;|&nbsp; ( مستر زيزو )
+        </div>
+
+        <div class="flex gap-2">
+            <a href="tea-contract-reports.html" class="btn-nav"><i class="fa-solid fa-file-invoice-dollar"></i> كشوف الأجر</a>
+            <a href="index.html" class="btn-nav"><i class="fa-solid fa-house"></i> الرئيسية</a>
+        </div>
+    </nav>
+
+    <div class="main-layout no-print">
+        
+        <!-- 2. بطاقة العمل للمعلم المستحق المختار -->
+        <div class="card-container">
+            
+            <!-- شريط اختيار المعلم بالبادئة + أزرار التنقل ❯ / ❮ -->
+            <div class="eligible-select-bar">
+                <div style="flex: 1; min-width: 290px; position: relative;">
+                    <label class="block text-xs font-black text-slate-700 mb-1">
+                        <i class="fa-solid fa-user-check text-blue-900"></i>
+                        المعلم المستحق (ابحث بالبادئة أو تنقل بالأسهم):
+                    </label>
+                    <div style="display:flex; gap:4px; align-items:center;">
+                        <!-- زر السابق -->
+                        <button type="button" class="btn-step-nav" onclick="navigateEligibleTeacher(-1)" title="المعلم السابق">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        
+                        <!-- حقل البحث بالبادئة الحي -->
+                        <div style="position:relative; flex:1;">
+                            <input type="text" id="teacher-quick-filter" class="search-input-field" 
+                                   placeholder="🔍 اكتب بداية الاسم (مثال: ع ثم عب)..." 
+                                   autocomplete="off" 
+                                   oninput="handleTeacherPrefixSearch(this.value)" 
+                                   onfocus="handleTeacherPrefixSearch(this.value)">
+                            <div class="dropdown-results" id="teacher-dropdown-results"></div>
+                        </div>
+
+                        <!-- القائمة المنسدلة المزامنة -->
+                        <select id="eligible-teacher-select" class="select-eligible-sync" onchange="onEligibleDropdownChange(this.value)">
+                            <option value="" disabled selected>-- اختر معلماً --</option>
+                        </select>
+
+                        <!-- زر التالي -->
+                        <button type="button" class="btn-step-nav" onclick="navigateEligibleTeacher(1)" title="المعلم التالي">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- أزرار الإجراءات العلوية -->
+                <div class="flex gap-2 items-end">
+                    <button type="button" class="btn-roster-print" onclick="openPrintableRosterModal()">
+                        <i class="fa-solid fa-print text-yellow-300"></i>
+                        كشف حافز التدريس (A4 عمودي)
+                    </button>
+                    <button type="button" class="btn-manage-eligible" onclick="openEligibleManagementModal()">
+                        <i class="fa-solid fa-users-gear text-yellow-300"></i>
+                        تحديد المستحقين (<span id="eligible-count-badge">0</span>)
+                    </button>
+                </div>
+            </div>
+
+            <!-- بطاقة البيانات المنسقة -->
+            <div class="teacher-info-card" id="teacher-info-card" style="display: none;">
+                <div class="teacher-info-grid">
+                    <div class="info-cell">
+                        <span class="info-cell-title">اسم المعلم:</span>
+                        <span class="info-cell-value" id="disp-t-name">-</span>
+                    </div>
+                    <div class="info-cell">
+                        <span class="info-cell-title">الرقم القومي:</span>
+                        <span class="info-cell-value font-mono text-xs" id="disp-t-nid">-</span>
+                    </div>
+                    
+                    <div class="info-cell">
+                        <span class="info-cell-title">الوظيفة على الكادر (عمود الدرجة):</span>
+                        <span class="info-badge-cadre" id="disp-t-cadre">-</span>
+                    </div>
+
+                    <div class="info-cell">
+                        <span class="info-cell-title">الدرجة المالية (مستنتجة آلياً):</span>
+                        <span class="info-badge-degree" id="disp-t-degree">-</span>
+                    </div>
+
+                    <div class="info-cell">
+                        <span class="info-cell-title">مادة التدريس:</span>
+                        <span class="info-cell-value text-blue-900" id="disp-t-subject">-</span>
+                    </div>
+                    <div class="info-cell">
+                        <span class="info-cell-title">شهر الحساب والاستحقاق:</span>
+                        <select id="incentive-month-select" onchange="onMonthChanged()" class="p-1.5 border rounded-lg font-black text-xs bg-white text-slate-800 outline-none">
+                            <option value="m_sept">شهر سبتمبر</option>
+                            <option value="m_oct" selected>شهر أكتوبر</option>
+                            <option value="m_nov">شهر نوفمبر</option>
+                            <option value="m_dec">شهر ديسمبر</option>
+                            <option value="m_jan">شهر يناير</option>
+                            <option value="m_feb">شهر فبراير</option>
+                            <option value="m_mar">شهر مارس</option>
+                            <option value="m_apr">شهر أبريل</option>
+                            <option value="m_may">شهر مايو</option>
+                        </select>
+                    </div>
+                    <div class="info-cell">
+                        <span class="info-cell-title">نوع الحافز المستحق:</span>
+                        <select id="incentive-type-select" onchange="onIncentiveTypeChanged()" class="p-1.5 border-2 border-blue-500 rounded-lg font-black text-xs bg-blue-50 text-blue-950 outline-none">
+                            <option value="تدريس">تدريس</option>
+                            <option value="مدير ووكيل مدرسة">مدير ووكيل مدرسة</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- شريط التتبع والإحصاء الحي الموزون -->
+            <div class="kpi-tracker-grid" id="kpi-tracker-grid">
+                <div class="kpi-card kpi-quota">
+                    <span class="kpi-label">النصاب القانوني</span>
+                    <span class="kpi-val text-blue-900" id="kpi-legal-quota">٠</span>
+                </div>
+                <div class="kpi-card kpi-weekly">
+                    <span class="kpi-label">حصص الجدول الفعلي</span>
+                    <span class="kpi-val text-indigo-900" id="kpi-weekly-actual">٠</span>
+                </div>
+                <div class="kpi-card kpi-month-classes">
+                    <span class="kpi-label">إجمالي الحصص الشهري</span>
+                    <span class="kpi-val text-blue-900" id="kpi-monthly-classes">٠ حصة</span>
+                </div>
+                <div class="kpi-card kpi-abs">
+                    <span class="kpi-label">أيام الغياب بالشهر</span>
+                    <span class="kpi-val text-rose-700" id="kpi-month-abs">٠ يوم</span>
+                </div>
+                <div class="kpi-card kpi-attend">
+                    <span class="kpi-label">عدد أيام الحضور (فعلي)</span>
+                    <span class="kpi-val text-amber-900" id="kpi-month-attendance">٠ يوم</span>
+                </div>
+            </div>
+
+            <!-- 🌟 شريط حصر وتفصيل فصول المعلم المسندة في الجدول 🌟 -->
+            <div class="classes-breakdown-bar" id="classes-breakdown-bar">
+                <span class="text-xs font-black text-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-chart-pie text-blue-900"></i> بيان فصول المعلم:
+                </span>
+                <div id="classes-breakdown-chips" class="flex flex-wrap gap-1.5 flex-1 items-center">
+                    <span class="text-xs text-slate-400 font-bold">لم تُسكن حصص بعد في جدول الحافز.</span>
+                </div>
+            </div>
+
+            <!-- جدول الحصص الخاص بالحوافز -->
+            <div class="flex justify-between items-center mb-2.5">
+                <span class="font-black text-sm text-[#0f2b48] flex items-center gap-2">
+                    <i class="fa-solid fa-table-cells text-blue-900"></i>
+                    جدول حصص الحافز الخاص بالمعلم
+                </span>
+                <span class="text-xs bg-blue-50 text-blue-800 border border-blue-200 px-3 py-1 rounded-full font-black">
+                    <i class="fa-solid fa-shield-halved"></i> جدول مستقل خاص بالحوافز فقط
+                </span>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">اليوم</th>
+                            <th colspan="2">الفترة الأولى</th>
+                            <th colspan="2">الفترة الثانية</th>
+                            <th colspan="2">الفترة الثالثة</th>
+                            <th colspan="2">الفترة الرابعة</th>
+                        </tr>
+                        <tr>
+                            <th>١</th><th>٢</th><th>٣</th><th>٤</th><th>٥</th><th>٦</th><th>٧</th><th>٨</th>
+                        </tr>
+                    </thead>
+                    <tbody id="incentive-schedule-tbody"></tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- 3. لوحة التحكم الجانبية -->
+        <div class="side-actions">
+            <div style="font-size:13px; font-weight:900; color:var(--primary); text-align:center; border-bottom:2px solid var(--border-soft); padding-bottom:6px;">
+                <i class="fa-solid fa-sliders text-blue-600"></i> خيارات الحافز
+            </div>
+
+            <button type="button" class="btn-action btn-save-all" onclick="saveIncentiveDataToCloud()">
+                <i class="fa-solid fa-cloud-arrow-up text-yellow-300"></i> حفظ بيانات وجدول الحافز
+            </button>
+
+            <button type="button" class="btn-action btn-import-official" onclick="manualPullOfficialSchedule()">
+                <i class="fa-solid fa-file-import text-yellow-300"></i> استيراد الجدول المدرسي الأصلي
+            </button>
+
+            <button type="button" class="btn-action btn-open-abs" onclick="openAbsenceModal()">
+                <i class="fa-solid fa-calendar-xmark text-yellow-300"></i> تسجيل غياب المعلم
+            </button>
+
+            <button type="button" class="btn-action btn-clear-view" onclick="clearScheduleInputsOnly()">
+                <i class="fa-solid fa-eraser"></i> تفريغ مربعات الجدول
+            </button>
+        </div>
+
+    </div>
+
+    <!-- ================= 4. نافذة تحديد المستحقين ================= -->
+    <div class="modal-overlay no-print" id="eligibleModal" onclick="if(event.target===this) closeEligibleModal()">
+        <div class="modal-content">
+            <div class="modal-head">
+                <h3 class="text-sm font-black flex items-center gap-2">
+                    <i class="fa-solid fa-users-viewfinder text-yellow-300"></i>
+                    تحديد المعلمين المستحقين لصرف الحوافز (من كافة معلمي المدرسة)
+                </h3>
+                <button onclick="closeEligibleModal()" class="text-white text-2xl font-bold hover:text-rose-300">&times;</button>
+            </div>
+            
+            <div class="modal-body space-y-3">
+                <div class="flex justify-between items-center gap-2 flex-wrap bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                    <input type="text" id="eligible-search-inp" oninput="filterAllTeachersChecklist(this.value)" placeholder="ابحث بالاسم أو الرقم القومي..." class="p-2 border border-slate-300 rounded-lg text-xs font-bold outline-none flex-grow bg-white">
+                    <span class="text-xs font-black text-indigo-900">
+                        تم تحديد: <b id="modal-selected-count">0</b> معلم مستحق
+                    </span>
+                </div>
+
+                <div class="table-responsive max-h-96">
+                    <table class="teachers-checklist-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">م</th>
+                                <th style="text-align: right;">اسم المعلم</th>
+                                <th>الوظيفة على الكادر (عمود الدرجة)</th>
+                                <th>مادة التدريس</th>
+                                <th style="width: 140px;">حالة الاستحقاق</th>
+                            </tr>
+                        </thead>
+                        <tbody id="checklist-tbody"></tbody>
+                    </table>
+                </div>
+
+                <div class="pt-2 border-t flex justify-end gap-2">
+                    <button type="button" onclick="saveEligibleListToCloud()" class="btn-manage-eligible px-6 py-2">
+                        <i class="fa-solid fa-floppy-disk text-yellow-300"></i>
+                        اعتماد وحفظ المستحقين في السحابة
+                    </button>
+                    <button type="button" onclick="closeEligibleModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. نافذة تسجيل غياب المعلم بالحافز (تحفظ مباشرة في السحابة) -->
+    <div class="modal-overlay no-print" id="absModal" onclick="if(event.target===this) this.classList.remove('active')">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-head">
+                <h3 class="text-sm font-black flex items-center gap-2"><i class="fa-solid fa-calendar-xmark text-yellow-300"></i> تسجيل أيام غياب المعلم لشهر الحساب</h3>
+                <button onclick="document.getElementById('absModal').classList.remove('active')" class="text-white text-2xl font-bold">&times;</button>
+            </div>
+            <div class="modal-body space-y-3">
+                <div class="text-xs font-bold text-slate-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                    أيام الغياب المسجلة هنا تُحفظ مباشرة في السحابة وتُخصم حصصها تلقائياً من الحصص الشهرية وأيام الحضور.
+                </div>
+                <div id="abs-days-tags-container" class="flex flex-wrap gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl min-h-[60px]"></div>
+                <div class="flex gap-2">
+                    <input type="number" id="inp-new-abs-day" min="1" max="31" placeholder="أدخل رقم اليوم (1-31)" class="p-2 border border-slate-300 rounded-lg text-xs font-bold flex-1 text-center">
+                    <button type="button" onclick="addAbsDayDirect()" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-lg text-xs font-bold"><i class="fa-solid fa-plus"></i> إضافة يوم</button>
+                </div>
+                <button type="button" id="btn-save-abs-direct" onclick="saveAbsenceOnlyDirect()" class="btn-manage-eligible w-full py-2.5 justify-center"><i class="fa-solid fa-cloud-arrow-up"></i> اعتماد وحفظ أيام الغياب مباشرة في السحابة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. كشف حافز التدريس الرسمي للطباعة والمعاينة -->
+    <div class="modal-overlay no-print" id="rosterModal" onclick="if(event.target===this) closePrintableRosterModal()">
+        <div class="modal-content" style="max-width: 950px;">
+            <div class="modal-head">
+                <h3 class="text-sm font-black flex items-center gap-2 text-white">
+                    <i class="fa-solid fa-file-invoice text-yellow-300"></i>
+                    معاينة كشف حافز التدريس الرسمي للطباعة (A4 عمودي)
+                </h3>
+                <div class="flex gap-2 items-center">
+                    <button onclick="window.print()" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-black flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-print"></i> طباعة فورية
+                    </button>
+                    <button onclick="closePrintableRosterModal()" class="text-white text-2xl font-bold hover:text-rose-300 mr-2">&times;</button>
+                </div>
+            </div>
+            <div class="modal-body bg-slate-100 p-4">
+                <div id="roster-preview-wrapper" class="bg-white p-6 rounded-xl border border-slate-300 shadow-sm"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- حاوية الطباعة الورقية A4 عمودي المخصصة للطابعة فقط -->
+    <div id="printable-roster-area"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://xgsyktjoerrymqoutqcb.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const days = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس"];
+        const jsDaysMap = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس", "الجمعة", "السبت"];
+
+        // ربط الشهور بتواريخ التقويم للعام الدراسي 2026 / 2027
+        const MONTH_CALENDAR_MAP = {
+            "m_sept": { m: 9, y: 2026, name: "سبتمبر" },
+            "m_oct":  { m: 10, y: 2026, name: "أكتوبر" },
+            "m_nov":  { m: 11, y: 2026, name: "نوفمبر" },
+            "m_dec":  { m: 12, y: 2026, name: "ديسمبر" },
+            "m_jan":  { m: 1, y: 2027, name: "يناير" },
+            "m_feb":  { m: 2, y: 2027, name: "فبراير" },
+            "m_mar":  { m: 3, y: 2027, name: "مارس" },
+            "m_apr":  { m: 4, y: 2027, name: "أبريل" },
+            "m_may":  { m: 5, y: 2027, name: "مايو" }
+        };
+
+        const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
+
+        let ALL_SCHOOL_TEACHERS = []; 
+        let ELIGIBLE_TEACHERS_LIST = []; 
+        let CURRENT_TEACHER = null;
+        let CURRENT_TEACHER_RECORD = {};
+
+        function normalizeArabic(text) {
+            if (!text) return "";
+            return String(text)
+                .replace(/[أإآا]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[\u064B-\u0652]/g, '')
+                .replace(/\u0640/g, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            initScheduleGrid();
+            await fetchAllSchoolTeachers();
+            await loadEligibleTeachersList();
+        });
+
+        // 1. استنتاج الدرجة المالية والنصاب القانوني آلياً بحسب كادر المعلم
+        function deriveDegreeAndQuota(cadreVal) {
+            const c = (cadreVal || "").trim().toLowerCase()
+                .replace(/[أإآ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي');
+
+            let degree = "الدرجة الثالثة";
+            let quota = 24;
+
+            if (c.includes("كبير")) {
+                degree = "مدير عام";
+                quota = 16;
+            } else if (c.includes("خبير")) {
+                degree = "الدرجة الأولى";
+                quota = 18;
+            } else if (c.includes("اول أ") || c.includes("اول ا") || c.includes("اولأ") || c.includes("اولا")) {
+                degree = "الدرجة الأولى";
+                quota = 20;
+            } else if (c.includes("اول")) {
+                degree = "الدرجة الثانية";
+                quota = 22;
+            } else if (c.includes("مساعد") || c.includes("معلم")) {
+                degree = "الدرجة الثالثة";
+                quota = 24;
+            } else if (c.includes("ثالث") || c.includes("3")) {
+                degree = "الدرجة الثالثة";
+                quota = 24;
+            } else if (c.includes("ثان") || c.includes("2")) {
+                degree = "الدرجة الثانية";
+                quota = 22;
+            } else if (c.includes("اول") || c.includes("1")) {
+                degree = "الدرجة الأولى";
+                quota = 20;
+            }
+
+            return { degree, quota };
+        }
+
+        function initScheduleGrid() {
+            const tbody = document.getElementById("incentive-schedule-tbody");
+            tbody.innerHTML = "";
+            days.forEach(d => {
+                let tr = `<tr><td>${d}</td>`;
+                for (let p = 1; p <= 8; p++) {
+                    tr += `<td><input type="text" class="sch-input" data-day="${d}" data-period="${p}" oninput="handleScheduleInput(this)"></td>`;
+                }
+                tr += `</tr>`;
+                tbody.innerHTML += tr;
+            });
+        }
+
+        function handleScheduleInput(inp) {
+            let val = inp.value.trim().replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+            if (/^[0-9]{2}$/.test(val)) {
+                inp.value = val[0] + "/" + val[1];
+            }
+            if (inp.value.trim() !== "") inp.classList.add("has-val");
+            else inp.classList.remove("has-val");
+            calculateIncentiveLive();
+        }
+
+        function getSlotValueFromOfficial(sched, day, period) {
+            if (!sched) return "";
+            const normDay = day.replace(/[أإآ]/g, 'ا').trim();
+            for (let key in sched) {
+                if (key.includes('_sub')) continue;
+                const normKey = key.replace(/[أإآ]/g, 'ا').trim();
+                if (normKey === `${normDay}_${period}` || normKey === `${normDay} ${period}` || normKey === `${normDay}-${period}`) {
+                    return sched[key];
+                }
+            }
+            if (sched[day] && typeof sched[day] === 'object') return sched[day][period] || sched[day][String(period)] || "";
+            if (sched[normDay] && typeof sched[normDay] === 'object') return sched[normDay][period] || sched[normDay][String(period)] || "";
+            return "";
+        }
+
+        // جلب جميع معلمي المدرسة وأخذ مسمى الكادر من عمود الدرجة
+        async function fetchAllSchoolTeachers() {
+            try {
+                const [resRegular, resContract] = await Promise.all([
+                    sbClient.from("teachers").select("name, nid, code, subject, cadre_job, quota, fin_degree, photo, emp_status, schedule"),
+                    sbClient.from("contract_teachers").select("name, nid, subject, quota, photo, status, schedule, pay_rate")
+                ]);
+
+                const list = [];
+                const seenNids = new Set();
+
+                (resRegular.data || []).forEach(t => {
+                    const st = (t.emp_status || "على رأس العمل").trim();
+                    if (!["معاش", "متوفى", "تم نقله"].includes(st) && t.nid) {
+                        seenNids.add(t.nid);
+                        
+                        const effectiveCadreFromDegree = (t.fin_degree && t.fin_degree.trim() !== "") 
+                            ? t.fin_degree.trim() 
+                            : (t.cadre_job || "معلم");
+
+                        const derived = deriveDegreeAndQuota(effectiveCadreFromDegree);
+                        
+                        list.push({
+                            name: t.name,
+                            nid: t.nid,
+                            code: t.code,
+                            subject: t.subject || "عام",
+                            cadre: effectiveCadreFromDegree,
+                            degree: derived.degree,
+                            legalQuota: derived.quota,
+                            photo: t.photo,
+                            type: (st === "مؤقت") ? "معلم مؤقت" : "معلم أساسي",
+                            officialSchedule: t.schedule || {}
+                        });
+                    }
+                });
+
+                (resContract.data || []).forEach(t => {
+                    if (t.nid && !seenNids.has(t.nid)) {
+                        seenNids.add(t.nid);
+                        const effectiveCadre = t.pay_rate || "معلم أجر / حصة";
+                        const derived = deriveDegreeAndQuota(effectiveCadre);
+
+                        list.push({
+                            name: t.name,
+                            nid: t.nid,
+                            code: t.nid,
+                            subject: t.subject || "عام",
+                            cadre: effectiveCadre,
+                            degree: derived.degree || "الدرجة الثالثة",
+                            legalQuota: derived.quota || 24,
+                            photo: t.photo,
+                            type: "معلم أجر",
+                            officialSchedule: t.schedule || {}
+                        });
+                    }
+                });
+
+                list.sort((a,b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
+                ALL_SCHOOL_TEACHERS = list;
+
+            } catch (err) {
+                console.error("خطأ جلب المعلمين:", err);
+            }
+        }
+
+        // استدعاء قائمة المستحقين
+        async function loadEligibleTeachersList() {
+            try {
+                const { data } = await sbClient.from("system_capsules").select("data").eq("id", "incentives_eligible_teachers").maybeSingle();
+                ELIGIBLE_TEACHERS_LIST = (data && Array.isArray(data.data)) ? data.data : [];
+                
+                document.getElementById("eligible-count-badge").innerText = ELIGIBLE_TEACHERS_LIST.length;
+                populateEligibleDropdown();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function populateEligibleDropdown() {
+            const select = document.getElementById("eligible-teacher-select");
+            select.innerHTML = '<option value="" disabled selected>-- اختر معلماً --</option>';
+
+            if (ELIGIBLE_TEACHERS_LIST.length === 0) {
+                select.innerHTML = '<option value="" disabled selected>⚠️ لم يتم تحديد مستحقين بعد</option>';
+                return;
+            }
+
+            ELIGIBLE_TEACHERS_LIST.forEach(t => {
+                select.innerHTML += `<option value="${t.nid}">أ/ ${t.name} (${t.subject || 'عام'}) - [${t.cadre || t.type}]</option>`;
+            });
+        }
+
+        // ================= محرك البحث بالبادئة والأزرار ❯ / ❮ =================
+        function searchEligibleTeachersByPrefix(rawQuery) {
+            const q = normalizeArabic(rawQuery);
+            if (!q) return ELIGIBLE_TEACHERS_LIST;
+
+            return ELIGIBLE_TEACHERS_LIST.filter(t => {
+                const normName = normalizeArabic(t.name);
+                if (normName.startsWith(q)) return true;
+                const words = normName.split(' ');
+                return words.some(w => w.startsWith(q));
+            }).sort((a, b) => {
+                const aStarts = normalizeArabic(a.name).startsWith(q);
+                const bStarts = normalizeArabic(b.name).startsWith(q);
+                if (aStarts && !bStarts) return -1;
+                if (!aStarts && bStarts) return 1;
+                return a.name.localeCompare(b.name, 'ar');
+            });
+        }
+
+        function handleTeacherPrefixSearch(val) {
+            const dropdown = document.getElementById("teacher-dropdown-results");
+            const cleanQuery = val.trim();
+
+            if (!cleanQuery) {
+                dropdown.style.display = "none";
+                return;
+            }
+
+            const matches = searchEligibleTeachersByPrefix(cleanQuery);
+
+            if (matches.length === 0) {
+                dropdown.innerHTML = `<div class="dropdown-item" style="color:#94a3b8; justify-content:center;">لا يوجد معلم مستحق يبدأ بـ "${cleanQuery}"</div>`;
+            } else {
+                dropdown.innerHTML = matches.slice(0, 20).map(t => `
+                    <div class="dropdown-item" onmousedown="chooseEligibleTeacherDirectly('${t.nid}', '${t.name}')">
+                        <div>
+                            <span>أ/ ${t.name}</span>
+                            <small style="color:#64748b; margin-right:6px; font-size:11px;">(${t.subject || 'عام'})</small>
+                        </div>
+                        <span style="font-size:10px; background:#eff6ff; color:#1e40af; padding:2px 6px; border-radius:4px; font-weight:bold;">${t.cadre || 'مستحق'}</span>
+                    </div>
+                `).join('');
+            }
+
+            dropdown.style.display = "block";
+        }
+
+        function chooseEligibleTeacherDirectly(nid, name) {
+            document.getElementById("teacher-quick-filter").value = name;
+            document.getElementById("teacher-dropdown-results").style.display = "none";
+            document.getElementById("eligible-teacher-select").value = nid;
+            loadSelectedTeacherIncentiveProfile(nid);
+        }
+
+        function onEligibleDropdownChange(nid) {
+            const t = ELIGIBLE_TEACHERS_LIST.find(x => x.nid === nid);
+            if (t) document.getElementById("teacher-quick-filter").value = t.name;
+            loadSelectedTeacherIncentiveProfile(nid);
+        }
+
+        function navigateEligibleTeacher(direction) {
+            const select = document.getElementById("eligible-teacher-select");
+            const total = select.options.length;
+            if (total <= 1) return;
+
+            let currentIndex = select.selectedIndex;
+            if (currentIndex <= 0) {
+                currentIndex = (direction > 0) ? 1 : total - 1;
+            } else {
+                currentIndex += direction;
+                if (currentIndex >= total) currentIndex = 1;
+                if (currentIndex < 1) currentIndex = total - 1;
+            }
+
+            select.selectedIndex = currentIndex;
+            const nid = select.value;
+            const selectedText = select.options[currentIndex].text;
+            const cleanName = selectedText.split('(')[0].replace('أ/', '').trim();
+            document.getElementById("teacher-quick-filter").value = cleanName;
+            loadSelectedTeacherIncentiveProfile(nid);
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#teacher-quick-filter') && !e.target.closest('#teacher-dropdown-results')) {
+                const box = document.getElementById('teacher-dropdown-results');
+                if (box) box.style.display = 'none';
+            }
+        });
+
+        // ================= 🌟 استدعاء ملف المعلم وجدوله في صمت وسلاسة 🌟 =================
+        async function loadSelectedTeacherIncentiveProfile(nid) {
+            CURRENT_TEACHER = ALL_SCHOOL_TEACHERS.find(t => t.nid === nid);
+            if (!CURRENT_TEACHER) return;
+
+            const derived = deriveDegreeAndQuota(CURRENT_TEACHER.cadre);
+            CURRENT_TEACHER.degree = derived.degree;
+            CURRENT_TEACHER.legalQuota = derived.quota;
+
+            // عرض البطاقة الشخصية
+            document.getElementById("teacher-info-card").style.display = "block";
+            document.getElementById("disp-t-name").innerText = CURRENT_TEACHER.name;
+            document.getElementById("disp-t-nid").innerText = CURRENT_TEACHER.nid;
+            document.getElementById("disp-t-cadre").innerText = CURRENT_TEACHER.cadre;
+            document.getElementById("disp-t-degree").innerText = CURRENT_TEACHER.degree;
+            document.getElementById("disp-t-subject").innerText = CURRENT_TEACHER.subject;
+            document.getElementById("kpi-legal-quota").innerText = toAr(CURRENT_TEACHER.legalQuota);
+
+            try {
+                const capsuleId = `incentive_tea_${nid}`;
+                const { data } = await sbClient.from("system_capsules").select("data").eq("id", capsuleId).maybeSingle();
+                
+                CURRENT_TEACHER_RECORD = (data && data.data) ? data.data : {
+                    schedule: {},
+                    incentive_type: "تدريس",
+                    absences: {}
+                };
+
+                document.getElementById("incentive-type-select").value = CURRENT_TEACHER_RECORD.incentive_type || "تدريس";
+
+                let sched = (CURRENT_TEACHER_RECORD && CURRENT_TEACHER_RECORD.schedule && Object.keys(CURRENT_TEACHER_RECORD.schedule).length > 0)
+                    ? CURRENT_TEACHER_RECORD.schedule
+                    : null;
+
+                // إذا لم يوجد جدول حوافز سابق، نسحب الجدول المدرسي تلقائياً كبداية
+                if (!sched) {
+                    let official = CURRENT_TEACHER.officialSchedule || {};
+                    if (typeof official === 'string') {
+                        try { official = JSON.parse(official); } catch(e){}
+                    }
+
+                    sched = {};
+                    days.forEach(d => {
+                        for (let p = 1; p <= 8; p++) {
+                            const val = getSlotValueFromOfficial(official, d, p);
+                            if (val && String(val).trim() !== "") {
+                                sched[`${d}_${p}`] = String(val).trim();
+                            }
+                        }
+                    });
+
+                    CURRENT_TEACHER_RECORD.schedule = sched;
+                }
+
+                // تعبئة جدول الحصص في الشاشة
+                document.querySelectorAll(".sch-input").forEach(inp => {
+                    const k = `${inp.dataset.day}_${inp.dataset.period}`;
+                    inp.value = sched[k] || "";
+                    if (inp.value) inp.classList.add("has-val");
+                    else inp.classList.remove("has-val");
+                });
+
+                calculateIncentiveLive();
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // ================= 🌟 محرك الحساب وتفصيل الفصول أعلى الجدول 🌟 =================
+        function calculateIncentiveLive() {
+            if (!CURRENT_TEACHER) return;
+
+            const monthKey = document.getElementById("incentive-month-select").value;
+            const monthMeta = MONTH_CALENDAR_MAP[monthKey] || { m: 10, y: 2026, name: "أكتوبر" };
+
+            // 1. حساب حصص الجدول الفعلي الأسبوعية وتفصيل فصول المعلم
+            let weeklyClassesCount = 0;
+            let classesPerDay = {};
+            const classCounts = {};
+
+            document.querySelectorAll(".sch-input").forEach(inp => {
+                const val = inp.value.trim();
+                if (val) {
+                    const d = inp.dataset.day;
+                    classesPerDay[d] = (classesPerDay[d] || 0) + 1;
+                    weeklyClassesCount++;
+                    classCounts[val] = (classCounts[val] || 0) + 1;
+                }
+            });
+            document.getElementById("kpi-weekly-actual").innerText = toAr(weeklyClassesCount);
+
+            // 🌟 رسم كروت تفصيل كل فصل كام حصة أعلى الجدول 🌟
+            renderClassesBreakdown(classCounts, weeklyClassesCount);
+
+            // 2. حساب أيام الحضور من 1 لآخر يوم بالشهر (استبعاد الجمعة والسبت فقط، والعطلات تعتبر حضور)
+            const daysInMonth = new Date(monthMeta.y, monthMeta.m, 0).getDate();
+            let schoolWorkDays = 0;
+            let weekdayFrequency = { "الاحد": 0, "الاثنين": 0, "الثلاثاء": 0, "الاربعاء": 0, "الخميس": 0 };
+            let weekdayAbsences = { "الاحد": 0, "الاثنين": 0, "الثلاثاء": 0, "الاربعاء": 0, "الخميس": 0 };
+
+            const teacherAbsDays = (CURRENT_TEACHER_RECORD.absences && Array.isArray(CURRENT_TEACHER_RECORD.absences[monthKey]))
+                ? CURRENT_TEACHER_RECORD.absences[monthKey]
+                : [];
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateObj = new Date(monthMeta.y, monthMeta.m - 1, d);
+                const dayOfWeek = dateObj.getDay();
+
+                if (dayOfWeek !== 5 && dayOfWeek !== 6) {
+                    schoolWorkDays++;
+                    const arDay = jsDaysMap[dayOfWeek];
+                    if (weekdayFrequency[arDay] !== undefined) {
+                        weekdayFrequency[arDay]++;
+                        if (teacherAbsDays.includes(d)) {
+                            weekdayAbsences[arDay]++;
+                        }
+                    }
+                }
+            }
+
+            const actualAttendanceDays = Math.max(0, schoolWorkDays - teacherAbsDays.length);
+
+            document.getElementById("kpi-month-abs").innerText = toAr(teacherAbsDays.length) + " يوم";
+            document.getElementById("kpi-month-attendance").innerText = toAr(actualAttendanceDays) + " يوم";
+
+            // 3. حساب إجمالي الحصص الشهري المنفذة
+            let totalMonthlyClasses = 0;
+            days.forEach(d => {
+                const dayClasses = classesPerDay[d] || 0;
+                const effectiveTimes = Math.max(0, (weekdayFrequency[d] || 0) - (weekdayAbsences[d] || 0));
+                totalMonthlyClasses += (dayClasses * effectiveTimes);
+            });
+
+            document.getElementById("kpi-monthly-classes").innerText = toAr(totalMonthlyClasses) + " حصة";
+        }
+
+        // دالة رسم حصر الفصول
+        function renderClassesBreakdown(countsObj, totalCount) {
+            const container = document.getElementById("classes-breakdown-chips");
+            if (!container) return;
+
+            const classes = Object.keys(countsObj).sort((a,b) => a.localeCompare(b, 'ar', {numeric: true}));
+
+            if (classes.length === 0) {
+                container.innerHTML = `<span class="text-xs text-slate-400 font-bold">لم تُسكن حصص بعد في جدول الحافز.</span>`;
+                return;
+            }
+
+            let html = "";
+            classes.forEach(c => {
+                html += `
+                    <div class="breakdown-chip">
+                        <span>فصل <b>${c}</b></span>
+                        <span>: ${toAr(countsObj[c])} حصص</span>
+                    </div>
+                `;
+            });
+
+            html += `
+                <div class="breakdown-total-chip">
+                    <span>إجمالي الحصص المسكنة: <b>${toAr(totalCount)} حصة</b></span>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function onMonthChanged() {
+            calculateIncentiveLive();
+        }
+
+        function onIncentiveTypeChanged() {
+            if (CURRENT_TEACHER_RECORD) {
+                CURRENT_TEACHER_RECORD.incentive_type = document.getElementById("incentive-type-select").value;
+            }
+        }
+
+        // حفظ بيانات وجدول الحافز في السحابة
+        async function saveIncentiveDataToCloud() {
+            if (!CURRENT_TEACHER) {
+                Swal.fire('تنبيه', 'يرجى اختيار معلم أولاً لحفظ بياناته!', 'warning');
+                return;
+            }
+
+            const scheduleData = {};
+            document.querySelectorAll(".sch-input").forEach(inp => {
+                if (inp.value.trim()) {
+                    scheduleData[`${inp.dataset.day}_${inp.dataset.period}`] = inp.value.trim();
+                }
+            });
+
+            CURRENT_TEACHER_RECORD.schedule = scheduleData;
+            CURRENT_TEACHER_RECORD.incentive_type = document.getElementById("incentive-type-select").value;
+
+            Swal.fire({ title: 'جاري حفظ بيانات الحافز...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const capsuleId = `incentive_tea_${CURRENT_TEACHER.nid}`;
+                await sbClient.from("system_capsules").upsert({
+                    id: capsuleId,
+                    data: CURRENT_TEACHER_RECORD,
+                    updatedat: new Date().toLocaleString('ar-EG')
+                });
+
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'تم الحفظ بنجاح!', 
+                    text: 'تم تثبيت جدول الحوافز بشكل مستقل تماماً دون المساس بجدول المدرسة الأصلي.',
+                    timer: 1800, 
+                    showConfirmButton: false 
+                });
+
+            } catch (err) {
+                Swal.fire('خطأ', 'فشل الحفظ: ' + err.message, 'error');
+            }
+        }
+
+        function manualPullOfficialSchedule() {
+            if (!CURRENT_TEACHER) {
+                Swal.fire('تنبيه', 'اختر معلماً أولاً!', 'warning');
+                return;
+            }
+
+            if (!confirm(`هل أنت متأكد من استيراد الجدول المدرسي الأصلي للأستاذ (${CURRENT_TEACHER.name}) واستبدال جدول الحوافز به؟`)) {
+                return;
+            }
+
+            let official = CURRENT_TEACHER.officialSchedule || {};
+            if (typeof official === 'string') {
+                try { official = JSON.parse(official); } catch(e){}
+            }
+
+            let importedCount = 0;
+            document.querySelectorAll(".sch-input").forEach(inp => {
+                const d = inp.dataset.day;
+                const p = inp.dataset.period;
+                const val = getSlotValueFromOfficial(official, d, p);
+                inp.value = val ? String(val).trim() : "";
+                if (inp.value) {
+                    inp.classList.add("has-val");
+                    importedCount++;
+                } else {
+                    inp.classList.remove("has-val");
+                }
+            });
+
+            calculateIncentiveLive();
+            Swal.fire({
+                icon: 'success',
+                title: 'تم استيراد الجدول الأصلي!',
+                text: `تم استرجاع (${importedCount}) حصة بنجاح. لا تنسَ الضغط على (حفظ) لتثبيتها.`,
+                timer: 1800,
+                showConfirmButton: false
+            });
+        }
+
+        function clearScheduleInputsOnly() {
+            if (confirm("هل تريد مسح جميع الحصص المكتوبة في جدول الحافز؟")) {
+                document.querySelectorAll(".sch-input").forEach(inp => {
+                    inp.value = "";
+                    inp.classList.remove("has-val");
+                });
+                calculateIncentiveLive();
+            }
+        }
+
+        // ================= 🌟 نافذة الغياب مع الحفظ المباشر في السحابة 🌟 =================
+        function openAbsenceModal() {
+            if (!CURRENT_TEACHER) {
+                Swal.fire('تنبيه', 'اختر معلماً أولاً لتسجيل غيابه!', 'warning');
+                return;
+            }
+            renderAbsDaysTags();
+            document.getElementById("absModal").classList.add("active");
+        }
+
+        function renderAbsDaysTags() {
+            const monthKey = document.getElementById("incentive-month-select").value;
+            const container = document.getElementById("abs-days-tags-container");
+            container.innerHTML = "";
+
+            if (!CURRENT_TEACHER_RECORD.absences) CURRENT_TEACHER_RECORD.absences = {};
+            const daysArr = CURRENT_TEACHER_RECORD.absences[monthKey] || [];
+
+            if (daysArr.length === 0) {
+                container.innerHTML = `<span class="text-xs text-slate-400 font-bold">لا يوجد غياب مسجل لهذا الشهر.</span>`;
+                return;
+            }
+
+            daysArr.forEach(d => {
+                container.innerHTML += `
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-rose-100 text-rose-800 text-xs font-black">
+                        يوم ${d}
+                        <i class="fa-solid fa-xmark cursor-pointer hover:text-red-900" onclick="removeAbsDay(${d})"></i>
+                    </span>
+                `;
+            });
+        }
+
+        function addAbsDayDirect() {
+            const inp = document.getElementById("inp-new-abs-day");
+            const d = parseInt(inp.value);
+            if (!d || d < 1 || d > 31) return;
+
+            const monthKey = document.getElementById("incentive-month-select").value;
+            if (!CURRENT_TEACHER_RECORD.absences[monthKey]) CURRENT_TEACHER_RECORD.absences[monthKey] = [];
+            
+            if (!CURRENT_TEACHER_RECORD.absences[monthKey].includes(d)) {
+                CURRENT_TEACHER_RECORD.absences[monthKey].push(d);
+                CURRENT_TEACHER_RECORD.absences[monthKey].sort((a,b)=>a-b);
+            }
+            inp.value = "";
+            renderAbsDaysTags();
+        }
+
+        function removeAbsDay(d) {
+            const monthKey = document.getElementById("incentive-month-select").value;
+            if (CURRENT_TEACHER_RECORD.absences && CURRENT_TEACHER_RECORD.absences[monthKey]) {
+                CURRENT_TEACHER_RECORD.absences[monthKey] = CURRENT_TEACHER_RECORD.absences[monthKey].filter(x => x !== d);
+            }
+            renderAbsDaysTags();
+        }
+
+        // 🌟 الحفظ المباشر للغياب في السحابة فوراً دون الحاجة لحفظ الجدول كاملاً 🌟
+        async function saveAbsenceOnlyDirect() {
+            if (!CURRENT_TEACHER) return;
+
+            const btn = document.getElementById("btn-save-abs-direct");
+            const oldHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ المباشر...`;
+            btn.disabled = true;
+
+            try {
+                // تحديث الحسابات محلياً
+                calculateIncentiveLive();
+
+                const capsuleId = `incentive_tea_${CURRENT_TEACHER.nid}`;
+                await sbClient.from("system_capsules").upsert({
+                    id: capsuleId,
+                    data: CURRENT_TEACHER_RECORD,
+                    updatedat: new Date().toLocaleString('ar-EG')
+                });
+
+                document.getElementById("absModal").classList.remove("active");
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top',
+                    icon: 'success',
+                    title: 'تم حفظ أيام الغياب مباشرة في السحابة وتحديث الحسابات بنجاح!',
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+
+            } catch (err) {
+                Swal.fire('خطأ', 'فشل حفظ الغياب: ' + err.message, 'error');
+            } finally {
+                btn.innerHTML = oldHtml;
+                btn.disabled = false;
+            }
+        }
+
+        // ================= إدارة المستحقين =================
+        function openEligibleManagementModal() {
+            renderChecklistTable();
+            document.getElementById("eligibleModal").classList.add("active");
+        }
+
+        function closeEligibleModal() {
+            document.getElementById("eligibleModal").classList.remove("active");
+        }
+
+        function renderChecklistTable(query = "") {
+            const tbody = document.getElementById("checklist-tbody");
+            tbody.innerHTML = "";
+
+            const cleanQ = query.trim().toLowerCase();
+            const eligibleNids = new Set(ELIGIBLE_TEACHERS_LIST.map(t => t.nid));
+
+            let countSelected = 0;
+            let filtered = ALL_SCHOOL_TEACHERS.filter(t => {
+                if (!cleanQ) return true;
+                return (t.name || "").toLowerCase().includes(cleanQ) || String(t.nid || "").includes(cleanQ);
+            });
+
+            filtered.forEach((t, idx) => {
+                const isSelected = eligibleNids.has(t.nid);
+                if (isSelected) countSelected++;
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${idx + 1}</td>
+                    <td style="text-align: right; font-weight: 900; color: #0f2b48;">${t.name}</td>
+                    <td><span class="text-xs px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-900 border border-blue-200 font-black">${t.cadre}</span></td>
+                    <td class="font-bold text-slate-800">${t.subject}</td>
+                    <td>
+                        <button type="button" class="btn-toggle-status ${isSelected ? 'btn-status-selected' : 'btn-status-unselected'}" onclick="toggleTeacherEligibility('${t.nid}')">
+                            ${isSelected ? 'مستحق ✔️' : 'غير مستحق ❌'}
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById("modal-selected-count").innerText = ELIGIBLE_TEACHERS_LIST.length;
+        }
+
+        function filterAllTeachersChecklist(q) {
+            renderChecklistTable(q);
+        }
+
+        function toggleTeacherEligibility(nid) {
+            const index = ELIGIBLE_TEACHERS_LIST.findIndex(t => t.nid === nid);
+            if (index > -1) {
+                ELIGIBLE_TEACHERS_LIST.splice(index, 1);
+            } else {
+                const teacherObj = ALL_SCHOOL_TEACHERS.find(t => t.nid === nid);
+                if (teacherObj) {
+                    ELIGIBLE_TEACHERS_LIST.push({
+                        nid: teacherObj.nid,
+                        name: teacherObj.name,
+                        subject: teacherObj.subject,
+                        cadre: teacherObj.cadre,
+                        type: teacherObj.type
+                    });
+                }
+            }
+            renderChecklistTable(document.getElementById("eligible-search-inp").value);
+        }
+
+        async function saveEligibleListToCloud() {
+            Swal.fire({ title: 'جاري حفظ القائمة...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            try {
+                await sbClient.from("system_capsules").upsert({
+                    id: "incentives_eligible_teachers",
+                    data: ELIGIBLE_TEACHERS_LIST,
+                    updatedat: new Date().toLocaleString('ar-EG')
+                });
+
+                document.getElementById("eligible-count-badge").innerText = ELIGIBLE_TEACHERS_LIST.length;
+                populateEligibleDropdown();
+                closeEligibleModal();
+
+                Swal.fire({ icon: 'success', title: 'تم اعتماد قائمة المستحقين بنجاح!', timer: 1500, showConfirmButton: false });
+
+            } catch (err) {
+                Swal.fire('خطأ', 'فشل حفظ القائمة: ' + err.message, 'error');
+            }
+        }
+
+        // ================= كشف حافز التدريس الرسمي للطباعة =================
+        async function openPrintableRosterModal() {
+            if (ELIGIBLE_TEACHERS_LIST.length === 0) {
+                Swal.fire('تنبيه', 'لا يوجد معلمين مستحقين معتمدين بالقائمة بعد!', 'warning');
+                return;
+            }
+
+            const monthKey = document.getElementById("incentive-month-select").value;
+            const monthMeta = MONTH_CALENDAR_MAP[monthKey] || { m: 10, y: 2026, name: "أكتوبر" };
+
+            let rowsHtml = "";
+            let idx = 1;
+
+            for (let t of ELIGIBLE_TEACHERS_LIST) {
+                const fullTeacher = ALL_SCHOOL_TEACHERS.find(x => x.nid === t.nid) || t;
+                const derived = deriveDegreeAndQuota(fullTeacher.cadre);
+
+                let weeklyClasses = 0;
+                let sched = {};
+
+                try {
+                    const { data } = await sbClient.from("system_capsules").select("data").eq("id", `incentive_tea_${t.nid}`).maybeSingle();
+                    if (data && data.data && data.data.schedule) {
+                        sched = data.data.schedule;
+                    } else if (fullTeacher.officialSchedule) {
+                        sched = fullTeacher.officialSchedule;
+                    }
+                } catch(e) {
+                    sched = fullTeacher.officialSchedule || {};
+                }
+
+                if (typeof sched === 'string') {
+                    try { sched = JSON.parse(sched); } catch(e){}
+                }
+
+                for (let k in sched) {
+                    if (!k.includes('_sub') && sched[k] && String(sched[k]).trim() !== "") {
+                        weeklyClasses++;
+                    }
+                }
+
+                const displayClasses = (weeklyClasses > 0) ? weeklyClasses : derived.quota;
+
+                rowsHtml += `
+                    <tr>
+                        <td style="border: 1.5px solid #000; width: 35px; padding: 6px 3px; font-weight: 900; text-align: center;">${toAr(idx++)}</td>
+                        <td style="border: 1.5px solid #000; text-align: right; padding: 6px 8px; font-weight: 900;">${fullTeacher.name}</td>
+                        <td style="border: 1.5px solid #000; width: 140px; padding: 6px 3px; font-weight: 900; text-align: center;">${fullTeacher.cadre}</td>
+                        <td style="border: 1.5px solid #000; width: 130px; padding: 6px 3px; font-weight: 900; text-align: center;">${fullTeacher.subject}</td>
+                        <td style="border: 1.5px solid #000; width: 85px; padding: 6px 3px; font-weight: 900; text-align: center;">${toAr(derived.quota)}</td>
+                        <td style="border: 1.5px solid #000; width: 85px; padding: 6px 3px; font-weight: 900; text-align: center;">${toAr(displayClasses)}</td>
+                    </tr>
+                `;
+            }
+
+            const sheetContentHtml = `
+                <div style="direction: rtl; font-family: 'Cairo', Arial, sans-serif; color: #000;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #000;">
+                        <div style="width: 250px; text-align: right; font-weight: 900; font-size: 13.5px; line-height: 1.4;">
+                            <div>محافظة المنوفية</div>
+                            <div>مديرية التربية والتعليم</div>
+                            <div>إدارة الشهداء التعليمية</div>
+                        </div>
+
+                        <div style="width: 250px; text-align: left; font-weight: 900; font-size: 14.5px;">
+                            <div>مدرسة الشهيد أشرف حبيب</div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-bottom: 12px;">
+                        <h2 style="font-size: 16px; font-weight: 900; color: #000; margin: 0;">
+                            كشف لأسماء السادة المعلمين المستحقين لصرف حافز التدريس
+                        </h2>
+                        <div style="font-size: 14px; font-weight: 900; margin-top: 4px;">
+                            عن شهر ${monthMeta.name} للعام ${toAr(monthMeta.y)}
+                        </div>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; text-align: center; border: 2.5px solid #000;">
+                        <thead>
+                            <tr style="background: #f1f5f9;">
+                                <th style="border: 1.5px solid #000; width: 35px; padding: 7px 3px; font-weight: 900;">م</th>
+                                <th style="border: 1.5px solid #000; text-align: center; padding: 7px 6px; font-weight: 900;">الاسم</th>
+                                <th style="border: 1.5px solid #000; width: 140px; padding: 7px 3px; font-weight: 900;">الوظيفة<br>على الكادر</th>
+                                <th style="border: 1.5px solid #000; width: 130px; padding: 7px 3px; font-weight: 900;">المادة</th>
+                                <th style="border: 1.5px solid #000; width: 85px; padding: 7px 3px; font-weight: 900;">النصاب<br>الاسبوعى</th>
+                                <th style="border: 1.5px solid #000; width: 85px; padding: 7px 3px; font-weight: 900;">عدد<br>الحصص</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; padding: 0 40px; font-weight: 900; font-size: 13.5px;">
+                        <div style="text-align: center;">
+                            <div>شئون العاملين</div>
+                            <div style="margin-top: 25px;">........................................</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div>مسئول الجدول المدرسي</div>
+                            <div style="margin-top: 25px;">........................................</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div>يعتمد / مدير المدرسة</div>
+                            <div style="margin-top: 25px;">........................................</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("roster-preview-wrapper").innerHTML = sheetContentHtml;
+            document.getElementById("printable-roster-area").innerHTML = sheetContentHtml;
+
+            document.getElementById("rosterModal").classList.add("active");
+        }
+
+        function closePrintableRosterModal() {
+            document.getElementById("rosterModal").classList.remove("active");
+        }
+    </script>
+</body>
+</html>
