@@ -12,18 +12,20 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- مكتبات Supabase & SweetAlert2 -->
+    <!-- مكتبات Supabase & JSZip لحفظ الماكرو & FileSaver & SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        /* ================= بالة الألوان الملكية الفاخرة (بدون اللون الأخضر) ================= */
+        /* ================= بالة الألوان الملكية الفاخرة ================= */
         :root { 
-            --primary: #0f2b48;          /* كحلي داكن ملكي */
-            --primary-light: #1e3a8a;    /* أزرق نيلي */
-            --royal-blue: #2563eb;       /* أزرق ملكي */
-            --ice-blue: #eff6ff;         /* ثلجي مريح */
-            --gold: #d97706;             /* ذهبي عنبري رصين */
+            --primary: #0f2b48;          
+            --primary-light: #1e3a8a;    
+            --royal-blue: #2563eb;       
+            --ice-blue: #eff6ff;         
+            --gold: #d97706;             
             --gold-light: #fffbeb;       
             --dark: #0f172a;             
             --bg: #f8fafc;               
@@ -105,7 +107,7 @@
             border-top: 4.5px solid var(--primary); 
         }
         .side-actions { 
-            width: 260px; 
+            width: 270px; 
             background: var(--surface); 
             padding: 16px; 
             border-radius: 18px; 
@@ -165,7 +167,6 @@
 
         .select-eligible-sync { display: none; }
 
-        /* القائمة المنسدلة للبحث الفوري بالبادئة */
         .dropdown-results { 
             position: absolute; 
             top: 42px; 
@@ -392,6 +393,9 @@
         .btn-save-all { background: var(--primary); }
         .btn-save-all:hover { background: var(--primary-light); }
 
+        .btn-export-excel { background: #0284c7; }
+        .btn-export-excel:hover { background: #0369a1; }
+
         .btn-import-official { background: #4f46e5; }
         .btn-import-official:hover { background: #4338ca; }
 
@@ -428,7 +432,7 @@
             border: 1.5px solid #fecaca; 
         }
 
-        /* ================= كشف حافز التدريس الرسمي للطباعة ================= */
+        /* طباعة كشف حافز التدريس A4 عمودي */
         #printable-roster-area { display: none; }
         
         @media print {
@@ -483,12 +487,10 @@
                         المعلم المستحق (ابحث بالبادئة أو تنقل بالأسهم):
                     </label>
                     <div style="display:flex; gap:4px; align-items:center;">
-                        <!-- زر السابق -->
                         <button type="button" class="btn-step-nav" onclick="navigateEligibleTeacher(-1)" title="المعلم السابق">
                             <i class="fa-solid fa-chevron-right"></i>
                         </button>
                         
-                        <!-- حقل البحث بالبادئة الحي -->
                         <div style="position:relative; flex:1;">
                             <input type="text" id="teacher-quick-filter" class="search-input-field" 
                                    placeholder="🔍 اكتب بداية الاسم (مثال: ع ثم عب)..." 
@@ -498,12 +500,10 @@
                             <div class="dropdown-results" id="teacher-dropdown-results"></div>
                         </div>
 
-                        <!-- القائمة المنسدلة المزامنة -->
                         <select id="eligible-teacher-select" class="select-eligible-sync" onchange="onEligibleDropdownChange(this.value)">
                             <option value="" disabled selected>-- اختر معلماً --</option>
                         </select>
 
-                        <!-- زر التالي -->
                         <button type="button" class="btn-step-nav" onclick="navigateEligibleTeacher(1)" title="المعلم التالي">
                             <i class="fa-solid fa-chevron-left"></i>
                         </button>
@@ -597,7 +597,7 @@
                 </div>
             </div>
 
-            <!-- 🌟 شريط حصر وتفصيل فصول المعلم المسندة في الجدول 🌟 -->
+            <!-- بيان فصول المعلم المسندة في الجدول -->
             <div class="classes-breakdown-bar" id="classes-breakdown-bar">
                 <span class="text-xs font-black text-slate-700 flex items-center gap-1.5">
                     <i class="fa-solid fa-chart-pie text-blue-900"></i> بيان فصول المعلم:
@@ -646,6 +646,11 @@
 
             <button type="button" class="btn-action btn-save-all" onclick="saveIncentiveDataToCloud()">
                 <i class="fa-solid fa-cloud-arrow-up text-yellow-300"></i> حفظ بيانات وجدول الحافز
+            </button>
+
+            <!-- 🌟 زر الترحيل إلى استمارة الإكسيل المعتمدة TADDST.xlsm 🌟 -->
+            <button type="button" class="btn-action btn-export-excel" id="btn-export-sheet" onclick="generateAndDownloadIncentiveSheet()">
+                <i class="fa-solid fa-file-excel text-yellow-300"></i> ترحيل الاستمارة وتنزيلها (.xlsm)
             </button>
 
             <button type="button" class="btn-action btn-import-official" onclick="manualPullOfficialSchedule()">
@@ -708,7 +713,7 @@
         </div>
     </div>
 
-    <!-- 5. نافذة تسجيل غياب المعلم بالحافز (تحفظ مباشرة في السحابة) -->
+    <!-- 5. نافذة تسجيل غياب المعلم بالحافز (حفظ مباشر) -->
     <div class="modal-overlay no-print" id="absModal" onclick="if(event.target===this) this.classList.remove('active')">
         <div class="modal-content" style="max-width: 600px;">
             <div class="modal-head">
@@ -800,7 +805,7 @@
             await loadEligibleTeachersList();
         });
 
-        // 1. استنتاج الدرجة المالية والنصاب القانوني آلياً بحسب كادر المعلم
+        // 1. استنتاج الدرجة المالية والنصاب القانوني بحسب عمود الدرجة
         function deriveDegreeAndQuota(cadreVal) {
             const c = (cadreVal || "").trim().toLowerCase()
                 .replace(/[أإآ]/g, 'ا')
@@ -877,7 +882,6 @@
             return "";
         }
 
-        // جلب جميع معلمي المدرسة وأخذ مسمى الكادر من عمود الدرجة
         async function fetchAllSchoolTeachers() {
             try {
                 const [resRegular, resContract] = await Promise.all([
@@ -943,7 +947,6 @@
             }
         }
 
-        // استدعاء قائمة المستحقين
         async function loadEligibleTeachersList() {
             try {
                 const { data } = await sbClient.from("system_capsules").select("data").eq("id", "incentives_eligible_teachers").maybeSingle();
@@ -970,7 +973,7 @@
             });
         }
 
-        // ================= محرك البحث بالبادئة والأزرار ❯ / ❮ =================
+        // ================= البحث بالبادئة =================
         function searchEligibleTeachersByPrefix(rawQuery) {
             const q = normalizeArabic(rawQuery);
             if (!q) return ELIGIBLE_TEACHERS_LIST;
@@ -1059,7 +1062,7 @@
             }
         });
 
-        // ================= 🌟 استدعاء ملف المعلم وجدوله في صمت وسلاسة 🌟 =================
+        // ================= استدعاء ملف المعلم في صمت تام =================
         async function loadSelectedTeacherIncentiveProfile(nid) {
             CURRENT_TEACHER = ALL_SCHOOL_TEACHERS.find(t => t.nid === nid);
             if (!CURRENT_TEACHER) return;
@@ -1068,7 +1071,6 @@
             CURRENT_TEACHER.degree = derived.degree;
             CURRENT_TEACHER.legalQuota = derived.quota;
 
-            // عرض البطاقة الشخصية
             document.getElementById("teacher-info-card").style.display = "block";
             document.getElementById("disp-t-name").innerText = CURRENT_TEACHER.name;
             document.getElementById("disp-t-nid").innerText = CURRENT_TEACHER.nid;
@@ -1093,7 +1095,6 @@
                     ? CURRENT_TEACHER_RECORD.schedule
                     : null;
 
-                // إذا لم يوجد جدول حوافز سابق، نسحب الجدول المدرسي تلقائياً كبداية
                 if (!sched) {
                     let official = CURRENT_TEACHER.officialSchedule || {};
                     if (typeof official === 'string') {
@@ -1113,7 +1114,6 @@
                     CURRENT_TEACHER_RECORD.schedule = sched;
                 }
 
-                // تعبئة جدول الحصص في الشاشة
                 document.querySelectorAll(".sch-input").forEach(inp => {
                     const k = `${inp.dataset.day}_${inp.dataset.period}`;
                     inp.value = sched[k] || "";
@@ -1128,14 +1128,13 @@
             }
         }
 
-        // ================= 🌟 محرك الحساب وتفصيل الفصول أعلى الجدول 🌟 =================
+        // ================= محرك الحساب وتفصيل الحصص =================
         function calculateIncentiveLive() {
             if (!CURRENT_TEACHER) return;
 
             const monthKey = document.getElementById("incentive-month-select").value;
             const monthMeta = MONTH_CALENDAR_MAP[monthKey] || { m: 10, y: 2026, name: "أكتوبر" };
 
-            // 1. حساب حصص الجدول الفعلي الأسبوعية وتفصيل فصول المعلم
             let weeklyClassesCount = 0;
             let classesPerDay = {};
             const classCounts = {};
@@ -1151,10 +1150,8 @@
             });
             document.getElementById("kpi-weekly-actual").innerText = toAr(weeklyClassesCount);
 
-            // 🌟 رسم كروت تفصيل كل فصل كام حصة أعلى الجدول 🌟
             renderClassesBreakdown(classCounts, weeklyClassesCount);
 
-            // 2. حساب أيام الحضور من 1 لآخر يوم بالشهر (استبعاد الجمعة والسبت فقط، والعطلات تعتبر حضور)
             const daysInMonth = new Date(monthMeta.y, monthMeta.m, 0).getDate();
             let schoolWorkDays = 0;
             let weekdayFrequency = { "الاحد": 0, "الاثنين": 0, "الثلاثاء": 0, "الاربعاء": 0, "الخميس": 0 };
@@ -1185,7 +1182,6 @@
             document.getElementById("kpi-month-abs").innerText = toAr(teacherAbsDays.length) + " يوم";
             document.getElementById("kpi-month-attendance").innerText = toAr(actualAttendanceDays) + " يوم";
 
-            // 3. حساب إجمالي الحصص الشهري المنفذة
             let totalMonthlyClasses = 0;
             days.forEach(d => {
                 const dayClasses = classesPerDay[d] || 0;
@@ -1196,7 +1192,6 @@
             document.getElementById("kpi-monthly-classes").innerText = toAr(totalMonthlyClasses) + " حصة";
         }
 
-        // دالة رسم حصر الفصول
         function renderClassesBreakdown(countsObj, totalCount) {
             const container = document.getElementById("classes-breakdown-chips");
             if (!container) return;
@@ -1237,7 +1232,7 @@
             }
         }
 
-        // حفظ بيانات وجدول الحافز في السحابة
+        // حفظ بيانات الحافز بالسحابة في كبسولة المعلم المستقلة
         async function saveIncentiveDataToCloud() {
             if (!CURRENT_TEACHER) {
                 Swal.fire('تنبيه', 'يرجى اختيار معلم أولاً لحفظ بياناته!', 'warning');
@@ -1267,7 +1262,7 @@
                 Swal.fire({ 
                     icon: 'success', 
                     title: 'تم الحفظ بنجاح!', 
-                    text: 'تم تثبيت جدول الحوافز بشكل مستقل تماماً دون المساس بجدول المدرسة الأصلي.',
+                    text: 'تم تثبيت جدول الحوافز بشكل مستقل تماماً.',
                     timer: 1800, 
                     showConfirmButton: false 
                 });
@@ -1283,7 +1278,7 @@
                 return;
             }
 
-            if (!confirm(`هل أنت متأكد من استيراد الجدول المدرسي الأصلي للأستاذ (${CURRENT_TEACHER.name}) واستبدال جدول الحوافز به؟`)) {
+            if (!confirm(`هل أنت متأكد من استيراد الجدول المدرسي الأصلي للأستاذ (${CURRENT_TEACHER.name})؟`)) {
                 return;
             }
 
@@ -1326,7 +1321,7 @@
             }
         }
 
-        // ================= 🌟 نافذة الغياب مع الحفظ المباشر في السحابة 🌟 =================
+        // ================= 🌟 نافذة الغياب مع الحفظ المباشر بالسحابة 🌟 =================
         function openAbsenceModal() {
             if (!CURRENT_TEACHER) {
                 Swal.fire('تنبيه', 'اختر معلماً أولاً لتسجيل غيابه!', 'warning');
@@ -1383,7 +1378,6 @@
             renderAbsDaysTags();
         }
 
-        // 🌟 الحفظ المباشر للغياب في السحابة فوراً دون الحاجة لحفظ الجدول كاملاً 🌟
         async function saveAbsenceOnlyDirect() {
             if (!CURRENT_TEACHER) return;
 
@@ -1393,7 +1387,6 @@
             btn.disabled = true;
 
             try {
-                // تحديث الحسابات محلياً
                 calculateIncentiveLive();
 
                 const capsuleId = `incentive_tea_${CURRENT_TEACHER.nid}`;
@@ -1418,6 +1411,258 @@
                 Swal.fire('خطأ', 'فشل حفظ الغياب: ' + err.message, 'error');
             } finally {
                 btn.innerHTML = oldHtml;
+                btn.disabled = false;
+            }
+        }
+
+        // ================= 🌟 محرك ترحيل وتنزيل استمارة الإكسيل TADDST.xlsm 🌟 =================
+        function setCellInXml(xmlDoc, cellRef, val, isNum = false) {
+            const NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+            const rowNum = parseInt(cellRef.replace(/[^0-9]/g, ''));
+            let sheetData = xmlDoc.getElementsByTagNameNS(NS, "sheetData")[0] || xmlDoc.getElementsByTagName("sheetData")[0];
+            if (!sheetData) return;
+
+            let rows = sheetData.getElementsByTagNameNS(NS, "row");
+            if (rows.length === 0) rows = sheetData.getElementsByTagName("row");
+            let targetRow = null;
+
+            for (let i = 0; i < rows.length; i++) {
+                if (rows[i].getAttribute("r") == rowNum) {
+                    targetRow = rows[i];
+                    break;
+                }
+            }
+
+            if (!targetRow) {
+                targetRow = xmlDoc.createElementNS(NS, "row");
+                targetRow.setAttribute("r", String(rowNum));
+                let inserted = false;
+                for (let i = 0; i < rows.length; i++) {
+                    if (parseInt(rows[i].getAttribute("r")) > rowNum) {
+                        sheetData.insertBefore(targetRow, rows[i]);
+                        inserted = true;
+                        break;
+                    }
+                }
+                if (!inserted) sheetData.appendChild(targetRow);
+            }
+
+            let cells = targetRow.getElementsByTagNameNS(NS, "c");
+            if (cells.length === 0) cells = targetRow.getElementsByTagName("c");
+            let targetCell = null;
+
+            for (let i = 0; i < cells.length; i++) {
+                if (cells[i].getAttribute("r") === cellRef) {
+                    targetCell = cells[i];
+                    break;
+                }
+            }
+
+            if (!targetCell) {
+                targetCell = xmlDoc.createElementNS(NS, "c");
+                targetCell.setAttribute("r", cellRef);
+                targetRow.appendChild(targetCell);
+            }
+
+            while (targetCell.firstChild) targetCell.removeChild(targetCell.firstChild);
+
+            if (val === "" || val === null || val === undefined) {
+                targetCell.removeAttribute("t");
+                return;
+            }
+
+            if (isNum && !isNaN(val)) {
+                targetCell.removeAttribute("t");
+                let v = xmlDoc.createElementNS(NS, "v");
+                v.textContent = String(val);
+                targetCell.appendChild(v);
+            } else {
+                targetCell.setAttribute("t", "inlineStr");
+                let isElem = xmlDoc.createElementNS(NS, "is");
+                let tElem = xmlDoc.createElementNS(NS, "t");
+                tElem.textContent = String(val);
+                isElem.appendChild(tElem);
+                targetCell.appendChild(isElem);
+            }
+        }
+
+        async function generateAndDownloadIncentiveSheet() {
+            if (!CURRENT_TEACHER) {
+                Swal.fire('تنبيه', 'يرجى اختيار معلم أولاً!', 'warning');
+                return;
+            }
+
+            // حفظ الجدول والبيانات أولاً
+            const scheduleData = {};
+            document.querySelectorAll(".sch-input").forEach(inp => {
+                if (inp.value.trim()) {
+                    scheduleData[`${inp.dataset.day}_${inp.dataset.period}`] = inp.value.trim();
+                }
+            });
+            CURRENT_TEACHER_RECORD.schedule = scheduleData;
+            CURRENT_TEACHER_RECORD.incentive_type = document.getElementById("incentive-type-select").value;
+
+            const btn = document.getElementById("btn-export-sheet");
+            const origBtnHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الترحيل...`;
+            btn.disabled = true;
+
+            Swal.fire({
+                title: 'جاري ترحيل البيانات وتوليد استمارة الإكسيل...',
+                text: 'يتم حقن البيانات في ملف الماكرو الرسمي (TADDST.xlsm)',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            try {
+                // حفظ بالسحابة لضمان التزامن
+                const capsuleId = `incentive_tea_${CURRENT_TEACHER.nid}`;
+                await sbClient.from("system_capsules").upsert({
+                    id: capsuleId,
+                    data: CURRENT_TEACHER_RECORD,
+                    updatedat: new Date().toLocaleString('ar-EG')
+                });
+
+                // تحميل ملف القالب TADDST.xlsm
+                const templateUrl = `https://xgsyktjoerrymqoutqcb.supabase.co/storage/v1/object/public/templates/TADDST.xlsm?nocache=${Date.now()}`;
+                const response = await fetch(templateUrl);
+                if (!response.ok) {
+                    throw new Error("تعذر تحميل قالب الاستمارة (TADDST.xlsm) من السحابة. تأكد من رفعه في مجلد templates.");
+                }
+
+                const arrayBuffer = await response.arrayBuffer();
+                const zip = await JSZip.loadAsync(arrayBuffer);
+
+                let targetSheetPath = "xl/worksheets/sheet1.xml";
+                if (!zip.file(targetSheetPath)) {
+                    const sheetFiles = Object.keys(zip.files).filter(p => p.startsWith("xl/worksheets/sheet") && p.endsWith(".xml"));
+                    if (sheetFiles.length > 0) targetSheetPath = sheetFiles[0];
+                }
+
+                const sheetXmlStr = await zip.file(targetSheetPath).async("text");
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(sheetXmlStr, "application/xml");
+
+                const monthKey = document.getElementById("incentive-month-select").value;
+                const monthMeta = MONTH_CALENDAR_MAP[monthKey] || { m: 10, y: 2026, name: "أكتوبر" };
+
+                // حسابات أيام الحضور والغياب
+                const teacherAbsDays = (CURRENT_TEACHER_RECORD.absences && Array.isArray(CURRENT_TEACHER_RECORD.absences[monthKey]))
+                    ? CURRENT_TEACHER_RECORD.absences[monthKey]
+                    : [];
+
+                const daysInMonth = new Date(monthMeta.y, monthMeta.m, 0).getDate();
+                let schoolWorkDays = 0;
+                let weekdayFrequency = { "الاحد": 0, "الاثنين": 0, "الثلاثاء": 0, "الاربعاء": 0, "الخميس": 0 };
+                let weekdayAbsences = { "الاحد": 0, "الاثنين": 0, "الثلاثاء": 0, "الاربعاء": 0, "الخميس": 0 };
+
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dateObj = new Date(monthMeta.y, monthMeta.m - 1, d);
+                    const dayOfWeek = dateObj.getDay();
+                    if (dayOfWeek !== 5 && dayOfWeek !== 6) {
+                        schoolWorkDays++;
+                        const arDay = jsDaysMap[dayOfWeek];
+                        if (weekdayFrequency[arDay] !== undefined) {
+                            weekdayFrequency[arDay]++;
+                            if (teacherAbsDays.includes(d)) weekdayAbsences[arDay]++;
+                        }
+                    }
+                }
+
+                const actualAttendanceDays = Math.max(0, schoolWorkDays - teacherAbsDays.length);
+
+                // تعبئة جدول الحصص الأسبوعي وحساب الإجماليات (الصفوف من 16 إلى 20)
+                const sessionCols = ['D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
+                const dayRows = { "الاحد": 16, "الاثنين": 17, "الثلاثاء": 18, "الاربعاء": 19, "الخميس": 20 };
+                
+                let totalWeeklyClasses = 0;
+                let totalMonthlyClasses = 0;
+
+                days.forEach(d => {
+                    const rowNum = dayRows[d];
+                    let dayTotal = 0;
+
+                    for (let p = 1; p <= 8; p++) {
+                        const inp = document.querySelector(`.sch-input[data-day="${d}"][data-period="${p}"]`);
+                        const val = inp ? inp.value.trim() : "";
+                        const colLetter = sessionCols[p - 1];
+
+                        if (val) {
+                            setCellInXml(xmlDoc, `${colLetter}${rowNum}`, val);
+                            dayTotal++;
+                        } else {
+                            setCellInXml(xmlDoc, `${colLetter}${rowNum}`, "");
+                        }
+                    }
+
+                    // مجموع اليوم في عمود L
+                    setCellInXml(xmlDoc, `L${rowNum}`, dayTotal, true);
+                    totalWeeklyClasses += dayTotal;
+
+                    // حساب حصص الشهر لهذا اليوم
+                    const effectiveTimes = Math.max(0, (weekdayFrequency[d] || 0) - (weekdayAbsences[d] || 0));
+                    totalMonthlyClasses += (dayTotal * effectiveTimes);
+                });
+
+                // 🌟 حقن البيانات في الخلايا المحددة بدقة متناهية طبقاً لجدول الصورة 🌟
+                setCellInXml(xmlDoc, 'Q2', monthMeta.name);                         // الشهر
+                setCellInXml(xmlDoc, 'Q4', monthMeta.y, true);                     // العام
+                setCellInXml(xmlDoc, 'E6', CURRENT_TEACHER.name);                  // اسم المعلم
+                setCellInXml(xmlDoc, 'E7', CURRENT_TEACHER.nid);                   // الرقم القومي
+                setCellInXml(xmlDoc, 'E8', CURRENT_TEACHER.cadre);                 // الوظيفة
+                setCellInXml(xmlDoc, 'J7', CURRENT_TEACHER.degree);                // الدرجة
+                setCellInXml(xmlDoc, 'J8', CURRENT_TEACHER.legalQuota, true);       // النصاب القانوني
+                setCellInXml(xmlDoc, 'J9', teacherAbsDays.length, true);           // عدد أيام الغياب
+                setCellInXml(xmlDoc, 'J10', totalMonthlyClasses, true);            // النصاب الشهري
+                setCellInXml(xmlDoc, 'E9', actualAttendanceDays, true);            // عدد أيام الحضور
+                setCellInXml(xmlDoc, 'E10', totalWeeklyClasses, true);             // النصاب الاسبوعي
+                setCellInXml(xmlDoc, 'K21', totalWeeklyClasses, true);             // النصاب الاسبوعي
+
+                // حفظ التعديلات داخل الـ XML
+                const serializer = new XMLSerializer();
+                zip.file(targetSheetPath, serializer.serializeToString(xmlDoc));
+
+                // تفعيل إعادة الحساب التلقائي للمعادلات
+                if (zip.file("xl/workbook.xml")) {
+                    let wbXmlStr = await zip.file("xl/workbook.xml").async("text");
+                    let wbDoc = parser.parseFromString(wbXmlStr, "application/xml");
+                    const NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+
+                    let calcPr = wbDoc.getElementsByTagNameNS(NS, "calcPr")[0] || wbDoc.getElementsByTagName("calcPr")[0];
+                    if (!calcPr) {
+                        calcPr = wbDoc.createElementNS(NS, "calcPr");
+                        wbDoc.documentElement.appendChild(calcPr);
+                    }
+                    calcPr.setAttribute("calcMode", "auto");
+                    calcPr.setAttribute("fullCalcOnLoad", "1");
+                    calcPr.setAttribute("forceFullCalculation", "1");
+
+                    zip.file("xl/workbook.xml", serializer.serializeToString(wbDoc));
+                }
+
+                const finalBlob = await zip.generateAsync({
+                    type: "blob",
+                    mimeType: "application/vnd.ms-excel.sheet.macroEnabled.12"
+                });
+
+                const cleanName = (CURRENT_TEACHER.name || "معلم").trim();
+                const fileName = `${cleanName} ${monthMeta.name}.xlsm`;
+
+                saveAs(finalBlob, fileName);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم ترحيل البيانات وتنزيل الاستمارة بنجاح!',
+                    text: `تم حفظ الملف باسم: ${fileName}`,
+                    timer: 2200,
+                    showConfirmButton: false
+                });
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ في التوليد', err.message, 'error');
+            } finally {
+                btn.innerHTML = origBtnHtml;
                 btn.disabled = false;
             }
         }
