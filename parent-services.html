@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>بوابة خدمات ولي الأمر - مدرسة الشهيد أشرف حبيب</title>
+    
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Supabase & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary: #0f2b48;
+            --primary-light: #1e3a8a;
+            --gold: #d97706;
+            --danger: #be123c;
+            --success: #15803d;
+            --bg: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        /* حماية أيقونات FontAwesome من التشويه والظهور كمربعات فارغة */
+        i, .fa, .fas, .fa-solid, .fa-regular {
+            font-family: "Font Awesome 6 Free" !important;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: #0f172a;
+            min-height: 100vh;
+        }
+
+        .card-system {
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-bottom: 4px solid #94a3b8;
+            border-radius: 18px;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+            transition: all 0.2s ease;
+        }
+
+        /* أزرار الخدمات الرئيسية */
+        .service-btn {
+            background: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 16px;
+            padding: 13px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            text-align: right;
+        }
+        .service-btn:active { transform: scale(0.98); }
+        .service-btn.btn-active {
+            border-color: var(--primary) !important;
+            background: #eff6ff !important;
+            box-shadow: 0 4px 12px rgba(15, 43, 72, 0.1);
+        }
+
+        .service-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        /* كروت الخيارات الصحية */
+        .health-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1.5px solid #e2e8f0;
+            background: #ffffff;
+            cursor: pointer;
+            transition: 0.15s;
+            user-select: none;
+        }
+        .health-option.selected {
+            border-color: var(--primary-light) !important;
+            background: #eff6ff !important;
+        }
+        .health-option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            flex-shrink: 0;
+            accent-color: var(--primary);
+        }
+
+        .btn-3d {
+            border-bottom: 3.5px solid rgba(0,0,0,0.25);
+            transition: all 0.1s ease;
+        }
+        .btn-3d:active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+        }
+    </style>
+</head>
+<body class="p-2.5 sm:p-4 flex flex-col items-center">
+
+    <div class="w-full max-w-2xl space-y-3.5">
+
+        <!-- 1. شريط الترويسة الرسمي -->
+        <header class="bg-[#0f2b48] text-white p-3.5 sm:p-4 rounded-2xl shadow-md border-b-4 border-amber-500 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-xl bg-blue-600/30 border border-blue-400/40 flex items-center justify-center text-yellow-300 text-xl shrink-0">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-base font-black leading-tight">بوابة خدمات أولياء الأمور</h1>
+                    <p class="text-[11px] text-blue-200 font-bold">مدرسة الشهيد أشرف حبيب الابتدائية • إدارة الشهداء</p>
+                </div>
+            </div>
+            <a href="index.html" class="text-xs font-black bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg border border-white/20 flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-house"></i>
+            </a>
+        </header>
+
+        <!-- 2. كارت إدخال الرقم القومي مرة واحدة فقط -->
+        <section class="card-system p-4 bg-white text-center space-y-2.5" id="nid-search-box">
+            <div class="w-11 h-11 rounded-full bg-blue-50 text-blue-900 mx-auto flex items-center justify-center text-lg">
+                <i class="fa-solid fa-id-card"></i>
+            </div>
+            <h2 class="text-sm sm:text-base font-black text-slate-800">أدخل الرقم القومي للتلميذ (١٤ رقماً)</h2>
+            <p class="text-[11px] text-slate-500 font-bold px-2">
+                يتم إدخال الرقم القومي مرة واحدة لفتح كافة الخدمات الصحية والتعليمية وسجل الغياب.
+            </p>
+
+            <div class="space-y-2 pt-1 max-w-md mx-auto">
+                <input type="tel" id="search_nid" maxlength="14" placeholder="••••••••••••••" 
+                       class="w-full text-center tracking-widest text-lg font-black font-mono py-2.5 px-3 rounded-xl border-2 border-slate-300 outline-none focus:border-blue-900 bg-slate-50 transition"
+                       onkeydown="if(event.key === 'Enter') executeUnifiedSearch()">
+                
+                <button type="button" onclick="executeUnifiedSearch()" id="btn-search" 
+                        class="btn-3d w-full py-2.5 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white font-black text-xs sm:text-sm rounded-xl flex items-center justify-center gap-2 shadow">
+                    <i class="fa-solid fa-magnifying-glass text-yellow-300"></i> استعلام وفتح خدمات التلميذ
+                </button>
+            </div>
+        </section>
+
+        <!-- مؤشر التحميل -->
+        <div id="loading-spinner" class="hidden text-center py-6">
+            <i class="fa-solid fa-circle-notch fa-spin text-2xl text-blue-900 mb-1"></i>
+            <p class="text-xs font-bold text-slate-600">جاري استرجاع بيانات التلميذ وسجلاته...</p>
+        </div>
+
+        <!-- 3. مساحة بيانات التلميذ والخدمات الثلاث -->
+        <div id="student-main-hub" class="hidden space-y-3.5">
+            
+            <!-- كارت بيانات التلميذ الأساسية (بدون أي رموز مشوهة) -->
+            <div class="card-system p-3.5 sm:p-4 bg-white border-t-4 border-t-blue-900 space-y-3">
+                <div class="flex justify-between items-center border-b pb-2">
+                    <span class="text-xs font-black text-[#0f2b48] flex items-center gap-2">
+                        <i class="fa-solid fa-address-card text-blue-700 text-sm"></i> بيانات الطفل المسجلة بالمدرسة:
+                    </span>
+                    <button type="button" onclick="resetAndSearchNew()" class="text-[11px] font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                        <i class="fa-solid fa-rotate-left"></i> بحث عن تلميذ آخر
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+                    <div class="p-2 bg-slate-50 rounded-lg border">
+                        <span class="text-slate-400 block text-[10px]">اسم التلميذ:</span>
+                        <b id="dsp_name" class="text-xs sm:text-sm font-black text-blue-950">-</b>
+                    </div>
+                    <div class="p-2 bg-slate-50 rounded-lg border">
+                        <span class="text-slate-400 block text-[10px]">الصف والفصل:</span>
+                        <b id="dsp_grade_class" class="text-xs sm:text-sm font-black text-blue-950">-</b>
+                    </div>
+                    <div class="p-2 bg-slate-50 rounded-lg border">
+                        <span class="text-slate-400 block text-[10px]">تاريخ الميلاد:</span>
+                        <b id="dsp_dob" class="font-mono text-slate-800">-</b>
+                    </div>
+                    <div class="p-2 bg-amber-50 rounded-lg border border-amber-200">
+                        <span class="text-amber-800 block text-[10px]">السن الحالي:</span>
+                        <b id="dsp_age" class="text-amber-950">-</b>
+                    </div>
+                    <div class="col-span-2 p-2 bg-slate-50 rounded-lg border flex justify-between items-center">
+                        <div>
+                            <span class="text-slate-400 block text-[10px]">الرقم القومي للتلميذ:</span>
+                            <b id="dsp_nid" class="font-mono text-xs font-black text-slate-800">-</b>
+                        </div>
+                        <span id="badge-gender" class="text-[11px] font-black px-2.5 py-0.5 rounded-full border"></span>
+                    </div>
+                </div>
+
+                <!-- تحديث رقم الموبايل المباشر -->
+                <div class="pt-2 border-t border-dashed space-y-1.5">
+                    <label class="block text-xs font-black text-slate-700 flex items-center gap-1.5">
+                        <i class="fa-solid fa-phone text-emerald-600"></i> رقم موبايل ولي الأمر (للطوارئ والاتصال بك):
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="tel" id="input_mobile" maxlength="11" placeholder="01xxxxxxxxx" 
+                               class="w-full text-center text-sm font-black font-mono py-2 px-3 bg-emerald-50/40 border-2 border-emerald-300 rounded-xl outline-none focus:border-emerald-600 focus:bg-white" dir="ltr">
+                        <button type="button" onclick="updateMobileDirect()" id="btn-update-phone" 
+                                class="btn-3d px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black whitespace-nowrap shadow flex items-center gap-1">
+                            <i class="fa-solid fa-floppy-disk"></i> تحديث
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- أزرار الأقسام الثلاثة الرئيسية -->
+            <div class="space-y-2">
+                <div class="text-xs font-black text-slate-700 px-1">اختر الخدمة المطلوبة للتلميذ:</div>
+                
+                <div class="grid grid-cols-1 gap-2.5">
+                    <!-- الزر 1: الحالة الصحية وموانع التطعيم -->
+                    <button type="button" onclick="togglePortalSection('health')" id="btn-service-health" class="service-btn">
+                        <div class="service-icon-box bg-rose-50 text-rose-700">
+                            <i class="fa-solid fa-heart-pulse"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xs sm:text-sm font-black text-slate-900">١. الأمراض المزمنة، أمراض الدم، وموانع التطعيم</h3>
+                            <p class="text-[11px] text-slate-500 font-bold mt-0.5">تسجيل موانع اللقاح، أمراض الدم، الكسور، والعمليات مع إرفاق الروشتة.</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition" id="arrow-health"></i>
+                    </button>
+
+                    <!-- الزر 2: تسجيل الولاية التعليمية -->
+                    <button type="button" onclick="togglePortalSection('custody')" id="btn-service-custody" class="service-btn">
+                        <div class="service-icon-box bg-amber-50 text-amber-700">
+                            <i class="fa-solid fa-scale-balanced"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xs sm:text-sm font-black text-slate-900">٢. تسجيل وتحديث الولاية التعليمية</h3>
+                            <p class="text-[11px] text-slate-500 font-bold mt-0.5">إثبات صاحب الحق القانوني مع إمكانية إرفاق صورة الحكم القضائي.</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition" id="arrow-custody"></i>
+                    </button>
+
+                    <!-- الزر 3: الاستعلام عن غياب التلميذ -->
+                    <button type="button" onclick="togglePortalSection('absence')" id="btn-service-absence" class="service-btn">
+                        <div class="service-icon-box bg-blue-50 text-blue-900">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xs sm:text-sm font-black text-slate-900">٣. كشف وسجل غياب التلميذ أسبوعياً</h3>
+                            <p class="text-[11px] text-slate-500 font-bold mt-0.5">عرض عدد أيام الغياب للترم الأول والترم الثاني وموقف الإنذارات.</p>
+                        </div>
+                        <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition" id="arrow-absence"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= محتوى القسم 1: الملف الصحي والتطعيم المطور ================= -->
+            <div id="section-health-content" class="hidden card-system p-4 bg-white border-t-4 border-t-rose-600 space-y-4">
+                <div class="border-b pb-2">
+                    <h3 class="text-xs sm:text-sm font-black text-rose-900 flex items-center gap-1.5">
+                        <i class="fa-solid fa-heart-pulse text-rose-600"></i> الملف الصحي الشامل وموانع التطعيمات المدرسية
+                    </h3>
+                    <p class="text-[11px] text-slate-500 font-bold mt-0.5">يرجى تحديد أي حالة يعاني منها طفلك لحمايته وإبلاغ الزائرة الصحية وطبيب التأمين:</p>
+                </div>
+
+                <!-- 1. الأمراض المزمنة العامة -->
+                <div class="space-y-2">
+                    <span class="text-xs font-black text-blue-900 block"><i class="fa-solid fa-stethoscope ml-1"></i> أولاً: الأمراض المزمنة العامة:</span>
+                    <div class="space-y-1.5" id="chronic-options-container"></div>
+                </div>
+
+                <!-- 🌟 2. أمراض الدم وخياراتها المتفرعة (جديد ومفصل) 🌟 -->
+                <div class="space-y-2 pt-2 border-t border-dashed">
+                    <div class="flex items-center gap-1.5 text-xs font-black text-red-700">
+                        <i class="fa-solid fa-droplet text-red-600"></i>
+                        <span>أمراض الدم وسيولة وتكسير الصفائح:</span>
+                    </div>
+                    <div class="space-y-1.5" id="blood-options-container"></div>
+                </div>
+
+                <!-- 🌟 3. العمليات والكسور مع الصندوق النصي للوصف 🌟 -->
+                <div class="space-y-2.5 pt-2 border-t border-dashed">
+                    <div class="flex items-center gap-1.5 text-xs font-black text-amber-900">
+                        <i class="fa-solid fa-bone text-amber-600"></i>
+                        <span>الكسور والعمليات الجراحية (للإعفاء من الجري والألعاب المدرسية):</span>
+                    </div>
+                    <div class="space-y-1.5" id="surgery-options-container"></div>
+                    
+                    <!-- صندوق نصي لوصف العملية بدقة طبقاً لطلبك -->
+                    <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-xl space-y-1.5">
+                        <label class="block text-xs font-black text-amber-950">
+                            <i class="fa-solid fa-pen-to-square ml-1"></i> وصف تفصيلي للعملية أو الكسر وتاريخه وتعليمات الطبيب:
+                        </label>
+                        <textarea id="surgery_description_text" rows="2" placeholder="اكتب تفاصيل العملية (مثال: تاريخ الجراحة، وجود صمام بالمخ، أو وجود شرائح ومسامير بالقدم اليمنى وممنوع من الجري)..." 
+                                  class="w-full p-2.5 text-xs font-bold border border-amber-300 rounded-lg outline-none bg-white"></textarea>
+                    </div>
+                </div>
+
+                <!-- 🌟 4. موانع التطعيم المدرسي الموسعة 🌟 -->
+                <div class="space-y-2 pt-2 border-t border-dashed">
+                    <div class="flex items-center gap-1.5 text-xs font-black text-rose-800">
+                        <i class="fa-solid fa-shield-virus text-rose-600"></i>
+                        <span>موانع التطعيم المدرسي (حالات تمنع الطفل من أخذ حقنة اللقاح):</span>
+                    </div>
+                    <div class="space-y-1.5" id="vaccine-options-container"></div>
+                </div>
+
+                <!-- إرفاق روشتة أو تقرير طبي -->
+                <div class="p-3 bg-rose-50/60 border-2 border-dashed border-rose-300 rounded-xl space-y-2">
+                    <label class="block text-xs font-black text-rose-950 flex items-center justify-between">
+                        <span><i class="fa-solid fa-file-medical text-rose-600 ml-1"></i> إرفاق صورة الروشتة أو التقرير الطبي (اختياري):</span>
+                        <span id="health-file-status" class="text-[10px] text-slate-500">صورة أو PDF</span>
+                    </label>
+                    <input type="file" id="health_attachment_file" accept="image/*, application/pdf" class="w-full text-xs font-bold p-2 bg-white border border-rose-200 rounded-lg">
+                    <div id="health-attached-preview" class="hidden text-xs font-bold text-emerald-800">
+                        <i class="fa-solid fa-circle-check"></i> يوجد تقرير محفوظ مسبقاً: <a href="#" target="_blank" id="health-file-link" class="underline text-blue-700">عرض الملف</a>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-1">أي علاج مستمر أو ملاحظات أخرى لإدارة المدرسة:</label>
+                    <input type="text" id="health_notes" placeholder="اكتب اسم الدواء أو أي تنبيه إضافي..." class="w-full p-2.5 text-xs font-bold border rounded-xl bg-slate-50 outline-none">
+                </div>
+
+                <button type="button" onclick="saveHealthSection()" id="btn-save-health" class="btn-3d w-full py-2.5 bg-rose-800 hover:bg-rose-900 text-white font-black text-xs sm:text-sm rounded-xl shadow flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up text-yellow-300"></i> حفظ واعتماد الملف الصحي وموانع التطعيم
+                </button>
+            </div>
+
+            <!-- ================= محتوى القسم 2: الولاية التعليمية ================= -->
+            <div id="section-custody-content" class="hidden card-system p-4 bg-white border-t-4 border-t-amber-500 space-y-3.5">
+                <div class="border-b pb-2 flex justify-between items-center">
+                    <h3 class="text-xs sm:text-sm font-black text-amber-950 flex items-center gap-1.5">
+                        <i class="fa-solid fa-scale-balanced text-amber-600"></i>
+                        تسجيل بيانات ومستندات الولاية التعليمية
+                    </h3>
+                    <span class="text-[10px] bg-amber-100 text-amber-900 font-black px-2 py-0.5 rounded">إجراء رسمي</span>
+                </div>
+
+                <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs font-bold text-amber-950 leading-relaxed">
+                    الولاية التعليمية للأب بحكم القانون، وتنتقل للأم أو الحاضنة بصدور أمر وقتي أو حكم محكمة واجب النفاذ.
+                </div>
+
+                <div class="space-y-3 text-xs font-bold">
+                    <div>
+                        <label class="block text-slate-700 mb-1">صاحب الولاية التعليمية الحالي:</label>
+                        <select id="custody_type" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none font-bold">
+                            <option value="الأب (بحكم القانون)">الأب (الولاية الطبيعية بحكم القانون)</option>
+                            <option value="الأم (بحكم قضائي / أمر وقتي)">الأم (بحكم قضائي / أمر وقتي واجب النفاذ)</option>
+                            <option value="الجدة للأم (حاضنة شرعية)">الجدة للأم (حاضنة شرعية)</option>
+                            <option value="وصي قانوني آخر">وصي قانوني آخر</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block text-slate-700 mb-1">الاسم الرباعي لصاحب الولاية:</label>
+                            <input type="text" id="custody_name" placeholder="اكتب الاسم كاملاً..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-slate-700 mb-1">الرقم القومي (١٤ رقماً):</label>
+                            <input type="tel" id="custody_nid" maxlength="14" placeholder="الرقم القومي..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none font-bold font-mono text-center">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                            <label class="block text-slate-700 mb-1">المحكمة الصادر منها الحكم (إن وُجد):</label>
+                            <input type="text" id="custody_court" placeholder="مثال: محكمة أسرة الشهداء" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-slate-700 mb-1">رقم الحكم أو الأمر الوقتي:</label>
+                            <input type="text" id="custody_verdict_no" placeholder="مثال: أمر وقتي رقم 45 لسنة 2025" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none font-bold">
+                        </div>
+                    </div>
+
+                    <!-- إرفاق صورة الحكم القضائي -->
+                    <div class="p-3 bg-amber-50/60 border-2 border-dashed border-amber-300 rounded-xl space-y-2">
+                        <label class="block text-xs font-black text-amber-950 flex items-center justify-between">
+                            <span><i class="fa-solid fa-file-contract text-amber-600 ml-1"></i> إرفاق صورة الحكم أو الأمر القضائي (اختياري):</span>
+                            <span id="custody-file-status" class="text-[10px] text-slate-500">صورة أو PDF</span>
+                        </label>
+                        <input type="file" id="custody_attachment_file" accept="image/*, application/pdf" class="w-full text-xs font-bold p-2 bg-white border border-amber-200 rounded-lg">
+                        <div id="custody-attached-preview" class="hidden text-xs font-bold text-emerald-800">
+                            <i class="fa-solid fa-circle-check"></i> يوجد مستند محفوظ: <a href="#" target="_blank" id="custody-file-link" class="underline text-blue-700">عرض المستند</a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-slate-700 mb-1">ملاحظات بخصوص استلام الملف أو تسليم الشهادات:</label>
+                        <textarea id="custody_notes" rows="2" placeholder="اكتب أي تعليمات لإدارة شئون الطلاب..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl outline-none font-bold"></textarea>
+                    </div>
+
+                    <button type="button" onclick="saveCustodySection()" id="btn-save-custody" class="btn-3d w-full py-2.5 bg-amber-700 hover:bg-amber-800 text-white font-black text-xs sm:text-sm rounded-xl shadow flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-cloud-arrow-up text-yellow-300"></i> حفظ واعتماد بيانات ومستند الولاية التعليمية
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= محتوى القسم 3: سجل الغياب المفصل ================= -->
+            <div id="section-absence-content" class="hidden card-system p-4 bg-white border-t-4 border-t-blue-900 space-y-3.5">
+                <div class="border-b pb-2 flex justify-between items-center">
+                    <h3 class="text-xs sm:text-sm font-black text-blue-950 flex items-center gap-1.5">
+                        <i class="fa-solid fa-calendar-days text-blue-800"></i>
+                        سجل الغياب الأسبوعي والإنذارات الوزارية
+                    </h3>
+                    <span id="badge-absence-meter" class="text-[11px] font-black px-2.5 py-0.5 rounded"></span>
+                </div>
+
+                <!-- كروت ملخص الترمين -->
+                <div class="grid grid-cols-3 gap-2 text-center text-xs font-bold">
+                    <div class="p-2.5 bg-slate-50 rounded-xl border">
+                        <span class="text-slate-400 block text-[10px]">إجمالي غياب السنة:</span>
+                        <b id="abs_grand_total" class="text-sm sm:text-base font-black text-rose-700">٠ يوم</b>
+                    </div>
+                    <div class="p-2.5 bg-blue-50/60 rounded-xl border border-blue-200">
+                        <span class="text-blue-700 block text-[10px]">غياب الترم الأول (1-17):</span>
+                        <b id="abs_term1_val" class="text-sm sm:text-base font-black text-blue-900">٠ يوم</b>
+                        <span id="abs_term1_pct" class="text-[10px] text-slate-500 block">حضور %100</span>
+                    </div>
+                    <div class="p-2.5 bg-indigo-50/60 rounded-xl border border-indigo-200">
+                        <span class="text-indigo-700 block text-[10px]">غياب الترم الثاني (18-30):</span>
+                        <b id="abs_term2_val" class="text-sm sm:text-base font-black text-indigo-900">٠ يوم</b>
+                        <span id="abs_term2_pct" class="text-[10px] text-slate-500 block">حضور %100</span>
+                    </div>
+                </div>
+
+                <!-- تفصيل الأسابيع أسبوع بأسبوع -->
+                <div>
+                    <div class="text-xs font-black text-slate-700 mb-1.5 flex justify-between items-center">
+                        <span><i class="fa-solid fa-list-ol ml-1 text-blue-800"></i> تفصيل أيام الغياب لكل أسبوع دراسي:</span>
+                        <span class="text-[10px] text-slate-400 font-normal">مرصود بسجلات الغياب</span>
+                    </div>
+
+                    <div id="abs_weekly_breakdown" class="max-h-64 overflow-y-auto border border-slate-200 rounded-xl divide-y divide-slate-100 bg-slate-50 text-xs font-bold"></div>
+                </div>
+
+                <div class="p-2.5 bg-slate-50 border rounded-xl text-[11px] text-slate-600 font-bold leading-relaxed">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 ml-1"></i>
+                    <b>تنبيه الغياب القانوني:</b> إنذار أول عند ٦ أيام غياب، إنذار ثانٍ عند ١١ يوماً، وإنذار بالفصل عند تجاوز ١٥ يوماً منفصلة أو متصلة بدون عذر.
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let CURRENT_STUDENT = null;
+
+        const arabicWeeks = [
+            "الأول","الثاني","الثالث","الرابع","الخامس","السادس","السابع","الثامن","التاسع","العاشر",
+            "الحادي عشر","الثاني عشر","الثالث عشر","الرابع عشر","الخامس عشر","السادس عشر","السابع عشر",
+            "الثامن عشر","التاسع عشر","العشرون","الحادي والعشرون","الثاني والعشرون","الثالث والعشرون",
+            "الرابع والعشرون","الخامس والعشرون","السادس والعشرون","السابع والعشرون","الثامن والعشرون",
+            "التاسع والعشرون","الثلاثون"
+        ];
+
+        const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
+
+        // ================= 1. قائمة الأمراض المزمنة العامة =================
+        const CHRONIC_LIST = [
+            { id: "c_diabetes", title: "مرض السكر", desc: "الطفل بياخد أنسولين أو علاج منتظم لضبط السكر" },
+            { id: "c_asthma", title: "حساسية الصدر أو الربو الشعبي", desc: "بيجيله كتمة نفس وبياخد بخاخات أو جلسات استنشاق" },
+            { id: "c_heart", title: "أمراض وروماتيزم القلب", desc: "ممنوع من النهجان والمجهود العنيف والجري الزائد" },
+            { id: "c_seizures", title: "الصرع أو التشنجات العصبية", desc: "بياخد أدوية بانتظام لتثبيت كهربة المخ ومنع التشنج" },
+            { id: "c_kidney", title: "أمراض الكلى المزمنة أو الغسيل الكلوي", desc: "قصور في وظائف الكلى أو التهابات كلوية متكررة" },
+            { id: "c_hypertension", title: "ارتفاع ضغط الدم لدى الأطفال", desc: "الطفل بيعاني من الضغط العالي وبياخد علاج منظم" },
+            { id: "c_sensory", title: "ضعف شديد بالنظر أو السمع / زراعة قوقعة", desc: "يحتاج لمقاعد أمامية واستعمال السماعة الطبية" }
+        ];
+
+        // ================= 2. 🌟 قائمة أمراض الدم وتفرعاتها (جديد) 🌟 =================
+        const BLOOD_DISORDERS_LIST = [
+            { id: "b_hemophilia", title: "سيولة الدم (الهيموفيليا / صعوبة التجلط)", desc: "عرضة لنزيف مستمر عند الجروح أو الكدمات ويحتاج لحقن عوامل التجلط" },
+            { id: "b_platelets", title: "نقص أو تكسير الصفائح الدموية (ITP)", desc: "نقص مناعي في الصفائح يسبب بقع زرقاء ونزيف جلدي" },
+            { id: "b_favism", title: "أنيميا الفول وتكسير كرات الدم مع الأكل", desc: "ممنوع نهائياً من أكل الفول والبقوليات وأدوية معينة كالسلفا والمسكنات" },
+            { id: "b_thalassemia", title: "أنيميا البحر المتوسط (الثلاسيميا)", desc: "مرض دم وراثي يتطلب نقل دم دوري ومتابعة نسبة الحديد" },
+            { id: "b_sickle", title: "الأنيميا المنجلية (Sickle Cell)", desc: "تسبب نوبات ألم شديدة في العظام وتكسير في كرات الدم الحمراء" },
+            { id: "b_leukemia", title: "أورام أو لوكيميا الدم (تحت العلاج والمتابعة)", desc: "الطفل تحت بروتوكول علاجي ومتابع بانتظام في معهد الأورام" }
+        ];
+
+        // ================= 3. 🌟 العمليات والكسور 🌟 =================
+        const SURGERY_LIST = [
+            { id: "s_brain_skull", title: "عمليات بالمخ أو الجمجمة (أو وجود صمام بالمخ)", desc: "يتوجب عدم الاهتزاز أو الحركة المفرطة وممنوع تماماً من الاصطدام بالرأس" },
+            { id: "s_leg_fractures", title: "كسور بالأرجل أو القدم أو تركيب شرائح ومسامير", desc: "إعفاء كامل من الجري وممارسة حصص التربية الرياضية وألعاب القوى" },
+            { id: "s_arm_fracture", title: "كسور أو شرائح سابقة بالذراع أو الكتف أو المفصل", desc: "ممنوع من التحميل على الذراع أو رفع أشياء ثقيلة في الأنشطة" },
+            { id: "s_heart_surgery", title: "جراحة قلب مفتوح أو قسطرة سابقة", desc: "ممنوع تماماً من ممارسة الرياضة والمسابقات والمجهود الشديد" },
+            { id: "s_eye_surgery", title: "عمليات بالعين أو انفصال شبكية سابق", desc: "ممنوع من التعرض لأي اصطدام بالوجه أو ألعاب الكرة العنيفة" },
+            { id: "s_abdominal_hernia", title: "عمليات سابقة بالبطن (استئصال طحال أو فتق)", desc: "حماية البطن من أي اصطدام وتجنب المجهود البدني الزائد" }
+        ];
+
+        // ================= 4. 🌟 موانع التطعيم المدرسي الموسعة 🌟 =================
+        const VACCINE_LIST = [
+            { id: "v_allergy_injection", title: "حساسية مفرطة شديدة بعد حقنة تطعيم سابقة", desc: "حدوث ورم بالوجه والشفتين وصعوبة بالتنفس بعد تطعيم سابق" },
+            { id: "v_egg_allergy", title: "حساسية شديدة جداً ومفرطة من البيض والدجاج", desc: "تتعارض مع بعض أنواع التطعيمات المدرسية المصنعة على بروتين البيض" },
+            { id: "v_cancer_chemo", title: "علاج كيماوي أو أورام حديثاً (شفاه الله)", desc: "يمنع التطعيم نهائياً لمنع أي مضاعفات على مناعة الطفل" },
+            { id: "v_steroids_high", title: "أدوية كورتيزون بجرعات عالية لأكثر من أسبوعين", desc: "الكورتيزون المستمر يتعارض مع اللقاحات ويضعف الاستجابة المناعية" },
+            { id: "v_immuno_disease", title: "أمراض نقص المناعة الوراثية أو المكتسبة", desc: "يمنع التطعيم باللقاحات الحية لحماية الجهاز المناعي للطفل" },
+            { id: "v_blood_transfusion", title: "نقل دم أو بلازما حديثاً (خلال آخر ٣ شهور)", desc: "الأجسام المضادة المنقولة تبطل مفعول بعض أنواع التطعيمات" },
+            { id: "v_active_seizures", title: "تشنجات صرعية نشطة وغير مسيطر عليها علاجياً", desc: "يجب تأجيل بعض التطعيمات لحين استقرار الحالة العصبية" },
+            { id: "v_fever_current", title: "سخونية شديدة ومرض حاد في الوقت الحالي", desc: "تأجيل مؤقت لحين نزول الحرارة وشفاء الطفل التام" }
+        ];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderOptions('chronic-options-container', CHRONIC_LIST, 'chr');
+            renderOptions('blood-options-container', BLOOD_DISORDERS_LIST, 'blood');
+            renderOptions('surgery-options-container', SURGERY_LIST, 'surg');
+            renderOptions('vaccine-options-container', VACCINE_LIST, 'vac');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const passedNid = urlParams.get('nid');
+            if (passedNid && passedNid.length === 14) {
+                document.getElementById('search_nid').value = passedNid;
+                executeUnifiedSearch();
+            }
+        });
+
+        function renderOptions(containerId, list, prefix) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = list.map(item => `
+                <label class="health-option" id="lbl_${item.id}">
+                    <input type="checkbox" id="${item.id}" name="${prefix}_check" value="${item.title}" onchange="this.closest('.health-option').classList.toggle('selected', this.checked)">
+                    <div class="flex-1">
+                        <div class="text-xs font-black text-slate-900">${item.title}</div>
+                        <div class="text-[11px] text-slate-500 font-bold mt-0.5">${item.desc}</div>
+                    </div>
+                </label>
+            `).join('');
+        }
+
+        function parseNID(nid) {
+            nid = String(nid).trim();
+            if (nid.length !== 14 || !/^\d+$/.test(nid)) return null;
+
+            const century = nid[0] === '3' ? 2000 : 1900;
+            const year = century + parseInt(nid.substring(1, 3), 10);
+            const month = parseInt(nid.substring(3, 5), 10);
+            const day = parseInt(nid.substring(5, 7), 10);
+
+            const dob = new Date(year, month - 1, day);
+            if (isNaN(dob.getTime())) return null;
+
+            const now = new Date();
+            let years = now.getFullYear() - dob.getFullYear();
+            let months = now.getMonth() - dob.getMonth();
+            let days = now.getDate() - dob.getDate();
+
+            if (days < 0) {
+                months--;
+                const prevMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+                days += prevMonth.getDate();
+            }
+            if (months < 0) {
+                years--;
+                months += 12;
+            }
+
+            const genderDigit = parseInt(nid[12], 10);
+            const gender = (genderDigit % 2 === 0) ? "أنثى" : "ذكر";
+
+            const dobStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const ageStr = `${years} سنة و ${months} شهر و ${days} يوم`;
+
+            return { dobStr, ageStr, gender };
+        }
+
+        // ================= الاستعلام الموحد =================
+        async function executeUnifiedSearch() {
+            const rawNid = document.getElementById("search_nid").value.trim();
+            const nid = rawNid.replace(/[^0-9]/g, '');
+
+            if (nid.length !== 14) {
+                Swal.fire({ icon: 'warning', title: 'تنبيه بالرقم القومي', text: 'يجب كتابة الرقم القومي للتلميذ كاملاً (١٤ رقماً).', confirmButtonColor: '#0f2b48' });
+                return;
+            }
+
+            const spinner = document.getElementById("loading-spinner");
+            const mainHub = document.getElementById("student-main-hub");
+            const btnSearch = document.getElementById("btn-search");
+
+            spinner.classList.remove("hidden");
+            mainHub.classList.add("hidden");
+            btnSearch.disabled = true;
+
+            try {
+                const { data, error } = await sbClient
+                    .from("students")
+                    .select("*")
+                    .eq("nid", nid)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                if (!data) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'التلميذ غير مسجل',
+                        html: `الرقم القومي (<b class="font-mono text-blue-900">${nid}</b>) غير مقيد في قاعدة بيانات المدرسة.`,
+                        confirmButtonColor: '#0f2b48'
+                    });
+                    return;
+                }
+
+                CURRENT_STUDENT = data;
+                populateStudentCard(data);
+                loadHealthData(data);
+                loadCustodyData(data);
+                renderAbsenceBreakdown(data);
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ', 'تعذر الاتصال بقاعدة البيانات: ' + err.message, 'error');
+            } finally {
+                spinner.classList.add("hidden");
+                btnSearch.disabled = false;
+            }
+        }
+
+        function populateStudentCard(s) {
+            document.getElementById("dsp_name").innerText = s.name || "-";
+            document.getElementById("dsp_grade_class").innerText = `${s.grade || '-'} ${s.class ? '(' + s.class + ')' : ''}`;
+            document.getElementById("dsp_nid").innerText = s.nid || "-";
+            document.getElementById("input_mobile").value = s.father_mobile || s.mobile || "";
+
+            const parsed = parseNID(s.nid) || { dobStr: s.dob || "-", ageStr: s.age_october || "-", gender: s.gender || "-" };
+            document.getElementById("dsp_dob").innerText = parsed.dobStr;
+            document.getElementById("dsp_age").innerText = parsed.ageStr;
+
+            const badgeGender = document.getElementById("badge-gender");
+            badgeGender.innerText = parsed.gender;
+            badgeGender.className = (parsed.gender === "ذكر") 
+                ? "text-[11px] font-black px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 border border-blue-200" 
+                : "text-[11px] font-black px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-900 border border-rose-200";
+
+            document.getElementById("student-main-hub").classList.remove("hidden");
+            document.getElementById("student-main-hub").scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function resetAndSearchNew() {
+            document.getElementById("student-main-hub").classList.add("hidden");
+            document.getElementById("search_nid").value = "";
+            document.getElementById("search_nid").focus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function togglePortalSection(section) {
+            const sections = ['health', 'custody', 'absence'];
+            sections.forEach(s => {
+                const content = document.getElementById(`section-${s}-content`);
+                const btn = document.getElementById(`btn-service-${s}`);
+                const arrow = document.getElementById(`arrow-${s}`);
+
+                if (s === section) {
+                    const isHidden = content.classList.contains("hidden");
+                    content.classList.toggle("hidden", !isHidden);
+                    btn.classList.toggle("btn-active", isHidden);
+                    arrow.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
+                    if (isHidden) content.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    content.classList.add("hidden");
+                    btn.classList.remove("btn-active");
+                    arrow.style.transform = "rotate(0deg)";
+                }
+            });
+        }
+
+        async function updateMobileDirect() {
+            if (!CURRENT_STUDENT) return;
+            const newMobile = document.getElementById("input_mobile").value.trim();
+            const phoneRegex = /^01[0125][0-9]{8}$/;
+
+            if (!phoneRegex.test(newMobile)) {
+                Swal.fire({ icon: 'warning', title: 'رقم غير صحيح', text: 'يرجى كتابة رقم موبايل مصري صحيح (١١ رقماً).', confirmButtonColor: '#0f2b48' });
+                return;
+            }
+
+            const btn = document.getElementById("btn-update-phone");
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+            try {
+                const { error } = await sbClient
+                    .from("students")
+                    .update({ father_mobile: newMobile, mobile: newMobile })
+                    .eq("code", CURRENT_STUDENT.code);
+
+                if (error) throw error;
+                CURRENT_STUDENT.father_mobile = newMobile;
+                Swal.fire({ icon: 'success', title: 'تم تحديث رقم الهاتف بنجاح!', timer: 1500, showConfirmButton: false });
+            } catch (e) {
+                Swal.fire('خطأ', e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> تحديث';
+            }
+        }
+
+        // ================= استرجاع وحفظ الحالة الصحية والروشتة =================
+        function loadHealthData(s) {
+            let hr = {};
+            if (s.health_record) {
+                hr = (typeof s.health_record === 'object') ? s.health_record : JSON.parse(s.health_record || '{}');
+            }
+
+            document.querySelectorAll('#section-health-content input[type="checkbox"]').forEach(c => {
+                c.checked = false;
+                c.closest('.health-option').classList.remove('selected');
+            });
+
+            // استرجاع الأمراض المزمنة، أمراض الدم، الكسور، وموانع التطعيم
+            const allSelected = [
+                ...(hr.chronic_diseases || []),
+                ...(hr.blood_disorders || []),
+                ...(hr.surgeries_fractures || []),
+                ...(hr.vaccine_contraindications || [])
+            ];
+
+            allSelected.forEach(title => {
+                const cb = Array.from(document.querySelectorAll('#section-health-content input[type="checkbox"]')).find(x => x.value === title);
+                if (cb) {
+                    cb.checked = true;
+                    cb.closest('.health-option').classList.add('selected');
+                }
+            });
+
+            // تعبئة صندوق وصف العملية
+            document.getElementById("surgery_description_text").value = hr.surgery_description || "";
+            document.getElementById("health_notes").value = hr.chronic_notes || hr.vaccine_notes || "";
+
+            const previewBox = document.getElementById("health-attached-preview");
+            const fileLink = document.getElementById("health-file-link");
+            if (hr.report_file_url) {
+                fileLink.href = hr.report_file_url;
+                previewBox.classList.remove("hidden");
+            } else {
+                previewBox.classList.add("hidden");
+            }
+        }
+
+        async function saveHealthSection() {
+            if (!CURRENT_STUDENT) return;
+
+            const chr = []; document.querySelectorAll('input[name="chr_check"]:checked').forEach(c => chr.push(c.value));
+            const blood = []; document.querySelectorAll('input[name="blood_check"]:checked').forEach(c => blood.push(c.value));
+            const surg = []; document.querySelectorAll('input[name="surg_check"]:checked').forEach(c => surg.push(c.value));
+            const vac = []; document.querySelectorAll('input[name="vac_check"]:checked').forEach(c => vac.push(c.value));
+            
+            const surgeryDesc = document.getElementById("surgery_description_text").value.trim();
+            const notes = document.getElementById("health_notes").value.trim();
+
+            const btn = document.getElementById("btn-save-health");
+            const oldHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ والرفع...';
+            btn.disabled = true;
+
+            try {
+                let fileUrl = (CURRENT_STUDENT.health_record && CURRENT_STUDENT.health_record.report_file_url) ? CURRENT_STUDENT.health_record.report_file_url : null;
+                const fileInp = document.getElementById("health_attachment_file");
+
+                if (fileInp.files && fileInp.files[0]) {
+                    const f = fileInp.files[0];
+                    const ext = f.name.split('.').pop();
+                    const path = `health_reports/${CURRENT_STUDENT.nid}_${Date.now()}.${ext}`;
+                    const { error: upErr } = await sbClient.storage.from('uploads').upload(path, f, { upsert: true });
+                    if (!upErr) {
+                        const { data: pubData } = sbClient.storage.from('uploads').getPublicUrl(path);
+                        fileUrl = pubData.publicUrl;
+                    }
+                }
+
+                const healthPayload = {
+                    updated_at: new Date().toISOString(),
+                    chronic_diseases: chr,
+                    blood_disorders: blood,
+                    surgeries_fractures: surg,
+                    surgery_description: surgeryDesc,
+                    vaccine_contraindications: vac,
+                    chronic_notes: notes,
+                    report_file_url: fileUrl
+                };
+
+                await sbClient.from("students").update({ health_record: healthPayload }).eq("code", CURRENT_STUDENT.code);
+                CURRENT_STUDENT.health_record = healthPayload;
+
+                loadHealthData(CURRENT_STUDENT);
+                Swal.fire({ icon: 'success', title: 'تم حفظ الملف الصحي بنجاح!', timer: 1700, showConfirmButton: false });
+
+            } catch (err) {
+                Swal.fire('خطأ', err.message, 'error');
+            } finally {
+                btn.innerHTML = oldHtml;
+                btn.disabled = false;
+            }
+        }
+
+        // ================= استرجاع وحفظ الولاية التعليمية =================
+        function loadCustodyData(s) {
+            let c = {};
+            if (s.educational_guardianship) {
+                c = (typeof s.educational_guardianship === 'object') ? s.educational_guardianship : JSON.parse(s.educational_guardianship || '{}');
+            }
+
+            document.getElementById("custody_type").value = c.type || "الأب (بحكم القانون)";
+            document.getElementById("custody_name").value = c.name || "";
+            document.getElementById("custody_nid").value = c.nid || "";
+            document.getElementById("custody_court").value = c.court || "";
+            document.getElementById("custody_verdict_no").value = c.verdict_no || "";
+            document.getElementById("custody_notes").value = c.notes || "";
+
+            const previewBox = document.getElementById("custody-attached-preview");
+            const fileLink = document.getElementById("custody-file-link");
+            if (c.document_url) {
+                fileLink.href = c.document_url;
+                previewBox.classList.remove("hidden");
+            } else {
+                previewBox.classList.add("hidden");
+            }
+        }
+
+        async function saveCustodySection() {
+            if (!CURRENT_STUDENT) return;
+
+            const btn = document.getElementById("btn-save-custody");
+            const oldHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري حفظ الولاية...';
+            btn.disabled = true;
+
+            try {
+                let fileUrl = (CURRENT_STUDENT.educational_guardianship && CURRENT_STUDENT.educational_guardianship.document_url) ? CURRENT_STUDENT.educational_guardianship.document_url : null;
+                const fileInp = document.getElementById("custody_attachment_file");
+
+                if (fileInp.files && fileInp.files[0]) {
+                    const f = fileInp.files[0];
+                    const ext = f.name.split('.').pop();
+                    const path = `custody_documents/${CURRENT_STUDENT.nid}_${Date.now()}.${ext}`;
+                    const { error: upErr } = await sbClient.storage.from('uploads').upload(path, f, { upsert: true });
+                    if (!upErr) {
+                        const { data: pubData } = sbClient.storage.from('uploads').getPublicUrl(path);
+                        fileUrl = pubData.publicUrl;
+                    }
+                }
+
+                const custodyPayload = {
+                    type: document.getElementById("custody_type").value,
+                    name: document.getElementById("custody_name").value.trim(),
+                    nid: document.getElementById("custody_nid").value.trim(),
+                    court: document.getElementById("custody_court").value.trim(),
+                    verdict_no: document.getElementById("custody_verdict_no").value.trim(),
+                    notes: document.getElementById("custody_notes").value.trim(),
+                    document_url: fileUrl,
+                    updated_at: new Date().toISOString()
+                };
+
+                await sbClient.from("students").update({ educational_guardianship: custodyPayload }).eq("code", CURRENT_STUDENT.code);
+                CURRENT_STUDENT.educational_guardianship = custodyPayload;
+
+                loadCustodyData(CURRENT_STUDENT);
+                Swal.fire({ icon: 'success', title: 'تم حفظ مستند وبيانات الولاية بنجاح!', timer: 1700, showConfirmButton: false });
+
+            } catch (err) {
+                Swal.fire('خطأ', err.message, 'error');
+            } finally {
+                btn.innerHTML = oldHtml;
+                btn.disabled = false;
+            }
+        }
+
+        // ================= عرض الغياب الأسبوعي والترمين مفصلاً =================
+        function renderAbsenceBreakdown(s) {
+            let absData = {};
+            if (s.absences) {
+                absData = (typeof s.absences === 'object') ? s.absences : JSON.parse(s.absences || '{}');
+            }
+
+            let grandTotal = 0;
+            let t1Total = 0;
+            let t2Total = 0;
+            const weekRows = [];
+
+            for (let i = 1; i <= 30; i++) {
+                const wKey = 'W' + i;
+                const daysMissed = parseInt(absData[wKey]) || 0;
+                grandTotal += daysMissed;
+
+                if (i <= 17) t1Total += daysMissed;
+                else t2Total += daysMissed;
+
+                if (daysMissed > 0) {
+                    weekRows.push({
+                        weekNum: i,
+                        weekTitle: arabicWeeks[i - 1],
+                        days: daysMissed,
+                        term: (i <= 17) ? "الترم الأول" : "الترم الثاني"
+                    });
+                }
+            }
+
+            const p1 = Math.max(0, (((85 - t1Total) / 85) * 100)).toFixed(1);
+            const p2 = Math.max(0, (((65 - t2Total) / 65) * 100)).toFixed(1);
+
+            document.getElementById("abs_grand_total").innerText = `${toAr(grandTotal)} يوم`;
+            document.getElementById("abs_term1_val").innerText = `${toAr(t1Total)} يوم`;
+            document.getElementById("abs_term1_pct").innerText = `حضور %${toAr(p1)}`;
+            document.getElementById("abs_term2_val").innerText = `${toAr(t2Total)} يوم`;
+            document.getElementById("abs_term2_pct").innerText = `حضور %${toAr(p2)}`;
+
+            const meterBadge = document.getElementById("badge-absence-meter");
+            if (grandTotal === 0) {
+                meterBadge.innerText = "حضور كامل ١٠٠%";
+                meterBadge.className = "text-[11px] font-black px-2.5 py-0.5 rounded bg-emerald-100 text-emerald-900";
+            } else if (grandTotal < 6) {
+                meterBadge.innerText = "حضور آمن";
+                meterBadge.className = "text-[11px] font-black px-2.5 py-0.5 rounded bg-blue-100 text-blue-900";
+            } else if (grandTotal < 11) {
+                meterBadge.innerText = "⚠️ إنذار أول";
+                meterBadge.className = "text-[11px] font-black px-2.5 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300";
+            } else if (grandTotal < 15) {
+                meterBadge.innerText = "⚠️ إنذار ثانٍ";
+                meterBadge.className = "text-[11px] font-black px-2.5 py-0.5 rounded bg-orange-100 text-orange-900 border border-orange-300";
+            } else {
+                meterBadge.innerText = "⛔ خطر تجاوز نسبة الغياب";
+                meterBadge.className = "text-[11px] font-black px-2.5 py-0.5 rounded bg-rose-100 text-rose-900 border border-rose-300";
+            }
+
+            const container = document.getElementById("abs_weekly_breakdown");
+            if (weekRows.length === 0) {
+                container.innerHTML = `
+                    <div class="p-4 text-center text-emerald-800 bg-emerald-50">
+                        <i class="fa-solid fa-circle-check text-base ml-1"></i>
+                        ما شاء الله! التلميذ ملتزم بنسبة حضور كاملة ١٠٠% طوال العام الدراسي.
+                    </div>
+                `;
+            } else {
+                container.innerHTML = weekRows.map(w => `
+                    <div class="flex justify-between items-center p-2.5 hover:bg-white transition">
+                        <div>
+                            <span class="text-slate-800 font-black">الأسبوع ${w.weekTitle}</span>
+                            <span class="text-[10px] text-slate-400 mr-1.5">(${w.term})</span>
+                        </div>
+                        <span class="font-black text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                            ${toAr(w.days)} أيام غياب
+                        </span>
+                    </div>
+                `).join('');
+            }
+        }
+    </script>
+</body>
+</html>
