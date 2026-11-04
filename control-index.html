@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>بوابة الكنترول المدرسي - مستر زيزو</title>
+    
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Supabase & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary: #0f2b48;
+            --primary-light: #1e3a8a;
+            --gold: #d97706;
+            --gold-light: #fef3c7;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --border: #cbd5e1;
+            --success: #15803d;
+            --danger: #be123c;
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { 
+            background-color: var(--bg); 
+            color: #0f172a; 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 12px;
+        }
+
+        .app-container { width: 100%; max-width: 1050px; }
+
+        .btn-3d {
+            border-bottom: 4px solid rgba(0,0,0,0.25);
+            transition: all 0.15s ease;
+            touch-action: manipulation;
+        }
+        .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
+
+        /* شريط الترويسة المذهب */
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-bottom: 4px solid var(--gold);
+        }
+
+        .dev-badge-royal {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            padding: 5px 16px;
+            border-radius: 50px;
+            font-size: 12.5px;
+            font-weight: 900;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* شبكة أزرار الصفحات */
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 14px;
+            margin-top: 20px;
+        }
+
+        /* زر التشغيل السريع المطور */
+        .btn-page-launcher {
+            background: white;
+            border: 2px solid var(--border);
+            border-bottom: 5px solid var(--border);
+            border-radius: 16px;
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            text-decoration: none;
+            color: #0f2b48;
+            font-weight: 900;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(15, 43, 72, 0.04);
+        }
+        .btn-page-launcher:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+            border-bottom-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(15, 43, 72, 0.12);
+            background: #f8fafc;
+        }
+        .btn-page-launcher:active {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
+        }
+
+        /* تمييز الزر الأول الأساسي (الشيت الرئيسي) */
+        .btn-active-primary {
+            background: #ffffff !important;
+            border-color: var(--gold) !important;
+            border-bottom-color: #b45309 !important;
+            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.12) !important;
+        }
+        .btn-active-primary:hover {
+            border-color: var(--primary) !important;
+            border-bottom-color: var(--primary) !important;
+            background: #fffbeb !important;
+        }
+
+        .icon-box-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+        }
+
+        /* زر غير مفعل (المحطات التالية) */
+        .btn-page-disabled {
+            background: #f1f5f9 !important;
+            border: 1.5px dashed #cbd5e1 !important;
+            border-bottom: 3px solid #cbd5e1 !important;
+            opacity: 0.65;
+            cursor: not-allowed;
+            color: #64748b !important;
+            box-shadow: none !important;
+        }
+        .btn-page-disabled:hover {
+            transform: none !important;
+            border-color: #cbd5e1 !important;
+            box-shadow: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container space-y-4">
+
+        <!-- 1. الشريط العلوي مع بصمة مستر زيزو -->
+        <header class="top-nav rounded-2xl shadow-lg p-3 sm:p-4 text-white flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-yellow-300 text-2xl shrink-0">
+                    <i class="fa-solid fa-stamp"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-base font-black leading-tight flex items-center gap-2">
+                        بوابة الكنترول المدرسي وأعمال الامتحانات
+                    </h1>
+                    <p class="text-[11px] text-blue-200 font-bold">مدرسة الشهيد أشرف حبيب الابتدائية • العام الدراسي ٢٠٢٦ / ٢٠٢٧ م</p>
+                </div>
+            </div>
+
+            <!-- بادج حقوق مستر زيزو في الصدارة -->
+            <div class="dev-badge-royal">
+                <i class="fa-solid fa-award text-yellow-300 text-base"></i>
+                <span>فكرة وتطوير وبرمجة:</span>
+                <span class="text-yellow-300 font-black">مستر زيزو</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <span id="system-mode-tag" class="text-[11px] font-black px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1.5">
+                    <i class="fa-solid fa-wifi"></i> متصل بالسحابة
+                </span>
+                <a href="index.html" class="btn-3d px-3.5 py-1.5 bg-blue-700 hover:bg-blue-600 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-house"></i> الرئيسية
+                </a>
+            </div>
+        </header>
+
+        <!-- 2. بطاقة معلومات سريعة ومختصرة -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-900 flex items-center justify-center text-sm font-black">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <div class="text-xs font-black text-slate-700">
+                    اختر الصفحة المطلوبة من الأزرار المباشرة أدناه للبدء في أعمال الكنترول.
+                </div>
+            </div>
+
+            <div class="text-xs font-bold bg-amber-50 border border-amber-200 text-amber-900 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-amber-600"></i>
+                <span>بوابة خاصة ومؤمنة بالكامل</span>
+            </div>
+        </div>
+
+        <!-- 3. شبكة الأزرار المباشرة لكل صفحة (بدون يافطات) -->
+        <div class="buttons-grid">
+
+            <!-- 🌟 الزر الأول (المفعل): الشيت الرئيسي الشامل 🌟 -->
+            <a href="control-master.html" class="btn-page-launcher btn-active-primary">
+                <div class="flex items-center gap-3">
+                    <div class="icon-box-btn bg-amber-50 text-amber-800 border border-amber-200">
+                        <i class="fa-solid fa-table-list"></i>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-black text-slate-900">١. الشيت المركزي الشامل</div>
+                        <div class="text-[11px] font-bold text-slate-500 mt-0.5">سحب القوة • أرقام الجلوس • اللجان بالسعة • السري المئوي</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded font-black border border-emerald-300">مفعل ✔️</span>
+                    <i class="fa-solid fa-chevron-left text-xs text-amber-600"></i>
+                </div>
+            </a>
+
+            <!-- زر 2: كشوف المناداة وبطاقات الجلوس -->
+            <div class="btn-page-launcher btn-page-disabled" title="سيتم بناؤها تالياً">
+                <div class="flex items-center gap-3">
+                    <div class="icon-box-btn bg-slate-200 text-slate-500">
+                        <i class="fa-solid fa-id-card-clip"></i>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-black text-slate-700">٢. كشوف المناداة وبطاقات الجلوس</div>
+                        <div class="text-[11px] font-bold text-slate-400 mt-0.5">كروت المقاعد وقوائم توقيع الطلاب باللجان</div>
+                    </div>
+                </div>
+                <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-bold">قريباً</span>
+            </div>
+
+            <!-- زر 3: كشوف التكويد والترقيم السري -->
+            <div class="btn-page-launcher btn-page-disabled" title="سيتم بناؤها تالياً">
+                <div class="flex items-center gap-3">
+                    <div class="icon-box-btn bg-slate-200 text-slate-500">
+                        <i class="fa-solid fa-user-secret"></i>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-black text-slate-700">٣. كشوف التكويد والأرقام السرية</div>
+                        <div class="text-[11px] font-bold text-slate-400 mt-0.5">قسائم كراسات الإجابة والأكواد المشفرة</div>
+                    </div>
+                </div>
+                <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-bold">قريباً</span>
+            </div>
+
+            <!-- زر 4: رصد الدرجات والمهام الأدائية -->
+            <div class="btn-page-launcher btn-page-disabled" title="سيتم بناؤها تالياً">
+                <div class="flex items-center gap-3">
+                    <div class="icon-box-btn bg-slate-200 text-slate-500">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-black text-slate-700">٤. رصد الدرجات والمهام بالرقم السري</div>
+                        <div class="text-[11px] font-bold text-slate-400 mt-0.5">شيت رصد المصححين والتقييمات الأسبوعية</div>
+                    </div>
+                </div>
+                <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-bold">قريباً</span>
+            </div>
+
+            <!-- زر 5: شيت النتيجة المعتمد A3 -->
+            <div class="btn-page-launcher btn-page-disabled" title="سيتم بناؤها تالياً">
+                <div class="flex items-center gap-3">
+                    <div class="icon-box-btn bg-slate-200 text-slate-500">
+                        <i class="fa-solid fa-scroll"></i>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-black text-slate-700">٥. شيت النتيجة النهائي المعتمد (A3)</div>
+                        <div class="text-[11px] font-bold text-slate-400 mt-0.5">الشيت الوزاري المجمع بالتقديرات والألوان</div>
+                    </div>
+                </div>
+                <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-bold">قريباً</span>
+            </div>
+
+            <!-- زر 6: الشهادات وتحليل الأوائل -->
+            <div class="btn-page-launcher btn-page-disabled" title="سيتم بناؤها تالياً">
+                <div class="flex items-center gap-3">
+                    <div class="icon-box-btn bg-slate-200 text-slate-500">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm font-black text-slate-700">٦. الشهادات الملونة وكشف الأوائل</div>
+                        <div class="text-[11px] font-bold text-slate-400 mt-0.5">طباعة بطاقات الدرجات وتكريم المتفوقين</div>
+                    </div>
+                </div>
+                <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-bold">قريباً</span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- تذييل حقوق الملكية الثابت: مستر زيزو -->
+    <footer class="mt-8 text-center text-xs font-black text-slate-500 flex items-center justify-center gap-2">
+        <span>جميع الحقوق محفوظة للمنظومة</span>
+        <span>•</span>
+        <span class="text-amber-700 font-black">فكرة وتطوير: مستر زيزو</span>
+        <span>•</span>
+        <span>٢٠٢٦ / ٢٠٢٧ م</span>
+    </footer>
+
+</body>
+</html>
