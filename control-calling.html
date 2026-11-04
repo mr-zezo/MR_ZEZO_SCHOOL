@@ -45,46 +45,37 @@
         /* ================= تنسيقات الطباعة العامة ================= */
         #print-area { width: 100%; display: flex; flex-direction: column; gap: 20px; align-items: center; }
         
-        /* ---------- كشوف المناداة (لجنتين في صفحة A4) ---------- */
-        .calling-a4-page {
+        /* ---------- كشوف المناداة ---------- */
+        .committee-sheet {
             width: 210mm;
-            height: 297mm;
+            min-height: 297mm;
             background: white;
-            margin-bottom: 20px;
+            padding: 15mm;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            display: flex;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            display: none;
             flex-direction: column;
-            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
-
-        .committee-sheet-half {
-            width: 100%;
-            height: 50%; /* نصف الصفحة */
-            padding: 6mm 10mm; /* تقليل الحواف لتناسب نصف الصفحة */
-            display: flex;
-            flex-direction: column;
-            box-sizing: border-box;
-            border-bottom: 2px dashed #cbd5e1; /* فاصل مرئي على الشاشة فقط */
-            overflow: hidden;
-        }
-        .committee-sheet-half:last-child { border-bottom: none; }
 
         .header-table {
             width: 100%;
             border-collapse: collapse;
             border: 3px solid #000;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
             text-align: center;
             font-weight: 900;
-            font-size: 13px;
+            font-size: 15px;
             color: #000;
         }
-        .header-table td { border: 2px solid #000; padding: 3px 5px; vertical-align: middle; }
-        .header-table .col-right { width: 40%; text-align: right; padding-right: 10px; }
-        .header-table .col-center { width: 40%; font-size: 16px; }
+        .header-table td { border: 2px solid #000; padding: 6px; vertical-align: middle; }
+        .header-table .col-right { width: 40%; text-align: right; padding-right: 15px; }
+        .header-table .col-center { width: 40%; font-size: 18px; }
         .header-table .col-left { width: 20%; }
         .header-table .stat-label { width: 50%; border-left: 2px solid #000; }
-        .header-table .stat-val { width: 50%; font-family: Arial, sans-serif; font-size: 14px; }
+        .header-table .stat-val { width: 50%; font-family: Arial, sans-serif; font-size: 16px; }
 
         .students-table {
             width: 100%;
@@ -97,24 +88,24 @@
         .students-table th {
             background-color: #f2f2f2;
             border: 2px solid #000;
-            padding: 4px;
-            font-size: 13px;
+            padding: 8px;
+            font-size: 15px;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        .students-table td { border: 2px solid #000; padding: 2px; font-size: 13px; height: 24px; }
+        .students-table td { border: 2px solid #000; padding: 6px; font-size: 14px; height: 32px; }
         .students-table .col-m { width: 40px; font-family: Arial, sans-serif; }
-        .students-table .col-name { text-align: right; padding-right: 10px; font-size: 14px; }
-        .students-table .col-seat { width: 90px; font-family: Arial, sans-serif; font-size: 14px; }
+        .students-table .col-name { text-align: right; padding-right: 10px; font-size: 15px; }
+        .students-table .col-seat { width: 90px; font-family: Arial, sans-serif; font-size: 15px; }
         .students-table .col-rel { width: 70px; }
         .students-table .col-dmj { width: 70px; }
 
         .sheet-footer {
             display: flex;
             justify-content: space-between;
-            margin-top: 5px;
+            margin-top: 15px;
             font-weight: 900;
-            font-size: 13px;
+            font-size: 15px;
             color: #000;
             padding: 0 10px;
         }
@@ -127,7 +118,7 @@
             align-items: center;
         }
 
-        .a4-page-tickets {
+        .a4-page {
             width: 210mm;
             height: 297mm;
             background: white;
@@ -164,10 +155,31 @@
             color: #000;
         }
 
-        .ticket-table td { border: 3px solid #000; padding: 2px; vertical-align: middle; font-size: 16px; }
-        .ticket-table .t-label { background-color: #f2f2f2; font-size: 14px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .ticket-table .t-name { text-align: right; padding-right: 10px; font-size: 18px; }
-        .ticket-table .t-num { font-family: Arial, sans-serif; font-size: 26px; font-weight: 900; }
+        .ticket-table td {
+            border: 3px solid #000;
+            padding: 2px;
+            vertical-align: middle;
+            font-size: 16px;
+        }
+
+        .ticket-table .t-label {
+            background-color: #f2f2f2;
+            font-size: 14px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .ticket-table .t-name {
+            text-align: right;
+            padding-right: 10px;
+            font-size: 18px;
+        }
+
+        .ticket-table .t-num {
+            font-family: Arial, sans-serif;
+            font-size: 26px;
+            font-weight: 900;
+        }
 
         @media print {
             @page { size: A4 portrait; margin: 0; }
@@ -177,20 +189,19 @@
             #print-area { gap: 0; }
             
             /* كشوف المناداة */
-            .calling-a4-page {
-                box-shadow: none; border: none; margin: 0;
-                page-break-after: always;
+            .committee-sheet {
+                box-shadow: none; border: none; margin: 0; padding: 10mm;
+                page-break-after: always; display: flex !important;
             }
-            .calling-a4-page:last-child { page-break-after: auto; }
-            .committee-sheet-half { border-bottom: none; padding: 8mm 10mm; }
+            .committee-sheet:last-child { page-break-after: auto; }
 
             /* تيكتات الجلوس */
             .tickets-wrapper { display: block !important; gap: 0; }
-            .a4-page-tickets {
+            .a4-page {
                 box-shadow: none; border: none; margin: 0;
                 page-break-after: always;
             }
-            .a4-page-tickets:last-child { page-break-after: auto; }
+            .a4-page:last-child { page-break-after: auto; }
             .ticket-cell { padding: 2mm; }
         }
     </style>
@@ -349,10 +360,14 @@
         const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
         const DB_VERSION = 2;
 
+        // تحويل الأرقام إلى عربية
         const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
+
+        // تحويل الأرقام العربية إلى إنجليزية للعمليات الحسابية
         const arToEn = v => String(v ?? '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
         const toNum = v => { const n = parseInt(arToEn(v), 10); return Number.isFinite(n) ? n : null; };
 
+        // التبديل بين التبويبات
         function switchTab(tab) {
             const secCalling = document.getElementById('section-calling');
             const secTickets = document.getElementById('section-tickets');
@@ -375,7 +390,7 @@
                 btnCalling.className = "btn-3d flex-1 py-2 bg-slate-200 text-slate-700 hover:bg-slate-300 font-black rounded-xl text-sm shadow";
                 callCont.style.display = 'none';
                 tickCont.style.display = 'flex';
-                loadClassesForTickets();
+                loadClassesForTickets(); // تحميل الفصول عند الدخول للتبويب
             }
         }
 
@@ -393,6 +408,7 @@
             });
         }
 
+        // دالة مساعدة لجلب البيانات من أونلاين أو أوفلاين
         async function fetchStudentsData(capsuleKey) {
             let studentsData = null;
             const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
@@ -420,6 +436,7 @@
                 } catch (err) { console.error(err); }
             }
 
+            // التأكد من أن البيانات مصفوفة
             if (studentsData && !Array.isArray(studentsData) && Array.isArray(studentsData.students)) {
                 studentsData = studentsData.students;
             }
@@ -427,13 +444,14 @@
             return studentsData;
         }
 
+        // تحديث اسم الامتحان تلقائياً
         document.getElementById('sel-term').addEventListener('change', function() {
             const examInput = document.getElementById('inp-exam-name');
             if (this.value === 't1') examInput.value = "امتحان نصف العام";
             else examInput.value = "امتحان آخر العام";
         });
 
-        // 1. توليد كشوف المناداة (لجنتين في صفحة A4)
+        // 1. توليد كشوف المناداة
         async function generateCallingLists() {
             const grade = document.getElementById("sel-grade").value;
             const term = document.getElementById("sel-term").value;
@@ -475,9 +493,9 @@
 
                 const sortedCommittees = Array.from(committeesMap.keys()).sort((a, b) => a - b);
 
-                let sheetsHtml = "";
+                printArea.innerHTML = ""; 
 
-                sortedCommittees.forEach((cNum, index) => {
+                sortedCommittees.forEach(cNum => {
                     let committeeStudents = committeesMap.get(cNum);
                     committeeStudents.sort((a, b) => (toNum(a[seatField]) ?? 0) - (toNum(b[seatField]) ?? 0));
 
@@ -500,7 +518,7 @@
                     });
 
                     const sheetHtml = `
-                        <div class="committee-sheet-half">
+                        <div class="committee-sheet" style="display: flex;">
                             <table class="header-table">
                                 <tr>
                                     <td class="col-right">مدرسة الشهيد أشرف حبيب</td>
@@ -513,7 +531,7 @@
                                 </tr>
                                 <tr>
                                     <td class="col-right">${examName}</td>
-                                    <td class="col-center" rowspan="2">لجنة رقم <span style="font-family:Arial; margin-right:5px;">${toAr(cNum)}</span></td>
+                                    <td class="col-center" rowspan="2" style="font-size:22px;">لجنة رقم <span style="font-family:Arial; margin-right:10px;">${toAr(cNum)}</span></td>
                                     <td class="col-left" style="padding:0;">
                                         <table style="width:100%; height:100%; border-collapse:collapse;">
                                             <tr><td class="stat-label">مسيحى</td><td class="stat-val">${christianCount > 0 ? toAr(christianCount) : '-'}</td></tr>
@@ -549,18 +567,9 @@
                             </div>
                         </div>
                     `;
-
-                    // تجميع كل لجنتين في صفحة A4
-                    if (index % 2 === 0) {
-                        sheetsHtml += `<div class="calling-a4-page">`;
-                    }
-                    sheetsHtml += sheetHtml;
-                    if (index % 2 === 1 || index === sortedCommittees.length - 1) {
-                        sheetsHtml += `</div>`;
-                    }
+                    printArea.innerHTML += sheetHtml;
                 });
 
-                printArea.innerHTML = sheetsHtml;
                 document.getElementById("btn-print-main").style.display = "flex";
                 Swal.close();
 
@@ -584,6 +593,7 @@
                 return;
             }
 
+            // استخراج الفصول الفريدة
             const uniqueClasses = [...new Set(studentsData.map(s => s.class || s.class_name || s.classroom || '').filter(Boolean))];
             uniqueClasses.sort((a, b) => a.localeCompare(b, 'ar', { numeric: true }));
 
@@ -625,6 +635,7 @@
                 const commField = term === 't1' ? 'comm_t1' : 'comm_t2';
                 const seatField = term === 't1' ? 'seat_t1' : 'seat_t2';
 
+                // تصفية حسب الفصل والترم
                 let validStudents = studentsData.filter(s => {
                     const sClass = s.class || s.class_name || s.classroom || '';
                     return String(sClass) === String(classVal) && s[commField] && s[seatField];
@@ -635,6 +646,7 @@
                     return;
                 }
 
+                // ترتيب حسب رقم الجلوس
                 validStudents.sort((a, b) => (toNum(a[seatField]) ?? 0) - (toNum(b[seatField]) ?? 0));
 
                 let html = '';
@@ -642,8 +654,8 @@
                 
                 validStudents.forEach((st, index) => {
                     if (index % 8 === 0) {
-                        if (pageOpen) html += `</div>`;
-                        html += `<div class="a4-page-tickets">`;
+                        if (pageOpen) html += `</div>`; // إغلاق الصفحة السابقة
+                        html += `<div class="a4-page">`;
                         pageOpen = true;
                     }
 
@@ -655,6 +667,7 @@
                         <div class="ticket-cell">
                             <div class="ticket-box">
                                 <table class="ticket-table">
+                                    <!-- الترويسة -->
                                     <tr>
                                         <td rowspan="2" class="t-label" style="width: 15%;">فصل</td>
                                         <td rowspan="2" style="width: 35%; font-size: 20px;">${classVal}</td>
@@ -663,16 +676,19 @@
                                     <tr>
                                         <td colspan="2" style="font-size: 20px;">${grade}</td>
                                     </tr>
+                                    <!-- الاسم -->
                                     <tr>
                                         <td class="t-label">الاسم</td>
                                         <td colspan="3" class="t-name">${studentName}</td>
                                     </tr>
+                                    <!-- الجلوس واللجنة -->
                                     <tr>
                                         <td class="t-label">رقم الجلوس</td>
                                         <td class="t-num">${seatNum}</td>
                                         <td class="t-label">رقم اللجنة</td>
                                         <td class="t-num">${commNum}</td>
                                     </tr>
+                                    <!-- مكان اللجنة -->
                                     <tr>
                                         <td class="t-label">مكان اللجنة</td>
                                         <td colspan="3" style="font-size: 18px;">${location}</td>
@@ -683,7 +699,7 @@
                     `;
                 });
 
-                if (pageOpen) html += `</div>`;
+                if (pageOpen) html += `</div>`; // إغلاق آخر صفحة
 
                 container.innerHTML = html;
                 document.getElementById("btn-print-main").style.display = "flex";
@@ -695,6 +711,7 @@
             }
         }
 
+        // تحميل الفصول مبدئياً عند فتح الصفحة
         window.addEventListener('DOMContentLoaded', () => {
             loadClassesForTickets();
         });
