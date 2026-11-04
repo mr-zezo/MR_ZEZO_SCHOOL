@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>كشوف المناداة - كنترول مستر زيزو</title>
+    <title>كشوف المناداة والتيكتات - كنترول مستر زيزو</title>
     
     <!-- خط Cairo والأيقونات الرسمية -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -42,22 +42,24 @@
         }
         .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
 
-        /* ================= تنسيقات الطباعة (مطابقة للصورة المرفقة) ================= */
+        /* ================= تنسيقات الطباعة العامة ================= */
         #print-area { width: 100%; display: flex; flex-direction: column; gap: 20px; align-items: center; }
         
+        /* ---------- كشوف المناداة ---------- */
         .committee-sheet {
-            width: 210mm; /* عرض A4 */
-            min-height: 297mm; /* طول A4 */
+            width: 210mm;
+            min-height: 297mm;
             background: white;
             padding: 15mm;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             border: 1px solid #ccc;
             margin-bottom: 20px;
-            display: none; /* مخفي حتى يتم التوليد */
+            display: none;
             flex-direction: column;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
 
-        /* ترويسة الكشف المطابقة للصورة */
         .header-table {
             width: 100%;
             border-collapse: collapse;
@@ -68,18 +70,13 @@
             font-size: 15px;
             color: #000;
         }
-        .header-table td {
-            border: 2px solid #000;
-            padding: 6px;
-            vertical-align: middle;
-        }
+        .header-table td { border: 2px solid #000; padding: 6px; vertical-align: middle; }
         .header-table .col-right { width: 40%; text-align: right; padding-right: 15px; }
         .header-table .col-center { width: 40%; font-size: 18px; }
         .header-table .col-left { width: 20%; }
         .header-table .stat-label { width: 50%; border-left: 2px solid #000; }
         .header-table .stat-val { width: 50%; font-family: Arial, sans-serif; font-size: 16px; }
 
-        /* جدول الأسماء المطابق للصورة */
         .students-table {
             width: 100%;
             border-collapse: collapse;
@@ -96,12 +93,7 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-        .students-table td {
-            border: 2px solid #000;
-            padding: 6px;
-            font-size: 14px;
-            height: 32px;
-        }
+        .students-table td { border: 2px solid #000; padding: 6px; font-size: 14px; height: 32px; }
         .students-table .col-m { width: 40px; font-family: Arial, sans-serif; }
         .students-table .col-name { text-align: right; padding-right: 10px; font-size: 15px; }
         .students-table .col-seat { width: 90px; font-family: Arial, sans-serif; font-size: 15px; }
@@ -118,16 +110,99 @@
             padding: 0 10px;
         }
 
+        /* ---------- تيكت أرقام الجلوس ---------- */
+        .tickets-wrapper {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .a4-page {
+            width: 210mm;
+            height: 297mm;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+        }
+
+        .ticket-cell {
+            width: 50%;
+            height: 25%; /* 4 صفوف في الصفحة */
+            padding: 3mm;
+            box-sizing: border-box;
+        }
+
+        .ticket-box {
+            width: 100%;
+            height: 100%;
+            border: 4px solid #000;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ticket-table {
+            width: 100%;
+            height: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-weight: 900;
+            color: #000;
+        }
+
+        .ticket-table td {
+            border: 3px solid #000;
+            padding: 2px;
+            vertical-align: middle;
+            font-size: 16px;
+        }
+
+        .ticket-table .t-label {
+            background-color: #f2f2f2;
+            font-size: 14px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .ticket-table .t-name {
+            text-align: right;
+            padding-right: 10px;
+            font-size: 18px;
+        }
+
+        .ticket-table .t-num {
+            font-family: Arial, sans-serif;
+            font-size: 26px;
+            font-weight: 900;
+        }
+
         @media print {
             @page { size: A4 portrait; margin: 0; }
             body { background: white !important; padding: 0 !important; }
             .no-print { display: none !important; }
             .app-container { max-width: 100% !important; width: 100% !important; }
             #print-area { gap: 0; }
+            
+            /* كشوف المناداة */
             .committee-sheet {
                 box-shadow: none; border: none; margin: 0; padding: 10mm;
                 page-break-after: always; display: flex !important;
             }
+            .committee-sheet:last-child { page-break-after: auto; }
+
+            /* تيكتات الجلوس */
+            .tickets-wrapper { display: block !important; gap: 0; }
+            .a4-page {
+                box-shadow: none; border: none; margin: 0;
+                page-break-after: always;
+            }
+            .a4-page:last-child { page-break-after: auto; }
+            .ticket-cell { padding: 2mm; }
         }
     </style>
 </head>
@@ -143,7 +218,7 @@
                 </div>
                 <div>
                     <h1 class="text-sm sm:text-base font-black leading-tight text-white flex items-center gap-2">
-                        كشوف المناداة للجان
+                        كشوف المناداة والتيكتات
                     </h1>
                     <p class="text-[11px] text-blue-200 font-bold">بوابة الكنترول المدرسي • مستر زيزو</p>
                 </div>
@@ -159,10 +234,19 @@
             </div>
         </header>
 
-        <!-- 2. لوحة التحكم والإعدادات -->
-        <div class="bg-white border border-slate-200 rounded-2xl p-4 mb-4 shadow-sm no-print space-y-4">
+        <!-- التبويبات -->
+        <div class="flex gap-2 mb-4 no-print">
+            <button id="tab-btn-calling" onclick="switchTab('calling')" class="btn-3d flex-1 py-2 bg-[#0f2b48] text-white font-black rounded-xl text-sm shadow">
+                <i class="fa-solid fa-list-ol"></i> كشوف المناداة
+            </button>
+            <button id="tab-btn-tickets" onclick="switchTab('tickets')" class="btn-3d flex-1 py-2 bg-slate-200 text-slate-700 hover:bg-slate-300 font-black rounded-xl text-sm shadow">
+                <i class="fa-solid fa-ticket"></i> تيكت أرقام الجلوس
+            </button>
+        </div>
+
+        <!-- 2. لوحة التحكم (كشوف المناداة) -->
+        <div id="section-calling" class="bg-white border border-slate-200 rounded-2xl p-4 mb-4 shadow-sm no-print space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                
                 <div>
                     <label class="block text-xs font-black text-slate-700 mb-1">الصف الدراسي:</label>
                     <select id="sel-grade" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-black outline-none">
@@ -174,7 +258,6 @@
                         <option value="السادس">الصف السادس</option>
                     </select>
                 </div>
-
                 <div>
                     <label class="block text-xs font-black text-slate-700 mb-1">امتحان الفصل الدراسي:</label>
                     <select id="sel-term" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-black outline-none">
@@ -182,19 +265,15 @@
                         <option value="t2">الترم الثاني (آخر العام)</option>
                     </select>
                 </div>
-
                 <div>
                     <label class="block text-xs font-black text-slate-700 mb-1">اسم الامتحان (للطباعة):</label>
                     <input type="text" id="inp-exam-name" value="امتحان نصف العام" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-black outline-none">
                 </div>
-
                 <div>
                     <label class="block text-xs font-black text-slate-700 mb-1">العام الدراسي:</label>
                     <input type="text" id="inp-year" value="٢٠٢٦ / ٢٠٢٧" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-black outline-none text-center">
                 </div>
-
             </div>
-
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
                 <div>
                     <label class="block text-xs font-black text-slate-700 mb-1">اسم مدير المدرسة:</label>
@@ -205,23 +284,69 @@
                     <input type="text" id="inp-control-head" value="أ / خالد عمارة" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-black outline-none">
                 </div>
             </div>
-
             <div class="flex justify-end gap-2 pt-2">
                 <button onclick="generateCallingLists()" class="btn-3d px-5 py-2.5 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-sm font-black flex items-center gap-2 shadow">
                     <i class="fa-solid fa-wand-magic-sparkles text-yellow-300"></i> توليد كشوف المناداة
                 </button>
-                <button onclick="window.print()" id="btn-print" style="display:none;" class="btn-3d px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-black flex items-center gap-2 shadow">
-                    <i class="fa-solid fa-print text-emerald-200"></i> طباعة الكشوف
+            </div>
+        </div>
+
+        <!-- 3. لوحة التحكم (تيكت أرقام الجلوس) -->
+        <div id="section-tickets" class="bg-white border border-slate-200 rounded-2xl p-4 mb-4 shadow-sm no-print space-y-4 hidden">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-1">الصف الدراسي:</label>
+                    <select id="sel-grade-ticket" onchange="loadClassesForTickets()" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-black outline-none">
+                        <option value="الأول">الصف الأول</option>
+                        <option value="الثاني">الصف الثاني</option>
+                        <option value="الثالث">الصف الثالث</option>
+                        <option value="الرابع">الصف الرابع</option>
+                        <option value="الخامس" selected>الصف الخامس</option>
+                        <option value="السادس">الصف السادس</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-1">الفصل:</label>
+                    <select id="sel-class-ticket" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-black outline-none">
+                        <option value="">جاري التحميل...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-1">الترم:</label>
+                    <select id="sel-term-ticket" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-black outline-none">
+                        <option value="t1">الترم الأول</option>
+                        <option value="t2">الترم الثاني</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-black text-slate-700 mb-1">مكان اللجنة (يظهر في التيكت):</label>
+                    <input type="text" id="inp-location" value="المبنى الجديد الدور الخامس" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-black outline-none">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="generateTickets()" class="btn-3d px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-black flex items-center gap-2 shadow">
+                    <i class="fa-solid fa-ticket text-yellow-300"></i> توليد التيكتات
                 </button>
             </div>
         </div>
 
-        <!-- 3. منطقة عرض الأوراق للطباعة -->
+        <!-- زر الطباعة الموحد -->
+        <div class="flex justify-center mb-4 no-print">
+            <button onclick="window.print()" id="btn-print-main" style="display:none;" class="btn-3d px-8 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-base font-black flex items-center gap-2 shadow-lg">
+                <i class="fa-solid fa-print"></i> طباعة الأوراق الحالية
+            </button>
+        </div>
+
+        <!-- 4. منطقة عرض الأوراق للطباعة -->
         <div id="print-area">
-            <div class="text-center p-10 text-slate-400 font-bold no-print">
-                <i class="fa-solid fa-id-card-clip text-4xl mb-3 opacity-50"></i><br>
-                حدد الصف والترم واضغط "توليد كشوف المناداة" لعرض الأوراق هنا...
+            <!-- كشوف المناداة -->
+            <div id="calling-container" class="text-center p-10 text-slate-400 font-bold no-print">
+                <i class="fa-solid fa-list-ol text-4xl mb-3 opacity-50"></i><br>
+                حدد الصف والترم واضغط "توليد كشوف المناداة"...
             </div>
+            
+            <!-- تيكتات الجلوس -->
+            <div id="tickets-container" class="tickets-wrapper"></div>
         </div>
 
     </div>
@@ -235,23 +360,98 @@
         const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
         const DB_VERSION = 2;
 
+        // تحويل الأرقام إلى عربية
         const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
 
-        // تحديث اسم الامتحان تلقائياً عند تغيير الترم
+        // تحويل الأرقام العربية إلى إنجليزية للعمليات الحسابية
+        const arToEn = v => String(v ?? '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+        const toNum = v => { const n = parseInt(arToEn(v), 10); return Number.isFinite(n) ? n : null; };
+
+        // التبديل بين التبويبات
+        function switchTab(tab) {
+            const secCalling = document.getElementById('section-calling');
+            const secTickets = document.getElementById('section-tickets');
+            const btnCalling = document.getElementById('tab-btn-calling');
+            const btnTickets = document.getElementById('tab-btn-tickets');
+            const callCont = document.getElementById('calling-container');
+            const tickCont = document.getElementById('tickets-container');
+
+            if (tab === 'calling') {
+                secCalling.classList.remove('hidden');
+                secTickets.classList.add('hidden');
+                btnCalling.className = "btn-3d flex-1 py-2 bg-[#0f2b48] text-white font-black rounded-xl text-sm shadow";
+                btnTickets.className = "btn-3d flex-1 py-2 bg-slate-200 text-slate-700 hover:bg-slate-300 font-black rounded-xl text-sm shadow";
+                callCont.style.display = 'block';
+                tickCont.style.display = 'none';
+            } else {
+                secCalling.classList.add('hidden');
+                secTickets.classList.remove('hidden');
+                btnTickets.className = "btn-3d flex-1 py-2 bg-[#0f2b48] text-white font-black rounded-xl text-sm shadow";
+                btnCalling.className = "btn-3d flex-1 py-2 bg-slate-200 text-slate-700 hover:bg-slate-300 font-black rounded-xl text-sm shadow";
+                callCont.style.display = 'none';
+                tickCont.style.display = 'flex';
+                loadClassesForTickets(); // تحميل الفصول عند الدخول للتبويب
+            }
+        }
+
+        function openLocalDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = () => {
+                    const db = req.result;
+                    if (!db.objectStoreNames.contains('system_capsules')) {
+                        db.createObjectStore('system_capsules');
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        // دالة مساعدة لجلب البيانات من أونلاين أو أوفلاين
+        async function fetchStudentsData(capsuleKey) {
+            let studentsData = null;
+            const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
+            
+            try {
+                if (mode === 'online') {
+                    const { data } = await sbClient.from("system_capsules").select("data").eq("id", capsuleKey).maybeSingle();
+                    studentsData = data?.data ?? null;
+                }
+            } catch (e) {
+                console.warn('Supabase فشل، سيتم استخدام Offline');
+            }
+
+            if (!studentsData) {
+                try {
+                    const db = await openLocalDB();
+                    if (db.objectStoreNames.contains('system_capsules')) {
+                        studentsData = await new Promise((resolve) => {
+                            const tx = db.transaction('system_capsules', 'readonly');
+                            const req = tx.objectStore('system_capsules').get(capsuleKey);
+                            req.onsuccess = () => resolve(req.result ? req.result.data : null);
+                            req.onerror = () => resolve(null);
+                        });
+                    }
+                } catch (err) { console.error(err); }
+            }
+
+            // التأكد من أن البيانات مصفوفة
+            if (studentsData && !Array.isArray(studentsData) && Array.isArray(studentsData.students)) {
+                studentsData = studentsData.students;
+            }
+
+            return studentsData;
+        }
+
+        // تحديث اسم الامتحان تلقائياً
         document.getElementById('sel-term').addEventListener('change', function() {
             const examInput = document.getElementById('inp-exam-name');
             if (this.value === 't1') examInput.value = "امتحان نصف العام";
             else examInput.value = "امتحان آخر العام";
         });
 
-        function openLocalDB() {
-            return new Promise((resolve, reject) => {
-                const req = indexedDB.open(DB_NAME, DB_VERSION);
-                req.onsuccess = () => resolve(req.result);
-                req.onerror = () => reject(req.error);
-            });
-        }
-
+        // 1. توليد كشوف المناداة
         async function generateCallingLists() {
             const grade = document.getElementById("sel-grade").value;
             const term = document.getElementById("sel-term").value;
@@ -259,110 +459,82 @@
             const year = document.getElementById("inp-year").value;
             const manager = document.getElementById("inp-manager").value;
             const controlHead = document.getElementById("inp-control-head").value;
-            const printArea = document.getElementById("print-area");
+            const printArea = document.getElementById("calling-container");
 
             const capsuleKey = `control_master_grade_${grade}`;
             
-            Swal.fire({ title: 'جاري سحب بيانات الكنترول وتجهيز اللجان...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'جاري سحب البيانات...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             try {
-                let studentsData = null;
-                const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
-
-                if (mode === 'offline') {
-                    const db = await openLocalDB();
-                    studentsData = await new Promise((resolve) => {
-                        const tx = db.transaction('system_capsules', 'readonly');
-                        const req = tx.objectStore('system_capsules').get(capsuleKey);
-                        req.onsuccess = () => resolve(req.result ? req.result.data : null);
-                        req.onerror = () => resolve(null);
-                    });
-                } else {
-                    const { data } = await sbClient.from("system_capsules").select("data").eq("id", capsuleKey).maybeSingle();
-                    if (data && data.data) studentsData = data.data;
-                }
+                const studentsData = await fetchStudentsData(capsuleKey);
 
                 if (!studentsData || studentsData.length === 0) {
-                    Swal.fire('تنبيه', `لم يتم العثور على شيت كنترول معتمد للصف (${grade}). يرجى إعداده من الشيت المركزي أولاً.`, 'warning');
+                    Swal.fire('تنبيه', `لم يتم العثور على شيت كنترول معتمد للصف (${grade}).`, 'warning');
                     return;
                 }
 
-                // تحديد حقول اللجان والجلوس بناءً على الترم المختار
                 const commField = term === 't1' ? 'comm_t1' : 'comm_t2';
                 const seatField = term === 't1' ? 'seat_t1' : 'seat_t2';
 
-                // تصفية الطلاب الذين لديهم رقم لجنة ورقم جلوس
                 let validStudents = studentsData.filter(s => s[commField] && s[seatField]);
 
                 if (validStudents.length === 0) {
-                    Swal.fire('تنبيه', `لم يتم توزيع أرقام جلوس أو لجان لهذا الترم في شيت الكنترول!`, 'warning');
+                    Swal.fire('تنبيه', `لم يتم توزيع أرقام جلوس أو لجان لهذا الترم!`, 'warning');
                     return;
                 }
 
-                // تجميع الطلاب حسب رقم اللجنة
                 const committeesMap = new Map();
                 validStudents.forEach(s => {
-                    const cNum = parseInt(s[commField]);
+                    const cNum = toNum(s[commField]);
+                    if (cNum === null) return;
                     if (!committeesMap.has(cNum)) committeesMap.set(cNum, []);
                     committeesMap.get(cNum).push(s);
                 });
 
-                // ترتيب اللجان تصاعدياً
                 const sortedCommittees = Array.from(committeesMap.keys()).sort((a, b) => a - b);
 
-                printArea.innerHTML = ""; // تفريغ منطقة الطباعة
+                printArea.innerHTML = ""; 
 
-                // بناء ورقة لكل لجنة
                 sortedCommittees.forEach(cNum => {
                     let committeeStudents = committeesMap.get(cNum);
-                    
-                    // ترتيب الطلاب داخل اللجنة برقم الجلوس
-                    committeeStudents.sort((a, b) => parseInt(a[seatField]) - parseInt(b[seatField]));
+                    committeeStudents.sort((a, b) => (toNum(a[seatField]) ?? 0) - (toNum(b[seatField]) ?? 0));
 
-                    // حساب الإحصائيات
                     const totalCount = committeeStudents.length;
-
-                    // استخدام includes لتجاوز مشكلة (ي / ى) والمسافات في كلمة مسيحي
                     const christianCount = committeeStudents.filter(s => String(s.religion).includes('مسيح')).length;
-
-                    // تأمين إحصاء الدمج أيضاً بنفس الطريقة
                     const damjCount = committeeStudents.filter(s => String(s.dmj).includes('دمج')).length;
 
-                    // بناء صفوف الطلاب
                     let rowsHtml = "";
                     committeeStudents.forEach((st, idx) => {
+                        const isDamj = String(st.dmj ?? '').includes('دمج');
                         rowsHtml += `
                             <tr>
                                 <td class="col-m">${idx + 1}</td>
                                 <td class="col-name">${st.name}</td>
                                 <td class="col-seat">${st[seatField]}</td>
                                 <td class="col-rel">${st.religion}</td>
-                                <td class="col-dmj">${st.dmj === 'دمج' ? 'دمج' : ''}</td>
+                                <td class="col-dmj">${isDamj ? 'دمج' : ''}</td>
                             </tr>
                         `;
                     });
 
-                    // بناء الورقة (مطابقة للصورة المرفقة)
                     const sheetHtml = `
                         <div class="committee-sheet" style="display: flex;">
-                            
-                            <!-- الترويسة العلوية -->
                             <table class="header-table">
                                 <tr>
                                     <td class="col-right">مدرسة الشهيد أشرف حبيب</td>
-                                    <td class="col-center">الصف ${grade.replace('الصف ', '')}</td>
+                                    <td class="col-center">الصف ${grade}</td>
                                     <td class="col-left" style="padding:0;">
                                         <table style="width:100%; height:100%; border-collapse:collapse;">
-                                            <tr><td class="stat-label">العدد</td><td class="stat-val">${totalCount}</td></tr>
+                                            <tr><td class="stat-label">العدد</td><td class="stat-val">${toAr(totalCount)}</td></tr>
                                         </table>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="col-right">${examName}</td>
-                                    <td class="col-center" rowspan="2" style="font-size:22px;">لجنة رقم <span style="font-family:Arial; margin-right:10px;">${cNum}</span></td>
+                                    <td class="col-center" rowspan="2" style="font-size:22px;">لجنة رقم <span style="font-family:Arial; margin-right:10px;">${toAr(cNum)}</span></td>
                                     <td class="col-left" style="padding:0;">
                                         <table style="width:100%; height:100%; border-collapse:collapse;">
-                                            <tr><td class="stat-label">مسيحى</td><td class="stat-val">${christianCount > 0 ? christianCount : '-'}</td></tr>
+                                            <tr><td class="stat-label">مسيحى</td><td class="stat-val">${christianCount > 0 ? toAr(christianCount) : '-'}</td></tr>
                                         </table>
                                     </td>
                                 </tr>
@@ -370,13 +542,12 @@
                                     <td class="col-right">العام الدراسى &nbsp; ${year}</td>
                                     <td class="col-left" style="padding:0;">
                                         <table style="width:100%; height:100%; border-collapse:collapse;">
-                                            <tr><td class="stat-label">دمج</td><td class="stat-val">${damjCount > 0 ? damjCount : '-'}</td></tr>
+                                            <tr><td class="stat-label">دمج</td><td class="stat-val">${damjCount > 0 ? toAr(damjCount) : '-'}</td></tr>
                                         </table>
                                     </td>
                                 </tr>
                             </table>
 
-                            <!-- جدول الأسماء -->
                             <table class="students-table">
                                 <thead>
                                     <tr>
@@ -387,30 +558,163 @@
                                         <th class="col-dmj">دمج</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    ${rowsHtml}
-                                </tbody>
+                                <tbody>${rowsHtml}</tbody>
                             </table>
 
-                            <!-- التذييل -->
                             <div class="sheet-footer">
                                 <div>رئيس الكنترول ${controlHead}</div>
                                 <div>مدير المدرسة ${manager}</div>
                             </div>
                         </div>
                     `;
-
                     printArea.innerHTML += sheetHtml;
                 });
 
-                document.getElementById("btn-print").style.display = "flex";
+                document.getElementById("btn-print-main").style.display = "flex";
                 Swal.close();
 
             } catch (err) {
                 console.error(err);
-                Swal.fire('خطأ', 'حدث خطأ أثناء توليد الكشوف: ' + err.message, 'error');
+                Swal.fire('خطأ', 'حدث خطأ أثناء التوليد: ' + err.message, 'error');
             }
         }
+
+        // 2. تحميل الفصول للتيكتات
+        async function loadClassesForTickets() {
+            const grade = document.getElementById("sel-grade-ticket").value;
+            const classSelect = document.getElementById("sel-class-ticket");
+            classSelect.innerHTML = '<option value="">جاري التحميل...</option>';
+
+            const capsuleKey = `control_master_grade_${grade}`;
+            const studentsData = await fetchStudentsData(capsuleKey);
+
+            if (!studentsData || !studentsData.length) {
+                classSelect.innerHTML = '<option value="">لا توجد بيانات</option>';
+                return;
+            }
+
+            // استخراج الفصول الفريدة
+            const uniqueClasses = [...new Set(studentsData.map(s => s.class || s.class_name || s.classroom || '').filter(Boolean))];
+            uniqueClasses.sort((a, b) => a.localeCompare(b, 'ar', { numeric: true }));
+
+            if (uniqueClasses.length === 0) {
+                classSelect.innerHTML = '<option value="">لا توجد فصول مسجلة</option>';
+                return;
+            }
+
+            classSelect.innerHTML = '<option value="">اختر الفصل</option>';
+            uniqueClasses.forEach(c => {
+                classSelect.innerHTML += `<option value="${c}">${c}</option>`;
+            });
+        }
+
+        // 3. توليد تيكتات أرقام الجلوس
+        async function generateTickets() {
+            const grade = document.getElementById("sel-grade-ticket").value;
+            const classVal = document.getElementById("sel-class-ticket").value;
+            const term = document.getElementById("sel-term-ticket").value;
+            const location = document.getElementById("inp-location").value;
+            const container = document.getElementById("tickets-container");
+
+            if (!classVal) {
+                Swal.fire('تنبيه', 'يرجى اختيار الفصل أولاً.', 'warning');
+                return;
+            }
+
+            const capsuleKey = `control_master_grade_${grade}`;
+            Swal.fire({ title: 'جاري تجهيز التيكتات...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const studentsData = await fetchStudentsData(capsuleKey);
+
+                if (!studentsData || studentsData.length === 0) {
+                    Swal.fire('تنبيه', 'لا توجد بيانات لهذا الصف.', 'warning');
+                    return;
+                }
+
+                const commField = term === 't1' ? 'comm_t1' : 'comm_t2';
+                const seatField = term === 't1' ? 'seat_t1' : 'seat_t2';
+
+                // تصفية حسب الفصل والترم
+                let validStudents = studentsData.filter(s => {
+                    const sClass = s.class || s.class_name || s.classroom || '';
+                    return String(sClass) === String(classVal) && s[commField] && s[seatField];
+                });
+
+                if (validStudents.length === 0) {
+                    Swal.fire('تنبيه', 'لا توجد أرقام جلوس معتمدة لهذا الفصل في هذا الترم.', 'warning');
+                    return;
+                }
+
+                // ترتيب حسب رقم الجلوس
+                validStudents.sort((a, b) => (toNum(a[seatField]) ?? 0) - (toNum(b[seatField]) ?? 0));
+
+                let html = '';
+                let pageOpen = false;
+                
+                validStudents.forEach((st, index) => {
+                    if (index % 8 === 0) {
+                        if (pageOpen) html += `</div>`; // إغلاق الصفحة السابقة
+                        html += `<div class="a4-page">`;
+                        pageOpen = true;
+                    }
+
+                    const seatNum = toAr(st[seatField]);
+                    const commNum = toAr(st[commField]);
+                    const studentName = st.name || '';
+
+                    html += `
+                        <div class="ticket-cell">
+                            <div class="ticket-box">
+                                <table class="ticket-table">
+                                    <!-- الترويسة -->
+                                    <tr>
+                                        <td rowspan="2" class="t-label" style="width: 15%;">فصل</td>
+                                        <td rowspan="2" style="width: 35%; font-size: 20px;">${classVal}</td>
+                                        <td colspan="2" class="t-label" style="width: 50%;">الصف</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="font-size: 20px;">${grade}</td>
+                                    </tr>
+                                    <!-- الاسم -->
+                                    <tr>
+                                        <td class="t-label">الاسم</td>
+                                        <td colspan="3" class="t-name">${studentName}</td>
+                                    </tr>
+                                    <!-- الجلوس واللجنة -->
+                                    <tr>
+                                        <td class="t-label">رقم الجلوس</td>
+                                        <td class="t-num">${seatNum}</td>
+                                        <td class="t-label">رقم اللجنة</td>
+                                        <td class="t-num">${commNum}</td>
+                                    </tr>
+                                    <!-- مكان اللجنة -->
+                                    <tr>
+                                        <td class="t-label">مكان اللجنة</td>
+                                        <td colspan="3" style="font-size: 18px;">${location}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                if (pageOpen) html += `</div>`; // إغلاق آخر صفحة
+
+                container.innerHTML = html;
+                document.getElementById("btn-print-main").style.display = "flex";
+                Swal.close();
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ', 'حدث خطأ أثناء توليد التيكتات: ' + err.message, 'error');
+            }
+        }
+
+        // تحميل الفصول مبدئياً عند فتح الصفحة
+        window.addEventListener('DOMContentLoaded', () => {
+            loadClassesForTickets();
+        });
     </script>
 </body>
 </html>
