@@ -31,7 +31,25 @@
   --shadow:0 10px 35px rgba(15,23,42,.07);
   --shadow-lg:0 22px 60px rgba(15,23,42,.14);
 }
-
+.btn-control-top {
+    padding: 8px 14px;
+    border-radius: 11px;
+    background: linear-gradient(135deg, #d97706, #b45309);
+    color: #ffffff !important;
+    font-size: 12px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #fcd34d;
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+    transition: 0.2s;
+    text-decoration: none;
+}
+.btn-control-top:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+}
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Cairo',sans-serif}
 html{scroll-behavior:smooth}
 body{
@@ -497,11 +515,16 @@ a{text-decoration:none;color:inherit}
             </div>
 
             <div class="zizo-badge-wrapper">
-                <button class="btn-logout" onclick="logout()">
-                    <i class="fa-solid fa-power-off"></i> خروج
-                </button>
-                <div class="zizo-badge"><i class="fa-solid fa-laptop-code"></i> مستر زيزو</div>
-            </div>
+    <!-- 🌟 زر الكنترول المستقل في الشريط العلوي 🌟 -->
+    <a href="control-index.html" class="btn-control-top">
+        <i class="fa-solid fa-stamp"></i> بوابة الكنترول
+    </a>
+    
+    <button class="btn-logout" onclick="logout()">
+        <i class="fa-solid fa-power-off"></i> خروج
+    </button>
+    <div class="zizo-badge"><i class="fa-solid fa-laptop-code"></i> مستر زيزو</div>
+</div>
         </nav>
 
         <div class="main-container">
