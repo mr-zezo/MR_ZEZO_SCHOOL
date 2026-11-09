@@ -76,27 +76,21 @@
             color: var(--primary); cursor: pointer;
         }
         
-        .btn-smart {
-            background: linear-gradient(135deg, var(--smart), #6d28d9); color: white;
-            border: none; padding: 10px 16px; border-radius: 8px; font-weight: 900;
-            font-size: 13px; cursor: pointer; display: inline-flex; align-items: center;
-            gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); transition: 0.2s;
+        .btn-smart, .btn-save, .btn-print-form, .btn-config {
+            color: white; border: none; padding: 10px 15px; border-radius: 8px; font-weight: 900;
+            font-size: 12px; cursor: pointer; display: inline-flex; align-items: center;
+            gap: 6px; transition: 0.2s;
         }
+        .btn-smart { background: linear-gradient(135deg, var(--smart), #6d28d9); box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); }
+        .btn-save { background: var(--success); }
+        .btn-save:hover { background: #059669; transform: translateY(-2px); }
         .btn-smart:hover { transform: translateY(-2px); }
-
-        .btn-save {
-            background: var(--success); color: white; border: none; padding: 10px 18px;
-            border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer;
-            display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
-        }
-        .btn-save:hover { transform: translateY(-2px); background: #059669; }
-
-        .btn-print-form {
-            background: #0284c7; color: white; border: none; padding: 10px 18px;
-            border-radius: 8px; font-weight: 900; font-size: 13px; cursor: pointer;
-            display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
-        }
-        .btn-print-form:hover { background: #0369a1; transform: translateY(-2px); }
+        .btn-print-form.daily { background: #0284c7; }
+        .btn-print-form.daily:hover { background: #0369a1; transform: translateY(-2px); }
+        .btn-print-form.weekly { background: #8b5cf6; }
+        .btn-print-form.weekly:hover { background: #7c3aed; transform: translateY(-2px); }
+        .btn-config { background: #475569; }
+        .btn-config:hover { background: #334155; transform: translateY(-2px); }
 
         .tabs { display: flex; width: 100%; max-width: 1250px; gap: 10px; margin-bottom: 15px; }
         .tab-btn {
@@ -136,7 +130,7 @@
         }
         .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15); }
 
-        /* نافذة المساعد الذكي */
+        /* نوافذ منبثقة */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(15,23,42,0.75); backdrop-filter: blur(4px);
             display: none; justify-content: center; align-items: center; z-index: 2000; padding: 15px;
@@ -175,37 +169,35 @@
             border-radius: 10px; font-weight: 900; font-size: 14px; cursor: pointer;
         }
 
-        /* ================= تنسيقات الطباعة A4 Portrait الصارمة ================= */
-        #printable-supervisor-form {
-            display: none;
+        /* تنسيقات نافذة ضبط الطباعة */
+        .config-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+        .config-tab-btn {
+            flex: 1; padding: 8px 12px; border: 2px solid var(--border); border-radius: 8px;
+            background: #fff; font-weight: 900; font-size: 12.5px; cursor: pointer; color: #475569;
         }
+        .config-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .config-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;
+            background: white; padding: 15px; border-radius: 10px; border: 1px solid var(--border);
+        }
+        .config-item { display: flex; flex-direction: column; gap: 5px; }
+        .config-item label { font-size: 12.5px; font-weight: 900; color: var(--primary); display: flex; justify-content: space-between; }
+        .config-item input[type=range] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+
+        /* ================= تنسيقات الطباعة ================= */
+        #printable-supervisor-form { display: none; }
 
         @media print {
-            @page {
-                size: A4 portrait;
-                margin: 8mm 10mm;
-            }
-            body * {
-                visibility: hidden;
-            }
-            #printable-supervisor-form, #printable-supervisor-form * {
-                visibility: visible;
-            }
+            body * { visibility: hidden; }
+            #printable-supervisor-form, #printable-supervisor-form * { visibility: visible; }
             #printable-supervisor-form {
                 display: block !important;
                 position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                background: white;
-                color: black;
+                top: 0; left: 0; width: 100%;
+                background: white; color: black;
                 font-family: 'Cairo', Arial, sans-serif !important;
             }
-        }
-
-        @media (max-width: 768px) {
-            .top-nav, .controls-bar { flex-direction: column; text-align: center; }
-            .btn-smart, .btn-save, .btn-print-form { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -234,18 +226,19 @@
     <!-- 2. شريط التحكم والعمليات -->
     <div class="controls-bar">
         <div class="day-group">
-            <label><i class="fa-regular fa-calendar-check"></i> إعداد إشراف يوم:</label>
+            <label><i class="fa-regular fa-calendar-check"></i> اليوم:</label>
             <select class="day-selector" id="day-select" onchange="loadSupervisionData()">
                 <option value="الاحد">الأحد</option><option value="الاثنين">الإثنين</option>
                 <option value="الثلاثاء">الثلاثاء</option><option value="الاربعاء">الأربعاء</option>
                 <option value="الخميس">الخميس</option>
             </select>
         </div>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
             <button class="btn-smart" onclick="openSmartAssistant()"><i class="fa-solid fa-wand-magic-sparkles"></i> المساعد الذكي</button>
-            <button class="btn-save" onclick="saveSupervisionData()"><i class="fa-solid fa-floppy-disk"></i> حفظ بالسحابة</button>
-            <button class="btn-print-form" onclick="printSupervisorForm()"><i class="fa-solid fa-print"></i> استمارة المشرف (A4)</button>
-            <button onclick="takeSupervisionScreenshot()" class="btn-nav" style="background:#475569;"><i class="fa-solid fa-camera"></i> صورة الجدول</button>
+            <button class="btn-save" onclick="saveSupervisionData()"><i class="fa-solid fa-floppy-disk"></i> حفظ</button>
+            <button class="btn-print-form daily" onclick="printSupervisorForm()"><i class="fa-solid fa-print"></i> استمارة اليوم</button>
+            <button class="btn-print-form weekly" onclick="printWeeklyForm()"><i class="fa-solid fa-calendar-week"></i> استمارة الأسبوع (أفقي)</button>
+            <button class="btn-config" onclick="openPrintSettingsModal()"><i class="fa-solid fa-sliders"></i> مقاسات الطباعة</button>
         </div>
     </div>
 
@@ -257,7 +250,6 @@
 
     <!-- ================= 4. شاشة الصفوف الأولى ================= -->
     <div id="tab-lower" class="tab-content active">
-        <!-- القيادة والفناء والإخلاء -->
         <div class="building-card">
             <div class="building-header"><i class="fa-solid fa-star" style="color:var(--accent);"></i> القيادة والفناء والإخلاء</div>
             <div class="building-body">
@@ -270,7 +262,6 @@
             </div>
         </div>
 
-        <!-- المبنى القديم -->
         <div class="building-card">
             <div class="building-header"><i class="fa-regular fa-building"></i> المبنى القديم</div>
             <div class="building-body">
@@ -282,7 +273,6 @@
             </div>
         </div>
 
-        <!-- المبنى الشرقي -->
         <div class="building-card">
             <div class="building-header"><i class="fa-solid fa-city"></i> المبنى الشرقي</div>
             <div class="building-body">
@@ -299,7 +289,6 @@
 
     <!-- ================= 5. شاشة الصفوف العليا ================= -->
     <div id="tab-upper" class="tab-content">
-        <!-- القيادة والفناء والإخلاء -->
         <div class="building-card">
             <div class="building-header"><i class="fa-solid fa-star" style="color:var(--accent);"></i> القيادة والفناء والإخلاء</div>
             <div class="building-body">
@@ -312,22 +301,17 @@
             </div>
         </div>
 
-        <!-- المبنى الجديد (الصفوف العليا) -->
         <div class="building-card" style="grid-column: span 2;">
             <div class="building-header"><i class="fa-solid fa-hotel"></i> المبنى الجديد (الصفوف العليا)</div>
             <div class="building-body" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
                 <div class="input-group"><label>الدور الأرضي (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_ground_1" placeholder="ابحث بالاسم..."></div>
                 <div class="input-group"><label>الدور الأرضي (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_ground_2" placeholder="ابحث بالاسم..."></div>
-                
                 <div class="input-group"><label>الدور الثاني (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f2_1" placeholder="ابحث بالاسم..."></div>
                 <div class="input-group"><label>الدور الثاني (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f2_2" placeholder="ابحث بالاسم..."></div>
-                
                 <div class="input-group"><label>الدور الثالث (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f3_1" placeholder="ابحث بالاسم..."></div>
                 <div class="input-group"><label>الدور الثالث (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f3_2" placeholder="ابحث بالاسم..."></div>
-                
                 <div class="input-group"><label>الدور الرابع (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f4_1" placeholder="ابحث بالاسم..."></div>
                 <div class="input-group"><label>الدور الرابع (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f4_2" placeholder="ابحث بالاسم..."></div>
-                
                 <div class="input-group"><label>الدور الخامس (مشرف 1)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f5_1" placeholder="ابحث بالاسم..."></div>
                 <div class="input-group"><label>الدور الخامس (مشرف 2)</label><input type="text" list="teachers-list" class="search-input" data-stage="upper" data-loc="new_f5_2" placeholder="ابحث بالاسم..."></div>
             </div>
@@ -342,10 +326,7 @@
                 <button class="btn-close" onclick="document.getElementById('smartModal').classList.remove('active')">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="smart-criteria-info" style="background:#f0fdf4; color:#166534; padding:10px 14px; border-radius:8px; font-size:12px; font-weight:800; border:1px solid #bbf7d0;">
-                    جاري فحص وتوفيق الجداول...
-                </div>
-                
+                <div id="smart-criteria-info" style="background:#f0fdf4; color:#166534; padding:10px 14px; border-radius:8px; font-size:12px; font-weight:800; border:1px solid #bbf7d0;"></div>
                 <div class="smart-controls">
                     <select id="smart-day" onchange="generateSmartSuggestions()">
                         <option value="الاحد">يوم الأحد</option><option value="الاثنين">الإثنين</option><option value="الثلاثاء">الثلاثاء</option><option value="الاربعاء">الأربعاء</option><option value="الخميس">الخميس</option>
@@ -355,17 +336,81 @@
                     </select>
                     <div id="smart-diagnostic" style="font-size: 11px; font-weight: 800; color: #475569; display: flex; align-items: center; gap: 5px;"></div>
                 </div>
-
                 <div class="suggestion-grid" id="suggestion-container"></div>
                 <button class="btn-finish-smart" onclick="document.getElementById('smartModal').classList.remove('active')"><i class="fa-solid fa-check-double"></i> تم الانتهاء من التوزيع</button>
             </div>
         </div>
     </div>
 
-    <!-- ================= 7. حاوية استمارة المشرف للطباعة A4 عمودي ================= -->
+    <!-- ================= 7. نافذة ضبط مقاسات الطباعة (لليوم والأسبوع) ================= -->
+    <div class="modal-overlay" id="printSettingsModal" onclick="if(event.target===this) this.classList.remove('active')">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header" style="background: #334155;">
+                <h2><i class="fa-solid fa-sliders"></i> ضبط وتنسيق مقاسات الطباعة</h2>
+                <button class="btn-close" onclick="document.getElementById('printSettingsModal').classList.remove('active')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="config-tabs">
+                    <button class="config-tab-btn active" id="btn-cfg-daily" onclick="switchConfigTab('daily')"><i class="fa-solid fa-print"></i> استمارة اليوم (عمودي)</button>
+                    <button class="config-tab-btn" id="btn-cfg-weekly" onclick="switchConfigTab('weekly')"><i class="fa-solid fa-calendar-week"></i> استمارة الأسبوع (أفقي)</button>
+                </div>
+
+                <!-- إعدادات استمارة اليوم -->
+                <div id="config-section-daily" class="config-grid">
+                    <div class="config-item">
+                        <label>ارتفاع الصفوف: <b id="val-d-rowHeight">34px</b></label>
+                        <input type="range" id="cfg-d-rowHeight" min="24" max="50" value="34" oninput="updateConfigDisplay()">
+                    </div>
+                    <div class="config-item">
+                        <label>حجم خط النصوص: <b id="val-d-fontSize">12px</b></label>
+                        <input type="range" id="cfg-d-fontSize" min="9" max="16" value="12" oninput="updateConfigDisplay()">
+                    </div>
+                    <div class="config-item">
+                        <label>حجم خط العناوين: <b id="val-d-headerSize">12px</b></label>
+                        <input type="range" id="cfg-d-headerSize" min="10" max="18" value="12" oninput="updateConfigDisplay()">
+                    </div>
+                    <div class="config-item">
+                        <label>عرض عمود الموقع: <b id="val-d-colWidth">32%</b></label>
+                        <input type="range" id="cfg-d-colWidth" min="20" max="45" value="32" oninput="updateConfigDisplay()">
+                    </div>
+                    <div class="config-item">
+                        <label>المسافات الداخلية (Padding): <b id="val-d-padding">4px</b></label>
+                        <input type="range" id="cfg-d-padding" min="1" max="10" value="4" oninput="updateConfigDisplay()">
+                    </div>
+                </div>
+
+                <!-- إعدادات استمارة الأسبوع (أفقي) -->
+                <div id="config-section-weekly" class="config-grid" style="display: none;">
+                    <div class="config-item">
+                        <label>ارتفاع الصفوف: <b id="val-w-rowHeight">26px</b></label>
+                        <input type="range" id="cfg-w-rowHeight" min="20" max="40" value="26" oninput="updateConfigDisplay()">
+                    </div>
+                    <div class="config-item">
+                        <label>حجم خط أسماء المشرفين: <b id="val-w-fontSize">11.5px</b></label>
+                        <input type="range" id="cfg-w-fontSize" min="9" max="16" value="11.5" step="0.5" oninput="updateConfigDisplay()">
+                    </div>
+                    <div class="config-item">
+                        <label>حجم خط عناوين الأيام: <b id="val-w-headerSize">12.5px</b></label>
+                        <input type="range" id="cfg-w-headerSize" min="10" max="18" value="12.5" step="0.5" oninput="updateConfigDisplay()">
+                    </div>
+                    <div class="config-item">
+                        <label>المسافات الداخلية (Padding): <b id="val-w-padding">3px</b></label>
+                        <input type="range" id="cfg-w-padding" min="1" max="8" value="3" oninput="updateConfigDisplay()">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
+                    <button onclick="resetPrintConfig()" class="btn-nav" style="background:#ef4444;"><i class="fa-solid fa-rotate-left"></i> الافتراضي</button>
+                    <button onclick="savePrintConfig()" class="btn-save"><i class="fa-solid fa-floppy-disk"></i> حفظ الإعدادات</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 8. حاوية الطباعة ================= -->
     <div id="printable-supervisor-form"></div>
 
-    <!-- ================= المحرك البرمجي وتقنية الطباعة A4 ================= -->
+    <!-- ================= المحرك البرمجي ================= -->
     <script>
         const supabaseUrl = 'https://xgsyktjoerrymqoutqcb.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM';
@@ -373,6 +418,14 @@
 
         let ALL_TEACHERS = [];
         let SCHOOL_MAP = [];
+
+        // بنية إعدادات الطباعة لليوم (عمودي) والأسبوع (أفقي)
+        let defaultPrintConfig = {
+            daily: { rowHeight: 34, fontSize: 12, headerSize: 12, colWidth: 32, padding: 4 },
+            weekly: { rowHeight: 26, fontSize: 11.5, headerSize: 12.5, padding: 3 }
+        };
+
+        let printConfig = JSON.parse(localStorage.getItem('PRINT_SUPERVISION_CONFIG_V3')) || defaultPrintConfig;
 
         const PERIOD_CONFIG = {
             lower: { "الاحد": 6, "الاثنين": 6, "الثلاثاء": 6, "الاربعاء": 6, "الخميس": 5 },
@@ -398,7 +451,6 @@
             }
         };
 
-        // بنية المواقع بالترتيب الرسمي للاستمارة
         const FORM_LOCATIONS = {
             lower: [
                 { label: "المشرف العام لليوم", loc: "general" },
@@ -440,31 +492,104 @@
             ]
         };
 
-        function extractClassSignature(val) {
-            if (!val) return "";
-            let str = typeof val === 'object' ? (val.class || val.cls || val.room || JSON.stringify(val)) : String(val);
-            str = str.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
-            const match = str.match(/([1-6])\s*[\/\\\-]\s*([1-9])/);
-            if (match) return `${match[1]}/${match[2]}`;
-            return str.replace(/[\s\-]/g, '/').trim();
+        // ================= بحث ذكي دقيق (يبدأ بالحرف المكتوب فقط) =================
+        function normalizeArabic(text) {
+            if(!text) return "";
+            return text.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
         }
 
-        function getTeacherClass(teacherSchedule, dayName, periodNum) {
-            if (!teacherSchedule) return null;
-            const targetDay = dayName.replace(/أ|إ|آ/g, 'ا');
-
-            for (let key in teacherSchedule) {
-                const cleanKey = key.replace(/أ|إ|آ/g, 'ا');
-                if (cleanKey === `${targetDay}_${periodNum}` || cleanKey === `${targetDay} ${periodNum}` || cleanKey === `${targetDay}-${periodNum}`) {
-                    return teacherSchedule[key];
+        function populateDatalist(filterText = "") {
+            const datalist = document.getElementById("teachers-list");
+            let html = "";
+            const normFilter = normalizeArabic(filterText.trim());
+            
+            ALL_TEACHERS.forEach(t => {
+                const normName = normalizeArabic(t.name);
+                if (normName.startsWith(normFilter)) {
+                    html += `<option value="${t.name}">`;
                 }
-            }
-            if (teacherSchedule[targetDay] && typeof teacherSchedule[targetDay] === 'object') {
-                return teacherSchedule[targetDay][periodNum] || teacherSchedule[targetDay][String(periodNum)];
-            }
-            return null;
+            });
+            datalist.innerHTML = html;
         }
 
+        document.addEventListener('input', function(e) {
+            if(e.target.classList.contains('search-input')) {
+                populateDatalist(e.target.value);
+            }
+        });
+        
+        document.addEventListener('focusin', function(e) {
+            if(e.target.classList.contains('search-input')) {
+                populateDatalist(e.target.value);
+            }
+        });
+
+        // ================= إدارة نافذة إعدادات الطباعة وتبويباتها =================
+        function switchConfigTab(tab) {
+            document.querySelectorAll('.config-tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`btn-cfg-${tab}`).classList.add('active');
+            
+            document.getElementById('config-section-daily').style.display = tab === 'daily' ? 'grid' : 'none';
+            document.getElementById('config-section-weekly').style.display = tab === 'weekly' ? 'grid' : 'none';
+        }
+
+        function openPrintSettingsModal() {
+            document.getElementById('cfg-d-rowHeight').value = printConfig.daily.rowHeight;
+            document.getElementById('cfg-d-fontSize').value = printConfig.daily.fontSize;
+            document.getElementById('cfg-d-headerSize').value = printConfig.daily.headerSize;
+            document.getElementById('cfg-d-colWidth').value = printConfig.daily.colWidth;
+            document.getElementById('cfg-d-padding').value = printConfig.daily.padding;
+
+            document.getElementById('cfg-w-rowHeight').value = printConfig.weekly.rowHeight;
+            document.getElementById('cfg-w-fontSize').value = printConfig.weekly.fontSize;
+            document.getElementById('cfg-w-headerSize').value = printConfig.weekly.headerSize;
+            document.getElementById('cfg-w-padding').value = printConfig.weekly.padding;
+
+            updateConfigDisplay();
+            switchConfigTab('daily');
+            document.getElementById('printSettingsModal').classList.add('active');
+        }
+
+        function updateConfigDisplay() {
+            document.getElementById('val-d-rowHeight').innerText = document.getElementById('cfg-d-rowHeight').value + 'px';
+            document.getElementById('val-d-fontSize').innerText = document.getElementById('cfg-d-fontSize').value + 'px';
+            document.getElementById('val-d-headerSize').innerText = document.getElementById('cfg-d-headerSize').value + 'px';
+            document.getElementById('val-d-colWidth').innerText = document.getElementById('cfg-d-colWidth').value + '%';
+            document.getElementById('val-d-padding').innerText = document.getElementById('cfg-d-padding').value + 'px';
+
+            document.getElementById('val-w-rowHeight').innerText = document.getElementById('cfg-w-rowHeight').value + 'px';
+            document.getElementById('val-w-fontSize').innerText = document.getElementById('cfg-w-fontSize').value + 'px';
+            document.getElementById('val-w-headerSize').innerText = document.getElementById('cfg-w-headerSize').value + 'px';
+            document.getElementById('val-w-padding').innerText = document.getElementById('cfg-w-padding').value + 'px';
+        }
+
+        function savePrintConfig() {
+            printConfig = {
+                daily: {
+                    rowHeight: parseInt(document.getElementById('cfg-d-rowHeight').value),
+                    fontSize: parseFloat(document.getElementById('cfg-d-fontSize').value),
+                    headerSize: parseFloat(document.getElementById('cfg-d-headerSize').value),
+                    colWidth: parseInt(document.getElementById('cfg-d-colWidth').value),
+                    padding: parseInt(document.getElementById('cfg-d-padding').value)
+                },
+                weekly: {
+                    rowHeight: parseInt(document.getElementById('cfg-w-rowHeight').value),
+                    fontSize: parseFloat(document.getElementById('cfg-w-fontSize').value),
+                    headerSize: parseFloat(document.getElementById('cfg-w-headerSize').value),
+                    padding: parseInt(document.getElementById('cfg-w-padding').value)
+                }
+            };
+            localStorage.setItem('PRINT_SUPERVISION_CONFIG_V3', JSON.stringify(printConfig));
+            document.getElementById('printSettingsModal').classList.remove('active');
+            Swal.fire({ icon: 'success', title: 'تم حفظ مقاسات الطباعة', timer: 1200, showConfirmButton: false });
+        }
+
+        function resetPrintConfig() {
+            printConfig = defaultPrintConfig;
+            openPrintSettingsModal();
+        }
+
+        // ================= التهيئة والتحميل =================
         window.addEventListener('DOMContentLoaded', async () => {
             initSystemModeUI();
             await fetchBaseData();
@@ -496,26 +621,11 @@
             if (supabaseClient) {
                 try {
                     const resTea = await supabaseClient.from("teachers").select("*");
-                    if (!resTea.error && resTea.data) {
-                        teachersData = resTea.data;
-                        localStorage.setItem('local_teachers', JSON.stringify(teachersData));
-                    }
-                } catch(e) {}
-
-                try {
+                    if (!resTea.error && resTea.data) teachersData = resTea.data;
                     const resCon = await supabaseClient.from("contract_teachers").select("*");
-                    if (!resCon.error && resCon.data) {
-                        contractData = resCon.data;
-                        localStorage.setItem('local_contract_teachers', JSON.stringify(contractData));
-                    }
-                } catch(e) {}
-
-                try {
+                    if (!resCon.error && resCon.data) contractData = resCon.data;
                     const resMap = await supabaseClient.from("school_map").select("*").eq("id", "main_layout").maybeSingle();
-                    if (!resMap.error && resMap.data && resMap.data.map_data) {
-                        mapData = resMap.data.map_data;
-                        localStorage.setItem('local_school_map', JSON.stringify(mapData));
-                    }
+                    if (!resMap.error && resMap.data && resMap.data.map_data) mapData = resMap.data.map_data;
                 } catch(e) {}
             }
 
@@ -524,27 +634,17 @@
             if (mapData.length === 0) mapData = JSON.parse(localStorage.getItem('local_school_map')) || [];
 
             ALL_TEACHERS = [];
-            let datalistHtml = "";
             const isExcludedJob = (job) => (job||"").replace(/\s+/g,"").match(/عامل|اداري|اخصائي|مشرف|سكرتير|فني|خدمات/);
 
             [...teachersData, ...contractData].forEach(t => {
                 const jobName = t.cadre_job || t.job || '';
                 if (!isExcludedJob(jobName)) {
-                    let parsedSchedule = t.schedule || {};
-                    if (typeof parsedSchedule === 'string') {
-                        try { parsedSchedule = JSON.parse(parsedSchedule); } catch(e) { parsedSchedule = {}; }
-                    }
-
-                    ALL_TEACHERS.push({
-                        name: t.name,
-                        cadre: jobName,
-                        schedule: parsedSchedule
-                    });
-                    datalistHtml += `<option value="${t.name}">`;
+                    let parsedSchedule = typeof t.schedule === 'string' ? (JSON.parse(t.schedule) || {}) : (t.schedule || {});
+                    ALL_TEACHERS.push({ name: t.name, cadre: jobName, schedule: parsedSchedule });
                 }
             });
 
-            document.getElementById("teachers-list").innerHTML = datalistHtml;
+            populateDatalist();
             SCHOOL_MAP = mapData;
         }
 
@@ -594,7 +694,7 @@
             if (supabaseClient) {
                 try {
                     await supabaseClient.from("supervision").upsert(recordsToUpsert);
-                    Swal.fire({ icon: 'success', title: 'تم الحفظ بالسحابة بنجاح!', timer: 1500, showConfirmButton: false });
+                    Swal.fire({ icon: 'success', title: 'تم الحفظ بنجاح!', timer: 1500, showConfirmButton: false });
                 } catch(e) { 
                     Swal.fire({ icon: 'warning', title: 'تم الحفظ محلياً على جهازك' });
                 }
@@ -603,17 +703,17 @@
             }
         }
 
-        // ================= طباعة استمارة المشرف العام A4 عمودي =================
+        // ================= طباعة استمارة اليوم (A4 Portrait - عمودي) =================
         function printSupervisorForm() {
+            const cfg = printConfig.daily;
             const daySelect = document.getElementById("day-select");
             const dayText = daySelect.options[daySelect.selectedIndex].text;
             const isLower = document.getElementById('tab-btn-lower').classList.contains('active');
             const stage = isLower ? 'lower' : 'upper';
             const stageText = isLower ? "الصفوف الأولى (1 - 3)" : "الصفوف العليا (4 - 6)";
 
-            // استخراج اسم المشرف العام الحالي
             const generalInput = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="general"]`);
-            const generalName = generalInput ? generalInput.value.trim() || "..................................................." : "...................................................";
+            const generalName = generalInput ? generalInput.value.trim() || "............................................." : ".............................................";
 
             const locs = FORM_LOCATIONS[stage];
             let rowsHtml = "";
@@ -623,102 +723,209 @@
                 const val = input ? input.value.trim() : "";
                 
                 rowsHtml += `
-                    <tr style="height: 34px;">
-                        <td style="text-align: center; font-weight: 900; font-size: 11.5px; border: 1.5px solid #000; padding: 2px 4px;">${index + 1}</td>
-                        <td style="font-weight: 900; font-size: 11.5px; border: 1.5px solid #000; padding: 2px 6px;">${item.label}</td>
-                        <td style="text-align: center; font-weight: 900; font-size: 12.5px; border: 1.5px solid #000; padding: 2px 6px; color: #000;">${val}</td>
+                    <tr style="height: ${cfg.rowHeight}px;">
+                        <td style="text-align: center; font-weight: 900; font-size: ${cfg.fontSize}px; border: 1.5px solid #000; padding: ${cfg.padding}px;">${index + 1}</td>
+                        <td style="font-weight: 900; font-size: ${cfg.fontSize}px; border: 1.5px solid #000; padding: ${cfg.padding}px 6px;">${item.label}</td>
+                        <td style="text-align: center; font-weight: 900; font-size: ${cfg.fontSize + 1}px; border: 1.5px solid #000; padding: ${cfg.padding}px 6px; color: #000;">${val}</td>
                         <td style="border: 1.5px solid #000; width: 110px;"></td>
-                        <td style="border: 1.5px solid #000; width: 140px;"></td>
+                        <td style="border: 1.5px solid #000; width: 130px;"></td>
                     </tr>
                 `;
             });
 
             const printContainer = document.getElementById('printable-supervisor-form');
             printContainer.innerHTML = `
+                <style>@media print { @page { size: A4 portrait; margin: 8mm 10mm; } }</style>
                 <div style="padding: 10px; width: 100%; box-sizing: border-box; direction: rtl; font-family: 'Cairo', Arial, sans-serif;">
                     
-                    <!-- الترويسة الرسمية -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 6px;">
                         <div style="text-align: right; font-weight: 800; font-size: 11px; line-height: 1.3;">
                             <div>وزارة التربية والتعليم والتعليم الفني</div>
                             <div>مديرية التربية والتعليم</div>
-                            <div>إدارة التعليمية</div>
                             <div><b>مدرسة الشهيد أشرف حبيب الابتدائية</b></div>
                         </div>
-
                         <div style="text-align: center;">
                             <div style="background: #1e3a8a; color: #ffffff; padding: 4px 18px; border-radius: 6px; font-size: 15px; font-weight: 900; margin-bottom: 4px; display: inline-block;">
                                 استمارة تكليف ومتابعة الإشراف اليومي
                             </div>
-                            <div style="font-size: 12px; font-weight: 900; color: #000;">
-                                ${stageText} — العام الدراسي ٢٠٢٦ / ٢٠٢٧ م
-                            </div>
+                            <div style="font-size: 12px; font-weight: 900;">${stageText} — العام الدراسي ٢٠٢٦ / ٢٠٢٧ م</div>
                         </div>
-
-                        <div style="text-align: left; font-weight: 800; font-size: 11px; line-height: 1.4; border: 1px dashed #000; padding: 4px 8px; border-radius: 4px;">
+                        <div style="text-align: left; font-weight: 800; font-size: 11px; border: 1px dashed #000; padding: 4px 8px; border-radius: 4px;">
                             <div><b>اليوم:</b> ${dayText}</div>
                             <div><b>التاريخ:</b> &nbsp;&nbsp;&nbsp;&nbsp; / &nbsp;&nbsp;&nbsp;&nbsp; / ٢٠٢٦ م</div>
                             <div><b>المشرف العام:</b> ${generalName}</div>
                         </div>
                     </div>
 
-                    <!-- إرشادات وتعليمات المشرف اليومي -->
-                    <div style="background: #f8fafc; border: 1px solid #000; padding: 4px 10px; font-size: 10px; font-weight: 700; margin-bottom: 8px; border-radius: 4px; display: flex; justify-content: space-between;">
-                        <div>• التواجد الميداني في مكان الإشراف طوال اليوم الدراسي وأثناء الفسحة.</div>
-                        <div>• عدم مغادرة الدور إلا بعد تسليم الفصول وخروج آخر تلميذ.</div>
-                        <div>• الإبلاغ الفوري عن أي طوارئ لإدارة المدرسة.</div>
+                    <!-- النص القانوني الملزم في سطرين -->
+                    <div style="background: #fff; border: 1.5px solid #000; padding: 5px 8px; font-size: 10.5px; font-weight: 800; margin-bottom: 8px; border-radius: 4px; line-height: 1.45; color: #000;">
+                        <div>• يُعد التوقيع بالعلم إقراراً قانونياً وإدارياً ملزماً بالتواجد الميداني الفعلي بموقع الإشراف ومسؤولية كاملة عن سلامة وأمن التلاميذ طوال اليوم الدراسي والفسحة والانصراف.</div>
+                        <div>• تسري على أي غياب أو مغادرة للدور دون إذن كتابي رسمي أحكام المساءلة التأديبية المنصوص عليها بالقرارات واللوائح الوزارية المنظمة للإشراف المدرسي.</div>
                     </div>
 
-                    <!-- جدول الإشراف الرئيسي -->
                     <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">
                         <thead>
-                            <tr style="background: #e2e8f0; font-size: 11.5px; font-weight: 900; height: 28px;">
+                            <tr style="background: #e2e8f0; font-size: ${cfg.headerSize}px; font-weight: 900; height: 28px;">
                                 <th style="border: 1.5px solid #000; width: 35px; text-align: center;">م</th>
-                                <th style="border: 1.5px solid #000; text-align: center; width: 32%;">مكان وموقع الإشراف</th>
-                                <th style="border: 1.5px solid #000; text-align: center; width: 32%;">اسم المعلم المشرف المكلف</th>
+                                <th style="border: 1.5px solid #000; text-align: center; width: ${cfg.colWidth}%;">مكان وموقع الإشراف</th>
+                                <th style="border: 1.5px solid #000; text-align: center; width: ${cfg.colWidth}%;">اسم المعلم المشرف المكلف</th>
                                 <th style="border: 1.5px solid #000; text-align: center;">توقيع المعلم بالعلم</th>
                                 <th style="border: 1.5px solid #000; text-align: center;">ملاحظات المشرف العام</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            ${rowsHtml}
-                        </tbody>
+                        <tbody>${rowsHtml}</tbody>
                     </table>
 
-                    <!-- ملاحظات وختام تقرير المشرف العام -->
-                    <div style="border: 1px solid #000; border-radius: 4px; padding: 4px 8px; font-size: 11px; font-weight: 800; margin-bottom: 8px; min-height: 40px;">
+                    <div style="border: 1px solid #000; border-radius: 4px; padding: 4px 8px; font-size: 11px; font-weight: 800; margin-bottom: 10px; min-height: 38px;">
                         <b>ملاحظات وتقرير المشرف العام لليوم:</b> ....................................................................................................................................................................................................................................................
                     </div>
 
-                    <!-- التوقيعات والاعتماد الرسمي -->
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 6px 15px; font-weight: 900; font-size: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; padding: 4px 40px; font-weight: 900; font-size: 13px;">
                         <div style="text-align: center;">
                             <div>مشرف عام اليوم</div>
-                            <div style="margin-top: 15px;">الاسم: ..............................</div>
-                            <div style="margin-top: 4px;">التوقيع: ............................</div>
-                        </div>
-
-                        <div style="text-align: center;">
-                            <div>مسؤول الجدول المدرسي</div>
-                            <div style="margin-top: 15px;">أ. عبدالعزيز لولح (مستر زيزو)</div>
-                            <div style="margin-top: 4px;">التوقيع: ............................</div>
+                            <div style="margin-top: 25px;">الاسم والتوقيع: .......................................</div>
                         </div>
 
                         <div style="text-align: center;">
                             <div>يعتمد / مدير المدرسة</div>
-                            <div style="margin-top: 15px;">الاسم: ..............................</div>
-                            <div style="margin-top: 4px;">التوقيع: ............................</div>
+                            <div style="margin-top: 25px;">الاسم والتوقيع: .......................................</div>
                         </div>
                     </div>
-
                 </div>
             `;
-
-            // تشغيل نافذة الطباعة مباشرة
             window.print();
         }
 
-        // ================= المساعد الذكي =================
+        // ================= طباعة استمارة الأسبوع (A4 Landscape - أفقي) =================
+        async function printWeeklyForm() {
+            const cfg = printConfig.weekly;
+            Swal.fire({ title: 'جاري استدعاء المشرفين للأسبوع...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            const isLower = document.getElementById('tab-btn-lower').classList.contains('active');
+            const stage = isLower ? 'lower' : 'upper';
+            const stageText = isLower ? "الصفوف الأولى (1 - 3)" : "الصفوف العليا (4 - 6)";
+            
+            const daysKeys = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس"];
+            const daysLabels = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
+            
+            let dayTeachers = {};
+            let maxRows = 0;
+
+            for (let day of daysKeys) {
+                dayTeachers[day] = [];
+                let dayRecords = [];
+                if (supabaseClient) {
+                    try {
+                        const { data } = await supabaseClient.from("supervision").select("*").eq("day", day).eq("stage", stage);
+                        if (data && data.length > 0) dayRecords = data;
+                    } catch(e) {}
+                }
+                if (dayRecords.length === 0) {
+                    const localData = JSON.parse(localStorage.getItem(`local_supervision_${day}`)) || [];
+                    dayRecords = localData.filter(r => r.stage === stage);
+                }
+
+                if (dayRecords.length > 0 && dayRecords[0].data) {
+                    const assignments = dayRecords[0].data;
+                    FORM_LOCATIONS[stage].forEach(item => {
+                        const tName = (assignments[item.loc] || "").trim();
+                        if (tName && !dayTeachers[day].includes(tName)) {
+                            dayTeachers[day].push(tName);
+                        }
+                    });
+                }
+
+                if (dayTeachers[day].length > maxRows) {
+                    maxRows = dayTeachers[day].length;
+                }
+            }
+
+            // ضمان وجود 16 سطر كحد أدنى للشكل الجمالي
+            if (maxRows < 16) maxRows = 16;
+
+            let rowsHtml = "";
+            for (let i = 0; i < maxRows; i++) {
+                let row = `
+                    <tr style="height: ${cfg.rowHeight}px;">
+                        <td style="text-align: center; font-weight: 900; font-size: ${cfg.fontSize}px; border: 1.5px solid #000; padding: ${cfg.padding}px;">${i + 1}</td>
+                `;
+                daysKeys.forEach(day => {
+                    const teacher = dayTeachers[day][i] || "";
+                    row += `<td style="text-align: center; font-weight: 900; font-size: ${cfg.fontSize}px; border: 1.5px solid #000; padding: ${cfg.padding}px 4px; color: #000;">${teacher}</td>`;
+                });
+                row += `</tr>`;
+                rowsHtml += row;
+            }
+
+            Swal.close();
+
+            const printContainer = document.getElementById('printable-supervisor-form');
+            printContainer.innerHTML = `
+                <style>@media print { @page { size: A4 landscape; margin: 6mm 10mm; } }</style>
+                <div style="padding: 5px 10px; width: 100%; box-sizing: border-box; direction: rtl; font-family: 'Cairo', Arial, sans-serif;">
+                    
+                    <!-- الترويسة الأفقية -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 8px;">
+                        <div style="text-align: right; font-weight: 800; font-size: 11px; line-height: 1.3;">
+                            <div>وزارة التربية والتعليم والتعليم الفني</div>
+                            <div>مديرية التربية والتعليم</div>
+                            <div><b>مدرسة الشهيد أشرف حبيب الابتدائية</b></div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="background: #1e3a8a; color: #ffffff; padding: 4px 25px; border-radius: 6px; font-size: 16px; font-weight: 900; margin-bottom: 2px; display: inline-block;">
+                                كشف توزيع المشرفين الأسبوعي
+                            </div>
+                            <div style="font-size: 12px; font-weight: 900;">${stageText} — العام الدراسي ٢٠٢٦ / ٢٠٢٧ م</div>
+                        </div>
+                        <div style="text-align: left; font-weight: 800; font-size: 11px; border: 1px solid #000; padding: 4px 8px; border-radius: 4px;">
+                            يعتمد للعمل به أسبوعياً
+                        </div>
+                    </div>
+
+                    <!-- جدول الأسبوع بالعرض -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                        <thead>
+                            <tr style="background: #e2e8f0; font-size: ${cfg.headerSize}px; font-weight: 900; height: 28px;">
+                                <th style="border: 1.5px solid #000; width: 40px; text-align: center;">م</th>
+                                ${daysLabels.map(d => `<th style="border: 1.5px solid #000; text-align: center; width: 19.2%;">${d}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+
+                    <!-- التوقيع الرسمي: يعتمد مدير المدرسة فقط -->
+                    <div style="display: flex; justify-content: flex-end; padding: 4px 50px; font-weight: 900; font-size: 13px;">
+                        <div style="text-align: center;">
+                            <div>يعتمد / مدير المدرسة</div>
+                            <div style="margin-top: 20px;">الاسم والتوقيع: .......................................</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            window.print();
+        }
+
+        /* دوال المساعد الذكي وتصوير الشاشة */
+        function getTeacherClass(teacherSchedule, dayName, periodNum) {
+            if (!teacherSchedule) return null;
+            const targetDay = dayName.replace(/أ|إ|آ/g, 'ا');
+            for (let key in teacherSchedule) {
+                const cleanKey = key.replace(/أ|إ|آ/g, 'ا');
+                if (cleanKey === `${targetDay}_${periodNum}` || cleanKey === `${targetDay} ${periodNum}` || cleanKey === `${targetDay}-${periodNum}`) return teacherSchedule[key];
+            }
+            if (teacherSchedule[targetDay] && typeof teacherSchedule[targetDay] === 'object') return teacherSchedule[targetDay][periodNum] || teacherSchedule[targetDay][String(periodNum)];
+            return null;
+        }
+
+        function extractClassSignature(val) {
+            if (!val) return "";
+            let str = typeof val === 'object' ? (val.class || val.cls || val.room || JSON.stringify(val)) : String(val);
+            str = str.replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
+            const match = str.match(/([1-6])\s*[\/\\\-]\s*([1-9])/);
+            if (match) return `${match[1]}/${match[2]}`;
+            return str.replace(/[\s\-]/g, '/').trim();
+        }
+
         function openSmartAssistant() {
             document.getElementById("smart-day").value = document.getElementById("day-select").value;
             const isLowerActive = document.getElementById('tab-btn-lower').classList.contains('active');
@@ -732,24 +939,12 @@
             const stage = document.getElementById("smart-stage").value;
             const container = document.getElementById("suggestion-container");
             const infoBox = document.getElementById("smart-criteria-info");
-            const diagBox = document.getElementById("smart-diagnostic");
-            
             container.innerHTML = "";
-            diagBox.innerHTML = `<i class="fa-solid fa-users"></i> إجمالي المعلمين بالمنظومة: <b>${ALL_TEACHERS.length}</b>`;
 
-            if(ALL_TEACHERS.length === 0) {
-                container.innerHTML = "<div style='grid-column:1/-1; color:var(--danger); text-align:center; font-weight:bold; padding:20px;'><i class=\"fa-solid fa-triangle-exclamation\"></i> لم يتم تحميل أي معلمين من قاعدة البيانات!</div>";
-                return;
-            }
-
+            if(ALL_TEACHERS.length === 0) return;
             const totalP = PERIOD_CONFIG[stage][day];
-            infoBox.innerHTML = `<b>المرحلة:</b> ${stage==='lower'?'صفوف أولى':'صفوف عليا'} | <b>نصاب يوم ${day}:</b> ${totalP} حصص. (الترتيب حسب التواجد بالدور، والفراغ بآخر الحصص، والتخصص).`;
-
-            if(!SCHOOL_MAP || SCHOOL_MAP.length === 0) {
-                container.innerHTML = "<div style='grid-column:1/-1; color:var(--danger); text-align:center; font-weight:bold; padding:20px;'>يرجى إعداد خريطة المبنى أولاً.</div>";
-                return;
-            }
-
+            infoBox.innerHTML = `نصاب يوم ${day}: ${totalP} حصص. (الترتيب حسب: نصاب بالدور، وفراغ بآخر اليوم).`;
+            
             const stageMapping = FLOOR_LOCS_MAP[stage] || {};
             let targetFloors = [];
 
@@ -757,204 +952,47 @@
                 if (bldg.floors) {
                     bldg.floors.forEach(floor => {
                         const mapKey = `${bldg.name}_${floor.name}`;
-                        if(stageMapping[mapKey]) {
-                            targetFloors.push({
-                                bldgName: bldg.name,
-                                floorName: floor.name,
-                                locKeys: stageMapping[mapKey],
-                                classes: (floor.rooms || []).map(r => extractClassSignature(r))
-                            });
-                        }
+                        if(stageMapping[mapKey]) targetFloors.push({ bldgName: bldg.name, floorName: floor.name, locKeys: stageMapping[mapKey], classes: (floor.rooms || []).map(r => extractClassSignature(r)) });
                     });
                 }
             });
-
-            if(targetFloors.length === 0) {
-                container.innerHTML = "<div style='grid-column:1/-1; color:var(--danger); text-align:center; font-weight:bold; padding:15px;'>لم يتم العثور على أدوار مطابقة لهذه المرحلة.</div>";
-                return;
-            }
 
             let html = "";
             targetFloors.forEach(floor => {
                 let candidateScores = [];
-
                 ALL_TEACHERS.forEach(t => {
                     let classesInThisFloor = 0;
-                    let hasLowerClasses = false;
-                    let hasUpperClasses = false;
-
                     for(let p = 1; p <= 8; p++) {
                         let rawCls = getTeacherClass(t.schedule, day, p);
-                        if(rawCls) {
-                            let cleanCls = extractClassSignature(rawCls);
-                            if(floor.classes.includes(cleanCls)) classesInThisFloor++;
-                            if (/^[1-3]/.test(cleanCls)) hasLowerClasses = true;
-                            if (/^[4-6]/.test(cleanCls)) hasUpperClasses = true;
-                        }
+                        if(rawCls && floor.classes.includes(extractClassSignature(rawCls))) classesInThisFloor++;
                     }
-
                     let score = classesInThisFloor * 15;
-                    const isClassTeacher = /فصل/i.test(t.cadre) || hasLowerClasses;
-                    if(stage === 'lower' && isClassTeacher) score += 10;
-                    if(stage === 'upper' && !isClassTeacher && hasUpperClasses) score += 10;
-
                     const freeLast = !getTeacherClass(t.schedule, day, totalP);
                     const freeBeforeLast = !getTeacherClass(t.schedule, day, totalP - 1);
-
-                    let statusBadge = "";
-                    if(freeLast && freeBeforeLast) {
-                        score += 25;
-                        statusBadge = `فاضي آخر حصتين (${totalP-1} و ${totalP}) ⭐`;
-                    } else if(freeLast) {
-                        score += 15;
-                        statusBadge = `فاضي الحصة الأخيرة (${totalP}) ✔️`;
-                    } else if(freeBeforeLast) {
-                        score += 5;
-                        statusBadge = `فاضي الحصة (${totalP-1})`;
-                    } else {
-                        score -= 10;
-                        statusBadge = `مشغول لنهاية اليوم (${totalP})`;
-                    }
-
-                    if(classesInThisFloor > 0 || (score >= 20 && (stage === 'lower' ? hasLowerClasses : hasUpperClasses))) {
-                        candidateScores.push({
-                            name: t.name,
-                            score: score,
-                            floorClasses: classesInThisFloor,
-                            statusBadge: statusBadge
-                        });
-                    }
+                    if(freeLast && freeBeforeLast) score += 25; else if(freeLast) score += 15;
+                    if(classesInThisFloor > 0 || score >= 20) candidateScores.push({ name: t.name, score: score, floorClasses: classesInThisFloor, badge: freeLast ? 'فاضي آخر اليوم' : 'مشغول' });
                 });
 
                 candidateScores.sort((a,b) => b.score - a.score);
-                const topCandidates = candidateScores.slice(0, 4);
-
                 let teachersHtml = "";
-                if(topCandidates.length > 0) {
-                    let medals = ['🥇', '🥈', '🥉', '🏅'];
-                    topCandidates.forEach((t, i) => {
-                        const targetKeys = JSON.stringify(floor.locKeys).replace(/"/g, '&quot;');
-                        teachersHtml += `
-                            <div class="sug-teacher" onclick="autoAssignTeacher('${stage}', ${targetKeys}, '${t.name}', this)">
-                                <span class="sug-t-name">${medals[i]} ${t.name}</span>
-                                <span class="sug-t-desc">${t.floorClasses} حصص بالدور | ${t.statusBadge}</span>
-                            </div>
-                        `;
-                    });
-                } else {
-                    teachersHtml = "<div style='font-size:11px; color:#94a3b8; text-align:center; padding: 6px;'>لا توجد حصص مسجلة لأي معلم بهذا الدور في هذا اليوم.</div>";
-                }
-
-                html += `
-                    <div class="sug-card">
-                        <div class="sug-loc">
-                            <i class="fa-solid fa-location-dot" style="color:var(--smart);"></i> ${floor.bldgName} - ${floor.floorName}
-                            <span style="font-size:11px; color:#64748b;">(مطلوب ${floor.locKeys.length} مشرف)</span>
-                        </div>
-                        ${teachersHtml}
-                    </div>
-                `;
+                candidateScores.slice(0, 4).forEach((t, i) => {
+                    teachersHtml += `<div class="sug-teacher" onclick="autoAssignTeacher('${stage}', ${JSON.stringify(floor.locKeys).replace(/"/g, '&quot;')}, '${t.name}', this)">
+                                        <span class="sug-t-name">${t.name}</span><span class="sug-t-desc">${t.floorClasses} حصص | ${t.badge}</span>
+                                     </div>`;
+                });
+                html += `<div class="sug-card"><div class="sug-loc">${floor.bldgName} - ${floor.floorName}</div>${teachersHtml || '<div style="font-size:11px;">لا يوجد مطابق</div>'}</div>`;
             });
-
             container.innerHTML = html;
         }
 
         function autoAssignTeacher(stage, locKeys, teacherName, btnEl) {
             document.getElementById("day-select").value = document.getElementById("smart-day").value;
             switchTab(stage);
-
-            let assignedLoc = null;
-            for(let key of locKeys) {
-                let input = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${key}"]`);
-                if(input && input.value.trim() === "") {
-                    assignedLoc = key;
-                    input.value = teacherName;
-                    break;
-                }
-            }
-
-            if(!assignedLoc) {
-                assignedLoc = locKeys[0];
-                let input = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${assignedLoc}"]`);
-                if(input) input.value = teacherName;
-            }
-
+            let assignedLoc = locKeys.find(key => { let i = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${key}"]`); return i && i.value.trim() === ""; }) || locKeys[0];
+            let input = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${assignedLoc}"]`);
+            if(input) { input.value = teacherName; input.style.backgroundColor = "#dcfce7"; setTimeout(() => input.style.backgroundColor = "", 1000); }
             btnEl.style.background = "#dcfce7";
-            btnEl.style.borderColor = "#16a34a";
-
-            let targetInput = document.querySelector(`.search-input[data-stage="${stage}"][data-loc="${assignedLoc}"]`);
-            if(targetInput) {
-                targetInput.style.backgroundColor = "#dcfce7";
-                setTimeout(() => targetInput.style.backgroundColor = "", 1000);
-            }
-
-            Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1000, icon: 'success', title: `تم تسكين ${teacherName}` });
-        }
-
-        // ================= تصوير عالي الوضوح =================
-        function takeSupervisionScreenshot() {
-            const dayText = document.getElementById("day-select").options[document.getElementById("day-select").selectedIndex].text;
-            const isLower = document.getElementById('tab-btn-lower').classList.contains('active');
-            const stageText = isLower ? "الصفوف الأولى (1 - 3)" : "الصفوف العليا (4 - 6)";
-            const activeTab = isLower ? document.getElementById('tab-lower') : document.getElementById('tab-upper');
-
-            let cardsHtml = "";
-            const cards = activeTab.querySelectorAll('.building-card');
-            
-            cards.forEach(card => {
-                const bldgTitle = card.querySelector('.building-header').innerText.trim();
-                const rows = card.querySelectorAll('.input-group');
-                let rowsHtml = "";
-                rows.forEach(row => {
-                    const label = row.querySelector('label').innerText.trim();
-                    const val = row.querySelector('input').value.trim() || "—";
-                    rowsHtml += `
-                        <div style="margin-bottom: 5px; text-align: right;">
-                            <div style="color: #000; font-weight: 900; font-size: 11px;">${label}</div>
-                            <div style="background: #fff; color: #000; border: 1.5px solid #000; border-radius: 4px; padding: 4px 6px; font-size: 13px; font-weight: 900; text-align: center; min-height: 28px;">
-                                ${val}
-                            </div>
-                        </div>
-                    `;
-                });
-
-                cardsHtml += `
-                    <div style="background: #fff; border: 2px solid #1e3a8a; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
-                        <div style="background: #1e3a8a; color: #fff; font-weight: 900; font-size: 13px; padding: 6px; text-align: center;">${bldgTitle}</div>
-                        <div style="padding: 8px; background: #fff; display: flex; flex-direction: column; gap: 2px;">${rowsHtml}</div>
-                    </div>
-                `;
-            });
-
-            const printContainer = document.createElement('div');
-            printContainer.style.position = 'fixed';
-            printContainer.style.top = '-9999px';
-            printContainer.style.width = '1200px';
-            printContainer.style.background = '#fff';
-            printContainer.style.padding = '20px';
-            printContainer.style.direction = 'rtl';
-            printContainer.style.fontFamily = "'Cairo', Arial, sans-serif";
-
-            printContainer.innerHTML = `
-                <div style="background: #1e3a8a; color: #fff; padding: 10px 20px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <div><h3 style="margin: 0; font-size: 16px; font-weight: 900;">مدرسة الشهيد أشرف حبيب الابتدائية</h3><div style="font-size: 12px;">العام الدراسي ٢٠٢٦ / ٢٠٢٧</div></div>
-                    <div><h2 style="margin: 0; font-size: 17px; font-weight: 900; color: #fcd34d;">جدول الإشراف اليومي (${stageText})</h2><div style="font-size: 13px; font-weight: 800;">يوم ${dayText}</div></div>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(${cards.length}, 1fr); gap: 10px;">${cardsHtml}</div>
-                <div style="border: 1.5px solid #000; border-radius: 6px; padding: 8px 15px; margin-top: 12px; display: flex; justify-content: space-between; font-weight: 900; font-size: 12px;">
-                    <div>تصميم وإعداد: أ. عبدالعزيز لولح (مستر زيزو)</div>
-                    <div>يعتمد / مدير المدرسة: .......................................</div>
-                </div>
-            `;
-
-            document.body.appendChild(printContainer);
-            html2canvas(printContainer, { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
-                document.body.removeChild(printContainer);
-                let link = document.createElement('a');
-                link.download = `جدول_الإشراف_${dayText}_${isLower ? 'صفوف_أولى' : 'صفوف_عليا'}.jpg`;
-                link.href = canvas.toDataURL("image/jpeg", 1.0);
-                link.click();
-            });
+            Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1000, icon: 'success', title: `تم التسكين` });
         }
     </script>
 </body>
