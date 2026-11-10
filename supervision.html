@@ -379,23 +379,23 @@
                     </div>
                 </div>
 
-                <!-- إعدادات استمارة الأسبوع (أفقي) -->
+                <!-- إعدادات استمارة الأسبوع (أفقي - 10 صفوف مكبرة) -->
                 <div id="config-section-weekly" class="config-grid" style="display: none;">
                     <div class="config-item">
-                        <label>ارتفاع الصفوف: <b id="val-w-rowHeight">26px</b></label>
-                        <input type="range" id="cfg-w-rowHeight" min="20" max="40" value="26" oninput="updateConfigDisplay()">
+                        <label>ارتفاع الصفوف: <b id="val-w-rowHeight">40px</b></label>
+                        <input type="range" id="cfg-w-rowHeight" min="25" max="60" value="40" oninput="updateConfigDisplay()">
                     </div>
                     <div class="config-item">
-                        <label>حجم خط أسماء المشرفين: <b id="val-w-fontSize">11.5px</b></label>
-                        <input type="range" id="cfg-w-fontSize" min="9" max="16" value="11.5" step="0.5" oninput="updateConfigDisplay()">
+                        <label>حجم خط أسماء المشرفين: <b id="val-w-fontSize">14px</b></label>
+                        <input type="range" id="cfg-w-fontSize" min="11" max="20" value="14" step="0.5" oninput="updateConfigDisplay()">
                     </div>
                     <div class="config-item">
-                        <label>حجم خط عناوين الأيام: <b id="val-w-headerSize">12.5px</b></label>
-                        <input type="range" id="cfg-w-headerSize" min="10" max="18" value="12.5" step="0.5" oninput="updateConfigDisplay()">
+                        <label>حجم خط عناوين الأيام: <b id="val-w-headerSize">16px</b></label>
+                        <input type="range" id="cfg-w-headerSize" min="12" max="22" value="16" step="0.5" oninput="updateConfigDisplay()">
                     </div>
                     <div class="config-item">
-                        <label>المسافات الداخلية (Padding): <b id="val-w-padding">3px</b></label>
-                        <input type="range" id="cfg-w-padding" min="1" max="8" value="3" oninput="updateConfigDisplay()">
+                        <label>المسافات الداخلية (Padding): <b id="val-w-padding">6px</b></label>
+                        <input type="range" id="cfg-w-padding" min="2" max="14" value="6" oninput="updateConfigDisplay()">
                     </div>
                 </div>
 
@@ -419,13 +419,13 @@
         let ALL_TEACHERS = [];
         let SCHOOL_MAP = [];
 
-        // بنية إعدادات الطباعة لليوم (عمودي) والأسبوع (أفقي)
+        // بنية إعدادات الطباعة لليوم (عمودي) والأسبوع (أفقي 10 صفوف متباعدة)
         let defaultPrintConfig = {
             daily: { rowHeight: 34, fontSize: 12, headerSize: 12, colWidth: 32, padding: 4 },
-            weekly: { rowHeight: 26, fontSize: 11.5, headerSize: 12.5, padding: 3 }
+            weekly: { rowHeight: 40, fontSize: 14, headerSize: 16, padding: 6 }
         };
 
-        let printConfig = JSON.parse(localStorage.getItem('PRINT_SUPERVISION_CONFIG_V3')) || defaultPrintConfig;
+        let printConfig = JSON.parse(localStorage.getItem('PRINT_SUPERVISION_CONFIG_V4')) || defaultPrintConfig;
 
         const PERIOD_CONFIG = {
             lower: { "الاحد": 6, "الاثنين": 6, "الثلاثاء": 6, "الاربعاء": 6, "الخميس": 5 },
@@ -579,7 +579,7 @@
                     padding: parseInt(document.getElementById('cfg-w-padding').value)
                 }
             };
-            localStorage.setItem('PRINT_SUPERVISION_CONFIG_V3', JSON.stringify(printConfig));
+            localStorage.setItem('PRINT_SUPERVISION_CONFIG_V4', JSON.stringify(printConfig));
             document.getElementById('printSettingsModal').classList.remove('active');
             Swal.fire({ icon: 'success', title: 'تم حفظ مقاسات الطباعة', timer: 1200, showConfirmButton: false });
         }
@@ -796,7 +796,7 @@
             window.print();
         }
 
-        // ================= طباعة استمارة الأسبوع (A4 Landscape - أفقي) =================
+        // ================= طباعة استمارة الأسبوع (A4 Landscape - أفقي بـ 10 صفوف فقط موسعة) =================
         async function printWeeklyForm() {
             const cfg = printConfig.weekly;
             Swal.fire({ title: 'جاري استدعاء المشرفين للأسبوع...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -809,7 +809,6 @@
             const daysLabels = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس"];
             
             let dayTeachers = {};
-            let maxRows = 0;
 
             for (let day of daysKeys) {
                 dayTeachers[day] = [];
@@ -834,24 +833,19 @@
                         }
                     });
                 }
-
-                if (dayTeachers[day].length > maxRows) {
-                    maxRows = dayTeachers[day].length;
-                }
             }
 
-            // ضمان وجود 16 سطر كحد أدنى للشكل الجمالي
-            if (maxRows < 16) maxRows = 16;
-
+            // تثبيت عدد الصفوف ليكون 10 صفوف بالضبط
+            const totalRows = 10;
             let rowsHtml = "";
-            for (let i = 0; i < maxRows; i++) {
+            for (let i = 0; i < totalRows; i++) {
                 let row = `
                     <tr style="height: ${cfg.rowHeight}px;">
-                        <td style="text-align: center; font-weight: 900; font-size: ${cfg.fontSize}px; border: 1.5px solid #000; padding: ${cfg.padding}px;">${i + 1}</td>
+                        <td style="text-align: center; font-weight: 900; font-size: ${cfg.fontSize}px; border: 2px solid #000; padding: ${cfg.padding}px;">${i + 1}</td>
                 `;
                 daysKeys.forEach(day => {
                     const teacher = dayTeachers[day][i] || "";
-                    row += `<td style="text-align: center; font-weight: 900; font-size: ${cfg.fontSize}px; border: 1.5px solid #000; padding: ${cfg.padding}px 4px; color: #000;">${teacher}</td>`;
+                    row += `<td style="text-align: center; font-weight: 900; font-size: ${cfg.fontSize}px; border: 2px solid #000; padding: ${cfg.padding}px 6px; color: #000;">${teacher}</td>`;
                 });
                 row += `</tr>`;
                 rowsHtml += row;
@@ -861,43 +855,43 @@
 
             const printContainer = document.getElementById('printable-supervisor-form');
             printContainer.innerHTML = `
-                <style>@media print { @page { size: A4 landscape; margin: 6mm 10mm; } }</style>
-                <div style="padding: 5px 10px; width: 100%; box-sizing: border-box; direction: rtl; font-family: 'Cairo', Arial, sans-serif;">
+                <style>@media print { @page { size: A4 landscape; margin: 8mm 12mm; } }</style>
+                <div style="padding: 10px; width: 100%; box-sizing: border-box; direction: rtl; font-family: 'Cairo', Arial, sans-serif;">
                     
-                    <!-- الترويسة الأفقية -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 8px;">
-                        <div style="text-align: right; font-weight: 800; font-size: 11px; line-height: 1.3;">
+                    <!-- الترويسة الأفقية الرسمية -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2.5px solid #000; padding-bottom: 10px; margin-bottom: 28px;">
+                        <div style="text-align: right; font-weight: 800; font-size: 13px; line-height: 1.4;">
                             <div>وزارة التربية والتعليم والتعليم الفني</div>
                             <div>مديرية التربية والتعليم</div>
                             <div><b>مدرسة الشهيد أشرف حبيب الابتدائية</b></div>
                         </div>
                         <div style="text-align: center;">
-                            <div style="background: #1e3a8a; color: #ffffff; padding: 4px 25px; border-radius: 6px; font-size: 16px; font-weight: 900; margin-bottom: 2px; display: inline-block;">
+                            <div style="background: #1e3a8a; color: #ffffff; padding: 6px 35px; border-radius: 8px; font-size: 20px; font-weight: 900; margin-bottom: 6px; display: inline-block;">
                                 كشف توزيع المشرفين الأسبوعي
                             </div>
-                            <div style="font-size: 12px; font-weight: 900;">${stageText} — العام الدراسي ٢٠٢٦ / ٢٠٢٧ م</div>
+                            <div style="font-size: 14px; font-weight: 900;">${stageText} — العام الدراسي ٢٠٢٦ / ٢٠٢٧ م</div>
                         </div>
-                        <div style="text-align: left; font-weight: 800; font-size: 11px; border: 1px solid #000; padding: 4px 8px; border-radius: 4px;">
+                        <div style="text-align: left; font-weight: 800; font-size: 13px; border: 2px solid #000; padding: 6px 14px; border-radius: 6px;">
                             يعتمد للعمل به أسبوعياً
                         </div>
                     </div>
 
-                    <!-- جدول الأسبوع بالعرض -->
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                    <!-- جدول الأسبوع المكون من 10 صفوف متباعدة بخط كبير -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                         <thead>
-                            <tr style="background: #e2e8f0; font-size: ${cfg.headerSize}px; font-weight: 900; height: 28px;">
-                                <th style="border: 1.5px solid #000; width: 40px; text-align: center;">م</th>
-                                ${daysLabels.map(d => `<th style="border: 1.5px solid #000; text-align: center; width: 19.2%;">${d}</th>`).join('')}
+                            <tr style="background: #e2e8f0; font-size: ${cfg.headerSize}px; font-weight: 900; height: 50px;">
+                                <th style="border: 2px solid #000; width: 50px; text-align: center;">م</th>
+                                ${daysLabels.map(d => `<th style="border: 2px solid #000; text-align: center; width: 19.2%;">${d}</th>`).join('')}
                             </tr>
                         </thead>
                         <tbody>${rowsHtml}</tbody>
                     </table>
 
                     <!-- التوقيع الرسمي: يعتمد مدير المدرسة فقط -->
-                    <div style="display: flex; justify-content: flex-end; padding: 4px 50px; font-weight: 900; font-size: 13px;">
+                    <div style="display: flex; justify-content: flex-end; padding: 10px 50px; font-weight: 900; font-size: 15px;">
                         <div style="text-align: center;">
                             <div>يعتمد / مدير المدرسة</div>
-                            <div style="margin-top: 20px;">الاسم والتوقيع: .......................................</div>
+                            <div style="margin-top: 25px;">الاسم والتوقيع: .......................................</div>
                         </div>
                     </div>
                 </div>
