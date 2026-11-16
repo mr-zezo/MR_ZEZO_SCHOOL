@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>رصد غياب المعلمين - مدرسة الشهيد أشرف حبيب</title>
+    <title>رصد الإجازات العارضة والممتدة - مدرسة الشهيد أشرف حبيب</title>
     
     <!-- خط Cairo والأيقونات الرسمية -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -60,9 +60,8 @@
 
         /* شريط التبويبات العلوي المصمم للموبايل */
         .tab-btn-m {
-            flex: 1;
-            padding: 10px 4px;
-            font-size: 12px;
+            padding: 8px 3px;
+            font-size: 10.5px;
             font-weight: 900;
             border-radius: 12px;
             text-align: center;
@@ -71,10 +70,19 @@
             border: 1.5px solid #cbd5e1;
             transition: all 0.15s;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 3px;
             white-space: nowrap;
+        }
+        @media (min-width: 640px) {
+            .tab-btn-m {
+                flex-direction: row;
+                font-size: 11.5px;
+                padding: 10px 4px;
+                gap: 5px;
+            }
         }
         .tab-btn-m.active {
             background: var(--primary);
@@ -98,14 +106,25 @@
         }
         .dropdown-item:active { background: #dbeafe; }
 
-        /* شارات أيام الغياب */
+        /* شارات أيام العارضة */
         .badge-day {
-            background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5;
+            background: #fef3c7; color: #92400e; border: 1px solid #fcd34d;
             padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 900;
             display: inline-flex; align-items: center; gap: 6px;
         }
         .badge-day i { cursor: pointer; color: #dc2626; transition: 0.15s; }
         .badge-day i:hover { transform: scale(1.25); }
+
+        .leave-item-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 10px;
+            font-size: 11.5px;
+        }
 
         /* أزرار اللمس */
         .btn-touch {
@@ -125,60 +144,112 @@
             border-bottom-width: 1px;
         }
 
+        /* حركة جرس التنبيه */
+        @keyframes bellRing {
+            0%, 100% { transform: rotate(0deg); }
+            15% { transform: rotate(15deg); }
+            30% { transform: rotate(-15deg); }
+            45% { transform: rotate(10deg); }
+            60% { transform: rotate(-10deg); }
+            75% { transform: rotate(5deg); }
+        }
+        .bell-ringing {
+            animation: bellRing 2s infinite;
+            transform-origin: top center;
+        }
+
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1.5px solid var(--border); background: white; }
         .summary-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 12px; min-width: 650px; }
         .summary-table th { background: var(--primary); color: white; padding: 9px 4px; font-weight: 900; white-space: nowrap; }
         .summary-table td { padding: 8px 4px; border: 1px solid #e2e8f0; font-weight: 800; white-space: nowrap; }
         .summary-table tr:nth-child(even) { background-color: #f8fafc; }
+
+        .print-only { display: none; }
+        @media print {
+            body { background: white; padding: 0; }
+            header, .no-print, #alerts-modal { display: none !important; }
+            .max-w-xl { max-width: 100% !important; width: 100% !important; }
+            .card-m { border: none; box-shadow: none; padding: 0; }
+            .table-responsive { overflow: visible; border: none; }
+            .summary-table { min-width: 100%; font-size: 11px; }
+            .summary-table th { background: #0f2b48 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-only { display: block !important; }
+        }
     </style>
 </head>
 <body>
 
     <div class="w-full max-w-xl mx-auto space-y-3">
         
-        <!-- 1. شريط علوي خفيف ومضغوط للموبايل -->
-        <header class="bg-[#0f2b48] text-white p-3 rounded-2xl shadow-md border-b-4 border-amber-500 flex justify-between items-center">
+        <!-- 1. شريط علوي + أيقونة الجرس -->
+        <header class="bg-[#0f2b48] text-white p-3 rounded-2xl shadow-md border-b-4 border-amber-500 flex justify-between items-center gap-2">
             <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-lg bg-blue-600/30 flex items-center justify-center text-yellow-300 text-sm">
+                <div class="w-8 h-8 rounded-lg bg-blue-600/30 flex items-center justify-center text-yellow-300 text-sm shrink-0">
                     <i class="fa-solid fa-calendar-check"></i>
                 </div>
                 <div>
-                    <h1 class="text-xs sm:text-sm font-black leading-tight">دفتر رصد غياب وإجازات المعلمين</h1>
+                    <h1 class="text-xs sm:text-sm font-black leading-tight">دفتر رصد الإجازات العارضة والممتدة</h1>
                     <p class="text-[10px] text-blue-200 font-bold">مدرسة الشهيد أشرف حبيب الابتدائية</p>
                 </div>
             </div>
 
-            <button type="button" onclick="fetchAllTeachers(true)" class="text-xs bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded-lg text-white font-black flex items-center gap-1 border border-white/20">
-                <i class="fa-solid fa-arrows-rotate text-yellow-300"></i>
-                <span class="hidden sm:inline">تحديث</span>
-            </button>
+            <div class="flex items-center gap-2">
+                <!-- 🔔 أيقونة جرس التنبيهات -->
+                <button type="button" onclick="toggleAlertsModal(true)" id="btn-bell-alerts" title="التنبيهات والإشعارات" class="relative w-9 h-9 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center border border-white/20 transition">
+                    <i id="bell-icon" class="fa-solid fa-bell text-yellow-300 text-sm"></i>
+                    <span id="bell-badge-count" class="hidden absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[10px] font-black min-w-[20px] h-5 px-1 rounded-full flex items-center justify-center border-2 border-[#0f2b48] shadow">٠</span>
+                </button>
+
+                <button type="button" onclick="fetchAllTeachers(true)" class="text-xs bg-white/10 hover:bg-white/20 px-2.5 py-2 rounded-xl text-white font-black flex items-center gap-1 border border-white/20">
+                    <i class="fa-solid fa-arrows-rotate text-yellow-300"></i>
+                    <span class="hidden sm:inline">تحديث</span>
+                </button>
+            </div>
         </header>
 
-        <!-- 2. شريط التبويبات المحمول المريح -->
-        <div class="grid grid-cols-4 gap-1.5">
+        <!-- 2. شريط التبويبات المحمول (5 تبويبات) -->
+        <div class="grid grid-cols-5 gap-1 no-print">
             <button type="button" class="tab-btn-m active" onclick="switchMainTab('quick')" id="tab-quick">
-                <i class="fa-solid fa-bolt text-yellow-500"></i> الرصد اليومي
+                <i class="fa-solid fa-bolt text-yellow-500"></i>
+                <span>رصد عارضة</span>
             </button>
             <button type="button" class="tab-btn-m" onclick="switchMainTab('teacher')" id="tab-teacher">
-                <i class="fa-solid fa-user text-blue-500"></i> ملف معلم
+                <i class="fa-solid fa-user text-blue-500"></i>
+                <span>ملف معلم</span>
             </button>
             <button type="button" class="tab-btn-m" onclick="switchMainTab('leave')" id="tab-leave">
-                <i class="fa-solid fa-umbrella-beach text-amber-500"></i> إجازة ممتدة
+                <i class="fa-solid fa-umbrella-beach text-amber-500"></i>
+                <span>ممتدة</span>
+            </button>
+            <button type="button" class="tab-btn-m" onclick="switchMainTab('casual')" id="tab-casual">
+                <i class="fa-solid fa-file-signature text-rose-600"></i>
+                <span>استمارة العارضة</span>
             </button>
             <button type="button" class="tab-btn-m" onclick="switchMainTab('report')" id="tab-report">
-                <i class="fa-solid fa-table-list text-emerald-600"></i> كشف الشهر
+                <i class="fa-solid fa-table-list text-emerald-600"></i>
+                <span>كشف الشهر</span>
             </button>
         </div>
 
-        <!-- ================= 🌟 التبويب 1: الرصد اليومي السريع 🌟 ================= -->
+        <!-- ================= 🌟 التبويب 1: الرصد اليومي السريع (عارضة فقط) 🌟 ================= -->
         <section id="sec-quick" class="space-y-3">
             
             <div class="card-m space-y-3 border-t-4 border-t-amber-500">
-                <!-- اختيار اليوم والشهر للرصد السريع -->
+                <div class="flex items-center justify-between border-b pb-2">
+                    <span class="text-xs font-black text-[#0f2b48] flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-600"></i>
+                        تسجيل الإجازة العارضة اليومية
+                    </span>
+                    <span class="px-2 py-0.5 bg-amber-100 text-amber-900 rounded-lg text-[10px] font-black">الرصيد السنوي: ٧ أيام</span>
+                </div>
+
+                <!-- اختيار اليوم والشهر -->
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-[11px] font-black text-slate-600 mb-1">الشهر الدراسي:</label>
+                        <label class="block text-[11px] font-black text-slate-600 mb-1">الشهر:</label>
                         <select id="quick-month-select" onchange="onQuickDateChange()" class="w-full p-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs font-black outline-none focus:border-blue-900">
+                            <option value="m7">يوليو (7)</option>
+                            <option value="m8">أغسطس (8)</option>
                             <option value="m9">سبتمبر (9)</option>
                             <option value="m10">أكتوبر (10)</option>
                             <option value="m11">نوفمبر (11)</option>
@@ -193,7 +264,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-black text-slate-600 mb-1">يوم الغياب المطلوب:</label>
+                        <label class="block text-[11px] font-black text-slate-600 mb-1">يوم الإجازة العارضة:</label>
                         <input type="number" id="quick-day-input" min="1" max="31" onchange="onQuickDateChange()" class="w-full p-2 bg-white border-2 border-slate-300 rounded-xl text-xs font-black text-center outline-none focus:border-blue-900 font-mono text-blue-900">
                     </div>
                 </div>
@@ -201,54 +272,56 @@
                 <!-- شريط تاريخ اليوم المعتمد -->
                 <div class="p-2 bg-amber-50 rounded-xl border border-amber-200 text-center text-xs font-black text-amber-900 flex items-center justify-center gap-1.5">
                     <i class="fa-regular fa-calendar-check text-amber-600"></i>
-                    <span>أنت الآن ترصد غياب يوم: <b id="dsp-quick-target-date" class="text-blue-950 underline">-</b></span>
+                    <span>أنت الآن ترصد إجازة عارضة ليوم: <b id="dsp-quick-target-date" class="text-blue-950 underline">-</b></span>
                 </div>
 
-                <!-- 🌟 التعديل الجديد: خانة البحث وزر التأكيد والحفظ 🌟 -->
+                <!-- خانة البحث وزر التأكيد والحفظ -->
                 <div class="space-y-1.5">
                     <label class="block text-xs font-black text-slate-700">
-                        🔍 ابحث عن المعلم الغائب ثم اضغط تأكيد:
+                        🔍 ابحث عن المعلم لتسجيل عارضة له ثم اضغط تأكيد:
                     </label>
                     <div class="flex gap-2 items-start">
                         <div class="search-box-rel flex-1">
                             <input type="text" id="quick-search-teacher" class="w-full p-2.5 bg-slate-50 border-2 border-blue-400 rounded-xl font-black text-xs sm:text-sm outline-none focus:bg-white focus:border-blue-900 transition" 
                                    placeholder="اكتب الحروف الأولى (مثال: ع ثم عب)..." 
                                    autocomplete="off" 
-                                   oninput="liveSearchQuick(this.value)" 
+                                   oninput="onQuickSearchInput(this.value)" 
                                    onfocus="liveSearchQuick(this.value)">
                             <input type="hidden" id="quick-selected-nid" value="">
                             <div class="dropdown-results" id="quick-dropdown-results"></div>
                         </div>
-                        <button type="button" onclick="confirmAndSaveQuickAbsence()" class="btn-touch px-4 py-2.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow whitespace-nowrap">
-                            <i class="fa-solid fa-check-double text-yellow-300"></i> تأكيد وحفظ
+                        <button type="button" onclick="confirmAndSaveQuickAbsence()" class="btn-touch px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow whitespace-nowrap">
+                            <i class="fa-solid fa-check-double text-yellow-200"></i> تأكيد وحفظ
                         </button>
                     </div>
+                    <!-- شريط عرض رصيد العارضة للمعلم المختار -->
+                    <div id="quick-teacher-casual-hint" class="hidden p-2 rounded-xl text-[11px] font-black border"></div>
                 </div>
             </div>
 
-            <!-- كارت: المعلمون المسجل غيابهم في هذا اليوم المحدد -->
+            <!-- كارت: المعلمون المسجل لهم عارضة في هذا اليوم المحدد -->
             <div class="card-m space-y-2 border-t-4 border-t-rose-600">
                 <div class="flex justify-between items-center border-b pb-1.5">
                     <span class="text-xs font-black text-rose-900 flex items-center gap-1.5">
-                        <i class="fa-solid fa-user-xmark text-rose-600"></i>
-                        المعلمون الغائبون في هذا اليوم (<span id="quick-today-count">٠</span> معلمين):
+                        <i class="fa-solid fa-user-clock text-rose-600"></i>
+                        المسجل لهم إجازة عارضة في هذا اليوم (<span id="quick-today-count">٠</span> معلمين):
                     </span>
                     <span class="text-[10px] text-slate-400 font-bold">حفظ سحابي فوري</span>
                 </div>
 
                 <div id="quick-today-absentees-list" class="space-y-1.5 max-h-80 overflow-y-auto">
-                    <div class="text-center py-6 text-slate-400 text-xs font-bold">لا يوجد غياب مسجل لهذا اليوم.</div>
+                    <div class="text-center py-6 text-slate-400 text-xs font-bold">لا توجد إجازات عارضة مسجلة لهذا اليوم.</div>
                 </div>
             </div>
 
         </section>
 
-        <!-- ================= التبويب 2: ملف معلم محدد (عرض كافة أيام الشهر) ================= -->
+        <!-- ================= التبويب 2: ملف معلم محدد (عارضة فقط) ================= -->
         <section id="sec-teacher" class="space-y-3 hidden">
             
             <div class="card-m space-y-3 border-t-4 border-t-blue-900">
                 <div>
-                    <label class="block text-xs font-black text-slate-700 mb-1">اختر المعلم لمراجعة غيابه:</label>
+                    <label class="block text-xs font-black text-slate-700 mb-1">اختر المعلم لمراجعة أيام العارضة:</label>
                     <div class="search-box-rel">
                         <input type="text" id="teacher-profile-search" class="w-full p-2.5 bg-slate-50 border-2 border-slate-300 rounded-xl font-black text-xs outline-none focus:border-blue-900" 
                                placeholder="🔍 اكتب اسم المعلم..." 
@@ -261,33 +334,35 @@
 
                 <div id="teacher-brief-bar" class="p-2.5 bg-slate-50 rounded-xl border flex justify-between items-center text-xs font-bold">
                     <span class="text-slate-600" id="brief-teacher-name">لم يتم تحديد معلم</span>
-                    <span class="font-black text-rose-700" id="brief-teacher-stats">٠ يوم غياب</span>
+                    <span class="font-black text-amber-800" id="brief-teacher-stats">٠ يوم عارضة</span>
                 </div>
 
-                <!-- إضافة يوم مفرد لهذا المعلم -->
-                <div class="p-2.5 bg-rose-50/50 border border-rose-200 rounded-xl space-y-2">
-                    <label class="block text-[11px] font-black text-rose-900">إضافة رقم يوم محدد في الشهر لهذا المعلم:</label>
+                <div id="profile-casual-hint" class="hidden p-2 rounded-xl text-[11px] font-black border"></div>
+
+                <!-- إضافة يوم عارضة مفرد لهذا المعلم -->
+                <div class="p-2.5 bg-amber-50/60 border border-amber-200 rounded-xl space-y-2">
+                    <label class="block text-[11px] font-black text-amber-950">إضافة يوم إجازة عارضة في الشهر المختار للمعلم:</label>
                     <div class="flex gap-2">
                         <input type="number" id="inp-add-day-profile" min="1" max="31" placeholder="رقم اليوم (1-31)" class="w-28 p-2 text-center text-xs font-black rounded-lg border outline-none">
-                        <button type="button" onclick="addDayToProfile()" class="btn-touch flex-1 py-2 bg-rose-700 text-white text-xs font-black">
-                            <i class="fa-solid fa-plus"></i> إضافة اليوم
+                        <button type="button" onclick="addDayToProfile()" class="btn-touch flex-1 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-black">
+                            <i class="fa-solid fa-plus"></i> إضافة يوم عارضة
                         </button>
                     </div>
                 </div>
 
-                <!-- شارات أيام الغياب للشهر -->
+                <!-- شارات أيام العارضة للشهر -->
                 <div class="space-y-1.5">
                     <div class="text-[11px] font-black text-slate-700 flex justify-between items-center">
-                        <span>أيام الغياب المسجلة بالشهر المختار:</span>
-                        <span class="text-rose-700 font-mono font-black" id="profile-days-count">٠ يوم</span>
+                        <span>أيام العارضة المسجلة بالشهر المختار:</span>
+                        <span class="text-amber-800 font-mono font-black" id="profile-days-count">٠ يوم</span>
                     </div>
                     <div id="profile-days-badges" class="flex flex-wrap gap-1.5 p-2.5 bg-slate-50 border rounded-xl min-h-[50px] items-center">
-                        <span class="text-slate-400 text-xs">اختر معلماً لعرض أيامه.</span>
+                        <span class="text-slate-400 text-xs">اختر معلماً لعرض أيام العارضة.</span>
                     </div>
                 </div>
 
                 <button type="button" onclick="saveProfileAbsenceToCloud()" id="btn-save-profile" class="btn-touch w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs sm:text-sm">
-                    <i class="fa-solid fa-cloud-arrow-up text-yellow-300"></i> حفظ وتثبيت غياب المعلم بالسحابة
+                    <i class="fa-solid fa-cloud-arrow-up text-yellow-300"></i> حفظ وتثبيت إجازات المعلم بالسحابة
                 </button>
             </div>
 
@@ -313,6 +388,7 @@
                                onfocus="liveSearchLeave(this.value)">
                         <div class="dropdown-results" id="leave-dropdown-results"></div>
                     </div>
+                    <div id="leave-casual-hint" class="hidden mt-1.5 p-2 rounded-xl text-[11px] font-black border"></div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2">
@@ -360,11 +436,102 @@
 
         </section>
 
-        <!-- ================= التبويب 4: كشف الشهر لجميع المعلمين ================= -->
+        <!-- ================= 🌟 التبويب 4: استمارة الإجازات العارضة (١/٧ إلى ٣٠/٦) 🌟 ================= -->
+        <section id="sec-casual" class="space-y-3 hidden">
+
+            <!-- ترويسة للطباعة الرسمية فقط -->
+            <div class="print-only text-center border-b-2 border-[#0f2b48] pb-3 mb-3">
+                <h2 class="text-base font-black text-[#0f2b48]">مدرسة الشهيد أشرف حبيب الابتدائية - شئون العاملين</h2>
+                <h3 class="text-sm font-black mt-1">استمارة حصر الإجازات العارضة للمعلمين (<span id="print-casual-period">من ١/٧ إلى ٣٠/٦</span>)</h3>
+            </div>
+
+            <div class="card-m space-y-3 border-t-4 border-t-rose-700">
+                <div class="flex flex-wrap justify-between items-center gap-2 no-print">
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-black text-[#0f2b48] flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-signature text-rose-700"></i>
+                            استمارة الإجازات العارضة (١ يوليو - ٣٠ يونيو)
+                        </h3>
+                        <p class="text-[10.5px] text-slate-500 font-bold">الحد الأقصى القانوني: ٧ أيام عارضة سنوياً</p>
+                    </div>
+                    <select id="casual-fiscal-select" onchange="renderCasualLeaveForm()" class="p-1.5 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs font-black outline-none focus:border-blue-900">
+                    </select>
+                </div>
+
+                <!-- بطاقات ملخص سريعة -->
+                <div class="grid grid-cols-3 gap-2 no-print">
+                    <div class="p-2 bg-blue-50 border border-blue-200 rounded-xl text-center">
+                        <span class="block text-[10px] font-bold text-blue-700">معلمون لهم عارضة</span>
+                        <b id="casual-stat-teachers" class="text-sm font-black text-blue-950">٠</b>
+                    </div>
+                    <div class="p-2 bg-rose-50 border border-rose-200 rounded-xl text-center">
+                        <span class="block text-[10px] font-bold text-rose-700">استنفذوا (٧/٧)</span>
+                        <b id="casual-stat-exhausted" class="text-sm font-black text-rose-800">٠</b>
+                    </div>
+                    <div class="p-2 bg-amber-50 border border-amber-200 rounded-xl text-center">
+                        <span class="block text-[10px] font-bold text-amber-800">إجمالي الأيام</span>
+                        <b id="casual-stat-days" class="text-sm font-black text-amber-950">٠</b>
+                    </div>
+                </div>
+
+                <!-- أدوات البحث والتصدير والطباعة -->
+                <div class="flex flex-wrap gap-1.5 items-center no-print">
+                    <input type="text" id="casual-search-inp" oninput="renderCasualLeaveForm()" placeholder="🔍 بحث بالاسم أو المادة..." class="p-2 bg-slate-50 border rounded-xl text-xs font-bold outline-none flex-1 min-w-[130px]">
+                    <select id="casual-filter-select" onchange="renderCasualLeaveForm()" class="p-2 bg-slate-50 border rounded-xl text-xs font-black outline-none">
+                        <option value="recorded">المسجل لهم عارضة فقط</option>
+                        <option value="exhausted">المستنفذون (٧ أيام) فقط</option>
+                        <option value="all">جميع المعلمين</option>
+                    </select>
+                    <button type="button" onclick="exportCasualToExcel()" class="btn-touch px-3 py-2 bg-emerald-700 text-white text-xs">
+                        <i class="fa-solid fa-file-excel"></i> إكسيل
+                    </button>
+                    <button type="button" onclick="window.print()" class="btn-touch px-3 py-2 bg-[#0f2b48] text-white text-xs">
+                        <i class="fa-solid fa-print"></i> طباعة
+                    </button>
+                </div>
+
+                <!-- جدول استمارة العارضة -->
+                <div class="table-responsive">
+                    <table class="summary-table" id="casual-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 32px;">م</th>
+                                <th style="text-align: right; padding-right: 8px;">اسم المعلم</th>
+                                <th style="width: 85px;">المادة</th>
+                                <th style="width: 75px;">المستنفذ</th>
+                                <th style="width: 65px;">المتبقي</th>
+                                <th style="text-align: right; padding-right: 6px;">تواريخ العارضة (١/٧ - ٣٠/٦)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="casual-tbody"></tbody>
+                    </table>
+                </div>
+
+                <!-- تذييل التوقيعات للطباعة -->
+                <div class="print-only grid grid-cols-2 gap-8 pt-6 text-center text-xs font-black">
+                    <div>
+                        <p>مسئول شئون العاملين</p>
+                        <p class="mt-6 text-slate-400">.........................</p>
+                    </div>
+                    <div>
+                        <p>يعتمد / مدير المدرسة</p>
+                        <p class="mt-6 text-slate-400">.........................</p>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ================= التبويب 5: كشف الشهر للإجازات العارضة ================= -->
         <section id="sec-report" class="space-y-3 hidden">
+
+            <div class="print-only text-center border-b-2 border-[#0f2b48] pb-3 mb-3">
+                <h2 class="text-base font-black text-[#0f2b48]">مدرسة الشهيد أشرف حبيب الابتدائية - شئون العاملين</h2>
+                <h3 class="text-sm font-black mt-1">كشف الإجازات العارضة الشهري للمعلمين (<span id="print-month-title">-</span>)</h3>
+            </div>
             
             <div class="card-m space-y-2.5">
-                <div class="flex justify-between items-center gap-2">
+                <div class="flex justify-between items-center gap-2 no-print">
                     <input type="text" id="report-search-inp" oninput="filterSummaryTable()" placeholder="🔍 بحث في كشف الشهر..." class="p-2 bg-slate-50 border rounded-xl text-xs font-bold outline-none flex-1">
                     <button type="button" onclick="exportSummaryToExcel()" class="btn-touch px-3 py-2 bg-emerald-700 text-white text-xs">
                         <i class="fa-solid fa-file-excel"></i> إكسيل
@@ -380,18 +547,76 @@
                             <tr>
                                 <th style="width: 35px;">م</th>
                                 <th style="text-align: right; padding-right: 8px;">اسم المعلم</th>
-                                <th style="width: 100px;">المادة</th>
-                                <th style="width: 75px;">الغياب</th>
-                                <th style="text-align: right; padding-right: 6px;">تفاصيل التواريخ</th>
+                                <th style="width: 85px;">المادة</th>
+                                <th style="width: 70px;">عارضة الشهر</th>
+                                <th style="width: 80px;">الرصيد السنوي</th>
+                                <th style="text-align: right; padding-right: 6px;">تواريخ العارضة وملاحظات</th>
                             </tr>
                         </thead>
                         <tbody id="report-tbody"></tbody>
                     </table>
                 </div>
+
+                <!-- تذييل التوقيعات للطباعة -->
+                <div class="print-only grid grid-cols-2 gap-8 pt-6 text-center text-xs font-black">
+                    <div>
+                        <p>مسئول شئون العاملين</p>
+                        <p class="mt-6 text-slate-400">.........................</p>
+                    </div>
+                    <div>
+                        <p>يعتمد / مدير المدرسة</p>
+                        <p class="mt-6 text-slate-400">.........................</p>
+                    </div>
+                </div>
             </div>
 
         </section>
 
+    </div>
+
+    <!-- ================= 🔔 نافذة التنبيهات والإشعارات المنبثقة ================= -->
+    <div id="alerts-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[3000] hidden flex items-start justify-center p-3 pt-12 overflow-y-auto" onclick="if(event.target===this) toggleAlertsModal(false)">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border-2 border-[#0f2b48] overflow-hidden">
+            <div class="bg-[#0f2b48] text-white p-3.5 flex justify-between items-center border-b-4 border-amber-500">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-bell text-yellow-300"></i>
+                    <h3 class="text-sm font-black">تنبيهات شئون المعلمين اليوم</h3>
+                </div>
+                <button type="button" onclick="toggleAlertsModal(false)" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-3.5 space-y-4 max-h-[75vh] overflow-y-auto">
+                <!-- قسم 1: العائدون من إجازات ممتدة اليوم -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center border-b pb-1.5">
+                        <span class="text-xs font-black text-amber-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-person-walking-arrow-right text-amber-600"></i>
+                            معلمون موعد عودتهم للمدرسة اليوم (إجازات ممتدة):
+                        </span>
+                        <span id="alerts-return-count" class="px-2 py-0.5 bg-amber-100 text-amber-900 rounded-full text-[11px] font-black">٠</span>
+                    </div>
+                    <div id="alerts-return-list" class="space-y-1.5"></div>
+                </div>
+
+                <!-- قسم 2: المعلمون المستنفذون لرصيد العارضة -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center border-b pb-1.5">
+                        <span class="text-xs font-black text-rose-900 flex items-center gap-1.5">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+                            معلمون استنفذوا رصيد العارضة (٧ أيام):
+                        </span>
+                        <span id="alerts-exhausted-count" class="px-2 py-0.5 bg-rose-100 text-rose-900 rounded-full text-[11px] font-black">٠</span>
+                    </div>
+                    <div id="alerts-exhausted-list" class="space-y-1.5"></div>
+                </div>
+            </div>
+
+            <div class="p-2.5 bg-slate-50 border-t text-center">
+                <button type="button" onclick="toggleAlertsModal(false)" class="btn-touch px-6 py-2 bg-[#0f2b48] text-white text-xs">إغلاق</button>
+            </div>
+        </div>
     </div>
 
     <!-- كود المحرك البرمجي والربط السحابي المباشر -->
@@ -400,17 +625,30 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        const CASUAL_MAX_DAYS = 7;
+
+        // حساب السنة المالية الحالية (تبدأ من 1 يوليو وتنتهي 30 يونيو)
+        function getFiscalStartYearFromDateObj(d) {
+            const m = d.getMonth() + 1;
+            const y = d.getFullYear();
+            return m >= 7 ? y : y - 1;
+        }
+
+        const CURRENT_FISCAL_START = getFiscalStartYearFromDateObj(new Date());
+
         const MONTHS_CFG = {
-            "m9":  { name: "سبتمبر", num: 9, year: 2026 },
-            "m10": { name: "أكتوبر", num: 10, year: 2026 },
-            "m11": { name: "نوفمبر", num: 11, year: 2026 },
-            "m12": { name: "ديسمبر", num: 12, year: 2026 },
-            "m1":  { name: "يناير", num: 1, year: 2027 },
-            "m2":  { name: "فبراير", num: 2, year: 2027 },
-            "m3":  { name: "مارس", num: 3, year: 2027 },
-            "m4":  { name: "أبريل", num: 4, year: 2027 },
-            "m5":  { name: "مايو", num: 5, year: 2027 },
-            "m6":  { name: "يونيو", num: 6, year: 2027 }
+            "m7":  { name: "يوليو",   num: 7,  year: CURRENT_FISCAL_START },
+            "m8":  { name: "أغسطس",  num: 8,  year: CURRENT_FISCAL_START },
+            "m9":  { name: "سبتمبر",  num: 9,  year: CURRENT_FISCAL_START },
+            "m10": { name: "أكتوبر",  num: 10, year: CURRENT_FISCAL_START },
+            "m11": { name: "نوفمبر",  num: 11, year: CURRENT_FISCAL_START },
+            "m12": { name: "ديسمبر",  num: 12, year: CURRENT_FISCAL_START },
+            "m1":  { name: "يناير",   num: 1,  year: CURRENT_FISCAL_START + 1 },
+            "m2":  { name: "فبراير",  num: 2,  year: CURRENT_FISCAL_START + 1 },
+            "m3":  { name: "مارس",    num: 3,  year: CURRENT_FISCAL_START + 1 },
+            "m4":  { name: "أبريل",   num: 4,  year: CURRENT_FISCAL_START + 1 },
+            "m5":  { name: "مايو",    num: 5,  year: CURRENT_FISCAL_START + 1 },
+            "m6":  { name: "يونيو",   num: 6,  year: CURRENT_FISCAL_START + 1 }
         };
 
         let ALL_TEACHERS = [];
@@ -420,6 +658,42 @@
         const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
         const esc = s => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+        // أدوات التاريخ المحلي بدون مشاكل التوقيت
+        function parseLocalDate(str) {
+            if (!str || typeof str !== 'string') return null;
+            const parts = str.split('-').map(Number);
+            if (parts.length !== 3 || parts.some(isNaN)) return null;
+            return new Date(parts[0], parts[1] - 1, parts[2]);
+        }
+        function formatLocalDate(d) {
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+        function buildDateStr(year, monthNum, dayNum) {
+            return `${year}-${String(monthNum).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+        }
+        function daysInMonth(year, monthNum) {
+            return new Date(year, monthNum, 0).getDate();
+        }
+        function getFiscalStartYear(dateStr) {
+            const d = parseLocalDate(dateStr);
+            if (!d) return CURRENT_FISCAL_START;
+            return getFiscalStartYearFromDateObj(d);
+        }
+        function parseAbsencesObj(raw) {
+            let abs = raw;
+            if (typeof abs === 'string') {
+                try { abs = JSON.parse(abs || '{}'); } catch(e) { abs = {}; }
+            }
+            if (!abs || typeof abs !== 'object') abs = {};
+            return abs;
+        }
+        function isCasualLeaveType(typeStr) {
+            return typeStr === 'إجازة عارضة' || String(typeStr || '').includes('عارضة');
+        }
+
         // ================= دالة توحيد الحروف العربية المطورة =================
         function normalizeArabic(text) {
             if (!text) return "";
@@ -427,7 +701,7 @@
                 .replace(/[أإآا]/g, 'ا')
                 .replace(/ة/g, 'ه')
                 .replace(/ى/g, 'ي')
-                .replace(/عبد /g, 'عبد') // دمج "عبد " لتصبح "عبد" لتسهيل البحث
+                .replace(/عبد /g, 'عبد')
                 .replace(/[\u064B-\u0652]/g, '')
                 .replace(/\u0640/g, '')
                 .replace(/\s+/g, ' ')
@@ -436,24 +710,30 @@
         }
 
         window.addEventListener('DOMContentLoaded', async () => {
+            initFiscalSelect();
             initDefaultDate();
             await fetchAllTeachers();
         });
 
-        // ضبط التاريخ التلقائي على تاريخ اليوم الحالي
+        function initFiscalSelect() {
+            const sel = document.getElementById("casual-fiscal-select");
+            const years = [CURRENT_FISCAL_START - 1, CURRENT_FISCAL_START, CURRENT_FISCAL_START + 1];
+            sel.innerHTML = years.map(y => `
+                <option value="${y}" ${y === CURRENT_FISCAL_START ? 'selected' : ''}>
+                    ١/٧/${toAr(y)} إلى ٣٠/٦/${toAr(y + 1)}
+                </option>
+            `).join('');
+        }
+
         function initDefaultDate() {
             const today = new Date();
             const currentMonthNum = today.getMonth() + 1;
             const currentDay = today.getDate();
 
-            let targetMonthKey = "m10"; // افتراضي أكتوبر
-            if (currentMonthNum === 9) targetMonthKey = "m9";
-            else if (currentMonthNum === 10) targetMonthKey = "m10";
-            else if (currentMonthNum === 11) targetMonthKey = "m11";
-            else if (currentMonthNum === 12) targetMonthKey = "m12";
-            else if (currentMonthNum >= 1 && currentMonthNum <= 6) targetMonthKey = `m${currentMonthNum}`;
-
-            document.getElementById("quick-month-select").value = targetMonthKey;
+            const targetMonthKey = `m${currentMonthNum}`;
+            if (MONTHS_CFG[targetMonthKey]) {
+                document.getElementById("quick-month-select").value = targetMonthKey;
+            }
             document.getElementById("quick-day-input").value = currentDay;
 
             onQuickDateChange();
@@ -464,8 +744,271 @@
             const dayVal = document.getElementById("quick-day-input").value || "1";
             const mName = MONTHS_CFG[mKey].name;
 
-            document.getElementById("dsp-quick-target-date").innerText = `${dayVal} ${mName}`;
+            document.getElementById("dsp-quick-target-date").innerText = `${dayVal} ${mName} ${MONTHS_CFG[mKey].year}`;
+            document.getElementById("print-month-title").innerText = `${mName} ${MONTHS_CFG[mKey].year}`;
             renderQuickTodayAbsentees();
+            updateQuickTeacherCasualHint();
+            if (SELECTED_TEACHER && ACTIVE_TAB === 'teacher') {
+                renderProfileBadges();
+            }
+            if (ACTIVE_TAB === 'report') {
+                renderSummaryTable();
+            }
+        }
+
+        // ================= بناء خريطة الإجازات الممتدة غير العارضة للمعلم =================
+        function getNonCasualExtendedDatesMap(teacher) {
+            const abs = parseAbsencesObj(teacher ? teacher.absences : {});
+            const nonCasualMap = new Map();
+
+            if (Array.isArray(abs.extended_leaves)) {
+                abs.extended_leaves.forEach(lv => {
+                    if (lv && !isCasualLeaveType(lv.type)) {
+                        const dFrom = parseLocalDate(lv.from);
+                        const dTo = parseLocalDate(lv.to);
+                        if (!dFrom || !dTo) return;
+                        let curr = new Date(dFrom);
+                        while (curr <= dTo) {
+                            const dow = curr.getDay();
+                            if (dow !== 5 && dow !== 6) {
+                                nonCasualMap.set(formatLocalDate(curr), lv.type || 'إجازة ممتدة');
+                            }
+                            curr.setDate(curr.getDate() + 1);
+                        }
+                    }
+                });
+            }
+            return nonCasualMap;
+        }
+
+        // ================= حساب كافة أيام العارضة للمعلم من 1/7 حتى 30/6 =================
+        function getTeacherCasualLeaveInfo(teacher, fiscalStartYear = CURRENT_FISCAL_START) {
+            const startStr = `${fiscalStartYear}-07-01`;
+            const endStr = `${fiscalStartYear + 1}-06-30`;
+            const abs = parseAbsencesObj(teacher ? teacher.absences : {});
+            const nonCasualMap = getNonCasualExtendedDatesMap(teacher);
+
+            const datesMap = new Map();
+
+            // 1) أيام العارضة المسجلة في casual_days
+            if (Array.isArray(abs.casual_days)) {
+                abs.casual_days.forEach(item => {
+                    const dStr = typeof item === 'string' ? item : (item && item.date ? item.date : '');
+                    if (dStr && dStr >= startStr && dStr <= endStr) {
+                        datesMap.set(dStr, { date: dStr, source: 'يومي', notes: (item && item.notes) || '' });
+                    }
+                });
+            }
+
+            // 2) الإجازات الممتدة التي نوعها "إجازة عارضة"
+            if (Array.isArray(abs.extended_leaves)) {
+                abs.extended_leaves.forEach(lv => {
+                    if (lv && isCasualLeaveType(lv.type)) {
+                        const dFrom = parseLocalDate(lv.from);
+                        const dTo = parseLocalDate(lv.to);
+                        if (!dFrom || !dTo) return;
+                        let curr = new Date(dFrom);
+                        while (curr <= dTo) {
+                            const dow = curr.getDay();
+                            if (dow !== 5 && dow !== 6) {
+                                const dStr = formatLocalDate(curr);
+                                if (dStr >= startStr && dStr <= endStr && !datesMap.has(dStr)) {
+                                    datesMap.set(dStr, { date: dStr, source: 'ممتدة', notes: lv.notes || '' });
+                                }
+                            }
+                            curr.setDate(curr.getDate() + 1);
+                        }
+                    }
+                });
+            }
+
+            // 3) الأيام المسجلة في مفاتيح الشهور (m7..m12 للسنة fiscalStartYear، و m1..m6 للسنة fiscalStartYear+1)
+            // بشرط ألا تكون تابعة لإجازة ممتدة غير عارضة
+            const fyMonths = [
+                { key: 'm7',  num: 7,  year: fiscalStartYear },
+                { key: 'm8',  num: 8,  year: fiscalStartYear },
+                { key: 'm9',  num: 9,  year: fiscalStartYear },
+                { key: 'm10', num: 10, year: fiscalStartYear },
+                { key: 'm11', num: 11, year: fiscalStartYear },
+                { key: 'm12', num: 12, year: fiscalStartYear },
+                { key: 'm1',  num: 1,  year: fiscalStartYear + 1 },
+                { key: 'm2',  num: 2,  year: fiscalStartYear + 1 },
+                { key: 'm3',  num: 3,  year: fiscalStartYear + 1 },
+                { key: 'm4',  num: 4,  year: fiscalStartYear + 1 },
+                { key: 'm5',  num: 5,  year: fiscalStartYear + 1 },
+                { key: 'm6',  num: 6,  year: fiscalStartYear + 1 }
+            ];
+
+            fyMonths.forEach(m => {
+                if (Array.isArray(abs[m.key])) {
+                    const maxD = daysInMonth(m.year, m.num);
+                    abs[m.key].forEach(dNum => {
+                        const day = parseInt(dNum);
+                        if (!isNaN(day) && day >= 1 && day <= maxD) {
+                            const dStr = buildDateStr(m.year, m.num, day);
+                            if (!nonCasualMap.has(dStr) && !datesMap.has(dStr)) {
+                                datesMap.set(dStr, { date: dStr, source: 'يومي', notes: '' });
+                            }
+                        }
+                    });
+                }
+            });
+
+            const dates = Array.from(datesMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+            const count = dates.length;
+            const remaining = Math.max(0, CASUAL_MAX_DAYS - count);
+            return {
+                fiscalStartYear,
+                count,
+                remaining,
+                isExhausted: count >= CASUAL_MAX_DAYS,
+                dates,
+                datesSet: new Set(dates.map(x => x.date))
+            };
+        }
+
+        // جلب أيام العارضة للمعلم في شهر معين (mKey)
+        function getTeacherMonthCasualDays(teacher, mKey) {
+            const cfg = MONTHS_CFG[mKey];
+            const fy = getFiscalStartYear(buildDateStr(cfg.year, cfg.num, 1));
+            const cInfo = getTeacherCasualLeaveInfo(teacher, fy);
+            const prefix = `${cfg.year}-${String(cfg.num).padStart(2, '0')}-`;
+            const days = [];
+            cInfo.dates.forEach(item => {
+                if (item.date.startsWith(prefix)) {
+                    days.push(parseInt(item.date.slice(8, 10), 10));
+                }
+            });
+            days.sort((a, b) => a - b);
+            return days;
+        }
+
+        // جلب الإجازات الممتدة (غير العارضة) التي تتداخل مع شهر معين
+        function getTeacherMonthExtendedNotes(teacher, mKey) {
+            const cfg = MONTHS_CFG[mKey];
+            const mStart = buildDateStr(cfg.year, cfg.num, 1);
+            const mEnd = buildDateStr(cfg.year, cfg.num, daysInMonth(cfg.year, cfg.num));
+            const abs = parseAbsencesObj(teacher.absences);
+            if (!Array.isArray(abs.extended_leaves)) return [];
+            return abs.extended_leaves.filter(lv => lv && !isCasualLeaveType(lv.type) && lv.from <= mEnd && lv.to >= mStart);
+        }
+
+        function formatCasualHintHtml(teacher, fiscalYear) {
+            const info = getTeacherCasualLeaveInfo(teacher, fiscalYear);
+            if (info.isExhausted) {
+                return {
+                    cls: 'bg-rose-50 border-rose-300 text-rose-800',
+                    html: `<i class="fa-solid fa-triangle-exclamation text-rose-600 ml-1"></i> تحذير: أ/ ${esc(teacher.name)} <b>استنفذ رصيد العارضة بالكامل (${toAr(info.count)} / ${toAr(CASUAL_MAX_DAYS)} أيام)</b> للفترة ${toAr(fiscalYear)}/${toAr(fiscalYear + 1)}!`
+                };
+            }
+            return {
+                cls: 'bg-amber-50 border-amber-200 text-amber-900',
+                html: `<i class="fa-solid fa-circle-info text-amber-600 ml-1"></i> رصيد العارضة لـ أ/ ${esc(teacher.name)}: مستنفذ <b>${toAr(info.count)}</b> • المتبقي <b>${toAr(info.remaining)}</b> من أصل ${toAr(CASUAL_MAX_DAYS)} أيام (${toAr(fiscalYear)}/${toAr(fiscalYear + 1)}).`
+            };
+        }
+
+        function showCasualExhaustedWarning(teacherName, fiscalYear, usedCount, attemptedCount = 1) {
+            const remaining = Math.max(0, CASUAL_MAX_DAYS - usedCount);
+            const msg = usedCount >= CASUAL_MAX_DAYS
+                ? `المعلم أ/ <b>${esc(teacherName)}</b> قد استنفذ رصيد الإجازات العارضة المسموح به (<b>${toAr(CASUAL_MAX_DAYS)} أيام</b>) عن الفترة من ١/٧/${toAr(fiscalYear)} إلى ٣٠/٦/${toAr(fiscalYear + 1)}.<br><span class="text-rose-700 font-bold">لا يمكن قبول أو حفظ إجازة عارضة جديدة!</span>`
+                : `المعلم أ/ <b>${esc(teacherName)}</b> متبقي له <b>${toAr(remaining)}</b> يوم فقط من رصيد العارضة (استنفذ ${toAr(usedCount)} من ${toAr(CASUAL_MAX_DAYS)})، ولا يمكن تسجيل ${toAr(attemptedCount)} يوم!`;
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'تحذير: استنفاذ رصيد الإجازات العارضة!',
+                html: msg,
+                confirmButtonText: 'حسناً',
+                confirmButtonColor: '#be123c'
+            });
+        }
+
+        // ================= حساب موعد العودة للمدرسة والتنبيهات =================
+        function getReturnToSchoolDateStr(toStr) {
+            const dTo = parseLocalDate(toStr);
+            if (!dTo) return null;
+            const dRet = new Date(dTo);
+            dRet.setDate(dRet.getDate() + 1);
+            while (dRet.getDay() === 5 || dRet.getDay() === 6) {
+                dRet.setDate(dRet.getDate() + 1);
+            }
+            return formatLocalDate(dRet);
+        }
+
+        function updateNotificationsUI() {
+            const todayStr = formatLocalDate(new Date());
+            const exhaustedAlerts = [];
+            const returnTodayAlerts = [];
+
+            ALL_TEACHERS.forEach(t => {
+                // 1) تنبيه استنفاذ العارضة (7 أيام) في السنة المالية الحالية
+                const cInfo = getTeacherCasualLeaveInfo(t, CURRENT_FISCAL_START);
+                if (cInfo.isExhausted) {
+                    exhaustedAlerts.push({ teacher: t, info: cInfo });
+                }
+
+                // 2) تنبيه موعد العودة للمدرسة اليوم من إجازة ممتدة
+                const abs = parseAbsencesObj(t.absences);
+                if (Array.isArray(abs.extended_leaves)) {
+                    abs.extended_leaves.forEach(lv => {
+                        if (lv && lv.to) {
+                            const retStr = getReturnToSchoolDateStr(lv.to);
+                            if (retStr === todayStr) {
+                                returnTodayAlerts.push({ teacher: t, leave: lv, returnDate: retStr });
+                            }
+                        }
+                    });
+                }
+            });
+
+            const totalAlerts = exhaustedAlerts.length + returnTodayAlerts.length;
+            const badge = document.getElementById("bell-badge-count");
+            const bellIcon = document.getElementById("bell-icon");
+
+            if (totalAlerts > 0) {
+                badge.innerText = toAr(totalAlerts);
+                badge.classList.remove("hidden");
+                bellIcon.classList.add("bell-ringing");
+            } else {
+                badge.classList.add("hidden");
+                bellIcon.classList.remove("bell-ringing");
+            }
+
+            document.getElementById("alerts-return-count").innerText = toAr(returnTodayAlerts.length);
+            const retListEl = document.getElementById("alerts-return-list");
+            if (returnTodayAlerts.length === 0) {
+                retListEl.innerHTML = `<div class="p-2.5 bg-slate-50 rounded-xl text-center text-xs text-slate-400 font-bold">لا يوجد معلمون موعد عودتهم للمدرسة اليوم.</div>`;
+            } else {
+                retListEl.innerHTML = returnTodayAlerts.map(item => `
+                    <div class="p-2.5 bg-amber-50 border border-amber-300 rounded-xl flex justify-between items-center text-xs">
+                        <div>
+                            <b class="text-amber-950 block">أ/ ${esc(item.teacher.name)} <small class="text-slate-500">(${esc(item.teacher.subject || 'عام')})</small></b>
+                            <span class="text-[11px] text-amber-800 font-bold">انتهت (${esc(item.leave.type)}) يوم ${item.leave.to} • <u>موعد العودة اليوم</u></span>
+                            ${item.leave.notes ? `<span class="block text-[10.5px] text-slate-500">ملاحظات: ${esc(item.leave.notes)}</span>` : ''}
+                        </div>
+                        <span class="px-2 py-1 bg-amber-600 text-white rounded-lg text-[10px] font-black shrink-0">عودة اليوم</span>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById("alerts-exhausted-count").innerText = toAr(exhaustedAlerts.length);
+            const exhListEl = document.getElementById("alerts-exhausted-list");
+            if (exhaustedAlerts.length === 0) {
+                exhListEl.innerHTML = `<div class="p-2.5 bg-slate-50 rounded-xl text-center text-xs text-slate-400 font-bold">لا يوجد معلمون استنفذوا رصيد العارضة (٧ أيام) حتى الآن.</div>`;
+            } else {
+                exhListEl.innerHTML = exhaustedAlerts.map(item => `
+                    <div class="p-2.5 bg-rose-50 border border-rose-300 rounded-xl flex justify-between items-center text-xs">
+                        <div>
+                            <b class="text-rose-950 block">أ/ ${esc(item.teacher.name)} <small class="text-slate-500">(${esc(item.teacher.subject || 'عام')})</small></b>
+                            <span class="text-[10.5px] text-rose-700 font-bold">أيام العارضة: ${item.info.dates.map(d => d.date).join(' ، ')}</span>
+                        </div>
+                        <span class="px-2 py-1 bg-rose-700 text-white rounded-lg text-[10px] font-black shrink-0">${toAr(item.info.count)} / ${toAr(CASUAL_MAX_DAYS)}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function toggleAlertsModal(show) {
+            document.getElementById("alerts-modal").classList.toggle("hidden", !show);
         }
 
         // ================= جلب بيانات المعلمين من السحابة =================
@@ -481,8 +1024,14 @@
 
                 ALL_TEACHERS.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
 
+                if (SELECTED_TEACHER) {
+                    SELECTED_TEACHER = ALL_TEACHERS.find(t => String(t.nid) === String(SELECTED_TEACHER.nid)) || null;
+                }
+
                 renderQuickTodayAbsentees();
+                renderCasualLeaveForm();
                 renderSummaryTable();
+                updateNotificationsUI();
 
                 if (isManual) {
                     Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم تحديث البيانات', timer: 1200, showConfirmButton: false });
@@ -498,14 +1047,22 @@
             document.querySelectorAll('.tab-btn-m').forEach(b => b.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
 
-            ['quick', 'teacher', 'leave', 'report'].forEach(t => {
+            ['quick', 'teacher', 'leave', 'casual', 'report'].forEach(t => {
                 document.getElementById(`sec-${t}`).classList.toggle('hidden', t !== tab);
             });
 
+            if (tab === 'casual') renderCasualLeaveForm();
             if (tab === 'report') renderSummaryTable();
+            if (tab === 'teacher' && SELECTED_TEACHER) renderProfileBadges();
         }
 
-        // ================= 🌟 1. وضع الرصد اليومي السريع 🌟 =================
+        // ================= 🌟 1. الرصد اليومي السريع (عارضة فقط) 🌟 =================
+        function onQuickSearchInput(val) {
+            document.getElementById("quick-selected-nid").value = "";
+            document.getElementById("quick-teacher-casual-hint").classList.add("hidden");
+            liveSearchQuick(val);
+        }
+
         function liveSearchQuick(q) {
             const dropdown = document.getElementById("quick-dropdown-results");
             const cleanQ = normalizeArabic(q);
@@ -515,20 +1072,19 @@
                 return;
             }
 
-            // بحث صارم: يجب أن يبدأ الاسم بالكامل بالحروف المدخلة
             const matches = ALL_TEACHERS.filter(t => {
                 const normName = normalizeArabic(t.name);
                 return normName.startsWith(cleanQ);
             }).sort((a, b) => a.name.localeCompare(b.name, 'ar')).slice(0, 15);
 
             if (matches.length === 0) {
-                dropdown.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs font-bold">لا يوجد معلم يبدأ اسمه بـ "${q}"</div>`;
+                dropdown.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs font-bold">لا يوجد معلم يبدأ اسمه بـ "${esc(q)}"</div>`;
             } else {
                 dropdown.innerHTML = matches.map(t => `
-                    <div class="dropdown-item" onmousedown="selectTeacherForQuick('${t.nid}', '${t.name}')">
+                    <div class="dropdown-item" onmousedown="selectTeacherForQuick('${esc(t.nid)}')">
                         <div>
-                            <span class="font-black text-slate-800">${t.name}</span>
-                            <small class="text-slate-500 mr-1">(${t.subject || 'عام'})</small>
+                            <span class="font-black text-slate-800">${esc(t.name)}</span>
+                            <small class="text-slate-500 mr-1">(${esc(t.subject || 'عام')})</small>
                         </div>
                     </div>
                 `).join('');
@@ -537,14 +1093,38 @@
             dropdown.style.display = "block";
         }
 
-        // دالة اختيار المعلم فقط بدون حفظ
-        function selectTeacherForQuick(nid, name) {
-            document.getElementById("quick-search-teacher").value = name;
-            document.getElementById("quick-selected-nid").value = nid;
+        function selectTeacherForQuick(nid) {
+            const teacher = ALL_TEACHERS.find(t => String(t.nid) === String(nid));
+            if (!teacher) return;
+            document.getElementById("quick-search-teacher").value = teacher.name;
+            document.getElementById("quick-selected-nid").value = teacher.nid;
             document.getElementById("quick-dropdown-results").style.display = "none";
+            updateQuickTeacherCasualHint();
         }
 
-        // دالة تأكيد وحفظ الغياب
+        function updateQuickTeacherCasualHint() {
+            const nid = document.getElementById("quick-selected-nid").value;
+            const hintEl = document.getElementById("quick-teacher-casual-hint");
+            if (!nid) {
+                hintEl.classList.add("hidden");
+                return;
+            }
+            const teacher = ALL_TEACHERS.find(t => String(t.nid) === String(nid));
+            if (!teacher) return;
+
+            const mKey = document.getElementById("quick-month-select").value;
+            const cfg = MONTHS_CFG[mKey];
+            const dayNum = Math.min(Math.max(parseInt(document.getElementById("quick-day-input").value) || 1, 1), daysInMonth(cfg.year, cfg.num));
+            const dateStr = buildDateStr(cfg.year, cfg.num, dayNum);
+            const fy = getFiscalStartYear(dateStr);
+
+            const res = formatCasualHintHtml(teacher, fy);
+            hintEl.className = `p-2 rounded-xl text-[11px] font-black border ${res.cls}`;
+            hintEl.innerHTML = res.html;
+            hintEl.classList.remove("hidden");
+        }
+
+        // تأكيد وحفظ الإجازة العارضة (مع الرفض التام عند استنفاذ الـ 7 أيام)
         async function confirmAndSaveQuickAbsence() {
             const nid = document.getElementById("quick-selected-nid").value;
             if (!nid) {
@@ -557,48 +1137,72 @@
 
             const mKey = document.getElementById("quick-month-select").value;
             const dayNum = parseInt(document.getElementById("quick-day-input").value);
-            const mName = MONTHS_CFG[mKey].name;
+            const cfg = MONTHS_CFG[mKey];
+            const mName = cfg.name;
+            const maxDay = daysInMonth(cfg.year, cfg.num);
 
-            if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) {
-                Swal.fire('تنبيه', 'يرجى كتابة رقم يوم صحيح بين 1 و 31.', 'warning');
+            if (isNaN(dayNum) || dayNum < 1 || dayNum > maxDay) {
+                Swal.fire('تنبيه', `يرجى كتابة رقم يوم صحيح بين 1 و ${maxDay} لشهر ${mName}.`, 'warning');
                 return;
             }
 
-            let abs = teacher.absences;
-            if (typeof abs === 'string') {
-                try { abs = JSON.parse(abs || '{}'); } catch(e) { abs = {}; }
-            }
-            if (!abs || typeof abs !== 'object') abs = {};
-            if (!Array.isArray(abs[mKey])) abs[mKey] = [];
+            const dateStr = buildDateStr(cfg.year, cfg.num, dayNum);
+            const fiscalYear = getFiscalStartYear(dateStr);
 
-            if (abs[mKey].includes(dayNum)) {
-                Swal.fire({ toast: true, position: 'top', icon: 'info', title: `مسجل بالفعل غياب يوم ${dayNum} ${mName}`, timer: 1500, showConfirmButton: false });
+            // فحص إذا كان التاريخ واقعاً في إجازة ممتدة أخرى
+            const nonCasualMap = getNonCasualExtendedDatesMap(teacher);
+            if (nonCasualMap.has(dateStr)) {
+                Swal.fire('تنبيه', `المعلم أ/ ${teacher.name} مسجل له بالفعل (${nonCasualMap.get(dateStr)}) في هذا اليوم.`, 'info');
+                return;
+            }
+
+            const cInfo = getTeacherCasualLeaveInfo(teacher, fiscalYear);
+            if (cInfo.datesSet.has(dateStr)) {
+                Swal.fire({ toast: true, position: 'top', icon: 'info', title: `مسجل بالفعل إجازة عارضة يوم ${dayNum} ${mName}`, timer: 1600, showConfirmButton: false });
                 document.getElementById("quick-search-teacher").value = "";
                 document.getElementById("quick-selected-nid").value = "";
+                document.getElementById("quick-teacher-casual-hint").classList.add("hidden");
                 return;
             }
 
-            // إضافة اليوم وترتيبه
-            abs[mKey].push(dayNum);
-            abs[mKey].sort((a, b) => a - b);
+            // شرط المنع عند استنفاذ الـ 7 أيام
+            if (cInfo.isExhausted) {
+                showCasualExhaustedWarning(teacher.name, fiscalYear, cInfo.count, 1);
+                return; // رفض الحفظ
+            }
+
+            const abs = parseAbsencesObj(teacher.absences);
+            if (!Array.isArray(abs[mKey])) abs[mKey] = [];
+            if (!Array.isArray(abs.casual_days)) abs.casual_days = [];
+
+            if (!abs.casual_days.includes(dateStr)) {
+                abs.casual_days.push(dateStr);
+                abs.casual_days.sort();
+            }
+            if (!abs[mKey].includes(dayNum)) {
+                abs[mKey].push(dayNum);
+                abs[mKey].sort((a, b) => a - b);
+            }
             teacher.absences = abs;
 
-            // حفظ مباشر في السحابة
             try {
                 await sbClient.from("teachers").update({ absences: abs }).eq("nid", teacher.nid);
 
                 document.getElementById("quick-search-teacher").value = "";
                 document.getElementById("quick-selected-nid").value = "";
+                document.getElementById("quick-teacher-casual-hint").classList.add("hidden");
 
                 renderQuickTodayAbsentees();
-                renderSummaryTable(); // تحديث كشف الشهر في الخلفية
+                renderCasualLeaveForm();
+                renderSummaryTable();
+                updateNotificationsUI();
 
                 Swal.fire({
                     toast: true,
                     position: 'top',
                     icon: 'success',
-                    title: `تم رصد غياب: أ/ ${teacher.name} (يوم ${dayNum} ${mName})`,
-                    timer: 1500,
+                    title: `تم رصد إجازة عارضة: أ/ ${teacher.name} (يوم ${dayNum} ${mName})`,
+                    timer: 1600,
                     showConfirmButton: false
                 });
 
@@ -608,38 +1212,55 @@
             }
         }
 
-        // رسم كشف الغائبين في اليوم المحدد
+        // رسم كشف المسجل لهم عارضة في اليوم المحدد
         function renderQuickTodayAbsentees() {
             const container = document.getElementById("quick-today-absentees-list");
             const mKey = document.getElementById("quick-month-select").value;
+            const cfg = MONTHS_CFG[mKey];
             const dayNum = parseInt(document.getElementById("quick-day-input").value) || 0;
+            const maxDay = daysInMonth(cfg.year, cfg.num);
 
-            let absentees = [];
-
-            ALL_TEACHERS.forEach(t => {
-                let abs = t.absences;
-                if (typeof abs === 'string') {
-                    try { abs = JSON.parse(abs || '{}'); } catch(e) { abs = {}; }
-                }
-                if (abs && Array.isArray(abs[mKey]) && abs[mKey].includes(dayNum)) {
-                    absentees.push(t);
-                }
-            });
-
-            document.getElementById("quick-today-count").innerText = toAr(absentees.length);
-
-            if (absentees.length === 0) {
-                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs font-bold">🎉 لا يوجد غياب مسجل في هذا اليوم.</div>`;
+            if (dayNum < 1 || dayNum > maxDay) {
+                document.getElementById("quick-today-count").innerText = "٠";
+                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs font-bold">رقم اليوم غير صحيح لهذا الشهر.</div>`;
                 return;
             }
 
-            container.innerHTML = absentees.map(t => `
-                <div class="flex justify-between items-center p-2.5 bg-slate-50 border border-slate-200 rounded-xl hover:bg-rose-50/50 transition">
+            const dateStr = buildDateStr(cfg.year, cfg.num, dayNum);
+            const fy = getFiscalStartYear(dateStr);
+
+            let casualAbsentees = [];
+
+            ALL_TEACHERS.forEach(t => {
+                const cInfo = getTeacherCasualLeaveInfo(t, fy);
+                if (cInfo.datesSet.has(dateStr)) {
+                    const entry = cInfo.dates.find(d => d.date === dateStr);
+                    casualAbsentees.push({
+                        teacher: t,
+                        usedCount: cInfo.count,
+                        source: entry ? entry.source : 'يومي'
+                    });
+                }
+            });
+
+            document.getElementById("quick-today-count").innerText = toAr(casualAbsentees.length);
+
+            if (casualAbsentees.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs font-bold">🎉 لا توجد إجازات عارضة مسجلة في هذا اليوم.</div>`;
+                return;
+            }
+
+            container.innerHTML = casualAbsentees.map(({ teacher: t, usedCount, source }) => `
+                <div class="flex justify-between items-center p-2.5 bg-slate-50 border border-slate-200 rounded-xl hover:bg-amber-50/50 transition">
                     <div>
-                        <b class="text-xs text-[#0f2b48] block">${t.name}</b>
-                        <span class="text-[11px] text-slate-500">${t.subject || 'عام'} • ${t.fin_degree || t.cadre_job || '-'}</span>
+                        <b class="text-xs text-[#0f2b48] inline-flex items-center gap-1.5">
+                            ${esc(t.name)}
+                            <span class="bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded text-[10px] font-black">عارضة (${toAr(usedCount)}/${toAr(CASUAL_MAX_DAYS)})</span>
+                            ${source === 'ممتدة' ? `<span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[9.5px] font-black">ممتدة</span>` : ''}
+                        </b>
+                        <span class="text-[11px] text-slate-500 block">${esc(t.subject || 'عام')} • ${esc(t.fin_degree || t.cadre_job || '-')}</span>
                     </div>
-                    <button type="button" onclick="quickRemoveTodayAbsence('${t.nid}')" class="text-rose-600 hover:text-rose-800 p-1.5 text-xs font-black flex items-center gap-1 bg-white border border-rose-200 rounded-lg shadow-sm">
+                    <button type="button" onclick="quickRemoveTodayAbsence('${esc(t.nid)}')" class="text-rose-600 hover:text-rose-800 p-1.5 text-xs font-black flex items-center gap-1 bg-white border border-rose-200 rounded-lg shadow-sm">
                         <i class="fa-solid fa-trash-can"></i> إلغاء
                     </button>
                 </div>
@@ -651,26 +1272,44 @@
             if (!teacher) return;
 
             const mKey = document.getElementById("quick-month-select").value;
+            const cfg = MONTHS_CFG[mKey];
             const dayNum = parseInt(document.getElementById("quick-day-input").value);
+            const dateStr = buildDateStr(cfg.year, cfg.num, dayNum);
 
-            let abs = teacher.absences;
-            if (typeof abs === 'string') {
-                try { abs = JSON.parse(abs || '{}'); } catch(e) { abs = {}; }
+            const abs = parseAbsencesObj(teacher.absences);
+
+            if (Array.isArray(abs.extended_leaves)) {
+                const extIdx = abs.extended_leaves.findIndex(lv => lv && isCasualLeaveType(lv.type) && dateStr >= lv.from && dateStr <= lv.to);
+                if (extIdx !== -1) {
+                    const lv = abs.extended_leaves[extIdx];
+                    if (lv.from === dateStr && lv.to === dateStr) {
+                        abs.extended_leaves.splice(extIdx, 1);
+                    } else {
+                        Swal.fire('تنبيه', `هذا اليوم مسجل ضمن إجازة عارضة ممتدة (${lv.from} إلى ${lv.to}). لحذفها انتقل إلى تبويب "ممتدة".`, 'info');
+                        return;
+                    }
+                }
             }
-            if (abs && Array.isArray(abs[mKey])) {
+
+            if (Array.isArray(abs[mKey])) {
                 abs[mKey] = abs[mKey].filter(d => d !== dayNum);
-                teacher.absences = abs;
-
-                try {
-                    await sbClient.from("teachers").update({ absences: abs }).eq("nid", teacher.nid);
-                    renderQuickTodayAbsentees();
-                    renderSummaryTable();
-                    Swal.fire({ toast: true, position: 'top', icon: 'info', title: `تم إلغاء غياب أ/ ${teacher.name}`, timer: 1200, showConfirmButton: false });
-                } catch(e) {}
             }
+            if (Array.isArray(abs.casual_days)) {
+                abs.casual_days = abs.casual_days.filter(d => (typeof d === 'string' ? d : d.date) !== dateStr);
+            }
+            teacher.absences = abs;
+
+            try {
+                await sbClient.from("teachers").update({ absences: abs }).eq("nid", teacher.nid);
+                renderQuickTodayAbsentees();
+                renderCasualLeaveForm();
+                renderSummaryTable();
+                updateNotificationsUI();
+                Swal.fire({ toast: true, position: 'top', icon: 'info', title: `تم إلغاء عارضة أ/ ${teacher.name}`, timer: 1200, showConfirmButton: false });
+            } catch(e) {}
         }
 
-        // ================= 🌟 2. تبويب ملف المعلم المحدد 🌟 =================
+        // ================= 🌟 2. تبويب ملف المعلم المحدد (عارضة فقط) 🌟 =================
         function liveSearchProfile(q) {
             const dropdown = document.getElementById("profile-dropdown-results");
             const cleanQ = normalizeArabic(q);
@@ -680,19 +1319,18 @@
                 return; 
             }
 
-            // بحث صارم: يجب أن يبدأ الاسم بالكامل بالحروف المدخلة
             const matches = ALL_TEACHERS.filter(t => {
                 const normName = normalizeArabic(t.name);
                 return normName.startsWith(cleanQ);
             }).sort((a, b) => a.name.localeCompare(b.name, 'ar')).slice(0, 10);
 
             if (matches.length === 0) {
-                dropdown.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs font-bold">لا يوجد معلم يبدأ اسمه بـ "${q}"</div>`;
+                dropdown.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs font-bold">لا يوجد معلم يبدأ اسمه بـ "${esc(q)}"</div>`;
             } else {
                 dropdown.innerHTML = matches.map(t => `
-                    <div class="dropdown-item" onmousedown="chooseTeacherForProfile('${t.nid}')">
-                        <span>${t.name}</span>
-                        <small>${t.subject || 'عام'}</small>
+                    <div class="dropdown-item" onmousedown="chooseTeacherForProfile('${esc(t.nid)}')">
+                        <span>${esc(t.name)}</span>
+                        <small>${esc(t.subject || 'عام')}</small>
                     </div>
                 `).join('');
             }
@@ -713,33 +1351,37 @@
         function renderProfileBadges() {
             const container = document.getElementById("profile-days-badges");
             const countEl = document.getElementById("profile-days-count");
+            const hintEl = document.getElementById("profile-casual-hint");
             const mKey = document.getElementById("quick-month-select").value;
-            const mName = MONTHS_CFG[mKey].name;
+            const cfg = MONTHS_CFG[mKey];
+            const mName = cfg.name;
 
             if (!SELECTED_TEACHER) {
                 container.innerHTML = `<span class="text-slate-400 text-xs">اختر معلماً أولاً.</span>`;
                 countEl.innerText = "٠ يوم";
+                hintEl.classList.add("hidden");
                 return;
             }
 
-            let abs = SELECTED_TEACHER.absences;
-            if (typeof abs === 'string') {
-                try { abs = JSON.parse(abs || '{}'); } catch(e) { abs = {}; }
-            }
-            if (!abs || typeof abs !== 'object') abs = {};
-            const daysArr = Array.isArray(abs[mKey]) ? abs[mKey] : [];
+            const fy = getFiscalStartYear(buildDateStr(cfg.year, cfg.num, 1));
+            const res = formatCasualHintHtml(SELECTED_TEACHER, fy);
+            hintEl.className = `p-2 rounded-xl text-[11px] font-black border ${res.cls}`;
+            hintEl.innerHTML = res.html;
+            hintEl.classList.remove("hidden");
+
+            const daysArr = getTeacherMonthCasualDays(SELECTED_TEACHER, mKey);
 
             countEl.innerText = `${toAr(daysArr.length)} يوم`;
-            document.getElementById("brief-teacher-stats").innerText = `${toAr(daysArr.length)} يوم غياب في ${mName}`;
+            document.getElementById("brief-teacher-stats").innerText = `${toAr(daysArr.length)} يوم عارضة في ${mName}`;
 
             if (daysArr.length === 0) {
-                container.innerHTML = `<span class="text-slate-400 text-xs font-bold">لا يوجد غياب مسجل في شهر ${mName}.</span>`;
+                container.innerHTML = `<span class="text-slate-400 text-xs font-bold">لا توجد أيام عارضة مسجلة في شهر ${mName}.</span>`;
                 return;
             }
 
             container.innerHTML = daysArr.map(d => `
                 <div class="badge-day">
-                    <span>يوم ${toAr(d)} ${mName}</span>
+                    <span>يوم ${toAr(d)} ${mName} (عارضة)</span>
                     <i class="fa-solid fa-xmark" onclick="removeDayFromProfile(${d})"></i>
                 </div>
             `).join('');
@@ -750,32 +1392,80 @@
             const inp = document.getElementById("inp-add-day-profile");
             const dayNum = parseInt(inp.value);
             const mKey = document.getElementById("quick-month-select").value;
+            const cfg = MONTHS_CFG[mKey];
+            const maxDay = daysInMonth(cfg.year, cfg.num);
 
-            if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) return;
+            if (isNaN(dayNum) || dayNum < 1 || dayNum > maxDay) {
+                Swal.fire('تنبيه', `أدخل رقم يوم صحيح بين 1 و ${maxDay}.`, 'warning');
+                return;
+            }
 
-            let abs = SELECTED_TEACHER.absences || {};
-            if (typeof abs === 'string') { try { abs = JSON.parse(abs || '{}'); } catch(e) { abs = {}; } }
+            const dateStr = buildDateStr(cfg.year, cfg.num, dayNum);
+            const fy = getFiscalStartYear(dateStr);
+
+            const nonCasualMap = getNonCasualExtendedDatesMap(SELECTED_TEACHER);
+            if (nonCasualMap.has(dateStr)) {
+                Swal.fire('تنبيه', `المعلم مسجل له (${nonCasualMap.get(dateStr)}) في هذا اليوم.`, 'info');
+                return;
+            }
+
+            const cInfo = getTeacherCasualLeaveInfo(SELECTED_TEACHER, fy);
+            if (!cInfo.datesSet.has(dateStr)) {
+                if (cInfo.isExhausted) {
+                    showCasualExhaustedWarning(SELECTED_TEACHER.name, fy, cInfo.count, 1);
+                    return; // رفض الإضافة
+                }
+            } else {
+                inp.value = "";
+                return;
+            }
+
+            const abs = parseAbsencesObj(SELECTED_TEACHER.absences);
             if (!Array.isArray(abs[mKey])) abs[mKey] = [];
+            if (!Array.isArray(abs.casual_days)) abs.casual_days = [];
 
+            if (!abs.casual_days.includes(dateStr)) {
+                abs.casual_days.push(dateStr);
+                abs.casual_days.sort();
+            }
             if (!abs[mKey].includes(dayNum)) {
                 abs[mKey].push(dayNum);
                 abs[mKey].sort((a,b)=>a-b);
-                SELECTED_TEACHER.absences = abs;
-                inp.value = "";
-                renderProfileBadges();
             }
+            SELECTED_TEACHER.absences = abs;
+            inp.value = "";
+            renderProfileBadges();
         }
 
         function removeDayFromProfile(dayNum) {
             if (!SELECTED_TEACHER) return;
             const mKey = document.getElementById("quick-month-select").value;
-            let abs = SELECTED_TEACHER.absences;
-            if (typeof abs === 'string') { try { abs = JSON.parse(abs || '{}'); } catch(e) { abs = {}; } }
-            if (abs && Array.isArray(abs[mKey])) {
-                abs[mKey] = abs[mKey].filter(d => d !== dayNum);
-                SELECTED_TEACHER.absences = abs;
-                renderProfileBadges();
+            const cfg = MONTHS_CFG[mKey];
+            const dateStr = buildDateStr(cfg.year, cfg.num, dayNum);
+
+            const abs = parseAbsencesObj(SELECTED_TEACHER.absences);
+
+            if (Array.isArray(abs.extended_leaves)) {
+                const extIdx = abs.extended_leaves.findIndex(lv => lv && isCasualLeaveType(lv.type) && dateStr >= lv.from && dateStr <= lv.to);
+                if (extIdx !== -1) {
+                    const lv = abs.extended_leaves[extIdx];
+                    if (lv.from === dateStr && lv.to === dateStr) {
+                        abs.extended_leaves.splice(extIdx, 1);
+                    } else {
+                        Swal.fire('تنبيه', `هذا اليوم ضمن إجازة عارضة ممتدة (${lv.from} إلى ${lv.to}). احذفها من تبويب "ممتدة".`, 'info');
+                        return;
+                    }
+                }
             }
+
+            if (Array.isArray(abs[mKey])) {
+                abs[mKey] = abs[mKey].filter(d => d !== dayNum);
+            }
+            if (Array.isArray(abs.casual_days)) {
+                abs.casual_days = abs.casual_days.filter(d => (typeof d === 'string' ? d : d.date) !== dateStr);
+            }
+            SELECTED_TEACHER.absences = abs;
+            renderProfileBadges();
         }
 
         async function saveProfileAbsenceToCloud() {
@@ -786,13 +1476,16 @@
 
             try {
                 await sbClient.from("teachers").update({ absences: SELECTED_TEACHER.absences }).eq("nid", SELECTED_TEACHER.nid);
+                renderQuickTodayAbsentees();
+                renderCasualLeaveForm();
                 renderSummaryTable();
-                Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم حفظ غياب المعلم بالسحابة!', timer: 1500, showConfirmButton: false });
+                updateNotificationsUI();
+                Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم حفظ إجازات المعلم بالسحابة!', timer: 1500, showConfirmButton: false });
             } catch(e) {
                 Swal.fire('خطأ', e.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-yellow-300"></i> حفظ وتثبيت غياب المعلم بالسحابة`;
+                btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-yellow-300"></i> حفظ وتثبيت إجازات المعلم بالسحابة`;
             }
         }
 
@@ -806,19 +1499,18 @@
                 return; 
             }
 
-            // بحث صارم: يجب أن يبدأ الاسم بالكامل بالحروف المدخلة
             const matches = ALL_TEACHERS.filter(t => {
                 const normName = normalizeArabic(t.name);
                 return normName.startsWith(cleanQ);
             }).sort((a, b) => a.name.localeCompare(b.name, 'ar')).slice(0, 10);
 
             if (matches.length === 0) {
-                dropdown.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs font-bold">لا يوجد معلم يبدأ اسمه بـ "${q}"</div>`;
+                dropdown.innerHTML = `<div class="p-3 text-center text-slate-400 text-xs font-bold">لا يوجد معلم يبدأ اسمه بـ "${esc(q)}"</div>`;
             } else {
                 dropdown.innerHTML = matches.map(t => `
-                    <div class="dropdown-item" onmousedown="chooseTeacherForLeave('${t.nid}')">
-                        <span>${t.name}</span>
-                        <small>${t.subject || 'عام'}</small>
+                    <div class="dropdown-item" onmousedown="chooseTeacherForLeave('${esc(t.nid)}')">
+                        <span>${esc(t.name)}</span>
+                        <small>${esc(t.subject || 'عام')}</small>
                     </div>
                 `).join('');
             }
@@ -832,6 +1524,12 @@
             document.getElementById("leave-teacher-search").value = SELECTED_TEACHER.name;
             document.getElementById("leave-dropdown-results").style.display = "none";
 
+            const hintEl = document.getElementById("leave-casual-hint");
+            const res = formatCasualHintHtml(SELECTED_TEACHER, CURRENT_FISCAL_START);
+            hintEl.className = `mt-1.5 p-2 rounded-xl text-[11px] font-black border ${res.cls}`;
+            hintEl.innerHTML = res.html;
+            hintEl.classList.remove("hidden");
+
             renderLeaveHistory();
         }
 
@@ -842,9 +1540,8 @@
                 return;
             }
 
-            let abs = SELECTED_TEACHER.absences;
-            if (typeof abs === 'string') { try { abs = JSON.parse(abs || '{}'); } catch(e) { abs = {}; } }
-            const leaves = (abs && Array.isArray(abs.extended_leaves)) ? abs.extended_leaves : [];
+            const abs = parseAbsencesObj(SELECTED_TEACHER.absences);
+            const leaves = Array.isArray(abs.extended_leaves) ? abs.extended_leaves : [];
 
             if (leaves.length === 0) {
                 container.innerHTML = `<div class="text-slate-400 text-xs text-center py-2">لا توجد إجازات ممتدة مسجلة.</div>`;
@@ -854,7 +1551,7 @@
             container.innerHTML = leaves.map((lv, idx) => `
                 <div class="leave-item-card">
                     <div>
-                        <b class="text-amber-950 block">${lv.type} (${toAr(lv.totalDays)} يوم)</b>
+                        <b class="text-amber-950 block">${esc(lv.type)} (${toAr(lv.totalDays)} يوم)</b>
                         <span class="text-slate-500 font-mono text-[10.5px]">من: ${lv.from} إلى: ${lv.to}</span>
                         ${lv.notes ? `<span class="text-slate-500 block text-[10.5px]">قرار: ${esc(lv.notes)}</span>` : ''}
                     </div>
@@ -875,29 +1572,74 @@
 
             if (!fromStr || !toStr) { Swal.fire('تنبيه', 'حدد تاريخ بداية ونهاية الإجازة!', 'warning'); return; }
 
-            const dFrom = new Date(fromStr);
-            const dTo = new Date(toStr);
-            if (dFrom > dTo) { Swal.fire('خطأ', 'تاريخ البداية بعد النهاية!', 'error'); return; }
+            const dFrom = parseLocalDate(fromStr);
+            const dTo = parseLocalDate(toStr);
+            if (!dFrom || !dTo || dFrom > dTo) { Swal.fire('خطأ', 'تاريخ البداية بعد النهاية!', 'error'); return; }
 
             const diffTime = Math.abs(dTo - dFrom);
             const totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
-            let abs = SELECTED_TEACHER.absences || {};
-            if (typeof abs === 'string') { try { abs = JSON.parse(abs || '{}'); } catch(e) { abs = {}; } }
+            // التحقق الصارم إذا كان نوع الإجازة "إجازة عارضة"
+            if (isCasualLeaveType(leaveType)) {
+                const newDaysByFY = {};
+                let currCheck = new Date(dFrom);
+                while (currCheck <= dTo) {
+                    const dow = currCheck.getDay();
+                    if (dow !== 5 && dow !== 6) {
+                        const dStr = formatLocalDate(currCheck);
+                        const fy = getFiscalStartYear(dStr);
+                        if (!newDaysByFY[fy]) newDaysByFY[fy] = new Set();
+                        newDaysByFY[fy].add(dStr);
+                    }
+                    currCheck.setDate(currCheck.getDate() + 1);
+                }
+
+                const fyKeys = Object.keys(newDaysByFY);
+                if (fyKeys.length === 0) {
+                    Swal.fire('تنبيه', 'التواريخ المختارة تقع في عطلة رسمية (الجمعة والسبت) فقط.', 'info');
+                    return;
+                }
+
+                for (const fyStr of fyKeys) {
+                    const fy = Number(fyStr);
+                    const cInfo = getTeacherCasualLeaveInfo(SELECTED_TEACHER, fy);
+                    let uniqueNewCount = 0;
+                    newDaysByFY[fy].forEach(dStr => {
+                        if (!cInfo.datesSet.has(dStr)) uniqueNewCount++;
+                    });
+
+                    if (cInfo.isExhausted || (cInfo.count + uniqueNewCount > CASUAL_MAX_DAYS)) {
+                        showCasualExhaustedWarning(SELECTED_TEACHER.name, fy, cInfo.count, uniqueNewCount || 1);
+                        return; // رفض الحفظ
+                    }
+                }
+            }
+
+            const abs = parseAbsencesObj(SELECTED_TEACHER.absences);
             if (!Array.isArray(abs.extended_leaves)) abs.extended_leaves = [];
 
-            // إنزال أيام العمل (الأحد - الخميس) آلياً في غياب الشهور
+            if (isCasualLeaveType(leaveType) && !Array.isArray(abs.casual_days)) {
+                abs.casual_days = [];
+            }
+
             let curr = new Date(dFrom);
             while (curr <= dTo) {
                 const dayOfWeek = curr.getDay();
-                if (dayOfWeek !== 5 && dayOfWeek !== 6) { // استبعاد الجمعة والسبت
+                if (dayOfWeek !== 5 && dayOfWeek !== 6) {
                     const mNum = curr.getMonth() + 1;
-                    const mKey = (mNum >= 9 && mNum <= 12) ? `m${mNum}` : `m${mNum}`;
+                    const mKey = `m${mNum}`;
                     if (!Array.isArray(abs[mKey])) abs[mKey] = [];
                     const dNum = curr.getDate();
                     if (!abs[mKey].includes(dNum)) {
                         abs[mKey].push(dNum);
                         abs[mKey].sort((a,b)=>a-b);
+                    }
+                    if (isCasualLeaveType(leaveType)) {
+                        const dStr = formatLocalDate(curr);
+                        if (!abs.casual_days.includes(dStr)) {
+                            abs.casual_days.push(dStr);
+                            abs.casual_days.sort();
+                        }
                     }
                 }
                 curr.setDate(curr.getDate() + 1);
@@ -921,8 +1663,17 @@
                 document.getElementById("leave-from-date").value = "";
                 document.getElementById("leave-to-date").value = "";
                 document.getElementById("leave-notes").value = "";
+
+                const hintEl = document.getElementById("leave-casual-hint");
+                const res = formatCasualHintHtml(SELECTED_TEACHER, CURRENT_FISCAL_START);
+                hintEl.className = `mt-1.5 p-2 rounded-xl text-[11px] font-black border ${res.cls}`;
+                hintEl.innerHTML = res.html;
+
                 renderLeaveHistory();
+                renderQuickTodayAbsentees();
+                renderCasualLeaveForm();
                 renderSummaryTable();
+                updateNotificationsUI();
                 Swal.fire({ icon: 'success', title: 'تم حفظ الإجازة وتنزيل أيامها تلقائياً!', timer: 1500, showConfirmButton: false });
             } catch(e) {
                 Swal.fire('خطأ', e.message, 'error');
@@ -945,44 +1696,176 @@
             });
             if (!r.isConfirmed) return;
 
-            SELECTED_TEACHER.absences.extended_leaves.splice(idx, 1);
+            const abs = parseAbsencesObj(SELECTED_TEACHER.absences);
+            const removedLeave = Array.isArray(abs.extended_leaves) ? abs.extended_leaves[idx] : null;
+            if (Array.isArray(abs.extended_leaves)) {
+                abs.extended_leaves.splice(idx, 1);
+            }
+
+            // تنظيف أيام الإجازة المحذوفة من الشهور و casual_days إذا لم تكن مسجلة في إجازة ممتدة أخرى
+            if (removedLeave && removedLeave.from && removedLeave.to) {
+                const dFrom = parseLocalDate(removedLeave.from);
+                const dTo = parseLocalDate(removedLeave.to);
+                if (dFrom && dTo) {
+                    let curr = new Date(dFrom);
+                    while (curr <= dTo) {
+                        const dStr = formatLocalDate(curr);
+                        const mKey = `m${curr.getMonth() + 1}`;
+                        const dNum = curr.getDate();
+
+                        const stillInOtherExt = (abs.extended_leaves || []).some(lv => lv && dStr >= lv.from && dStr <= lv.to);
+                        if (!stillInOtherExt) {
+                            if (isCasualLeaveType(removedLeave.type) && Array.isArray(abs.casual_days)) {
+                                abs.casual_days = abs.casual_days.filter(d => (typeof d === 'string' ? d : d.date) !== dStr);
+                            }
+                            if (Array.isArray(abs[mKey])) {
+                                abs[mKey] = abs[mKey].filter(d => d !== dNum);
+                            }
+                        }
+                        curr.setDate(curr.getDate() + 1);
+                    }
+                }
+            }
+
+            SELECTED_TEACHER.absences = abs;
 
             try {
-                await sbClient.from("teachers").update({ absences: SELECTED_TEACHER.absences }).eq("nid", SELECTED_TEACHER.nid);
+                await sbClient.from("teachers").update({ absences: abs }).eq("nid", SELECTED_TEACHER.nid);
+                const hintEl = document.getElementById("leave-casual-hint");
+                const res = formatCasualHintHtml(SELECTED_TEACHER, CURRENT_FISCAL_START);
+                hintEl.className = `mt-1.5 p-2 rounded-xl text-[11px] font-black border ${res.cls}`;
+                hintEl.innerHTML = res.html;
+
                 renderLeaveHistory();
+                renderQuickTodayAbsentees();
+                renderCasualLeaveForm();
                 renderSummaryTable();
+                updateNotificationsUI();
                 Swal.fire({ icon: 'success', title: 'تم الحذف بنجاح', timer: 1400, showConfirmButton: false });
             } catch(e){}
         }
 
-        // ================= 4. تبويب كشف الشهر =================
+        // ================= 🌟 4. استمارة الإجازات العارضة (١/٧ إلى ٣٠/٦) 🌟 =================
+        function renderCasualLeaveForm() {
+            const tbody = document.getElementById("casual-tbody");
+            const fy = Number(document.getElementById("casual-fiscal-select").value) || CURRENT_FISCAL_START;
+            const searchVal = normalizeArabic(document.getElementById("casual-search-inp").value || "");
+            const filterMode = document.getElementById("casual-filter-select").value;
+
+            document.getElementById("print-casual-period").innerText = `من ١ / ٧ / ${toAr(fy)} إلى ٣٠ / ٦ / ${toAr(fy + 1)}`;
+
+            let teachersWithCasualCount = 0;
+            let exhaustedCount = 0;
+            let totalCasualDays = 0;
+
+            const rowsData = [];
+
+            ALL_TEACHERS.forEach(t => {
+                const cInfo = getTeacherCasualLeaveInfo(t, fy);
+                if (cInfo.count > 0) {
+                    teachersWithCasualCount++;
+                    totalCasualDays += cInfo.count;
+                }
+                if (cInfo.isExhausted) {
+                    exhaustedCount++;
+                }
+
+                if (filterMode === 'recorded' && cInfo.count === 0) return;
+                if (filterMode === 'exhausted' && !cInfo.isExhausted) return;
+
+                if (searchVal) {
+                    const nName = normalizeArabic(t.name);
+                    const nSub = normalizeArabic(t.subject || '');
+                    if (!nName.includes(searchVal) && !nSub.includes(searchVal)) return;
+                }
+
+                rowsData.push({ teacher: t, info: cInfo });
+            });
+
+            document.getElementById("casual-stat-teachers").innerText = toAr(teachersWithCasualCount);
+            document.getElementById("casual-stat-exhausted").innerText = toAr(exhaustedCount);
+            document.getElementById("casual-stat-days").innerText = toAr(totalCasualDays);
+
+            if (rowsData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-slate-400 text-xs font-bold">لا توجد سجلات إجازات عارضة مطابقة في هذه الفترة.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = rowsData.map((row, idx) => {
+                const { teacher: t, info } = row;
+                const datesHtml = info.dates.length > 0
+                    ? info.dates.map(d => {
+                        const [yy, mm, dd] = d.date.split('-').map(Number);
+                        return `<span class="inline-block bg-amber-50 border border-amber-200 text-amber-900 rounded px-1.5 py-0.5 m-0.5 text-[10.5px]">${toAr(dd)}/${toAr(mm)}/${toAr(yy)}</span>`;
+                    }).join(' ')
+                    : '<span class="text-slate-300">-</span>';
+
+                const usedCls = info.isExhausted
+                    ? 'bg-rose-100 text-rose-800'
+                    : (info.count >= 5 ? 'bg-amber-100 text-amber-900' : (info.count > 0 ? 'bg-blue-50 text-blue-900' : 'text-slate-400'));
+
+                return `
+                    <tr>
+                        <td>${toAr(idx + 1)}</td>
+                        <td style="text-align: right; padding-right: 10px; font-weight: 900; color: #0f2b48;">
+                            ${esc(t.name)}
+                            ${info.isExhausted ? `<span class="mr-1 px-1.5 py-0.5 bg-rose-700 text-white rounded text-[9.5px]">مستنفذ</span>` : ''}
+                        </td>
+                        <td>${esc(t.subject || '-')}</td>
+                        <td class="font-black ${usedCls}">${toAr(info.count)} / ${toAr(CASUAL_MAX_DAYS)}</td>
+                        <td class="font-black ${info.remaining === 0 ? 'text-rose-700' : 'text-emerald-700'}">${toAr(info.remaining)} يوم</td>
+                        <td style="text-align: right; padding-right: 6px; white-space: normal; min-width: 190px;">${datesHtml}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function exportCasualToExcel() {
+            const table = document.getElementById("casual-table");
+            const fy = Number(document.getElementById("casual-fiscal-select").value) || CURRENT_FISCAL_START;
+            const wb = XLSX.utils.table_to_book(table, { raw: true });
+            if (!wb.Sheets[wb.SheetNames[0]]['!views']) wb.Sheets[wb.SheetNames[0]]['!views'] = [];
+            wb.Sheets[wb.SheetNames[0]]['!views'].push({ rightToLeft: true });
+            XLSX.writeFile(wb, `استمارة_الاجازات_العارضة_${fy}_${fy + 1}.xlsx`);
+        }
+
+        // ================= 5. تبويب كشف الشهر (عارضة + الرصيد السنوي) =================
         function renderSummaryTable() {
             const tbody = document.getElementById("report-tbody");
             const mKey = document.getElementById("quick-month-select").value;
-            const searchVal = (document.getElementById("report-search-inp").value || "").trim().toLowerCase();
+            const cfg = MONTHS_CFG[mKey];
+            const fy = getFiscalStartYear(buildDateStr(cfg.year, cfg.num, 1));
+            const searchVal = normalizeArabic(document.getElementById("report-search-inp").value || "");
 
             let list = ALL_TEACHERS.slice();
             if (searchVal) {
-                list = list.filter(t => (t.name || '').toLowerCase().includes(searchVal) || (t.subject || '').toLowerCase().includes(searchVal));
+                list = list.filter(t => normalizeArabic(t.name).includes(searchVal) || normalizeArabic(t.subject || '').includes(searchVal));
             }
 
             let html = "";
             let idx = 1;
 
             list.forEach(t => {
-                let abs = t.absences;
-                if (typeof abs === 'string') { try { abs = JSON.parse(abs || '{}'); } catch(e) { abs = {}; } }
-                const daysArr = (abs && Array.isArray(abs[mKey])) ? abs[mKey] : [];
+                const daysArr = getTeacherMonthCasualDays(t, mKey);
+                const cInfo = getTeacherCasualLeaveInfo(t, fy);
+                const extNotes = getTeacherMonthExtendedNotes(t, mKey);
 
-                const detailsText = daysArr.length > 0 ? daysArr.map(d => `يوم ${toAr(d)}`).join(' ، ') : '<span class="text-slate-300">-</span>';
+                const daysText = daysArr.length > 0 ? daysArr.map(d => `يوم ${toAr(d)}`).join(' ، ') : '';
+                const extText = extNotes.length > 0
+                    ? extNotes.map(lv => `<span class="inline-block bg-blue-50 text-blue-800 border border-blue-200 rounded px-1.5 py-0.5 text-[10px]">${esc(lv.type)} (${lv.from} ← ${lv.to})</span>`).join(' ')
+                    : '';
+
+                const detailsHtml = [daysText, extText].filter(Boolean).join(' • ') || '<span class="text-slate-300">-</span>';
+                const annualCls = cInfo.isExhausted ? 'text-rose-700 bg-rose-50' : (cInfo.count > 0 ? 'text-amber-800' : 'text-slate-400');
 
                 html += `
                     <tr>
                         <td>${toAr(idx++)}</td>
-                        <td style="text-align: right; padding-right: 12px; font-weight: 900; color: #0f2b48;">${t.name}</td>
-                        <td>${t.subject || '-'}</td>
-                        <td class="font-black ${daysArr.length > 0 ? 'text-rose-700 bg-rose-50' : 'text-slate-400'}">${toAr(daysArr.length)} يوم</td>
-                        <td style="text-align: right; padding-right: 6px; font-size: 11px;">${detailsText}</td>
+                        <td style="text-align: right; padding-right: 12px; font-weight: 900; color: #0f2b48;">${esc(t.name)}</td>
+                        <td>${esc(t.subject || '-')}</td>
+                        <td class="font-black ${daysArr.length > 0 ? 'text-amber-900 bg-amber-50' : 'text-slate-400'}">${toAr(daysArr.length)} يوم</td>
+                        <td class="font-black ${annualCls}">${toAr(cInfo.count)} / ${toAr(CASUAL_MAX_DAYS)}</td>
+                        <td style="text-align: right; padding-right: 6px; font-size: 11px; white-space: normal;">${detailsHtml}</td>
                     </tr>
                 `;
             });
@@ -1003,7 +1886,7 @@
             if (!wb.Sheets[wb.SheetNames[0]]['!views']) wb.Sheets[wb.SheetNames[0]]['!views'] = [];
             wb.Sheets[wb.SheetNames[0]]['!views'].push({ rightToLeft: true });
 
-            XLSX.writeFile(wb, `كشف_غياب_المعلمين_شهر_${mName}.xlsx`);
+            XLSX.writeFile(wb, `كشف_الاجازات_العارضة_شهر_${mName}.xlsx`);
         }
 
         document.addEventListener("click", (e) => {
