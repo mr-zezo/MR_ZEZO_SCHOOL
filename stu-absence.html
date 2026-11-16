@@ -403,6 +403,10 @@
                             <i class="fa-solid fa-book-open-reader text-orange-200"></i> سجل الإنذارات الشامل
                         </button>
 
+                        <button onclick="exportGradeForScript()" class="btn-3d px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow cursor-pointer">
+                            <i class="fa-solid fa-file-export text-yellow-300"></i> تصدير للغياب الوزاري
+                        </button>
+
                         <button onclick="exportReportToExcel()" class="btn-3d px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold flex items-center gap-1 shadow">
                             <i class="fa-solid fa-file-excel"></i> إكسيل
                         </button>
@@ -1649,6 +1653,118 @@
             const wb = XLSX.utils.table_to_book(table, { raw: true });
             const repTitle = document.getElementById("report-title").innerText || "تقرير_الغياب";
             XLSX.writeFile(wb, `${repTitle}.xlsx`);
+        }
+
+        // 🌟 تصدير بيانات الصف من الأسبوع الأول وحتى آخر أسبوع مسجل به بيانات بنفس أعمدة اسكربت Tampermonkey 🌟
+        function extractClassNumber(clsStr) {
+            const raw = String(clsStr || '').trim();
+            if (!raw || raw === '-') return '';
+            const eng = raw.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+            if (eng.includes('/')) {
+                return eng.split('/')[0].trim();
+            }
+            return eng;
+        }
+
+        async function exportGradeForScript() {
+            const grade = document.getElementById("rep-grade").value;
+            if (!grade) {
+                Swal.fire('تنبيه', 'يرجى اختيار الصف الدراسي أولاً.', 'warning');
+                return;
+            }
+
+            Swal.fire({ title: `جاري تجهيز بيانات الصف ${grade} للتصدير...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const data = await ZezoEngine.getStudentsByGrade(grade);
+                const students = (data || []).filter(d => d.transfer_type !== "محول من");
+
+                // معالجة وتجهيز حقل الغياب لكل طالب وتحديد آخر أسبوع به غياب مسجل
+                let lastRecordedWeek = 0;
+                const parsedStudents = students.map(s => {
+                    let absData = s.absences;
+                    if (typeof absData === 'string') {
+                        try { absData = JSON.parse(absData || '{}'); } catch (e) { absData = {}; }
+                    }
+                    if (typeof absData === 'string') {
+                        try { absData = JSON.parse(absData || '{}'); } catch (e) { absData = {}; }
+                    }
+                    if (!absData || typeof absData !== 'object') absData = {};
+
+                    for (let w = 1; w <= 30; w++) {
+                        const d = parseInt(absData['W' + w]) || 0;
+                        if (d > 0 && w > lastRecordedWeek) {
+                            lastRecordedWeek = w;
+                        }
+                    }
+                    return { student: s, absData };
+                });
+
+                if (lastRecordedWeek === 0) {
+                    Swal.fire('تنبيه', `لا توجد أي أيام غياب مسجلة للصف (${grade}) من الأسبوع الأول حتى الآن.`, 'info');
+                    return;
+                }
+
+                const exportRows = [];
+
+                for (let w = 1; w <= lastRecordedWeek; w++) {
+                    const weekItems = [];
+                    parsedStudents.forEach(({ student, absData }) => {
+                        const days = parseInt(absData['W' + w]) || 0;
+                        if (days > 0) {
+                            const clsStr = extractClassNumber(student.class);
+                            const clsVal = (clsStr !== '' && !isNaN(Number(clsStr))) ? Number(clsStr) : clsStr;
+                            const codeVal = (student.code && !String(student.code).startsWith('TEMP_'))
+                                ? String(student.code).trim()
+                                : String(student.nid || '').trim();
+
+                            weekItems.push({
+                                clsSort: String(clsStr),
+                                nameSort: String(student.name || ''),
+                                row: {
+                                    "الاسبوع": w,
+                                    "فصل": clsVal,
+                                    "الكود": codeVal,
+                                    "عدد الغياب": days
+                                }
+                            });
+                        }
+                    });
+
+                    // ترتيب طلاب الأسبوع حسب رقم الفصل ثم الاسم
+                    weekItems.sort((a, b) => {
+                        const cmp = a.clsSort.localeCompare(b.clsSort, 'ar', { numeric: true });
+                        return cmp !== 0 ? cmp : a.nameSort.localeCompare(b.nameSort, 'ar');
+                    });
+
+                    weekItems.forEach(item => exportRows.push(item.row));
+                }
+
+                const headers = ["الاسبوع", "فصل", "الكود", "عدد الغياب"];
+                const ws = XLSX.utils.json_to_sheet(exportRows, { header: headers });
+                if (!ws['!views']) ws['!views'] = [];
+                ws['!views'].push({ rightToLeft: true });
+
+                ws['!cols'] = [
+                    { wch: 12 },
+                    { wch: 10 },
+                    { wch: 18 },
+                    { wch: 14 }
+                ];
+
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, `غياب_${grade}`.slice(0, 31));
+                XLSX.writeFile(wb, `تصدير_غياب_الصف_${grade}_حتى_الأسبوع_${lastRecordedWeek}.xlsx`);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم التصدير بنجاح!',
+                    text: `تم تصدير (${exportRows.length}) صف للصف ${grade} من الأسبوع 1 حتى الأسبوع ${lastRecordedWeek}.`
+                });
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ', 'حدث خطأ أثناء التصدير: ' + err.message, 'error');
+            }
         }
 
         // ================= المخططات البيانية =================
