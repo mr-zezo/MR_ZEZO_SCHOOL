@@ -418,6 +418,7 @@
 
         let ALL_TEACHERS = [];
         let SCHOOL_MAP = [];
+        let TEACHER_SHORT_MAP = {}; // خريطة لربط اسم المعلم الرباعي بالاسم المختصر (short_name)
 
         // بنية إعدادات الطباعة لليوم (عمودي) والأسبوع (أفقي 10 صفوف متباعدة)
         let defaultPrintConfig = {
@@ -496,6 +497,62 @@
         function normalizeArabic(text) {
             if(!text) return "";
             return text.replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي');
+        }
+
+        // ================= جلب وحساب الاسم المختصر مطابقاً لمنظومة الجدول المدرسي =================
+        function computeScheduleShortName(fullName, dbShortName = "") {
+            const savedShort = String(dbShortName || "").trim();
+            if (savedShort) return savedShort;
+
+            const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+            if (parts.length === 0) return "";
+            if (parts.length === 1) return parts[0];
+            if (parts[0] === "عبد" || parts[0] === "ابو" || parts[0] === "أبو") {
+                if (parts.length === 2) return `${parts[0]} ${parts[1]}`;
+                return `${parts[0]} ${parts[1]} ${parts[parts.length - 1]}`;
+            }
+            return `${parts[0]} ${parts[parts.length - 1]}`;
+        }
+
+        function buildTeacherShortMap(records) {
+            TEACHER_SHORT_MAP = {};
+            records.forEach(t => {
+                const full = String(t.name || "").trim();
+                if (!full) return;
+                const sName = computeScheduleShortName(full, t.short_name);
+                TEACHER_SHORT_MAP[full] = sName;
+                TEACHER_SHORT_MAP[normalizeArabic(full).replace(/\s+/g, ' ')] = sName;
+            });
+        }
+
+        function getShortTeacherName(fullName) {
+            const clean = String(fullName || "").trim();
+            if (!clean) return "";
+            const norm = normalizeArabic(clean).replace(/\s+/g, ' ');
+            return TEACHER_SHORT_MAP[clean] || TEACHER_SHORT_MAP[norm] || computeScheduleShortName(clean, "");
+        }
+
+        function fetchTeachersFromOfflineDB() {
+            return new Promise((resolve) => {
+                try {
+                    const req = indexedDB.open("MR_ZEZO_SCHOOL_OFFLINE_DB");
+                    req.onsuccess = (e) => {
+                        const db = e.target.result;
+                        if (db.objectStoreNames.contains("teachers")) {
+                            const tx = db.transaction("teachers", "readonly");
+                            const store = tx.objectStore("teachers");
+                            const allReq = store.getAll();
+                            allReq.onsuccess = () => resolve(allReq.result || []);
+                            allReq.onerror = () => resolve([]);
+                        } else {
+                            resolve([]);
+                        }
+                    };
+                    req.onerror = () => resolve([]);
+                } catch (e) {
+                    resolve([]);
+                }
+            });
         }
 
         function populateDatalist(filterText = "") {
@@ -630,17 +687,26 @@
             }
 
             if (teachersData.length === 0) teachersData = JSON.parse(localStorage.getItem('local_teachers')) || [];
+            if (teachersData.length === 0) teachersData = await fetchTeachersFromOfflineDB();
             if (contractData.length === 0) contractData = JSON.parse(localStorage.getItem('local_contract_teachers')) || [];
             if (mapData.length === 0) mapData = JSON.parse(localStorage.getItem('local_school_map')) || [];
+
+            const combinedRecords = [...teachersData, ...contractData];
+            buildTeacherShortMap(combinedRecords);
 
             ALL_TEACHERS = [];
             const isExcludedJob = (job) => (job||"").replace(/\s+/g,"").match(/عامل|اداري|اخصائي|مشرف|سكرتير|فني|خدمات/);
 
-            [...teachersData, ...contractData].forEach(t => {
+            combinedRecords.forEach(t => {
                 const jobName = t.cadre_job || t.job || '';
                 if (!isExcludedJob(jobName)) {
                     let parsedSchedule = typeof t.schedule === 'string' ? (JSON.parse(t.schedule) || {}) : (t.schedule || {});
-                    ALL_TEACHERS.push({ name: t.name, cadre: jobName, schedule: parsedSchedule });
+                    ALL_TEACHERS.push({
+                        name: t.name,
+                        short_name: computeScheduleShortName(t.name, t.short_name),
+                        cadre: jobName,
+                        schedule: parsedSchedule
+                    });
                 }
             });
 
@@ -796,10 +862,15 @@
             window.print();
         }
 
-        // ================= طباعة استمارة الأسبوع (A4 Landscape - أفقي بـ 10 صفوف فقط موسعة) =================
+        // ================= طباعة استمارة الأسبوع (A4 Landscape - أفقي بـ 10 صفوف بالاسم المختصر short_name) =================
         async function printWeeklyForm() {
             const cfg = printConfig.weekly;
             Swal.fire({ title: 'جاري استدعاء المشرفين للأسبوع...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            // التأكد من توفر خريطة الأسماء المختصرة من جدول المعلمين
+            if (Object.keys(TEACHER_SHORT_MAP).length === 0) {
+                await fetchBaseData();
+            }
             
             const isLower = document.getElementById('tab-btn-lower').classList.contains('active');
             const stage = isLower ? 'lower' : 'upper';
@@ -835,7 +906,7 @@
                 }
             }
 
-            // تثبيت عدد الصفوف ليكون 10 صفوف بالضبط
+            // تثبيت عدد الصفوف ليكون 10 صفوف بالضبط مع استبدال الاسم الرباعي بالاسم المختصر (short_name)
             const totalRows = 10;
             let rowsHtml = "";
             for (let i = 0; i < totalRows; i++) {
@@ -844,8 +915,9 @@
                         <td style="text-align: center; font-weight: 900; font-size: ${cfg.fontSize}px; border: 2px solid #000; padding: ${cfg.padding}px;">${i + 1}</td>
                 `;
                 daysKeys.forEach(day => {
-                    const teacher = dayTeachers[day][i] || "";
-                    row += `<td style="text-align: center; font-weight: 900; font-size: ${cfg.fontSize}px; border: 2px solid #000; padding: ${cfg.padding}px 6px; color: #000;">${teacher}</td>`;
+                    const teacherFull = dayTeachers[day][i] || "";
+                    const teacherShort = teacherFull ? getShortTeacherName(teacherFull) : "";
+                    row += `<td style="text-align: center; font-weight: 900; font-size: ${cfg.fontSize}px; border: 2px solid #000; padding: ${cfg.padding}px 6px; color: #000;">${teacherShort}</td>`;
                 });
                 row += `</tr>`;
                 rowsHtml += row;
@@ -987,6 +1059,20 @@
             if(input) { input.value = teacherName; input.style.backgroundColor = "#dcfce7"; setTimeout(() => input.style.backgroundColor = "", 1000); }
             btnEl.style.background = "#dcfce7";
             Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1000, icon: 'success', title: `تم التسكين` });
+        }
+
+        async function takeSupervisionScreenshot() {
+            const activeTab = document.querySelector('.tab-content.active') || document.body;
+            const dayText = document.getElementById("day-select").value;
+            try {
+                const canvas = await html2canvas(activeTab, { scale: 2, backgroundColor: '#f8fafc' });
+                const link = document.createElement('a');
+                link.download = `اشراف_${dayText}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            } catch (err) {
+                Swal.fire({ icon: 'error', title: 'تعذر التقاط لقطة الشاشة' });
+            }
         }
     </script>
 </body>
