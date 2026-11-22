@@ -119,10 +119,174 @@
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75);
             backdrop-filter: blur(4px); display: none; justify-content: center;
-            align-items: center; z-index: 3000; padding: 12px;
+            align-items: center; z-index: 2000; padding: 12px;
         }
         .modal-overlay.active { display: flex; }
+
+        /* ضمان ظهور تنبيهات SweetAlert2 دائماً فوق النوافذ المنبثقة */
+        .swal2-container { z-index: 99999 !important; }
+
         #file-excel-import { display: none; }
+
+        /* ================= تنسيقات لوحة الأرقام السرية المطبوعة (ورقة A4 واحدة) ================= */
+        #printable-secret-board {
+            display: none;
+            background: white;
+            color: #000;
+            direction: rtl;
+        }
+
+        .sb-sheet {
+            width: 100%;
+            max-width: 210mm;
+            margin: 0 auto;
+            background: white;
+            color: #000;
+            padding: 4mm;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .sb-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2.5px solid #000;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+        }
+
+        .sb-header-right {
+            font-size: 11.5px;
+            font-weight: 900;
+            line-height: 1.4;
+            text-align: right;
+            width: 185px;
+        }
+
+        .sb-header-center {
+            text-align: center;
+            flex: 1;
+        }
+        .sb-header-center h2 {
+            font-size: 16px;
+            font-weight: 900;
+            border: 2px solid #000;
+            border-radius: 8px;
+            padding: 4px 14px;
+            display: inline-block;
+            background: #f1f5f9;
+        }
+        .sb-header-center div {
+            font-size: 12px;
+            font-weight: 900;
+            margin-top: 3px;
+        }
+
+        .sb-header-left {
+            width: 185px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 900;
+            line-height: 1.4;
+        }
+
+        .sb-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2.5px solid #000;
+        }
+
+        .sb-table th, .sb-table td {
+            border: 1.5px solid #000;
+            padding: 5px 6px;
+            vertical-align: middle;
+        }
+
+        .sb-table thead th {
+            background: #e2e8f0;
+            font-size: 12.5px;
+            font-weight: 900;
+            text-align: center;
+        }
+
+        .sb-grade-col {
+            width: 110px;
+            text-align: center;
+            background: #f8fafc;
+            font-weight: 900;
+        }
+
+        .sb-groups-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+
+        .sb-group-card {
+            border: 1.5px solid #000;
+            border-radius: 6px;
+            padding: 4px 6px;
+            text-align: center;
+            background: #ffffff;
+        }
+
+        .sb-group-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed #64748b;
+            padding-bottom: 2px;
+            margin-bottom: 2px;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .sb-group-letter {
+            font-family: Arial, sans-serif;
+            font-size: 15px;
+            font-weight: 900;
+            background: #0f2b48;
+            color: #ffffff;
+            padding: 0 7px;
+            border-radius: 4px;
+        }
+
+        .sb-group-meta {
+            font-size: 10.5px;
+            font-weight: 800;
+            line-height: 1.35;
+            color: #000;
+        }
+
+        .sb-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+            padding: 0 25px;
+            font-size: 12.5px;
+            font-weight: 900;
+        }
+
+        @media print {
+            @page { size: A4 portrait; margin: 7mm; }
+            body.print-secret-board-mode {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            body.print-secret-board-mode > *:not(#printable-secret-board) {
+                display: none !important;
+            }
+            body.print-secret-board-mode #printable-secret-board {
+                display: block !important;
+                width: 100%;
+            }
+            body.print-secret-board-mode .sb-sheet {
+                max-width: 100%;
+                padding: 0;
+            }
+        }
     </style>
 </head>
 <body class="p-2 sm:p-3">
@@ -164,48 +328,40 @@
                 <i class="fa-solid fa-wifi"></i> متصل بالسحابة
             </span>
 
-            <!-- 🌟 زر العودة لبوابة الكنترول 🌟 -->
             <a href="control-index.html" class="btn-3d px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow">
                 <i class="fa-solid fa-stamp"></i> بوابة الكنترول
             </a>
 
-            <!-- زر العودة للمنظومة الرئيسية -->
             <a href="index.html" class="btn-3d px-3.5 py-1.5 bg-blue-800 hover:bg-blue-700 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow">
                 <i class="fa-solid fa-house"></i> الرئيسية
             </a>
         </div>
     </header>
 
-    <!-- 2. شريط أدوات الكنترول مع استيراد الإكسيل المباشر والسحب -->
+    <!-- 2. شريط أدوات الكنترول -->
     <div class="bg-white border border-slate-200 rounded-2xl p-2.5 mb-2.5 shadow-sm flex flex-wrap justify-between items-center gap-2">
         <div class="flex items-center gap-1.5 flex-wrap">
-            <!-- 1. سحب البيانات من القاعدة مع الالتزام التام بالمسلسل -->
             <button onclick="pullAndFreezeStudentsFromSystem()" class="btn-3d px-3 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow" title="يسحب التلاميذ من القاعدة ويرتبهم حسب رقم المسلسل المسجل">
                 <i class="fa-solid fa-cloud-arrow-down text-yellow-300"></i> سحب من القاعدة (بالمسلسل)
             </button>
 
-            <!-- 2. استيراد شيت إكسيل واعتماد ترتيب أسطره 100% -->
             <input type="file" id="file-excel-import" accept=".xlsx, .xls" onchange="importControlFromExcel(event)">
             <button onclick="document.getElementById('file-excel-import').click()" class="btn-3d px-3 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow" title="يقرأ أسطر ملف الإكسيل ويرتب التلاميذ بنفس ترتيب الشيت تماماً">
                 <i class="fa-solid fa-file-import text-emerald-200"></i> استيراد إكسيل (بترتيب الشيت)
             </button>
 
-            <!-- 3. ترقيم أرقام الجلوس المتسلسل -->
             <button onclick="openSeatingNumberingDialog()" class="btn-3d px-3 py-2 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow">
                 <i class="fa-solid fa-arrow-down-1-9 text-indigo-200"></i> ترقيم أرقام الجلوس
             </button>
 
-            <!-- 4. نافذة إعداد وتقسيم اللجان بحساب السعة -->
             <button onclick="openCommitteesSetupModal()" class="btn-3d px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow">
                 <i class="fa-solid fa-sliders text-yellow-200"></i> ضبط وتوزيع اللجان بالسعة
             </button>
 
-            <!-- 5. توليد الأرقام السرية بالحروف ومجموعات الـ 100 -->
             <button onclick="openSecretNumberingModal()" class="btn-3d px-3 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow">
                 <i class="fa-solid fa-user-secret text-purple-200"></i> الأرقام السرية (حروف + 100)
             </button>
 
-            <!-- 6. سحب نسب الحضور من الغياب -->
             <button onclick="syncAttendanceRatesFromAbsenceSystem()" class="btn-3d px-3 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow" title="حساب نسبة الحضور آلياً من غياب أسابيع المنظومة">
                 <i class="fa-solid fa-clipboard-user text-teal-200"></i> سحب نسب الحضور
             </button>
@@ -308,7 +464,6 @@
                     <input type="number" id="comm-single-cap-input" min="1" max="100" placeholder="مثال: 20 أو 22 تلميذ..." oninput="updateCommitteesLiveCalc()" class="w-full p-2.5 bg-slate-50 border-2 border-amber-500 rounded-xl text-base font-black text-center text-blue-900 outline-none focus:bg-white">
                 </div>
 
-                <!-- شاشات الإحصاء الفوري لناتج التقسيم -->
                 <div id="comm-calc-results-box" class="space-y-2 p-3 bg-slate-50 border border-slate-200 rounded-xl" style="display: none;">
                     <div class="flex justify-between items-center text-xs font-bold text-slate-700">
                         <span><i class="fa-solid fa-layer-group text-blue-600"></i> إجمالي عدد اللجان المطلوبة:</span>
@@ -334,58 +489,61 @@
         </div>
     </div>
 
-    <!-- ================= 5. نافذة الأرقام السرية بالحروف ومجموعات الـ 100 ================= -->
+    <!-- ================= 5. نافذة لوحة الأرقام السرية لجميع الصفوف (عرض المحفوظ + تعديل + طباعة) ================= -->
     <div class="modal-overlay" id="secretModal" onclick="if(event.target===this) closeSecretModal()">
-        <div class="modal-content bg-white w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+        <div class="modal-content bg-white w-full max-w-5xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[94vh]">
             <div class="bg-gradient-to-r from-purple-800 to-indigo-900 text-white p-3.5 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-user-secret text-yellow-300 text-lg"></i>
-                    <h3 class="text-sm font-black">توليد الأرقام السرية (حرف إنجليزي + أرقام 1 : 100)</h3>
+                    <h3 class="text-sm sm:text-base font-black">لوحة إدارة وتوزيع الأرقام السرية لجميع الصفوف (حرف + 1 : 100)</h3>
                 </div>
-                <button onclick="closeSecretModal()" class="text-white text-xl font-bold hover:text-purple-200 cursor-pointer">&times;</button>
+                <button onclick="closeSecretModal()" class="text-white text-2xl font-bold hover:text-purple-200 cursor-pointer leading-none">&times;</button>
             </div>
 
-            <div class="p-4 overflow-y-auto space-y-3.5">
-                <div class="p-2.5 bg-purple-50 border border-purple-200 rounded-xl text-xs font-bold text-purple-900 leading-relaxed">
-                    يتم تقسيم إجمالي تلاميذ الصف على مجموعات كل منها ١٠٠ طالب، ويُخصص لكل مجموعة حرف إنجليزي ليكون الرقم السري (الحرف + رقم من 1 إلى 100).
+            <div class="p-3 sm:p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap justify-between items-center gap-2.5">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <label class="text-xs font-black text-slate-700">تحديد الترم:</label>
+                    <select id="sec-target-term" onchange="onSecretTermSelectorChange()" class="p-2 bg-white border-2 border-purple-400 rounded-xl text-xs font-black outline-none text-purple-950 cursor-pointer">
+                        <option value="t1">الترم الأول (نصف العام)</option>
+                        <option value="t2">الترم الثاني (آخر العام)</option>
+                        <option value="both">الترمين معاً (t1 و t2)</option>
+                    </select>
+                    <span class="text-[11px] font-bold text-slate-500 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200">
+                        <i class="fa-solid fa-circle-info text-purple-600 ml-1"></i>
+                        يظهر تلقائياً ما تم حفظه لكل صف، ويمكنك تعديل الحروف أو الترقيم وحفظها.
+                    </span>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2.5">
-                    <div>
-                        <label class="block text-xs font-black text-slate-700 mb-1">تطبيق على الترم:</label>
-                        <select id="sec-target-term" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-black outline-none">
-                            <option value="t1">الترم الأول فقط</option>
-                            <option value="t2">الترم الثاني فقط</option>
-                            <option value="both">الترمين معاً</option>
-                        </select>
-                    </div>
+                <button type="button" onclick="printSecretNumbersBoard()" class="btn-3d px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow cursor-pointer">
+                    <i class="fa-solid fa-print text-yellow-200"></i> طباعة لوحة الأرقام السرية (ورقة A4 واحدة)
+                </button>
+            </div>
 
-                    <div>
-                        <label class="block text-xs font-black text-slate-700 mb-1">نظام الترقيم داخل الـ 100:</label>
-                        <select id="sec-numbering-type" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-black outline-none">
-                            <option value="seq">متسلسل مرتب (1 ، 2 ، 3 ... 100)</option>
-                            <option value="rnd">عشوائي مشفر (أرقام غير مكررة 1:100)</option>
-                        </select>
-                    </div>
+            <div class="p-3 sm:p-4 overflow-y-auto space-y-3 flex-1 bg-slate-100/70" id="secret-all-grades-container">
+                <div class="p-8 text-center text-slate-500 font-bold">
+                    <i class="fa-solid fa-spinner fa-spin text-xl text-purple-700 mb-2 block"></i>
+                    جاري تحميل الأرقام السرية المحفوظة لجميع الصفوف...
                 </div>
+            </div>
 
-                <!-- حاوية مجموعات الـ 100 الديناميكية -->
-                <div>
-                    <label class="block text-xs font-black text-purple-950 mb-1.5">حدد الحرف الإنجليزي لكل مجموعة (مجموعات الـ ١٠٠ تلميذ):</label>
-                    <div id="secret-groups-container" class="space-y-2 max-h-56 overflow-y-auto p-2 bg-slate-50 border border-slate-200 rounded-xl"></div>
-                </div>
-
-                <div class="pt-2 border-t flex justify-end gap-2">
-                    <button type="button" onclick="applySecretNumbering()" class="btn-3d px-5 py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow cursor-pointer">
-                        <i class="fa-solid fa-lock text-yellow-300"></i> اعتماد وتوليد الأرقام السرية
+            <div class="p-3 bg-white border-t border-slate-200 flex flex-wrap justify-between items-center gap-2">
+                <span class="text-[11px] font-bold text-slate-500">
+                    * اضغط «حفظ هذا الصف» لتطبيق وتثبيت صف واحد فوراً، أو «اعتماد وحفظ جميع الصفوف» للكل.
+                </span>
+                <div class="flex gap-2">
+                    <button type="button" onclick="saveAllGradesSecretNumbers()" class="btn-3d px-5 py-2.5 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow cursor-pointer">
+                        <i class="fa-solid fa-floppy-disk text-yellow-300"></i> اعتماد وحفظ التعديلات لجميع الصفوف
                     </button>
-                    <button type="button" onclick="closeSecretModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">إلغاء</button>
+                    <button type="button" onclick="closeSecretModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl text-xs font-black">إغلاق</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ================= 6. المحرك البرمجي والحسابي ================= -->
+    <!-- ================= 6. حاوية طباعة لوحة الأرقام السرية (كل الصفوف والمجموعات في ورقة واحدة) ================= -->
+    <div id="printable-secret-board"></div>
+
+    <!-- ================= 7. المحرك البرمجي والحسابي ================= -->
     <script>
         const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
@@ -394,7 +552,15 @@
         const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
         const DB_VERSION = 2;
 
+        const ALL_GRADES = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
+        const DEFAULT_GROUP_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
+        const SECRET_CONFIG_CAPSULE_ID = "control_secret_config";
+
         let CURRENT_GRADE_STUDENTS = [];
+        let ALL_GRADES_STUDENTS_CACHE = {};
+        let SECRET_CONFIG_CACHE = { t1: {}, t2: {} };
+        let DIRTY_SECRET_GRADES = new Set();
+        let LAST_SECRET_TERM = 't1';
 
         const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
 
@@ -509,6 +675,56 @@
                     }
                     return allData;
                 }
+            },
+
+            async getCapsule(capsuleKey) {
+                const mode = this.getMode();
+                if (mode === 'offline') {
+                    const db = await openLocalDB();
+                    return new Promise((resolve) => {
+                        const tx = db.transaction('system_capsules', 'readonly');
+                        const req = tx.objectStore('system_capsules').get(capsuleKey);
+                        req.onsuccess = () => resolve(req.result ? req.result.data : null);
+                        req.onerror = () => resolve(null);
+                    });
+                } else {
+                    const { data, error } = await sbClient.from("system_capsules").select("data").eq("id", capsuleKey).maybeSingle();
+                    if (error) throw error;
+                    return data ? data.data : null;
+                }
+            },
+
+            async saveCapsule(capsuleKey, payload) {
+                const mode = this.getMode();
+                // حفظ في المحلي دائماً كنسخة سريعة
+                try {
+                    const db = await openLocalDB();
+                    if (db.objectStoreNames.contains('system_capsules')) {
+                        await new Promise((resolve, reject) => {
+                            const tx = db.transaction('system_capsules', 'readwrite');
+                            tx.objectStore('system_capsules').put({ id: capsuleKey, data: payload });
+                            tx.oncomplete = () => resolve();
+                            tx.onerror = () => reject(tx.error);
+                        });
+                    }
+                } catch(e) { console.warn('Local cache save warning:', e); }
+
+                if (mode === 'online') {
+                    let { error } = await sbClient.from("system_capsules").upsert({
+                        id: capsuleKey,
+                        data: payload,
+                        updatedat: new Date().toLocaleString('ar-EG')
+                    }, { onConflict: 'id' });
+
+                    if (error) {
+                        // محاولة احتياطية بدون حقل updatedat إن لم يكن موجوداً
+                        const res2 = await sbClient.from("system_capsules").upsert({
+                            id: capsuleKey,
+                            data: payload
+                        }, { onConflict: 'id' });
+                        if (res2.error) throw res2.error;
+                    }
+                }
             }
         };
 
@@ -525,26 +741,14 @@
             tbody.innerHTML = `<tr><td colspan="24" class="p-8 text-center text-blue-900 font-bold"><i class="fa-solid fa-spinner fa-spin text-xl mb-2 block"></i> جاري استرجاع شيت كنترول ${grade}...</td></tr>`;
 
             try {
-                let savedData = null;
-                const mode = ZezoEngine.getMode();
-
-                if (mode === 'offline') {
-                    const db = await openLocalDB();
-                    savedData = await new Promise((resolve) => {
-                        const tx = db.transaction('system_capsules', 'readonly');
-                        const req = tx.objectStore('system_capsules').get(capsuleKey);
-                        req.onsuccess = () => resolve(req.result ? req.result.data : null);
-                        req.onerror = () => resolve(null);
-                    });
-                } else {
-                    const { data } = await sbClient.from("system_capsules").select("data").eq("id", capsuleKey).maybeSingle();
-                    if (data && data.data) savedData = data.data;
-                }
+                const savedData = await ZezoEngine.getCapsule(capsuleKey);
 
                 if (savedData && Array.isArray(savedData) && savedData.length > 0) {
                     CURRENT_GRADE_STUDENTS = savedData;
+                    ALL_GRADES_STUDENTS_CACHE[grade] = savedData;
                     renderMasterTable();
                 } else {
+                    CURRENT_GRADE_STUDENTS = [];
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="24" class="p-10 text-center text-slate-500 font-bold">
@@ -625,6 +829,7 @@
                 });
 
                 CURRENT_GRADE_STUDENTS = frozenList;
+                ALL_GRADES_STUDENTS_CACHE[grade] = frozenList;
                 renderMasterTable();
                 await saveControlSheetToStorage(false);
 
@@ -717,6 +922,7 @@
                     });
 
                     CURRENT_GRADE_STUDENTS = list;
+                    ALL_GRADES_STUDENTS_CACHE[grade] = list;
                     renderMasterTable();
                     await saveControlSheetToStorage(false);
 
@@ -880,7 +1086,7 @@
             }
         }
 
-        // ================= 🌟 5. طريقة إعداد اللجان بالسعة والحساب اللحظي 🌟 =================
+        // ================= 5. إعداد اللجان بالسعة =================
         function openCommitteesSetupModal() {
             if (CURRENT_GRADE_STUDENTS.length === 0) {
                 Swal.fire('تنبيه', 'اسحب التلاميذ أولاً لضبط وتوزيع اللجان!', 'warning');
@@ -896,7 +1102,6 @@
             document.getElementById("committeesModal").classList.remove("active");
         }
 
-        // الحساب اللحظي لعدد اللجان واللجنة الأخيرة بمجرد كتابة السعة
         function updateCommitteesLiveCalc() {
             const cap = parseInt(document.getElementById("comm-single-cap-input").value) || 0;
             const total = CURRENT_GRADE_STUDENTS.length;
@@ -919,7 +1124,6 @@
             resultsBox.style.display = "block";
         }
 
-        // تطبيق وتقسيم اللجان بناءً على السعة المحسوبة
         function applyCommitteesDistribution() {
             const cap = parseInt(document.getElementById("comm-single-cap-input").value) || 0;
             const total = CURRENT_GRADE_STUDENTS.length;
@@ -956,118 +1160,570 @@
             });
         }
 
-        // ================= 🌟 6. الأرقام السرية بالحروف ومجموعات الـ 100 🌟 =================
-        function openSecretNumberingModal() {
-            if (CURRENT_GRADE_STUDENTS.length === 0) {
-                Swal.fire('تنبيه', 'اسحب التلاميذ أولاً لتوليد الأرقام السرية!', 'warning');
-                return;
-            }
+        // ================= 🌟 6. لوحة الأرقام السرية لجميع الصفوف (عرض المحفوظ + التعديل + الطباعة) 🌟 =================
+        function extractSecretParts(secretVal) {
+            if (!secretVal) return null;
+            const cleaned = String(secretVal).trim().replace(/-2$/, '');
+            const m = cleaned.match(/^([A-Za-zأ-ي]+)(\d+)$/);
+            if (m) return { letter: m[1].toUpperCase(), num: parseInt(m[2], 10) };
+            return null;
+        }
 
-            const total = CURRENT_GRADE_STUDENTS.length;
+        function detectGradeSecretInfo(grade, students, termKey) {
+            const inspectTerm = (termKey === 't2') ? 't2' : 't1';
+            const secretField = (inspectTerm === 't2') ? 'secret_t2' : 'secret_t1';
+            const seatField   = (inspectTerm === 't2') ? 'seat_t2' : 'seat_t1';
+
+            const total = students.length;
             const numGroups = Math.ceil(total / 100);
-            const container = document.getElementById("secret-groups-container");
-            container.innerHTML = "";
+            const savedEntry = (SECRET_CONFIG_CACHE[inspectTerm] && SECRET_CONFIG_CACHE[inspectTerm][grade])
+                ? SECRET_CONFIG_CACHE[inspectTerm][grade]
+                : null;
 
-            const defaultLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K'];
+            let detectedLetters = [];
+            let hasAnySecret = false;
+            let isFullyCoded = total > 0;
+            let isSequential = true;
 
             for (let g = 0; g < numGroups; g++) {
-                const startRange = (g * 100) + 1;
-                const endRange = Math.min((g + 1) * 100, total);
-                const count = endRange - startRange + 1;
-                const letter = defaultLetters[g] || String.fromCharCode(65 + g);
+                const slice = students.slice(g * 100, (g + 1) * 100);
+                let foundLetter = "";
+                let numsInGroup = [];
 
-                container.innerHTML += `
-                    <div class="flex items-center justify-between p-2.5 bg-white border border-purple-200 rounded-lg gap-2">
-                        <div class="text-xs font-black text-purple-950">
-                            <span>المجموعة ${toAr(g + 1)}:</span>
-                            <span class="text-slate-500 font-normal mr-1">(من رقم جلوس/مسلسل ${startRange} إلى ${endRange} - عدد: ${count})</span>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <label class="text-xs font-bold text-slate-600">الحرف:</label>
-                            <input type="text" maxlength="2" value="${letter}" id="sec-letter-group-${g}" class="w-14 p-1 border-2 border-purple-500 rounded text-center text-sm font-black text-purple-900 uppercase outline-none focus:bg-purple-50">
-                        </div>
-                    </div>
-                `;
+                slice.forEach((st, idx) => {
+                    const hasT1 = String(st.secret_t1 || '').trim() !== '';
+                    const hasT2 = String(st.secret_t2 || '').trim() !== '';
+                    if (termKey === 't1' && !hasT1) isFullyCoded = false;
+                    else if (termKey === 't2' && !hasT2) isFullyCoded = false;
+                    else if (termKey === 'both' && (!hasT1 || !hasT2)) isFullyCoded = false;
+
+                    const parts = extractSecretParts(st[secretField]);
+                    if (parts) {
+                        hasAnySecret = true;
+                        if (!foundLetter) foundLetter = parts.letter;
+                        numsInGroup.push({ idx: idx + 1, num: parts.num });
+                    }
+                });
+
+                if (numsInGroup.length > 1) {
+                    const allMatchSeq = numsInGroup.every(x => x.num === x.idx);
+                    if (!allMatchSeq) isSequential = false;
+                }
+
+                const savedLetter = (savedEntry && Array.isArray(savedEntry.letters) && savedEntry.letters[g])
+                    ? savedEntry.letters[g]
+                    : '';
+
+                detectedLetters.push(foundLetter || savedLetter || DEFAULT_GROUP_LETTERS[g] || String.fromCharCode(65 + g));
             }
 
+            const type = (savedEntry && savedEntry.type)
+                ? savedEntry.type
+                : (hasAnySecret ? (isSequential ? 'seq' : 'rnd') : 'seq');
+
+            const groups = [];
+            for (let g = 0; g < numGroups; g++) {
+                const startIdx = g * 100;
+                const endIdx = Math.min((g + 1) * 100, total);
+                const slice = students.slice(startIdx, endIdx);
+                const firstSeat = slice[0] && slice[0][seatField] ? slice[0][seatField] : null;
+                const lastSeat  = slice[slice.length - 1] && slice[slice.length - 1][seatField] ? slice[slice.length - 1][seatField] : null;
+
+                groups.push({
+                    index: g,
+                    count: slice.length,
+                    startPos: startIdx + 1,
+                    endPos: endIdx,
+                    firstSeat,
+                    lastSeat,
+                    letter: detectedLetters[g]
+                });
+            }
+
+            return {
+                grade,
+                total,
+                numGroups,
+                hasAnySecret,
+                isFullyCoded,
+                type,
+                groups
+            };
+        }
+
+        async function openSecretNumberingModal() {
             document.getElementById("secretModal").classList.add("active");
+            const container = document.getElementById("secret-all-grades-container");
+            container.innerHTML = `
+                <div class="p-8 text-center text-slate-500 font-bold">
+                    <i class="fa-solid fa-spinner fa-spin text-xl text-purple-700 mb-2 block"></i>
+                    جاري تحميل الأرقام السرية المحفوظة لجميع الصفوف...
+                </div>`;
+
+            DIRTY_SECRET_GRADES.clear();
+            LAST_SECRET_TERM = document.getElementById("sec-target-term").value;
+
+            try {
+                const activeGrade = document.getElementById("sel-grade").value;
+
+                const capsulePromises = ALL_GRADES.map(g => ZezoEngine.getCapsule(`control_master_grade_${g}`).catch(() => null));
+                const configPromise = ZezoEngine.getCapsule(SECRET_CONFIG_CAPSULE_ID).catch(() => null);
+
+                const results = await Promise.all([...capsulePromises, configPromise]);
+
+                ALL_GRADES.forEach((g, idx) => {
+                    if (g === activeGrade && CURRENT_GRADE_STUDENTS.length > 0) {
+                        ALL_GRADES_STUDENTS_CACHE[g] = CURRENT_GRADE_STUDENTS;
+                    } else {
+                        ALL_GRADES_STUDENTS_CACHE[g] = Array.isArray(results[idx]) ? results[idx] : [];
+                    }
+                });
+
+                const cloudCfg = results[ALL_GRADES.length];
+                let localCfg = null;
+                try { localCfg = JSON.parse(localStorage.getItem(SECRET_CONFIG_CAPSULE_ID) || 'null'); } catch(e){}
+
+                const mergedCfg = cloudCfg || localCfg || { t1: {}, t2: {} };
+                SECRET_CONFIG_CACHE = {
+                    t1: mergedCfg.t1 || {},
+                    t2: mergedCfg.t2 || {}
+                };
+
+                renderAllGradesSecretPanel();
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<div class="p-6 text-center text-rose-700 font-black">تعذر تحميل الصفوف: ${err.message}</div>`;
+            }
         }
 
         function closeSecretModal() {
             document.getElementById("secretModal").classList.remove("active");
         }
 
-        function applySecretNumbering() {
-            const total = CURRENT_GRADE_STUDENTS.length;
-            const numGroups = Math.ceil(total / 100);
-            const term = document.getElementById("sec-target-term").value;
-            const type = document.getElementById("sec-numbering-type").value;
-
-            // جمع الحروف المختارة لكل مجموعة
-            const groupLetters = [];
-            for (let g = 0; g < numGroups; g++) {
-                const inp = document.getElementById(`sec-letter-group-${g}`);
-                const ltr = (inp ? inp.value.trim().toUpperCase() : "") || String.fromCharCode(65 + g);
-                groupLetters.push(ltr);
+        function onSecretTermSelectorChange() {
+            const newTerm = document.getElementById("sec-target-term").value;
+            // إذا كان هناك تعديلات على الحروف وانتقل المستخدم إلى (الترمين معاً)، نحتفظ بالتعديلات الظاهرة حالياً
+            if (DIRTY_SECRET_GRADES.size > 0 && newTerm === 'both' && LAST_SECRET_TERM === 't1') {
+                LAST_SECRET_TERM = newTerm;
+                return;
             }
+            DIRTY_SECRET_GRADES.clear();
+            LAST_SECRET_TERM = newTerm;
+            renderAllGradesSecretPanel();
+        }
 
-            // توليد الأكواد لكل مجموعة من 1 إلى سعة المجموعة
+        function renderAllGradesSecretPanel() {
+            const container = document.getElementById("secret-all-grades-container");
+            const termKey = document.getElementById("sec-target-term").value;
+            const activeGrade = document.getElementById("sel-grade").value;
+
+            let html = "";
+
+            ALL_GRADES.forEach((grade, gIdx) => {
+                const students = ALL_GRADES_STUDENTS_CACHE[grade] || [];
+                const info = detectGradeSecretInfo(grade, students, termKey);
+                const isActive = (grade === activeGrade);
+                const isDirty = DIRTY_SECRET_GRADES.has(grade);
+
+                let statusBadge = "";
+                if (info.total === 0) {
+                    statusBadge = `<span class="text-[10.5px] px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-600 font-black">لا يوجد شيت مسحوب</span>`;
+                } else if (isDirty) {
+                    statusBadge = `<span class="text-[10.5px] px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-black">✏️ معدّل - بانتظار الحفظ</span>`;
+                } else if (info.isFullyCoded) {
+                    statusBadge = `<span class="text-[10.5px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 font-black">✔️ محفوظ ومكوّد بالكامل</span>`;
+                } else if (info.hasAnySecret) {
+                    statusBadge = `<span class="text-[10.5px] px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-black">⚠️ مكوّد جزئياً / ترم واحد</span>`;
+                } else {
+                    statusBadge = `<span class="text-[10.5px] px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 border border-rose-200 font-black">⏳ لم يكوّد بعد</span>`;
+                }
+
+                let groupsHtml = "";
+                if (info.total === 0) {
+                    groupsHtml = `<div class="text-xs font-bold text-slate-400 py-2">اسحب تلاميذ الصف ${grade} من الصفحة الرئيسية واحفظ الشيت أولاً لتوزيع أرقامه السرية.</div>`;
+                } else {
+                    groupsHtml = `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">`;
+                    info.groups.forEach(grp => {
+                        const rangeTxt = (grp.firstSeat && grp.lastSeat)
+                            ? `جلوس: ${toAr(grp.firstSeat)} ← ${toAr(grp.lastSeat)}`
+                            : `مسلسل: ${toAr(grp.startPos)} ← ${toAr(grp.endPos)}`;
+
+                        groupsHtml += `
+                            <div class="p-2.5 bg-slate-50 border border-purple-200 rounded-xl flex items-center justify-between gap-2">
+                                <div class="text-xs">
+                                    <div class="font-black text-purple-950">المجموعة ${toAr(grp.index + 1)} <span class="text-[10.5px] text-slate-500 font-bold">(${toAr(grp.count)} طالب)</span></div>
+                                    <div class="text-[10.5px] font-bold text-slate-600">${rangeTxt}</div>
+                                    <div class="text-[10.5px] font-mono font-black text-purple-800 mt-0.5" id="sec-prev-${gIdx}-${grp.index}">
+                                        ${grp.letter}1 : ${grp.letter}${grp.count}
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-center gap-0.5">
+                                    <span class="text-[10px] font-bold text-slate-500">الحرف</span>
+                                    <input type="text"
+                                           maxlength="3"
+                                           id="sec-inp-${gIdx}-${grp.index}"
+                                           data-grade-idx="${gIdx}"
+                                           data-group-idx="${grp.index}"
+                                           data-count="${grp.count}"
+                                           value="${grp.letter}"
+                                           oninput="onGradeSecretInputChanged(${gIdx}, ${grp.index}, ${grp.count})"
+                                           class="w-14 p-1.5 border-2 border-purple-500 rounded-lg text-center text-sm font-black text-purple-950 uppercase outline-none bg-white focus:bg-purple-50">
+                                </div>
+                            </div>
+                        `;
+                    });
+                    groupsHtml += `</div>`;
+                }
+
+                html += `
+                    <div class="bg-white border-2 ${isActive ? 'border-purple-600' : 'border-slate-200'} rounded-2xl p-3 shadow-sm space-y-2.5" id="sec-card-${gIdx}">
+                        <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-2">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-sm font-black text-[#0f2b48]">الصف ${grade}</span>
+                                ${isActive ? '<span class="text-[10px] bg-purple-100 text-purple-900 px-2 py-0.5 rounded font-black">المعروض حالياً</span>' : ''}
+                                <span class="text-xs font-bold text-slate-500">(${toAr(info.total)} تلميذ • ${toAr(info.numGroups)} مجموعات)</span>
+                                <span id="sec-badge-${gIdx}">${statusBadge}</span>
+                            </div>
+
+                            ${info.total > 0 ? `
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <select id="sec-type-${gIdx}" onchange="markGradeSecretDirty(${gIdx})" class="p-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-black outline-none">
+                                        <option value="seq" ${info.type === 'seq' ? 'selected' : ''}>متسلسل مرتب (1..100)</option>
+                                        <option value="rnd" ${info.type === 'rnd' ? 'selected' : ''}>عشوائي مشفر (1..100)</option>
+                                    </select>
+                                    <button type="button" onclick="applyAndSaveSingleGradeSecret(${gIdx})" class="btn-3d px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-black flex items-center gap-1 shadow cursor-pointer">
+                                        <i class="fa-solid fa-check"></i> حفظ وتطبيق للصف
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        ${groupsHtml}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function markGradeSecretDirty(gIdx) {
+            const grade = ALL_GRADES[gIdx];
+            DIRTY_SECRET_GRADES.add(grade);
+            const badgeEl = document.getElementById(`sec-badge-${gIdx}`);
+            if (badgeEl) {
+                badgeEl.innerHTML = `<span class="text-[10.5px] px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-black">✏️ معدّل - بانتظار الحفظ</span>`;
+            }
+        }
+
+        function onGradeSecretInputChanged(gIdx, grpIdx, count) {
+            const inp = document.getElementById(`sec-inp-${gIdx}-${grpIdx}`);
+            const prev = document.getElementById(`sec-prev-${gIdx}-${grpIdx}`);
+            const ltr = (inp.value.trim().toUpperCase()) || DEFAULT_GROUP_LETTERS[grpIdx] || 'A';
+            if (prev) prev.innerText = `${ltr}1 : ${ltr}${count}`;
+            markGradeSecretDirty(gIdx);
+        }
+
+        function collectGradeModalConfig(gIdx) {
+            const grade = ALL_GRADES[gIdx];
+            const students = ALL_GRADES_STUDENTS_CACHE[grade] || [];
+            const numGroups = Math.ceil(students.length / 100);
+            const typeEl = document.getElementById(`sec-type-${gIdx}`);
+            const type = typeEl ? typeEl.value : 'seq';
+
+            const letters = [];
+            for (let g = 0; g < numGroups; g++) {
+                const inp = document.getElementById(`sec-inp-${gIdx}-${g}`);
+                const ltr = (inp ? inp.value.trim().toUpperCase() : '') || DEFAULT_GROUP_LETTERS[g] || String.fromCharCode(65 + g);
+                if (inp) inp.value = ltr;
+                letters.push(ltr);
+            }
+            return { grade, students, numGroups, type, letters };
+        }
+
+        function applySecretCodesToStudentsList(students, numGroups, type, letters, term) {
+            const total = students.length;
             for (let g = 0; g < numGroups; g++) {
                 const startIdx = g * 100;
                 const endIdx = Math.min((g + 1) * 100, total);
                 const groupSize = endIdx - startIdx;
-                const ltr = groupLetters[g];
+                const ltr = letters[g];
 
                 let numbersPool = [];
                 for (let n = 1; n <= groupSize; n++) numbersPool.push(n);
-
                 if (type === 'rnd') {
-                    // خلط عشوائي غير مكرر داخل الـ 100
-                    numbersPool.sort(() => Math.random() - 0.5);
+                    for (let i = numbersPool.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [numbersPool[i], numbersPool[j]] = [numbersPool[j], numbersPool[i]];
+                    }
                 }
 
                 for (let i = 0; i < groupSize; i++) {
-                    const student = CURRENT_GRADE_STUDENTS[startIdx + i];
+                    const st = students[startIdx + i];
                     const secretCode = `${ltr}${numbersPool[i]}`;
-
-                    if (term === 'both' || term === 't1') student.secret_t1 = secretCode;
+                    if (term === 'both' || term === 't1') st.secret_t1 = secretCode;
                     if (term === 'both' || term === 't2') {
-                        // إذا اختار الترمين معاً نضع علامة للترم الثاني لتمييزه
-                        student.secret_t2 = (term === 'both') ? `${secretCode}-2` : secretCode;
+                        st.secret_t2 = (term === 'both') ? `${secretCode}-2` : secretCode;
                     }
                 }
             }
+        }
 
-            renderMasterTable();
-            closeSecretModal();
+        async function applyAndSaveSingleGradeSecret(gIdx) {
+            const term = document.getElementById("sec-target-term").value;
+            const { grade, students, numGroups, type, letters } = collectGradeModalConfig(gIdx);
 
-            Swal.fire({
-                icon: 'success',
-                title: 'تم اعتماد الأرقام السرية بنجاح!',
-                html: `
-                    تم تكويد الطلاب بنظام <b>(الحرف + رقم 1 : 100)</b>.<br>
-                    تم تقسيم الطلاب على <b>${numGroups} مجموعات</b> بحروفها المعتمدة.
-                `,
-                confirmButtonColor: '#0f2b48'
+            if (students.length === 0) return;
+
+            Swal.fire({ title: `جاري حفظ وتطبيق الأرقام السرية للصف ${grade}...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                applySecretCodesToStudentsList(students, numGroups, type, letters, term);
+
+                if (term === 'both' || term === 't1') {
+                    if (!SECRET_CONFIG_CACHE.t1) SECRET_CONFIG_CACHE.t1 = {};
+                    SECRET_CONFIG_CACHE.t1[grade] = { type, letters };
+                }
+                if (term === 'both' || term === 't2') {
+                    if (!SECRET_CONFIG_CACHE.t2) SECRET_CONFIG_CACHE.t2 = {};
+                    SECRET_CONFIG_CACHE.t2[grade] = { type, letters };
+                }
+
+                await ZezoEngine.saveCapsule(`control_master_grade_${grade}`, students);
+                localStorage.setItem(SECRET_CONFIG_CAPSULE_ID, JSON.stringify(SECRET_CONFIG_CACHE));
+                await ZezoEngine.saveCapsule(SECRET_CONFIG_CAPSULE_ID, SECRET_CONFIG_CACHE);
+
+                DIRTY_SECRET_GRADES.delete(grade);
+
+                const activeGrade = document.getElementById("sel-grade").value;
+                if (grade === activeGrade) {
+                    CURRENT_GRADE_STUDENTS = students;
+                    renderMasterTable();
+                }
+
+                renderAllGradesSecretPanel();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: `تم تطبيق وحفظ الأرقام السرية للصف (${grade})!`,
+                    text: `المجموعات: ${letters.join(' ، ')}`,
+                    timer: 1600,
+                    showConfirmButton: false
+                });
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ أثناء الحفظ', err.message || String(err), 'error');
+            }
+        }
+
+        async function saveAllGradesSecretNumbers() {
+            const term = document.getElementById("sec-target-term").value;
+            const activeGrade = document.getElementById("sel-grade").value;
+
+            let gradesWithData = ALL_GRADES.filter(g => (ALL_GRADES_STUDENTS_CACHE[g] || []).length > 0);
+            if (gradesWithData.length === 0) {
+                Swal.fire('تنبيه', 'لا توجد أي صفوف بها طلاب مسحوبون بعد!', 'warning');
+                return;
+            }
+
+            // فحص هل هناك صفوف غير مكوّدة أو معدّلة أم أن الكل مكتمل ومكوّد
+            let hasDirtyOrUncoded = false;
+            ALL_GRADES.forEach((g) => {
+                const students = ALL_GRADES_STUDENTS_CACHE[g] || [];
+                if (students.length === 0) return;
+                const info = detectGradeSecretInfo(g, students, term);
+                if (DIRTY_SECRET_GRADES.has(g) || !info.isFullyCoded) {
+                    hasDirtyOrUncoded = true;
+                }
             });
+
+            let forceAll = false;
+            if (!hasDirtyOrUncoded) {
+                const ask = await Swal.fire({
+                    title: 'جميع الصفوف مكوّدة مسبقاً',
+                    text: 'هل تريد إعادة توليد وتطبيق الأرقام السرية لجميع الصفوف وفق الحروف المعروضة حالياً؟',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'نعم، إعادة تطبيق وحفظ الكل',
+                    cancelButtonText: 'حفظ الإعدادات فقط',
+                    confirmButtonColor: '#6d28d9',
+                    cancelButtonColor: '#0f2b48'
+                });
+                forceAll = ask.isConfirmed;
+            }
+
+            Swal.fire({ title: 'جاري حفظ وتطبيق الأرقام السرية...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                let updatedGradesCount = 0;
+
+                for (let gIdx = 0; gIdx < ALL_GRADES.length; gIdx++) {
+                    const { grade, students, numGroups, type, letters } = collectGradeModalConfig(gIdx);
+                    if (students.length === 0) continue;
+
+                    const info = detectGradeSecretInfo(grade, students, term);
+                    const isDirty = DIRTY_SECRET_GRADES.has(grade);
+                    const needsGeneration = forceAll || isDirty || !info.isFullyCoded;
+
+                    if (term === 'both' || term === 't1') {
+                        if (!SECRET_CONFIG_CACHE.t1) SECRET_CONFIG_CACHE.t1 = {};
+                        SECRET_CONFIG_CACHE.t1[grade] = { type, letters };
+                    }
+                    if (term === 'both' || term === 't2') {
+                        if (!SECRET_CONFIG_CACHE.t2) SECRET_CONFIG_CACHE.t2 = {};
+                        SECRET_CONFIG_CACHE.t2[grade] = { type, letters };
+                    }
+
+                    if (needsGeneration) {
+                        applySecretCodesToStudentsList(students, numGroups, type, letters, term);
+                        await ZezoEngine.saveCapsule(`control_master_grade_${grade}`, students);
+                        updatedGradesCount++;
+
+                        if (grade === activeGrade) {
+                            CURRENT_GRADE_STUDENTS = students;
+                            renderMasterTable();
+                        }
+                    }
+                }
+
+                localStorage.setItem(SECRET_CONFIG_CAPSULE_ID, JSON.stringify(SECRET_CONFIG_CACHE));
+                await ZezoEngine.saveCapsule(SECRET_CONFIG_CAPSULE_ID, SECRET_CONFIG_CACHE);
+                DIRTY_SECRET_GRADES.clear();
+
+                renderAllGradesSecretPanel();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم الحفظ والتطبيق بنجاح!',
+                    text: updatedGradesCount > 0
+                        ? `تم تطبيق وحفظ الأرقام السرية لعدد (${toAr(updatedGradesCount)}) صفاً دراسياً.`
+                        : 'تم حفظ وتثبيت لوحة إعدادات الحروف والأرقام السرية بنجاح.',
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ أثناء الحفظ', err.message || String(err), 'error');
+            }
+        }
+
+        // طباعة لوحة الأرقام السرية لجميع الصفوف والمجموعات في ورقة A4 واحدة
+        function printSecretNumbersBoard() {
+            const term = document.getElementById("sec-target-term").value;
+            const inspectTerm = (term === 't2') ? 't2' : 't1';
+            const seatField = (inspectTerm === 't2') ? 'seat_t2' : 'seat_t1';
+            const termTitle = (term === 't1') ? 'الفصل الدراسي الأول (نصف العام)' : (term === 't2' ? 'الفصل الدراسي الثاني (آخر العام)' : 'الفصلين الدراسيين (الأول والثاني)');
+            const board = document.getElementById("printable-secret-board");
+
+            let rowsHtml = "";
+
+            ALL_GRADES.forEach((grade, gIdx) => {
+                const { students, numGroups, type, letters } = collectGradeModalConfig(gIdx);
+                const typeLabel = (type === 'rnd') ? 'عشوائي' : 'متسلسل';
+
+                let groupsCardsHtml = "";
+                if (students.length === 0) {
+                    groupsCardsHtml = `<div style="text-align:center; font-size:11px; color:#64748b; padding:6px;">لا توجد بيانات طلاب مسحوبة لهذا الصف</div>`;
+                } else {
+                    groupsCardsHtml = `<div class="sb-groups-grid">`;
+                    for (let g = 0; g < numGroups; g++) {
+                        const startIdx = g * 100;
+                        const endIdx = Math.min((g + 1) * 100, students.length);
+                        const slice = students.slice(startIdx, endIdx);
+                        const firstSeat = slice[0] && slice[0][seatField] ? slice[0][seatField] : null;
+                        const lastSeat = slice[slice.length - 1] && slice[slice.length - 1][seatField] ? slice[slice.length - 1][seatField] : null;
+
+                        const seatText = (firstSeat && lastSeat)
+                            ? `جلوس: ${toAr(firstSeat)} : ${toAr(lastSeat)}`
+                            : `مسلسل: ${toAr(startIdx + 1)} : ${toAr(endIdx)}`;
+
+                        const ltr = letters[g];
+                        const secRange = `${ltr}1 : ${ltr}${slice.length}`;
+
+                        groupsCardsHtml += `
+                            <div class="sb-group-card">
+                                <div class="sb-group-top">
+                                    <span>مجموعة ${toAr(g + 1)} (${toAr(slice.length)})</span>
+                                    <span class="sb-group-letter">${ltr}</span>
+                                </div>
+                                <div class="sb-group-meta">
+                                    <div>${seatText}</div>
+                                    <div style="font-family: Arial, sans-serif; font-weight: 900;">سري: ${secRange}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    groupsCardsHtml += `</div>`;
+                }
+
+                rowsHtml += `
+                    <tr>
+                        <td class="sb-grade-col">
+                            <div style="font-size:13.5px; font-weight:900;">الصف ${grade}</div>
+                            <div style="font-size:11px; font-weight:800; margin-top:2px;">العدد: ${toAr(students.length)}</div>
+                            ${students.length > 0 ? `<div style="font-size:10px; font-weight:800; color:#334155;">(${typeLabel})</div>` : ''}
+                        </td>
+                        <td>${groupsCardsHtml}</td>
+                    </tr>
+                `;
+            });
+
+            board.innerHTML = `
+                <div class="sb-sheet">
+                    <div class="sb-header">
+                        <div class="sb-header-right">
+                            <div>محافظة المنوفية</div>
+                            <div>إدارة الشهداء التعليمية</div>
+                            <div>مدرسة الشهيد أشرف حبيب الابتدائية</div>
+                        </div>
+                        <div class="sb-header-center">
+                            <h2>لوحة مفتاح وتوزيع الأرقام السرية لجميع الصفوف</h2>
+                            <div>${termTitle} • العام الدراسي ٢٠٢٦ / ٢٠٢٧ م</div>
+                        </div>
+                        <div class="sb-header-left">
+                            <div>كنترول المدرسة</div>
+                            <div>سري للغاية</div>
+                            <div>تاريخ: ${new Date().toLocaleDateString('ar-EG')}</div>
+                        </div>
+                    </div>
+
+                    <table class="sb-table">
+                        <thead>
+                            <tr>
+                                <th class="sb-grade-col">الصف والعدد</th>
+                                <th>مجموعات الأرقام السرية (الحرف + مدى أرقام الجلوس والسري)</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+
+                    <div class="sb-footer">
+                        <div>مسئول الإحصاء والكنترول<br><br>.................................</div>
+                        <div>رئيس الكنترول<br><br>.................................</div>
+                        <div>يعتمد / مدير المدرسة<br><br>.................................</div>
+                    </div>
+                </div>
+            `;
+
+            document.body.classList.add('print-secret-board-mode');
+            const cleanup = () => document.body.classList.remove('print-secret-board-mode');
+            window.addEventListener('afterprint', cleanup, { once: true });
+            window.print();
+            setTimeout(cleanup, 1500);
         }
 
         // ================= 7. سحب نسب الحضور من الغياب =================
-       // ================= 8. سحب وتدقيق نسب الحضور الحية من صفحة الغياب =================
-        // ================= دالة توحيد الحروف العربية للمطابقة الدقيقة =================
         function normalizeArabic(text) {
             if (!text) return "";
             return String(text)
                 .replace(/[أإآا]/g, 'ا')
                 .replace(/ة/g, 'ه')
                 .replace(/ى/g, 'ي')
-                .replace(/[\u064B-\u065F\u0640]/g, '') // إزالة التشكيل والمد
+                .replace(/[\u064B-\u065F\u0640]/g, '')
                 .replace(/\s+/g, ' ')
                 .trim()
                 .toLowerCase();
         }
 
-        // ================= سحب وتدقيق نسب الحضور الحية من صفحة الغياب =================
         async function syncAttendanceRatesFromAbsenceSystem() {
             if (CURRENT_GRADE_STUDENTS.length === 0) {
                 Swal.fire('تنبيه', 'لا يوجد تلاميذ في الشيت لسحب نسب حضورهم!', 'warning');
@@ -1082,10 +1738,8 @@
             });
 
             try {
-                // 1. جلب بيانات الطلاب الحية من جدول students (يدعم الأونلاين والأوفلاين)
                 const allLiveStudents = await ZezoEngine.getAllStudents();
                 
-                // إنشاء قواميس بحث للمطابقة بالترتيب: الكود -> القومي -> الاسم
                 const codeMap = new Map();
                 const nidMap = new Map();
                 const nameMap = new Map();
@@ -1106,7 +1760,6 @@
                 let studentsWithAbsencesCount = 0;
 
                 CURRENT_GRADE_STUDENTS.forEach(st => {
-                    // البحث عن التلميذ في سجلات المدرسة الحية
                     let liveStudent = null;
                     if (st.code && codeMap.has(String(st.code).trim())) {
                         liveStudent = codeMap.get(String(st.code).trim());
@@ -1119,7 +1772,6 @@
                     if (liveStudent) {
                         matchedCount++;
                         
-                        // فك تشفير حقل الغياب بأمان سواء كان Object أو JSON String
                         let abs = liveStudent.absences;
                         if (typeof abs === 'string') {
                             try { abs = JSON.parse(abs || '{}'); } catch(e) { abs = {}; }
@@ -1128,14 +1780,12 @@
 
                         st.raw_absences = abs;
 
-                        // الترم الأول: أسابيع W1 إلى W17 (إجمالي 85 يوم دراسة)
                         let t1Days = 0;
                         for (let i = 1; i <= 17; i++) {
                             const val = parseInt(abs['W' + i]);
                             if (!isNaN(val) && val > 0) t1Days += val;
                         }
 
-                        // الترم الثاني: أسابيع W18 إلى W30 (إجمالي 65 يوم دراسة)
                         let t2Days = 0;
                         for (let i = 18; i <= 30; i++) {
                             const val = parseInt(abs['W' + i]);
@@ -1146,7 +1796,6 @@
                             studentsWithAbsencesCount++;
                         }
 
-                        // حساب نسبة الحضور الدقيقة كما في صفحة الغياب بالضبط
                         const p1 = Math.max(0, (((85 - t1Days) / 85) * 100)).toFixed(1);
                         const p2 = Math.max(0, (((65 - t2Days) / 65) * 100)).toFixed(1);
 
@@ -1178,6 +1827,7 @@
                 Swal.fire('خطأ', 'فشل سحب نسب الغياب: ' + err.message, 'error');
             }
         }
+
         // ================= 8. حفظ الشيت =================
         async function saveControlSheetToStorage(showToast = true) {
             const grade = document.getElementById("sel-grade").value;
@@ -1189,24 +1839,8 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...`;
 
             try {
-                const mode = ZezoEngine.getMode();
-
-                if (mode === 'offline') {
-                    const db = await openLocalDB();
-                    await new Promise((resolve, reject) => {
-                        const tx = db.transaction('system_capsules', 'readwrite');
-                        tx.objectStore('system_capsules').put({ id: capsuleKey, data: CURRENT_GRADE_STUDENTS });
-                        tx.oncomplete = () => resolve();
-                        tx.onerror = () => reject(tx.error);
-                    });
-                } else {
-                    const { error } = await sbClient.from("system_capsules").upsert({
-                        id: capsuleKey,
-                        data: CURRENT_GRADE_STUDENTS,
-                        updatedat: new Date().toLocaleString('ar-EG')
-                    });
-                    if (error) throw error;
-                }
+                await ZezoEngine.saveCapsule(capsuleKey, CURRENT_GRADE_STUDENTS);
+                ALL_GRADES_STUDENTS_CACHE[grade] = CURRENT_GRADE_STUDENTS;
 
                 if (showToast) {
                     Swal.fire({
