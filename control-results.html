@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>شيت النتيجة النهائي المعتمد (A3) - كنترول مستر زيزو</title>
+
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Supabase & Excel & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary: #0f2b48;
+            --primary-light: #1e3a8a;
+            --gold: #d97706;
+            --bg: #f8fafc;
+            --border: #cbd5e1;
+            --res-row-h: 32px;
+            --res-font-sz: 11.5px;
+            --res-head-sz: 11px;
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white; border-bottom: 4px solid var(--gold);
+        }
+
+        .btn-3d {
+            border-bottom: 3.5px solid rgba(0,0,0,0.25);
+            transition: all 0.12s ease;
+            touch-action: manipulation;
+        }
+        .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
+
+        /* تبويبات الشيتات الثلاثة */
+        .res-tab-btn {
+            padding: 9px 14px;
+            border-radius: 12px;
+            font-size: 12.5px;
+            font-weight: 900;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1.5px solid #cbd5e1;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .res-tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(15, 43, 72, 0.25);
+        }
+
+        /* حاوية الجدول مع تثبيت الأعمدة اليُمنى */
+        .sheet-scroll-container {
+            width: 100%;
+            height: calc(100vh - 280px);
+            min-height: 360px;
+            overflow: auto;
+            border: 2px solid #94a3b8;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(15, 43, 72, 0.08);
+            position: relative;
+        }
+
+        .result-table {
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: center;
+            width: max-content;
+            min-width: 100%;
+            font-size: var(--res-font-sz);
+            color: #000;
+        }
+
+        .result-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            background: #0f2b48;
+            color: white;
+            border: 1px solid #334155;
+            padding: 5px 4px;
+            font-weight: 900;
+            font-size: var(--res-head-sz);
+            white-space: nowrap;
+        }
+
+        .result-table thead tr.sub-head-row th {
+            top: 33px;
+            z-index: 29;
+            background: #1e293b;
+            color: #f8fafc;
+            font-size: calc(var(--res-head-sz) - 0.5px);
+            padding: 4px 3px;
+        }
+
+        .v-sub-th {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            height: 74px;
+            padding: 4px 2px !important;
+            line-height: 1.1;
+        }
+
+        /* تثبيت أعمدة البيانات الأساسية يميناً */
+        .st-col-1 { position: sticky; right: 0;     z-index: 20; background: #f8fafc; width: 38px;  min-width: 38px;  border-left: 1px solid #cbd5e1 !important; }
+        .st-col-2 { position: sticky; right: 38px;  z-index: 20; background: #ffffff; width: 195px; min-width: 195px; text-align: right !important; padding-right: 7px !important; border-left: 1.5px solid #94a3b8 !important; }
+        .st-col-3 { position: sticky; right: 233px; z-index: 20; background: #f8fafc; width: 52px;  min-width: 52px;  border-left: 1.5px solid #94a3b8 !important; }
+        .st-col-4 { position: sticky; right: 285px; z-index: 20; background: #fffbeb; width: 58px;  min-width: 58px;  border-left: 1.5px solid #d97706 !important; }
+        .st-col-5 { position: sticky; right: 343px; z-index: 20; background: #f5f3ff; width: 58px;  min-width: 58px;  border-left: 2.5px solid #0f2b48 !important; }
+
+        /* وضع التثبيت عند وجود 7 أعمدة أساسية في الشيت المجمع */
+        .is-combined .st-col-4 { width: 52px; min-width: 52px; right: 285px; }
+        .is-combined .st-col-4b { position: sticky; right: 337px; z-index: 20; background: #eff6ff; width: 52px; min-width: 52px; border-left: 1.5px solid #3b82f6 !important; }
+        .is-combined .st-col-5 { right: 389px; width: 54px; min-width: 54px; }
+        .is-combined .st-col-5b { position: sticky; right: 443px; z-index: 20; background: #f5f3ff; width: 54px; min-width: 54px; border-left: 2.5px solid #0f2b48 !important; }
+
+        thead th.st-col-1, thead th.st-col-2, thead th.st-col-3,
+        thead th.st-col-4, thead th.st-col-4b, thead th.st-col-5, thead th.st-col-5b {
+            z-index: 45 !important;
+            background: #0f2b48 !important;
+            color: #fcd34d !important;
+        }
+
+        .result-table tbody td {
+            border: 1px solid #cbd5e1;
+            padding: 2px 3px;
+            height: var(--res-row-h);
+            font-weight: 800;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        .result-table tbody tr:nth-child(even) td:not([class*="grade-"]):not([class*="swatch-"]):not(.cell-eval40):not(.cell-total100):not(.cell-avg100) {
+            background-color: #f8fafc;
+        }
+
+        .cell-eval40 { background: #eff6ff !important; color: #1e3a8a; font-weight: 900; }
+        .cell-total100 { background: #f1f5f9 !important; color: #0f2b48; font-weight: 900; border-right: 1.5px solid #94a3b8 !important; }
+        .cell-avg100 { background: #fefce8 !important; color: #854d0e; font-weight: 900; }
+        .subj-border-end { border-left: 2.5px solid #0f2b48 !important; }
+
+        /* ألوان التقديرات الأربعة + غ (أحمر) */
+        .grade-red    { background-color: #fee2e2 !important; color: #b91c1c !important; font-weight: 900 !important; }
+        .grade-yellow { background-color: #fef9c3 !important; color: #854d0e !important; font-weight: 900 !important; }
+        .grade-green  { background-color: #dcfce7 !important; color: #15803d !important; font-weight: 900 !important; }
+        .grade-blue   { background-color: #dbeafe !important; color: #1d4ed8 !important; font-weight: 900 !important; }
+
+        .swatch-red    { background-color: #dc2626 !important; color: #ffffff !important; font-weight: 900 !important; }
+        .swatch-yellow { background-color: #facc15 !important; color: #000000 !important; font-weight: 900 !important; }
+        .swatch-green  { background-color: #16a34a !important; color: #ffffff !important; font-weight: 900 !important; }
+        .swatch-blue   { background-color: #2563eb !important; color: #ffffff !important; font-weight: 900 !important; }
+
+        .res-pass { background: #dcfce7 !important; color: #15803d !important; font-weight: 900; }
+        .res-fail { background: #fee2e2 !important; color: #b91c1c !important; font-weight: 900; }
+
+        /* المودال */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px); display: none; justify-content: center;
+            align-items: center; z-index: 2000; padding: 12px;
+        }
+        .modal-overlay.active { display: flex; }
+        .swal2-container { z-index: 99999 !important; }
+
+        .print-only-header, .print-only-footer { display: none; }
+
+        /* ================= طباعة الشيت المعتمد A3 أفقي ================= */
+        @media print {
+            @page { size: A3 landscape; margin: 5mm 4mm; }
+            body { background: white !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .sheet-scroll-container {
+                height: auto !important;
+                overflow: visible !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .result-table {
+                width: 100% !important;
+                min-width: 100% !important;
+                border: 2px solid #000 !important;
+            }
+            .result-table thead { display: table-header-group; }
+            .result-table tbody tr { break-inside: avoid; page-break-inside: avoid; }
+            .result-table th, .result-table td { border: 1px solid #000 !important; }
+            .st-col-1, .st-col-2, .st-col-3, .st-col-4, .st-col-4b, .st-col-5, .st-col-5b {
+                position: static !important;
+            }
+            .print-only-header {
+                display: flex !important;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 2.5px solid #000;
+                padding-bottom: 5px;
+                margin-bottom: 6px;
+            }
+            .print-only-footer {
+                display: flex !important;
+                justify-content: space-between;
+                padding: 12px 40px 0 40px;
+                font-size: 13px;
+                font-weight: 900;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="p-2 sm:p-3">
+
+    <!-- 1. الشريط العلوي -->
+    <header class="top-nav rounded-2xl shadow-md p-3 mb-2.5 flex flex-wrap justify-between items-center gap-3 no-print">
+        <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-yellow-300 text-xl shrink-0">
+                <i class="fa-solid fa-scroll"></i>
+            </div>
+            <div>
+                <h1 class="text-sm sm:text-base font-black leading-tight text-white flex items-center gap-2">
+                    شيت النتيجة النهائي المعتمد (A3)
+                </h1>
+                <p class="text-[11px] text-blue-200 font-bold">يستقبل الدرجات المرحّلة من صفحة الرصد • مستر زيزو</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/20">
+                <label class="text-xs font-bold text-yellow-300"><i class="fa-solid fa-graduation-cap"></i> الصف:</label>
+                <select id="sel-grade" onchange="loadAllGradeData()" class="bg-blue-900 text-white text-xs font-black rounded-lg p-1 outline-none cursor-pointer">
+                    <option value="الأول">الصف الأول</option>
+                    <option value="الثاني">الصف الثاني</option>
+                    <option value="الثالث">الصف الثالث</option>
+                    <option value="الرابع" selected>الصف الرابع</option>
+                    <option value="الخامس">الصف الخامس</option>
+                    <option value="السادس">الصف السادس</option>
+                </select>
+            </div>
+
+            <a href="control-index.html" class="btn-3d px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-stamp"></i> بوابة الكنترول
+            </a>
+            <a href="index.html" class="btn-3d px-3.5 py-1.5 bg-blue-800 hover:bg-blue-700 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-house"></i> الرئيسية
+            </a>
+        </div>
+    </header>
+
+    <!-- 2. شريط التبويبات والأدوات والفلاتر -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-2.5 mb-2.5 shadow-sm space-y-2.5 no-print">
+        
+        <div class="flex flex-wrap justify-between items-center gap-2">
+            <!-- التبويبات الثلاثة -->
+            <div class="flex flex-wrap gap-1.5">
+                <button id="btn-tab-t1" onclick="switchResultTab('t1')" class="res-tab-btn active">
+                    <i class="fa-solid fa-1 text-amber-400"></i> شيت الترم الأول (نصف العام)
+                </button>
+                <button id="btn-tab-t2" onclick="switchResultTab('t2')" class="res-tab-btn">
+                    <i class="fa-solid fa-2 text-blue-600"></i> شيت الترم الثاني (آخر العام)
+                </button>
+                <button id="btn-tab-combined" onclick="switchResultTab('combined')" class="res-tab-btn">
+                    <i class="fa-solid fa-layer-group text-emerald-600"></i> الشيت النهائي المجمّع (المتوسط والنتيجة)
+                </button>
+            </div>
+
+            <!-- أزرار التحكم -->
+            <div class="flex flex-wrap gap-1.5 items-center">
+                <button onclick="loadAllGradeData(true)" class="btn-3d px-3 py-1.5 bg-blue-800 hover:bg-blue-900 text-white rounded-xl text-xs font-black flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-arrows-rotate text-yellow-300"></i> تحديث الدرجات المرحّلة
+                </button>
+                <button onclick="openSettingsModal()" class="btn-3d px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-black flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-sliders text-yellow-300"></i> ضبط الطباعة والخطوط
+                </button>
+                <button onclick="exportResultToExcel()" class="btn-3d px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-file-excel text-emerald-200"></i> إكسيل
+                </button>
+                <button onclick="window.print()" class="btn-3d px-4 py-1.5 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs font-black flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-print text-yellow-400"></i> طباعة (A3 أفقي)
+                </button>
+            </div>
+        </div>
+
+        <!-- صف الفلاتر والبحث -->
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+            <div class="flex flex-wrap items-center gap-2">
+                <select id="filter-class" onchange="renderActiveSheet()" class="p-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-black outline-none">
+                    <option value="ALL">كل الفصول</option>
+                </select>
+
+                <select id="filter-subject" onchange="renderActiveSheet()" class="p-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-black outline-none">
+                    <option value="ALL">عرض جميع المواد</option>
+                </select>
+
+                <select id="filter-status" onchange="renderActiveSheet()" class="p-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-black outline-none">
+                    <option value="ALL">جميع التلاميذ</option>
+                    <option value="PASS">الناجحون / المنقولون فقط</option>
+                    <option value="FAIL">المستحقون لدور ثانٍ / لم يتقن</option>
+                    <option value="ABSENT">الغائبون (غ)</option>
+                </select>
+
+                <input type="text" id="filter-search" oninput="renderActiveSheet()" placeholder="🔍 بحث بالاسم أو الجلوس أو السري..." class="p-1.5 px-3 bg-slate-50 border border-slate-300 rounded-lg text-xs font-bold outline-none w-56">
+            </div>
+
+            <div id="scores-sync-badge" class="text-[11px] font-black px-3 py-1 rounded-lg bg-slate-100 text-slate-600 border">
+                جاري فحص الدرجات المرحّلة...
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 3. مؤشرات النتيجة السريعة -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-2.5 no-print text-center">
+        <div class="bg-white p-2 rounded-xl border border-slate-200 border-b-4 border-b-blue-600">
+            <div class="text-[10.5px] font-bold text-slate-500">إجمالي التلاميذ</div>
+            <div id="kpi-total" class="text-lg font-black text-[#0f2b48]">٠</div>
+        </div>
+        <div class="bg-white p-2 rounded-xl border border-slate-200 border-b-4 border-b-emerald-600">
+            <div class="text-[10.5px] font-bold text-slate-500">منقول / مجتاز</div>
+            <div id="kpi-pass" class="text-lg font-black text-emerald-700">٠</div>
+        </div>
+        <div class="bg-white p-2 rounded-xl border border-slate-200 border-b-4 border-b-rose-600">
+            <div class="text-[10.5px] font-bold text-slate-500">دور ثانٍ / لم يتقن</div>
+            <div id="kpi-fail" class="text-lg font-black text-rose-700">٠</div>
+        </div>
+        <div class="bg-white p-2 rounded-xl border border-slate-200 border-b-4 border-b-blue-500">
+            <div class="text-[10.5px] font-bold text-slate-500">نسبة النجاح</div>
+            <div id="kpi-rate" class="text-lg font-black text-blue-800">%٠</div>
+        </div>
+        <div class="bg-white p-2 rounded-xl border border-slate-200 border-b-4 border-b-amber-500">
+            <div class="text-[10.5px] font-bold text-slate-500">حالات غياب (غ)</div>
+            <div id="kpi-absent" class="text-lg font-black text-amber-800">٠</div>
+        </div>
+    </div>
+
+    <!-- 4. ترويسة الطباعة الرسمية (A3) -->
+    <div class="print-only-header">
+        <div style="text-align: right; font-size: 12px; font-weight: 900; line-height: 1.4;">
+            <div>محافظة المنوفية</div>
+            <div>إدارة الشهداء التعليمية</div>
+            <div>مدرسة الشهيد أشرف حبيب الابتدائية</div>
+        </div>
+        <div style="text-align: center;">
+            <h2 id="print-main-title" style="font-size: 17px; font-weight: 900; border: 2px solid #000; padding: 4px 18px; border-radius: 8px; background: #f1f5f9;">
+                شيت النتيجة المعتمد - الصف الرابع
+            </h2>
+            <div style="font-size: 12.5px; font-weight: 900; margin-top: 3px;">العام الدراسي ٢٠٢٦ / ٢٠٢٧ م</div>
+        </div>
+        <div style="text-align: left; font-size: 12px; font-weight: 900; line-height: 1.4;">
+            <div>عدد التلاميذ: <span id="print-count">٠</span></div>
+            <div>تاريخ: <span id="print-date"></span></div>
+        </div>
+    </div>
+
+    <!-- 5. جدول شيت النتيجة -->
+    <div class="sheet-scroll-container">
+        <table class="result-table" id="resultTable">
+            <thead id="resultThead"></thead>
+            <tbody id="resultTbody">
+                <tr><td class="p-10 text-slate-400 font-bold">جاري تحميل بيانات الشيت المركزي والدرجات...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- تذييل التوقيعات للطباعة -->
+    <div class="print-only-footer">
+        <div>مسئول الرصد والكمبيوتر<br><br>.................................</div>
+        <div>رئيس الكنترول<br><br>.................................</div>
+        <div>شئون الطلبة<br><br>.................................</div>
+        <div>يعتمد / مدير المدرسة<br><br>.................................</div>
+    </div>
+
+    <!-- 6. نافذة ضبط مقاسات الطباعة والحساب -->
+    <div class="modal-overlay no-print" id="settingsModal" onclick="if(event.target===this) closeSettingsModal()">
+        <div class="bg-white w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl">
+            <div class="bg-[#0f2b48] text-white p-3.5 flex justify-between items-center border-b-4 border-amber-500">
+                <h3 class="text-sm font-black flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-yellow-300"></i> ضبط مقاسات الطباعة وقواعد الحساب
+                </h3>
+                <button onclick="closeSettingsModal()" class="text-white text-2xl leading-none">&times;</button>
+            </div>
+            <div class="p-4 space-y-3 text-xs font-bold">
+                <div>
+                    <label class="flex justify-between mb-1"><span>ارتفاع صف التلميذ:</span> <b id="lbl-row-h">32px</b></label>
+                    <input type="range" id="rng-row-h" min="20" max="46" value="32" oninput="updateResStyle('--res-row-h', this.value + 'px', 'lbl-row-h')" class="w-full accent-blue-900">
+                </div>
+                <div>
+                    <label class="flex justify-between mb-1"><span>حجم خط الدرجات والأسماء:</span> <b id="lbl-font-sz">11.5px</b></label>
+                    <input type="range" id="rng-font-sz" min="8" max="15" step="0.5" value="11.5" oninput="updateResStyle('--res-font-sz', this.value + 'px', 'lbl-font-sz')" class="w-full accent-blue-900">
+                </div>
+                <div>
+                    <label class="flex justify-between mb-1"><span>حجم خط العناوين:</span> <b id="lbl-head-sz">11px</b></label>
+                    <input type="range" id="rng-head-sz" min="8" max="14" step="0.5" value="11" oninput="updateResStyle('--res-head-sz', this.value + 'px', 'lbl-head-sz')" class="w-full accent-blue-900">
+                </div>
+
+                <div class="p-3 bg-slate-50 border rounded-xl space-y-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="chk-include-religion" onchange="renderActiveSheet()" class="w-4 h-4 accent-blue-900">
+                        <span>إدراج مادة «الدين» ضمن المجموع الكلي والنسبة المئوية (بخلاف كونها مادة نجاح ورسوب)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="chk-show-color-col" checked onchange="renderActiveSheet()" class="w-4 h-4 accent-blue-900">
+                        <span>إظهار عمود «اللون» مستقلاً بجانب عمود التقدير</span>
+                    </label>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t">
+                    <button onclick="saveSettingsToLocal()" class="btn-3d px-5 py-2 bg-emerald-700 text-white rounded-xl font-black">حفظ وتثبيت</button>
+                    <button onclick="closeSettingsModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl font-black">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
+        const DB_VERSION = 2;
+
+        let MASTER_STUDENTS = [];
+        let SCORES_DATA = { t1: {}, t2: {} };
+        let ACTIVE_TAB = 't1'; // t1 | t2 | combined
+
+        const SUBJECTS_LOWER = [
+            { key: 'arabic',   name: 'لغة عربية' },
+            { key: 'math',     name: 'رياضيات' },
+            { key: 'english',  name: 'انجليزى' },
+            { key: 'religion', name: 'دين' }
+        ];
+
+        const SUBJECTS_UPPER = [
+            { key: 'arabic',   name: 'لغة عربية' },
+            { key: 'math',     name: 'رياضيات' },
+            { key: 'science',  name: 'علوم' },
+            { key: 'social',   name: 'دراسات' },
+            { key: 'english',  name: 'انجليزى' },
+            { key: 'tech',     name: 'تكنولوجيا' },
+            { key: 'religion', name: 'دين' }
+        ];
+
+        const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
+
+        function isLowerGrade(grade) {
+            return ["الأول", "الثاني", "الثالث"].includes(grade);
+        }
+
+        function getSubjectsForGrade(grade) {
+            return isLowerGrade(grade) ? SUBJECTS_LOWER : SUBJECTS_UPPER;
+        }
+
+        function openLocalDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('system_capsules')) {
+                        db.createObjectStore('system_capsules', { keyPath: 'id' });
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function fetchCapsuleData(capsuleKey) {
+            const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
+            let dataOut = null;
+
+            if (mode === 'online') {
+                try {
+                    const { data, error } = await sbClient.from("system_capsules").select("data").eq("id", capsuleKey).maybeSingle();
+                    if (!error && data) dataOut = data.data;
+                } catch (e) { console.warn(e); }
+            }
+
+            if (!dataOut) {
+                try {
+                    const db = await openLocalDB();
+                    if (db.objectStoreNames.contains('system_capsules')) {
+                        dataOut = await new Promise((resolve) => {
+                            const tx = db.transaction('system_capsules', 'readonly');
+                            const req = tx.objectStore('system_capsules').get(capsuleKey);
+                            req.onsuccess = () => resolve(req.result ? req.result.data : null);
+                            req.onerror = () => resolve(null);
+                        });
+                    }
+                } catch (e) {}
+            }
+            return dataOut;
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('print-date').innerText = new Date().toLocaleDateString('ar-EG');
+            loadSavedSettings();
+            await loadAllGradeData();
+        });
+
+        async function loadAllGradeData(showToast = false) {
+            const grade = document.getElementById('sel-grade').value;
+            const masterKey = `control_master_grade_${grade}`;
+            const scoresKey = `control_scores_grade_${grade}`;
+            const badge = document.getElementById('scores-sync-badge');
+
+            document.getElementById('resultTbody').innerHTML = `<tr><td colspan="25" class="p-10 text-blue-900 font-black"><i class="fa-solid fa-spinner fa-spin text-xl mb-2 block"></i> جاري استدعاء بيانات الكنترول والدرجات المرحّلة...</td></tr>`;
+
+            try {
+                const [masterRaw, scoresRaw] = await Promise.all([
+                    fetchCapsuleData(masterKey),
+                    fetchCapsuleData(scoresKey)
+                ]);
+
+                MASTER_STUDENTS = Array.isArray(masterRaw)
+                    ? masterRaw
+                    : (masterRaw && Array.isArray(masterRaw.students) ? masterRaw.students : []);
+
+                SCORES_DATA = (scoresRaw && typeof scoresRaw === 'object')
+                    ? { t1: scoresRaw.t1 || {}, t2: scoresRaw.t2 || {} }
+                    : { t1: {}, t2: {} };
+
+                const t1Count = Object.keys(SCORES_DATA.t1).length;
+                const t2Count = Object.keys(SCORES_DATA.t2).length;
+
+                if (t1Count > 0 || t2Count > 0) {
+                    badge.className = "text-[11px] font-black px-3 py-1 rounded-lg bg-emerald-100 text-emerald-900 border border-emerald-300";
+                    badge.innerHTML = `<i class="fa-solid fa-check-circle"></i> درجات مرحّلة (ت١: ${toAr(t1Count)} • ت٢: ${toAr(t2Count)})`;
+                } else {
+                    badge.className = "text-[11px] font-black px-3 py-1 rounded-lg bg-amber-100 text-amber-900 border border-amber-300";
+                    badge.innerHTML = `<i class="fa-solid fa-clock"></i> في انتظار ترحيل الدرجات من صفحة الرصد`;
+                }
+
+                populateClassAndSubjectFilters(grade);
+                renderActiveSheet();
+
+                if (showToast) {
+                    Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم تحديث بيانات شيت النتيجة', timer: 1300, showConfirmButton: false });
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ', 'تعذر تحميل بيانات الشيت: ' + err.message, 'error');
+            }
+        }
+
+        function populateClassAndSubjectFilters(grade) {
+            const clsSel = document.getElementById('filter-class');
+            const prevCls = clsSel.value;
+            const classes = [...new Set(MASTER_STUDENTS.map(s => String(s.class || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar', { numeric: true }));
+            clsSel.innerHTML = `<option value="ALL">كل الفصول</option>` + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+            if (classes.includes(prevCls)) clsSel.value = prevCls;
+
+            const subSel = document.getElementById('filter-subject');
+            const prevSub = subSel.value;
+            const subjects = getSubjectsForGrade(grade);
+            subSel.innerHTML = `<option value="ALL">عرض جميع المواد (${toAr(subjects.length)})</option>` + subjects.map(s => `<option value="${s.key}">${s.name}</option>`).join('');
+            if (subjects.some(s => s.key === prevSub)) subSel.value = prevSub;
+        }
+
+        function switchResultTab(tab) {
+            ACTIVE_TAB = tab;
+            ['t1', 't2', 'combined'].forEach(t => {
+                document.getElementById(`btn-tab-${t}`).classList.toggle('active', t === tab);
+            });
+            renderActiveSheet();
+        }
+
+        // جلب سجل درجات التلميذ لترم معين بأكثر من مفتاح مطابقة لضمان الربط مع صفحة الرصد
+        function getStudentTermScoreRecord(st, term) {
+            const map = SCORES_DATA[term] || {};
+            if (st.code && map[st.code]) return map[st.code];
+            if (st.nid && map[st.nid]) return map[st.nid];
+            const seatKey = term === 't1' ? st.seat_t1 : st.seat_t2;
+            const secKey  = term === 't1' ? st.secret_t1 : st.secret_t2;
+            if (seatKey && map[`SEAT_${seatKey}`]) return map[`SEAT_${seatKey}`];
+            if (secKey  && map[`SEC_${secKey}`])   return map[`SEC_${secKey}`];
+            return {};
+        }
+
+        function parseNumericOrZero(v) {
+            if (v === undefined || v === null || String(v).trim() === '') return 0;
+            const n = parseFloat(String(v).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function isAbsentVal(v) {
+            const s = String(v ?? '').trim();
+            return s === 'غ' || s === 'غائب' || s === 'غـ';
+        }
+
+        function hasValue(v) {
+            return v !== undefined && v !== null && String(v).trim() !== '';
+        }
+
+        // حساب التقدير واللون (غ = أحمر، <50 = لم يتقن أحمر، 50-65 = يحتاج دعم أصفر، 65-85 = يلبي أخضر، >=85 = يفوق أزرق)
+        function evaluateGradeAndColor(score100, isAbsent) {
+            if (isAbsent) {
+                return { label: 'غ', colorName: 'أحمر', badgeCls: 'grade-red', swatchCls: 'swatch-red', passed: false, isAbsent: true };
+            }
+            if (score100 < 50) {
+                return { label: 'لم يتقن', colorName: 'أحمر', badgeCls: 'grade-red', swatchCls: 'swatch-red', passed: false, isAbsent: false };
+            }
+            if (score100 < 65) {
+                return { label: 'يحتاج إلى دعم', colorName: 'أصفر', badgeCls: 'grade-yellow', swatchCls: 'swatch-yellow', passed: true, isAbsent: false };
+            }
+            if (score100 < 85) {
+                return { label: 'يلبي التوقعات', colorName: 'أخضر', badgeCls: 'grade-green', swatchCls: 'swatch-green', passed: true, isAbsent: false };
+            }
+            return { label: 'يفوق التوقعات', colorName: 'أزرق', badgeCls: 'grade-blue', swatchCls: 'swatch-blue', passed: true, isAbsent: false };
+        }
+
+        function computeSubjectTerm(rawSub) {
+            if (!rawSub || typeof rawSub !== 'object') {
+                return { hasData: false };
+            }
+            const hasAny = hasValue(rawSub.hw) || hasValue(rawSub.cw) || hasValue(rawSub.eval) ||
+                           hasValue(rawSub.att) || hasValue(rawSub.month) || hasValue(rawSub.exam);
+            if (!hasAny) return { hasData: false };
+
+            const hw = parseNumericOrZero(rawSub.hw);
+            const cw = parseNumericOrZero(rawSub.cw);
+            const ev = parseNumericOrZero(rawSub.eval);
+            const att = parseNumericOrZero(rawSub.att);
+            const month = parseNumericOrZero(rawSub.month);
+            const eval40 = +(hw + cw + ev + att + month).toFixed(1);
+
+            const absent = isAbsentVal(rawSub.exam);
+            const exam60 = absent ? 0 : parseNumericOrZero(rawSub.exam);
+            const total100 = absent ? eval40 : +(eval40 + exam60).toFixed(1);
+            const meta = evaluateGradeAndColor(total100, absent);
+
+            return {
+                hasData: true,
+                hw: hasValue(rawSub.hw) ? hw : '',
+                cw: hasValue(rawSub.cw) ? cw : '',
+                eval: hasValue(rawSub.eval) ? ev : '',
+                att: hasValue(rawSub.att) ? att : '',
+                month: hasValue(rawSub.month) ? month : '',
+                eval40,
+                exam60Display: absent ? 'غ' : (hasValue(rawSub.exam) ? exam60 : ''),
+                total100Display: absent ? 'غ' : total100,
+                total100Numeric: absent ? eval40 : total100,
+                absent,
+                meta
+            };
+        }
+
+        function renderActiveSheet() {
+            const grade = document.getElementById('sel-grade').value;
+            const clsFilter = document.getElementById('filter-class').value;
+            const subFilter = document.getElementById('filter-subject').value;
+            const statusFilter = document.getElementById('filter-status').value;
+            const searchQ = (document.getElementById('filter-search').value || '').trim().toLowerCase();
+
+            const includeRel = document.getElementById('chk-include-religion').checked;
+            const showColorCol = document.getElementById('chk-show-color-col').checked;
+
+            const allSubjects = getSubjectsForGrade(grade);
+            const subjects = (subFilter === 'ALL') ? allSubjects : allSubjects.filter(s => s.key === subFilter);
+
+            const table = document.getElementById('resultTable');
+            const thead = document.getElementById('resultThead');
+            const tbody = document.getElementById('resultTbody');
+
+            table.classList.toggle('is-combined', ACTIVE_TAB === 'combined');
+
+            const tabTitle = ACTIVE_TAB === 't1'
+                ? `شيت نتيجة الترم الأول (نصف العام) — الصف ${grade}`
+                : (ACTIVE_TAB === 't2' ? `شيت نتيجة الترم الثاني (آخر العام) — الصف ${grade}` : `شيت النتيجة النهائي المجمّع (متوسط الترمين) — الصف ${grade}`);
+            document.getElementById('print-main-title').innerText = tabTitle;
+
+            if (MASTER_STUDENTS.length === 0) {
+                thead.innerHTML = '';
+                tbody.innerHTML = `<tr><td class="p-10 text-rose-700 font-black">لا يوجد تلاميذ في الشيت المركزي للصف (${grade}). اسحب التلاميذ من «الشيت المركزي الشامل» أولاً.</td></tr>`;
+                updateKPIs(0, 0, 0, 0);
+                return;
+            }
+
+            // 1. بناء رأس الجدول حسب التبويب
+            if (ACTIVE_TAB === 't1' || ACTIVE_TAB === 't2') {
+                const examColTitle = (ACTIVE_TAB === 't1') ? 'نصف العام (٦٠)' : 'آخر العام (٦٠)';
+                const colsPerSub = showColorCol ? 10 : 9;
+
+                let r1 = `
+                    <tr>
+                        <th rowspan="2" class="st-col-1">م</th>
+                        <th rowspan="2" class="st-col-2" style="text-align:center !important;">الاسم</th>
+                        <th rowspan="2" class="st-col-3">الفصل</th>
+                        <th rowspan="2" class="st-col-4">جلوس</th>
+                        <th rowspan="2" class="st-col-5">سرى</th>
+                        ${subjects.map(s => `<th colspan="${colsPerSub}" class="subj-border-end">${s.name}</th>`).join('')}
+                        <th rowspan="2" style="min-width:65px;">المجموع<br>الكلى</th>
+                        <th rowspan="2" style="min-width:52px;">النسبة<br>%</th>
+                        <th rowspan="2" style="min-width:110px;">الموقف / النتيجة</th>
+                    </tr>
+                `;
+
+                let r2 = `<tr class="sub-head-row">`;
+                subjects.forEach(() => {
+                    r2 += `
+                        <th class="v-sub-th">واجب (٥)</th>
+                        <th class="v-sub-th">كراسة (٥)</th>
+                        <th class="v-sub-th">تقييم (١٠)</th>
+                        <th class="v-sub-th">مواظبة (٥)</th>
+                        <th class="v-sub-th">شهر (١٥)</th>
+                        <th class="v-sub-th" style="background:#1e3a8a; color:#fcd34d;">التقييم (٤٠)</th>
+                        <th class="v-sub-th">${examColTitle}</th>
+                        <th class="v-sub-th" style="background:#0f2b48; color:#fcd34d;">المجموع (١٠٠)</th>
+                        <th class="v-sub-th">التقدير</th>
+                        ${showColorCol ? `<th class="v-sub-th subj-border-end">اللون</th>` : ''}
+                    `;
+                });
+                r2 += `</tr>`;
+                thead.innerHTML = r1 + r2;
+            } else {
+                const colsPerSub = showColorCol ? 6 : 5;
+                let r1 = `
+                    <tr>
+                        <th rowspan="2" class="st-col-1">م</th>
+                        <th rowspan="2" class="st-col-2" style="text-align:center !important;">الاسم</th>
+                        <th rowspan="2" class="st-col-3">الفصل</th>
+                        <th rowspan="2" class="st-col-4">جلوس<br>ت١</th>
+                        <th rowspan="2" class="st-col-4b">جلوس<br>ت٢</th>
+                        <th rowspan="2" class="st-col-5">سرى<br>ت١</th>
+                        <th rowspan="2" class="st-col-5b">سرى<br>ت٢</th>
+                        ${subjects.map(s => `<th colspan="${colsPerSub}" class="subj-border-end">${s.name}</th>`).join('')}
+                        <th rowspan="2" style="min-width:65px;">المجموع<br>النهائى</th>
+                        <th rowspan="2" style="min-width:52px;">النسبة<br>%</th>
+                        <th rowspan="2" style="min-width:130px;">النتيجة النهائية</th>
+                    </tr>
+                `;
+
+                let r2 = `<tr class="sub-head-row">`;
+                subjects.forEach(() => {
+                    r2 += `
+                        <th class="v-sub-th">نصف العام</th>
+                        <th class="v-sub-th">آخر العام</th>
+                        <th class="v-sub-th">مجموع الترمين</th>
+                        <th class="v-sub-th" style="background:#78350f; color:#fef08a;">المتوسط (١٠٠)</th>
+                        <th class="v-sub-th">التقدير</th>
+                        ${showColorCol ? `<th class="v-sub-th subj-border-end">اللون</th>` : ''}
+                    `;
+                });
+                r2 += `</tr>`;
+                thead.innerHTML = r1 + r2;
+            }
+
+            // 2. معالجة التلاميذ وبناء الصفوف
+            let rowsHtml = "";
+            let kpiTotal = 0, kpiPass = 0, kpiFail = 0, kpiAbsent = 0;
+            let rowSerial = 1;
+
+            MASTER_STUDENTS.forEach((st) => {
+                if (clsFilter !== 'ALL' && String(st.class || '').trim() !== clsFilter) return;
+
+                if (searchQ) {
+                    const hay = `${st.name || ''} ${st.seat_t1 || ''} ${st.seat_t2 || ''} ${st.secret_t1 || ''} ${st.secret_t2 || ''}`.toLowerCase();
+                    if (!hay.includes(searchQ)) return;
+                }
+
+                let grandSum = 0;
+                let maxPossible = 0;
+                let failedSubjects = [];
+                let hasAnyGradeAtAll = false;
+                let hasAnyAbsent = false;
+                let subCellsHtml = "";
+
+                if (ACTIVE_TAB === 't1' || ACTIVE_TAB === 't2') {
+                    const termScores = getStudentTermScoreRecord(st, ACTIVE_TAB);
+                    const seatVal = ACTIVE_TAB === 't1' ? st.seat_t1 : st.seat_t2;
+                    const secVal  = ACTIVE_TAB === 't1' ? st.secret_t1 : st.secret_t2;
+
+                    subjects.forEach((sub) => {
+                        const res = computeSubjectTerm(termScores[sub.key]);
+                        const countInTotal = (sub.key !== 'religion' || includeRel);
+
+                        if (!res.hasData) {
+                            subCellsHtml += `
+                                <td></td><td></td><td></td><td></td><td></td>
+                                <td class="cell-eval40"></td><td></td><td class="cell-total100"></td>
+                                <td></td>${showColorCol ? `<td class="subj-border-end"></td>` : ''}
+                            `;
+                        } else {
+                            hasAnyGradeAtAll = true;
+                            if (res.absent) hasAnyAbsent = true;
+                            if (!res.meta.passed) failedSubjects.push(sub.name);
+                            if (countInTotal) {
+                                grandSum += res.absent ? 0 : res.total100Numeric;
+                                maxPossible += 100;
+                            }
+
+                            const endBorderCls = showColorCol ? '' : 'subj-border-end';
+                            subCellsHtml += `
+                                <td>${toAr(res.hw)}</td>
+                                <td>${toAr(res.cw)}</td>
+                                <td>${toAr(res.eval)}</td>
+                                <td>${toAr(res.att)}</td>
+                                <td>${toAr(res.month)}</td>
+                                <td class="cell-eval40">${toAr(res.eval40)}</td>
+                                <td class="${res.absent ? 'grade-red' : ''}">${res.absent ? 'غ' : toAr(res.exam60Display)}</td>
+                                <td class="cell-total100 ${res.absent ? 'grade-red' : ''}">${res.absent ? 'غ' : toAr(res.total100Display)}</td>
+                                <td class="${res.meta.badgeCls} ${endBorderCls}">${res.meta.label}</td>
+                                ${showColorCol ? `<td class="${res.meta.swatchCls} subj-border-end">${res.meta.colorName}</td>` : ''}
+                            `;
+                        }
+                    });
+
+                    // فحص حالة الطالب للفلتر
+                    const isPass = hasAnyGradeAtAll && failedSubjects.length === 0;
+                    const isFail = hasAnyGradeAtAll && failedSubjects.length > 0;
+                    if (statusFilter === 'PASS' && !isPass) return;
+                    if (statusFilter === 'FAIL' && !isFail) return;
+                    if (statusFilter === 'ABSENT' && !hasAnyAbsent) return;
+
+                    kpiTotal++;
+                    if (isPass) kpiPass++;
+                    else if (isFail) kpiFail++;
+                    if (hasAnyAbsent) kpiAbsent++;
+
+                    const pct = maxPossible > 0 ? ((grandSum / maxPossible) * 100).toFixed(1) : '';
+                    let statusCellHtml = `<td class="text-slate-400">-</td>`;
+                    if (hasAnyGradeAtAll) {
+                        statusCellHtml = isPass
+                            ? `<td class="res-pass">اجتاز</td>`
+                            : `<td class="res-fail">دعم: ${failedSubjects.join('، ')}</td>`;
+                    }
+
+                    rowsHtml += `
+                        <tr>
+                            <td class="st-col-1">${toAr(rowSerial++)}</td>
+                            <td class="st-col-2" title="${st.name}">${st.name || ''}</td>
+                            <td class="st-col-3">${st.class || '-'}</td>
+                            <td class="st-col-4 font-mono">${seatVal ? toAr(seatVal) : '-'}</td>
+                            <td class="st-col-5 font-mono text-purple-900">${secVal || '-'}</td>
+                            ${subCellsHtml}
+                            <td class="font-black bg-slate-100">${hasAnyGradeAtAll ? toAr(+grandSum.toFixed(1)) : '-'}</td>
+                            <td class="font-black">${pct ? '%' + toAr(pct) : '-'}</td>
+                            ${statusCellHtml}
+                        </tr>
+                    `;
+                } else {
+                    // الشيت النهائي المجمّع (متوسط الترمين)
+                    const sc1 = getStudentTermScoreRecord(st, 't1');
+                    const sc2 = getStudentTermScoreRecord(st, 't2');
+
+                    subjects.forEach((sub) => {
+                        const r1 = computeSubjectTerm(sc1[sub.key]);
+                        const r2 = computeSubjectTerm(sc2[sub.key]);
+                        const countInTotal = (sub.key !== 'religion' || includeRel);
+
+                        if (!r1.hasData && !r2.hasData) {
+                            subCellsHtml += `<td></td><td></td><td></td><td class="cell-avg100"></td><td></td>${showColorCol ? `<td class="subj-border-end"></td>` : ''}`;
+                        } else {
+                            hasAnyGradeAtAll = true;
+                            const anyAbs = r1.absent || r2.absent;
+                            if (anyAbs) hasAnyAbsent = true;
+
+                            const v1Display = r1.hasData ? (r1.absent ? 'غ' : toAr(r1.total100Numeric)) : '-';
+                            const v2Display = r2.hasData ? (r2.absent ? 'غ' : toAr(r2.total100Numeric)) : '-';
+
+                            const v1Num = r1.hasData ? (r1.absent ? 0 : r1.total100Numeric) : 0;
+                            const v2Num = r2.hasData ? (r2.absent ? 0 : r2.total100Numeric) : 0;
+
+                            let sum200Display = '-';
+                            let avg100Numeric = 0;
+                            let avg100Display = '-';
+                            let finalAbsent = false;
+
+                            if (r1.hasData && r2.hasData) {
+                                if (r1.absent && r2.absent) {
+                                    finalAbsent = true;
+                                    sum200Display = 'غ';
+                                    avg100Display = 'غ';
+                                } else if (r2.absent) {
+                                    // غائب في امتحان نهاية العام
+                                    finalAbsent = true;
+                                    sum200Display = toAr(+(v1Num + v2Num).toFixed(1));
+                                    avg100Display = 'غ';
+                                } else {
+                                    const sum200 = +(v1Num + v2Num).toFixed(1);
+                                    avg100Numeric = +(sum200 / 2).toFixed(1);
+                                    sum200Display = toAr(sum200);
+                                    avg100Display = toAr(avg100Numeric);
+                                }
+                            } else {
+                                // إذا رُصد ترم واحد فقط حتى الآن
+                                const onlyRes = r1.hasData ? r1 : r2;
+                                finalAbsent = onlyRes.absent;
+                                avg100Numeric = onlyRes.absent ? 0 : onlyRes.total100Numeric;
+                                sum200Display = onlyRes.absent ? 'غ' : toAr(avg100Numeric);
+                                avg100Display = onlyRes.absent ? 'غ' : toAr(avg100Numeric);
+                            }
+
+                            const finalMeta = evaluateGradeAndColor(avg100Numeric, finalAbsent);
+                            if (!finalMeta.passed) failedSubjects.push(sub.name);
+
+                            if (countInTotal) {
+                                grandSum += finalAbsent ? 0 : avg100Numeric;
+                                maxPossible += 100;
+                            }
+
+                            const endBorderCls = showColorCol ? '' : 'subj-border-end';
+                            subCellsHtml += `
+                                <td class="${r1.absent ? 'grade-red' : ''}">${v1Display}</td>
+                                <td class="${r2.absent ? 'grade-red' : ''}">${v2Display}</td>
+                                <td>${sum200Display}</td>
+                                <td class="cell-avg100 ${finalAbsent ? 'grade-red' : ''}">${avg100Display}</td>
+                                <td class="${finalMeta.badgeCls} ${endBorderCls}">${finalMeta.label}</td>
+                                ${showColorCol ? `<td class="${finalMeta.swatchCls} subj-border-end">${finalMeta.colorName}</td>` : ''}
+                            `;
+                        }
+                    });
+
+                    const isPass = hasAnyGradeAtAll && failedSubjects.length === 0;
+                    const isFail = hasAnyGradeAtAll && failedSubjects.length > 0;
+                    if (statusFilter === 'PASS' && !isPass) return;
+                    if (statusFilter === 'FAIL' && !isFail) return;
+                    if (statusFilter === 'ABSENT' && !hasAnyAbsent) return;
+
+                    kpiTotal++;
+                    if (isPass) kpiPass++;
+                    else if (isFail) kpiFail++;
+                    if (hasAnyAbsent) kpiAbsent++;
+
+                    const pct = maxPossible > 0 ? ((grandSum / maxPossible) * 100).toFixed(1) : '';
+                    let finalStatusHtml = `<td class="text-slate-400">-</td>`;
+                    if (hasAnyGradeAtAll) {
+                        finalStatusHtml = isPass
+                            ? `<td class="res-pass">منقول / ناجح</td>`
+                            : `<td class="res-fail">دور ثانٍ (${failedSubjects.join('، ')})</td>`;
+                    }
+
+                    rowsHtml += `
+                        <tr>
+                            <td class="st-col-1">${toAr(rowSerial++)}</td>
+                            <td class="st-col-2" title="${st.name}">${st.name || ''}</td>
+                            <td class="st-col-3">${st.class || '-'}</td>
+                            <td class="st-col-4 font-mono">${st.seat_t1 ? toAr(st.seat_t1) : '-'}</td>
+                            <td class="st-col-4b font-mono">${st.seat_t2 ? toAr(st.seat_t2) : '-'}</td>
+                            <td class="st-col-5 font-mono text-purple-900">${st.secret_t1 || '-'}</td>
+                            <td class="st-col-5b font-mono text-purple-900">${st.secret_t2 || '-'}</td>
+                            ${subCellsHtml}
+                            <td class="font-black bg-slate-100">${hasAnyGradeAtAll ? toAr(+grandSum.toFixed(1)) : '-'}</td>
+                            <td class="font-black">${pct ? '%' + toAr(pct) : '-'}</td>
+                            ${finalStatusHtml}
+                        </tr>
+                    `;
+                }
+            });
+
+            tbody.innerHTML = rowsHtml || `<tr><td colspan="45" class="p-8 text-slate-400 font-bold">لا توجد نتائج مطابقة للفلتر المحدد.</td></tr>`;
+            updateKPIs(kpiTotal, kpiPass, kpiFail, kpiAbsent);
+        }
+
+        function updateKPIs(total, pass, fail, absent) {
+            document.getElementById('kpi-total').innerText = toAr(total);
+            document.getElementById('kpi-pass').innerText = toAr(pass);
+            document.getElementById('kpi-fail').innerText = toAr(fail);
+            document.getElementById('kpi-absent').innerText = toAr(absent);
+            document.getElementById('print-count').innerText = toAr(total);
+
+            const gradedCount = pass + fail;
+            const rate = gradedCount > 0 ? ((pass / gradedCount) * 100).toFixed(1) : 0;
+            document.getElementById('kpi-rate').innerText = `%${toAr(rate)}`;
+        }
+
+        // ================= إعدادات المقاسات والخيارات =================
+        function openSettingsModal() { document.getElementById('settingsModal').classList.add('active'); }
+        function closeSettingsModal() { document.getElementById('settingsModal').classList.remove('active'); }
+
+        function updateResStyle(prop, val, lblId) {
+            document.documentElement.style.setProperty(prop, val);
+            document.getElementById(lblId).innerText = val;
+        }
+
+        function saveSettingsToLocal() {
+            const cfg = {
+                rowH: document.getElementById('rng-row-h').value,
+                fontSz: document.getElementById('rng-font-sz').value,
+                headSz: document.getElementById('rng-head-sz').value,
+                includeRel: document.getElementById('chk-include-religion').checked,
+                showColorCol: document.getElementById('chk-show-color-col').checked
+            };
+            localStorage.setItem('control_results_settings', JSON.stringify(cfg));
+            closeSettingsModal();
+            Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم حفظ إعدادات شيت النتيجة', timer: 1400, showConfirmButton: false });
+        }
+
+        function loadSavedSettings() {
+            try {
+                const cfg = JSON.parse(localStorage.getItem('control_results_settings') || 'null');
+                if (!cfg) return;
+                if (cfg.rowH) {
+                    document.getElementById('rng-row-h').value = cfg.rowH;
+                    updateResStyle('--res-row-h', cfg.rowH + 'px', 'lbl-row-h');
+                }
+                if (cfg.fontSz) {
+                    document.getElementById('rng-font-sz').value = cfg.fontSz;
+                    updateResStyle('--res-font-sz', cfg.fontSz + 'px', 'lbl-font-sz');
+                }
+                if (cfg.headSz) {
+                    document.getElementById('rng-head-sz').value = cfg.headSz;
+                    updateResStyle('--res-head-sz', cfg.headSz + 'px', 'lbl-head-sz');
+                }
+                if (cfg.includeRel !== undefined) document.getElementById('chk-include-religion').checked = cfg.includeRel;
+                if (cfg.showColorCol !== undefined) document.getElementById('chk-show-color-col').checked = cfg.showColorCol;
+            } catch (e) {}
+        }
+
+        // ================= تصدير الشيت المعروض إلى إكسيل =================
+        function exportResultToExcel() {
+            const grade = document.getElementById('sel-grade').value;
+            const table = document.getElementById('resultTable');
+            if (!table || MASTER_STUDENTS.length === 0) return;
+
+            const wb = XLSX.utils.table_to_book(table, { raw: true });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            if (!ws['!views']) ws['!views'] = [];
+            ws['!views'].push({ rightToLeft: true });
+
+            const tabLabel = ACTIVE_TAB === 't1' ? 'الترم_الأول' : (ACTIVE_TAB === 't2' ? 'الترم_الثاني' : 'المجمّع_النهائي');
+            XLSX.writeFile(wb, `شيت_نتيجة_${grade}_${tabLabel}.xlsx`);
+        }
+    </script>
+</body>
+</html>
