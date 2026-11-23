@@ -234,7 +234,7 @@
                 <h1 class="text-sm sm:text-base font-black leading-tight text-white flex items-center gap-2">
                     شيت النتيجة النهائي المعتمد (A3)
                 </h1>
-                <p class="text-[11px] text-blue-200 font-bold">يستقبل الدرجات المرحّلة من صفحة الرصد • مستر زيزو</p>
+                <p class="text-[11px] text-blue-200 font-bold">المجموع على المواد الأساسية (٥٠٠ / ٣٠٠) • نجاح التربية الدينية من ٧٠ • مستر زيزو</p>
             </div>
         </div>
 
@@ -383,12 +383,12 @@
         <div>يعتمد / مدير المدرسة<br><br>.................................</div>
     </div>
 
-    <!-- 6. نافذة ضبط مقاسات الطباعة والحساب -->
+    <!-- 6. نافذة ضبط مقاسات الطباعة والخيارات -->
     <div class="modal-overlay no-print" id="settingsModal" onclick="if(event.target===this) closeSettingsModal()">
         <div class="bg-white w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl">
             <div class="bg-[#0f2b48] text-white p-3.5 flex justify-between items-center border-b-4 border-amber-500">
                 <h3 class="text-sm font-black flex items-center gap-2">
-                    <i class="fa-solid fa-sliders text-yellow-300"></i> ضبط مقاسات الطباعة وقواعد الحساب
+                    <i class="fa-solid fa-sliders text-yellow-300"></i> ضبط مقاسات الطباعة والعرض
                 </h3>
                 <button onclick="closeSettingsModal()" class="text-white text-2xl leading-none">&times;</button>
             </div>
@@ -406,11 +406,13 @@
                     <input type="range" id="rng-head-sz" min="8" max="14" step="0.5" value="11" oninput="updateResStyle('--res-head-sz', this.value + 'px', 'lbl-head-sz')" class="w-full accent-blue-900">
                 </div>
 
-                <div class="p-3 bg-slate-50 border rounded-xl space-y-2">
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="chk-include-religion" onchange="renderActiveSheet()" class="w-4 h-4 accent-blue-900">
-                        <span>إدراج مادة «الدين» ضمن المجموع الكلي والنسبة المئوية (بخلاف كونها مادة نجاح ورسوب)</span>
-                    </label>
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-[11.5px] text-blue-950 space-y-1">
+                    <div><i class="fa-solid fa-circle-info text-blue-700 ml-1"></i> <b>قواعد النتيجة المعتمدة:</b></div>
+                    <div>• المجموع الكلي يُطبق على المواد الأساسية فقط (عربي، رياضيات، علوم، دراسات، إنجليزي = ٥٠٠ للصفوف العليا | عربي، رياضيات، إنجليزي = ٣٠٠ للأولى).</div>
+                    <div>• التربية الدينية والتكنولوجيا لا يُضافان للمجموع، وشرط النجاح في <b>التربية الدينية ٧٠ درجة فأكثر</b>.</div>
+                </div>
+
+                <div class="p-3 bg-slate-50 border rounded-xl">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" id="chk-show-color-col" checked onchange="renderActiveSheet()" class="w-4 h-4 accent-blue-900">
                         <span>إظهار عمود «اللون» مستقلاً بجانب عمود التقدير</span>
@@ -437,21 +439,24 @@
         let SCORES_DATA = { t1: {}, t2: {} };
         let ACTIVE_TAB = 't1'; // t1 | t2 | combined
 
+        // المواد الأساسية الـ 5 التي تدخل في المجموع الكلي فقط
+        const CORE_TOTAL_KEYS = new Set(['arabic', 'math', 'science', 'social', 'english']);
+
         const SUBJECTS_LOWER = [
-            { key: 'arabic',   name: 'لغة عربية' },
-            { key: 'math',     name: 'رياضيات' },
-            { key: 'english',  name: 'انجليزى' },
-            { key: 'religion', name: 'دين' }
+            { key: 'arabic',   name: 'لغة عربية',  inTotal: true },
+            { key: 'math',     name: 'رياضيات',    inTotal: true },
+            { key: 'english',  name: 'انجليزى',    inTotal: true },
+            { key: 'religion', name: 'دين',        inTotal: false }
         ];
 
         const SUBJECTS_UPPER = [
-            { key: 'arabic',   name: 'لغة عربية' },
-            { key: 'math',     name: 'رياضيات' },
-            { key: 'science',  name: 'علوم' },
-            { key: 'social',   name: 'دراسات' },
-            { key: 'english',  name: 'انجليزى' },
-            { key: 'tech',     name: 'تكنولوجيا' },
-            { key: 'religion', name: 'دين' }
+            { key: 'arabic',   name: 'لغة عربية',  inTotal: true },
+            { key: 'math',     name: 'رياضيات',    inTotal: true },
+            { key: 'science',  name: 'علوم',       inTotal: true },
+            { key: 'social',   name: 'دراسات',     inTotal: true },
+            { key: 'english',  name: 'انجليزى',    inTotal: true },
+            { key: 'tech',     name: 'تكنولوجيا',  inTotal: false },
+            { key: 'religion', name: 'دين',        inTotal: false }
         ];
 
         const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
@@ -578,7 +583,6 @@
             renderActiveSheet();
         }
 
-        // جلب سجل درجات التلميذ لترم معين بأكثر من مفتاح مطابقة لضمان الربط مع صفحة الرصد
         function getStudentTermScoreRecord(st, term) {
             const map = SCORES_DATA[term] || {};
             if (st.code && map[st.code]) return map[st.code];
@@ -605,11 +609,22 @@
             return v !== undefined && v !== null && String(v).trim() !== '';
         }
 
-        // حساب التقدير واللون (غ = أحمر، <50 = لم يتقن أحمر، 50-65 = يحتاج دعم أصفر، 65-85 = يلبي أخضر، >=85 = يفوق أزرق)
-        function evaluateGradeAndColor(score100, isAbsent) {
+        // تقييم الدرجة واللون مع تطبيق شرط نجاح التربية الدينية (70 فأكثر)
+        function evaluateGradeAndColor(score100, isAbsent, subjectKey) {
             if (isAbsent) {
                 return { label: 'غ', colorName: 'أحمر', badgeCls: 'grade-red', swatchCls: 'swatch-red', passed: false, isAbsent: true };
             }
+
+            if (subjectKey === 'religion') {
+                if (score100 < 70) {
+                    return { label: 'لم يتقن', colorName: 'أحمر', badgeCls: 'grade-red', swatchCls: 'swatch-red', passed: false, isAbsent: false };
+                }
+                if (score100 < 85) {
+                    return { label: 'يلبي التوقعات', colorName: 'أخضر', badgeCls: 'grade-green', swatchCls: 'swatch-green', passed: true, isAbsent: false };
+                }
+                return { label: 'يفوق التوقعات', colorName: 'أزرق', badgeCls: 'grade-blue', swatchCls: 'swatch-blue', passed: true, isAbsent: false };
+            }
+
             if (score100 < 50) {
                 return { label: 'لم يتقن', colorName: 'أحمر', badgeCls: 'grade-red', swatchCls: 'swatch-red', passed: false, isAbsent: false };
             }
@@ -622,7 +637,7 @@
             return { label: 'يفوق التوقعات', colorName: 'أزرق', badgeCls: 'grade-blue', swatchCls: 'swatch-blue', passed: true, isAbsent: false };
         }
 
-        function computeSubjectTerm(rawSub) {
+        function computeSubjectTerm(rawSub, subjectKey) {
             if (!rawSub || typeof rawSub !== 'object') {
                 return { hasData: false };
             }
@@ -640,7 +655,7 @@
             const absent = isAbsentVal(rawSub.exam);
             const exam60 = absent ? 0 : parseNumericOrZero(rawSub.exam);
             const total100 = absent ? eval40 : +(eval40 + exam60).toFixed(1);
-            const meta = evaluateGradeAndColor(total100, absent);
+            const meta = evaluateGradeAndColor(total100, absent, subjectKey);
 
             return {
                 hasData: true,
@@ -665,11 +680,11 @@
             const statusFilter = document.getElementById('filter-status').value;
             const searchQ = (document.getElementById('filter-search').value || '').trim().toLowerCase();
 
-            const includeRel = document.getElementById('chk-include-religion').checked;
             const showColorCol = document.getElementById('chk-show-color-col').checked;
 
             const allSubjects = getSubjectsForGrade(grade);
-            const subjects = (subFilter === 'ALL') ? allSubjects : allSubjects.filter(s => s.key === subFilter);
+            const visibleSubjects = (subFilter === 'ALL') ? allSubjects : allSubjects.filter(s => s.key === subFilter);
+            const coreMaxTotal = isLowerGrade(grade) ? 300 : 500;
 
             const table = document.getElementById('resultTable');
             const thead = document.getElementById('resultThead');
@@ -701,15 +716,15 @@
                         <th rowspan="2" class="st-col-3">الفصل</th>
                         <th rowspan="2" class="st-col-4">جلوس</th>
                         <th rowspan="2" class="st-col-5">سرى</th>
-                        ${subjects.map(s => `<th colspan="${colsPerSub}" class="subj-border-end">${s.name}</th>`).join('')}
-                        <th rowspan="2" style="min-width:65px;">المجموع<br>الكلى</th>
+                        ${visibleSubjects.map(s => `<th colspan="${colsPerSub}" class="subj-border-end">${s.name}${!s.inTotal ? (s.key === 'religion' ? ' <small>(نجاح ٧٠)</small>' : ' <small>(لا يضاف)</small>') : ''}</th>`).join('')}
+                        <th rowspan="2" style="min-width:68px;">المجموع<br>(${toAr(coreMaxTotal)})</th>
                         <th rowspan="2" style="min-width:52px;">النسبة<br>%</th>
-                        <th rowspan="2" style="min-width:110px;">الموقف / النتيجة</th>
+                        <th rowspan="2" style="min-width:115px;">الموقف / النتيجة</th>
                     </tr>
                 `;
 
                 let r2 = `<tr class="sub-head-row">`;
-                subjects.forEach(() => {
+                visibleSubjects.forEach(() => {
                     r2 += `
                         <th class="v-sub-th">واجب (٥)</th>
                         <th class="v-sub-th">كراسة (٥)</th>
@@ -736,15 +751,15 @@
                         <th rowspan="2" class="st-col-4b">جلوس<br>ت٢</th>
                         <th rowspan="2" class="st-col-5">سرى<br>ت١</th>
                         <th rowspan="2" class="st-col-5b">سرى<br>ت٢</th>
-                        ${subjects.map(s => `<th colspan="${colsPerSub}" class="subj-border-end">${s.name}</th>`).join('')}
-                        <th rowspan="2" style="min-width:65px;">المجموع<br>النهائى</th>
+                        ${visibleSubjects.map(s => `<th colspan="${colsPerSub}" class="subj-border-end">${s.name}${!s.inTotal ? (s.key === 'religion' ? ' <small>(نجاح ٧٠)</small>' : ' <small>(لا يضاف)</small>') : ''}</th>`).join('')}
+                        <th rowspan="2" style="min-width:68px;">المجموع<br>(${toAr(coreMaxTotal)})</th>
                         <th rowspan="2" style="min-width:52px;">النسبة<br>%</th>
                         <th rowspan="2" style="min-width:130px;">النتيجة النهائية</th>
                     </tr>
                 `;
 
                 let r2 = `<tr class="sub-head-row">`;
-                subjects.forEach(() => {
+                visibleSubjects.forEach(() => {
                     r2 += `
                         <th class="v-sub-th">نصف العام</th>
                         <th class="v-sub-th">آخر العام</th>
@@ -762,6 +777,7 @@
             let rowsHtml = "";
             let kpiTotal = 0, kpiPass = 0, kpiFail = 0, kpiAbsent = 0;
             let rowSerial = 1;
+            const visibleKeySet = new Set(visibleSubjects.map(s => s.key));
 
             MASTER_STUDENTS.forEach((st) => {
                 if (clsFilter !== 'ALL' && String(st.class || '').trim() !== clsFilter) return;
@@ -783,9 +799,21 @@
                     const seatVal = ACTIVE_TAB === 't1' ? st.seat_t1 : st.seat_t2;
                     const secVal  = ACTIVE_TAB === 't1' ? st.secret_t1 : st.secret_t2;
 
-                    subjects.forEach((sub) => {
-                        const res = computeSubjectTerm(termScores[sub.key]);
-                        const countInTotal = (sub.key !== 'religion' || includeRel);
+                    allSubjects.forEach((sub) => {
+                        const res = computeSubjectTerm(termScores[sub.key], sub.key);
+                        const isCore = CORE_TOTAL_KEYS.has(sub.key);
+
+                        if (res.hasData) {
+                            hasAnyGradeAtAll = true;
+                            if (res.absent) hasAnyAbsent = true;
+                            if (!res.meta.passed) failedSubjects.push(sub.name);
+                            if (isCore) {
+                                grandSum += res.absent ? 0 : res.total100Numeric;
+                                maxPossible += 100;
+                            }
+                        }
+
+                        if (!visibleKeySet.has(sub.key)) return;
 
                         if (!res.hasData) {
                             subCellsHtml += `
@@ -794,14 +822,6 @@
                                 <td></td>${showColorCol ? `<td class="subj-border-end"></td>` : ''}
                             `;
                         } else {
-                            hasAnyGradeAtAll = true;
-                            if (res.absent) hasAnyAbsent = true;
-                            if (!res.meta.passed) failedSubjects.push(sub.name);
-                            if (countInTotal) {
-                                grandSum += res.absent ? 0 : res.total100Numeric;
-                                maxPossible += 100;
-                            }
-
                             const endBorderCls = showColorCol ? '' : 'subj-border-end';
                             subCellsHtml += `
                                 <td>${toAr(res.hw)}</td>
@@ -818,7 +838,6 @@
                         }
                     });
 
-                    // فحص حالة الطالب للفلتر
                     const isPass = hasAnyGradeAtAll && failedSubjects.length === 0;
                     const isFail = hasAnyGradeAtAll && failedSubjects.length > 0;
                     if (statusFilter === 'PASS' && !isPass) return;
@@ -846,72 +865,74 @@
                             <td class="st-col-4 font-mono">${seatVal ? toAr(seatVal) : '-'}</td>
                             <td class="st-col-5 font-mono text-purple-900">${secVal || '-'}</td>
                             ${subCellsHtml}
-                            <td class="font-black bg-slate-100">${hasAnyGradeAtAll ? toAr(+grandSum.toFixed(1)) : '-'}</td>
+                            <td class="font-black bg-slate-100">${maxPossible > 0 ? toAr(+grandSum.toFixed(1)) : '-'}</td>
                             <td class="font-black">${pct ? '%' + toAr(pct) : '-'}</td>
                             ${statusCellHtml}
                         </tr>
                     `;
                 } else {
-                    // الشيت النهائي المجمّع (متوسط الترمين)
                     const sc1 = getStudentTermScoreRecord(st, 't1');
                     const sc2 = getStudentTermScoreRecord(st, 't2');
 
-                    subjects.forEach((sub) => {
-                        const r1 = computeSubjectTerm(sc1[sub.key]);
-                        const r2 = computeSubjectTerm(sc2[sub.key]);
-                        const countInTotal = (sub.key !== 'religion' || includeRel);
+                    allSubjects.forEach((sub) => {
+                        const r1 = computeSubjectTerm(sc1[sub.key], sub.key);
+                        const r2 = computeSubjectTerm(sc2[sub.key], sub.key);
+                        const isCore = CORE_TOTAL_KEYS.has(sub.key);
 
                         if (!r1.hasData && !r2.hasData) {
-                            subCellsHtml += `<td></td><td></td><td></td><td class="cell-avg100"></td><td></td>${showColorCol ? `<td class="subj-border-end"></td>` : ''}`;
-                        } else {
-                            hasAnyGradeAtAll = true;
-                            const anyAbs = r1.absent || r2.absent;
-                            if (anyAbs) hasAnyAbsent = true;
+                            if (visibleKeySet.has(sub.key)) {
+                                subCellsHtml += `<td></td><td></td><td></td><td class="cell-avg100"></td><td></td>${showColorCol ? `<td class="subj-border-end"></td>` : ''}`;
+                            }
+                            return;
+                        }
 
-                            const v1Display = r1.hasData ? (r1.absent ? 'غ' : toAr(r1.total100Numeric)) : '-';
-                            const v2Display = r2.hasData ? (r2.absent ? 'غ' : toAr(r2.total100Numeric)) : '-';
+                        hasAnyGradeAtAll = true;
+                        const anyAbs = r1.absent || r2.absent;
+                        if (anyAbs) hasAnyAbsent = true;
 
-                            const v1Num = r1.hasData ? (r1.absent ? 0 : r1.total100Numeric) : 0;
-                            const v2Num = r2.hasData ? (r2.absent ? 0 : r2.total100Numeric) : 0;
+                        const v1Display = r1.hasData ? (r1.absent ? 'غ' : toAr(r1.total100Numeric)) : '-';
+                        const v2Display = r2.hasData ? (r2.absent ? 'غ' : toAr(r2.total100Numeric)) : '-';
 
-                            let sum200Display = '-';
-                            let avg100Numeric = 0;
-                            let avg100Display = '-';
-                            let finalAbsent = false;
+                        const v1Num = r1.hasData ? (r1.absent ? 0 : r1.total100Numeric) : 0;
+                        const v2Num = r2.hasData ? (r2.absent ? 0 : r2.total100Numeric) : 0;
 
-                            if (r1.hasData && r2.hasData) {
-                                if (r1.absent && r2.absent) {
-                                    finalAbsent = true;
-                                    sum200Display = 'غ';
-                                    avg100Display = 'غ';
-                                } else if (r2.absent) {
-                                    // غائب في امتحان نهاية العام
-                                    finalAbsent = true;
-                                    sum200Display = toAr(+(v1Num + v2Num).toFixed(1));
-                                    avg100Display = 'غ';
-                                } else {
-                                    const sum200 = +(v1Num + v2Num).toFixed(1);
-                                    avg100Numeric = +(sum200 / 2).toFixed(1);
-                                    sum200Display = toAr(sum200);
-                                    avg100Display = toAr(avg100Numeric);
-                                }
+                        let sum200Display = '-';
+                        let avg100Numeric = 0;
+                        let avg100Display = '-';
+                        let finalAbsent = false;
+
+                        if (r1.hasData && r2.hasData) {
+                            if (r1.absent && r2.absent) {
+                                finalAbsent = true;
+                                sum200Display = 'غ';
+                                avg100Display = 'غ';
+                            } else if (r2.absent) {
+                                finalAbsent = true;
+                                sum200Display = toAr(+(v1Num + v2Num).toFixed(1));
+                                avg100Display = 'غ';
                             } else {
-                                // إذا رُصد ترم واحد فقط حتى الآن
-                                const onlyRes = r1.hasData ? r1 : r2;
-                                finalAbsent = onlyRes.absent;
-                                avg100Numeric = onlyRes.absent ? 0 : onlyRes.total100Numeric;
-                                sum200Display = onlyRes.absent ? 'غ' : toAr(avg100Numeric);
-                                avg100Display = onlyRes.absent ? 'غ' : toAr(avg100Numeric);
+                                const sum200 = +(v1Num + v2Num).toFixed(1);
+                                avg100Numeric = +(sum200 / 2).toFixed(1);
+                                sum200Display = toAr(sum200);
+                                avg100Display = toAr(avg100Numeric);
                             }
+                        } else {
+                            const onlyRes = r1.hasData ? r1 : r2;
+                            finalAbsent = onlyRes.absent;
+                            avg100Numeric = onlyRes.absent ? 0 : onlyRes.total100Numeric;
+                            sum200Display = onlyRes.absent ? 'غ' : toAr(avg100Numeric);
+                            avg100Display = onlyRes.absent ? 'غ' : toAr(avg100Numeric);
+                        }
 
-                            const finalMeta = evaluateGradeAndColor(avg100Numeric, finalAbsent);
-                            if (!finalMeta.passed) failedSubjects.push(sub.name);
+                        const finalMeta = evaluateGradeAndColor(avg100Numeric, finalAbsent, sub.key);
+                        if (!finalMeta.passed) failedSubjects.push(sub.name);
 
-                            if (countInTotal) {
-                                grandSum += finalAbsent ? 0 : avg100Numeric;
-                                maxPossible += 100;
-                            }
+                        if (isCore) {
+                            grandSum += finalAbsent ? 0 : avg100Numeric;
+                            maxPossible += 100;
+                        }
 
+                        if (visibleKeySet.has(sub.key)) {
                             const endBorderCls = showColorCol ? '' : 'subj-border-end';
                             subCellsHtml += `
                                 <td class="${r1.absent ? 'grade-red' : ''}">${v1Display}</td>
@@ -953,7 +974,7 @@
                             <td class="st-col-5 font-mono text-purple-900">${st.secret_t1 || '-'}</td>
                             <td class="st-col-5b font-mono text-purple-900">${st.secret_t2 || '-'}</td>
                             ${subCellsHtml}
-                            <td class="font-black bg-slate-100">${hasAnyGradeAtAll ? toAr(+grandSum.toFixed(1)) : '-'}</td>
+                            <td class="font-black bg-slate-100">${maxPossible > 0 ? toAr(+grandSum.toFixed(1)) : '-'}</td>
                             <td class="font-black">${pct ? '%' + toAr(pct) : '-'}</td>
                             ${finalStatusHtml}
                         </tr>
@@ -991,7 +1012,6 @@
                 rowH: document.getElementById('rng-row-h').value,
                 fontSz: document.getElementById('rng-font-sz').value,
                 headSz: document.getElementById('rng-head-sz').value,
-                includeRel: document.getElementById('chk-include-religion').checked,
                 showColorCol: document.getElementById('chk-show-color-col').checked
             };
             localStorage.setItem('control_results_settings', JSON.stringify(cfg));
@@ -1015,7 +1035,6 @@
                     document.getElementById('rng-head-sz').value = cfg.headSz;
                     updateResStyle('--res-head-sz', cfg.headSz + 'px', 'lbl-head-sz');
                 }
-                if (cfg.includeRel !== undefined) document.getElementById('chk-include-religion').checked = cfg.includeRel;
                 if (cfg.showColorCol !== undefined) document.getElementById('chk-show-color-col').checked = cfg.showColorCol;
             } catch (e) {}
         }
