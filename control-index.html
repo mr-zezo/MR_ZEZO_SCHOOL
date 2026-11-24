@@ -11,46 +11,41 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Supabase & SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         :root {
             --primary: #0f2b48;
             --primary-light: #1e3a8a;
             --gold: #d97706;
-            --gold-light: #fef3c7;
-            --bg: #f8fafc;
-            --surface: #ffffff;
+            --bg: #f1f5f9;
             --border: #cbd5e1;
-            --success: #15803d;
-            --danger: #be123c;
         }
 
         * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { 
-            background-color: var(--bg); 
+            background:
+                radial-gradient(circle at 10% 5%, rgba(30, 58, 138, 0.08), transparent 28%),
+                radial-gradient(circle at 90% 90%, rgba(217, 119, 6, 0.07), transparent 26%),
+                var(--bg);
             color: #0f172a; 
             min-height: 100vh; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
             justify-content: space-between; 
-            padding: 12px;
+            padding: 14px;
         }
 
-        .app-container { width: 100%; max-width: 1050px; }
+        .app-container { width: 100%; max-width: 1120px; }
 
         .btn-3d {
-            border-bottom: 4px solid rgba(0,0,0,0.25);
-            transition: all 0.15s ease;
+            border-bottom: 3.5px solid rgba(0,0,0,0.25);
+            transition: all 0.14s ease;
             touch-action: manipulation;
         }
         .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
 
-        /* شريط الترويسة المذهب */
+        /* شريط الترويسة */
         .top-nav {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
             border-bottom: 4px solid var(--gold);
@@ -68,108 +63,140 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        /* شبكة أزرار الصفحات */
-        .buttons-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 14px;
-            margin-top: 20px;
-        }
-
-        /* زر التشغيل السريع المطور */
-        .btn-page-launcher {
-            background: white;
-            border: 2px solid var(--border);
-            border-bottom: 5px solid var(--border);
-            border-radius: 16px;
-            padding: 16px 18px;
+        /* تصميم بطاقات الأزرار الخمسة المطورة */
+        .ctrl-card {
+            position: relative;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-bottom: 5px solid #94a3b8;
+            border-radius: 20px;
+            padding: 18px;
             display: flex;
-            align-items: center;
+            flex-direction: column;
             justify-content: space-between;
             gap: 14px;
             text-decoration: none;
             color: #0f2b48;
-            font-weight: 900;
+            overflow: hidden;
             transition: all 0.2s ease;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(15, 43, 72, 0.04);
+            box-shadow: 0 6px 18px rgba(15, 43, 72, 0.05);
         }
-        .btn-page-launcher:hover {
-            transform: translateY(-3px);
-            border-color: var(--primary);
-            border-bottom-color: var(--primary);
-            box-shadow: 0 8px 20px rgba(15, 43, 72, 0.12);
-            background: #f8fafc;
+
+        .ctrl-card::before {
+            content: "";
+            position: absolute;
+            top: 0; right: 0; left: 0;
+            height: 5px;
+            background: var(--card-accent, #1e3a8a);
         }
-        .btn-page-launcher:active {
+
+        .ctrl-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--card-accent, #1e3a8a);
+            border-bottom-color: var(--card-accent, #1e3a8a);
+            box-shadow: 0 14px 28px rgba(15, 43, 72, 0.12);
+        }
+
+        .ctrl-card:active {
             transform: translateY(2px);
             border-bottom-width: 2px;
         }
 
-        /* تمييز الزر الأول الأساسي (الشيت الرئيسي) */
-        .btn-active-primary {
-            background: #ffffff !important;
-            border-color: var(--gold) !important;
-            border-bottom-color: #b45309 !important;
-            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.12) !important;
-        }
-        .btn-active-primary:hover {
-            border-color: var(--primary) !important;
-            border-bottom-color: var(--primary) !important;
-            background: #fffbeb !important;
+        /* ألوان مميزة لكل بطاقة */
+        .card-data    { --card-accent: #d97706; }
+        .card-print   { --card-accent: #0284c7; }
+        .card-entry   { --card-accent: #7c3aed; }
+        .card-results { --card-accent: #15803d; }
+        .card-stats   { --card-accent: #be123c; }
+
+        .ctrl-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
         }
 
-        .icon-box-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 14px;
+        .ctrl-icon-box {
+            width: 54px;
+            height: 54px;
+            border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 24px;
             flex-shrink: 0;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+            transition: transform 0.2s ease;
+        }
+        .ctrl-card:hover .ctrl-icon-box {
+            transform: scale(1.06);
         }
 
-        /* زر غير مفعل (المحطات التالية) */
-        .btn-page-disabled {
-            background: #f1f5f9 !important;
-            border: 1.5px dashed #cbd5e1 !important;
-            border-bottom: 3px solid #cbd5e1 !important;
-            opacity: 0.65;
-            cursor: not-allowed;
-            color: #64748b !important;
-            box-shadow: none !important;
+        .step-num-pill {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 900;
+            color: #ffffff;
+            background: var(--card-accent, #0f2b48);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            flex-shrink: 0;
         }
-        .btn-page-disabled:hover {
-            transform: none !important;
-            border-color: #cbd5e1 !important;
-            box-shadow: none !important;
+
+        .ctrl-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px dashed #e2e8f0;
+            font-size: 11.5px;
+            font-weight: 900;
+        }
+
+        /* حالة البطاقة غير المفعلة بعد */
+        .ctrl-card.is-disabled {
+            background: #f8fafc;
+            border-style: dashed;
+            border-color: #cbd5e1;
+            border-bottom: 3px solid #cbd5e1;
+            opacity: 0.78;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .ctrl-card.is-disabled:hover {
+            transform: none;
+            border-color: #cbd5e1;
+            box-shadow: none;
+        }
+        .ctrl-card.is-disabled:hover .ctrl-icon-box {
+            transform: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="app-container space-y-4">
+    <div class="app-container space-y-5">
 
-        <!-- 1. الشريط العلوي مع بصمة مستر زيزو -->
-        <header class="top-nav rounded-2xl shadow-lg p-3 sm:p-4 text-white flex flex-wrap justify-between items-center gap-3">
+        <!-- 1. الشريط العلوي -->
+        <header class="top-nav rounded-2xl shadow-lg p-3.5 sm:p-4 text-white flex flex-wrap justify-between items-center gap-3">
             <div class="flex items-center gap-3">
                 <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-yellow-300 text-2xl shrink-0">
                     <i class="fa-solid fa-stamp"></i>
                 </div>
                 <div>
-                    <h1 class="text-sm sm:text-base font-black leading-tight flex items-center gap-2">
+                    <h1 class="text-sm sm:text-base font-black leading-tight">
                         بوابة الكنترول المدرسي وأعمال الامتحانات
                     </h1>
                     <p class="text-[11px] text-blue-200 font-bold">مدرسة الشهيد أشرف حبيب الابتدائية • العام الدراسي ٢٠٢٦ / ٢٠٢٧ م</p>
                 </div>
             </div>
 
-            <!-- بادج حقوق مستر زيزو في الصدارة -->
             <div class="dev-badge-royal">
                 <i class="fa-solid fa-award text-yellow-300 text-base"></i>
                 <span>فكرة وتطوير وبرمجة:</span>
@@ -186,120 +213,134 @@
             </div>
         </header>
 
-        <!-- 2. بطاقة معلومات سريعة ومختصرة -->
-        <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex flex-wrap justify-between items-center gap-3">
+        <!-- 2. شريط المسار الإرشادي -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-3 sm:px-4 shadow-sm flex flex-wrap justify-between items-center gap-2">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-900 flex items-center justify-center text-sm font-black">
-                    <i class="fa-solid fa-layer-group"></i>
+                    <i class="fa-solid fa-route"></i>
                 </div>
                 <div class="text-xs font-black text-slate-700">
-                    اختر الصفحة المطلوبة من الأزرار المباشرة أدناه للبدء في أعمال الكنترول.
+                    مسار العمل المتسلسل: <span class="text-amber-700">١. شيت البيانات</span> ← <span class="text-sky-700">٢. المطبوعات</span> ← <span class="text-purple-700">٣. الرصد</span> ← <span class="text-emerald-700">٤. النتيجة</span> ← <span class="text-rose-700">٥. التحكم والإحصاء</span>
                 </div>
             </div>
 
-            <div class="text-xs font-bold bg-amber-50 border border-amber-200 text-amber-900 px-3 py-1.5 rounded-xl flex items-center gap-2">
+            <div class="text-[11px] font-black bg-amber-50 border border-amber-200 text-amber-900 px-3 py-1 rounded-xl flex items-center gap-1.5">
                 <i class="fa-solid fa-shield-halved text-amber-600"></i>
-                <span>بوابة خاصة ومؤمنة بالكامل</span>
+                <span>منظومة كنترول متكاملة</span>
             </div>
         </div>
 
-        <!-- 3. شبكة الأزرار المباشرة لكل صفحة (بدون يافطات) -->
-        <div class="buttons-grid">
+        <!-- 3. شبكة الأزرار الخمسة (صف علوي من 3 بطاقات + صف سفلي من بطاقتين عريضتين) -->
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
 
-            <!-- 🌟 الزر الأول (المفعل): الشيت الرئيسي الشامل 🌟 -->
-            <a href="control-master.html" class="btn-page-launcher btn-active-primary">
-                <div class="flex items-center gap-3">
-                    <div class="icon-box-btn bg-amber-50 text-amber-800 border border-amber-200">
-                        <i class="fa-solid fa-table-list"></i>
+            <!-- ١. شيت البيانات -->
+            <a href="control-master.html" class="ctrl-card card-data md:col-span-2">
+                <div class="ctrl-card-top">
+                    <div class="flex items-center gap-3">
+                        <div class="ctrl-icon-box bg-amber-50 text-amber-700 border border-amber-200">
+                            <i class="fa-solid fa-database"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-black text-slate-900">شيت البيانات</h2>
+                            <p class="text-[11.5px] font-bold text-slate-500 mt-1 leading-relaxed">
+                                سحب التلاميذ • أرقام الجلوس • اللجان بالسعة • الأرقام السرية • نسب الحضور
+                            </p>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-sm font-black text-slate-900">١. الشيت المركزي الشامل</div>
-                        <div class="text-[11px] font-bold text-slate-500 mt-0.5">سحب القوة • أرقام الجلوس • اللجان بالسعة • السري المئوي</div>
-                    </div>
+                    <span class="step-num-pill">١</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded font-black border border-emerald-300">مفعل ✔️</span>
-                    <i class="fa-solid fa-chevron-left text-xs text-amber-600"></i>
+                <div class="ctrl-card-footer">
+                    <span class="bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-full border border-emerald-300">مفعل ✔️</span>
+                    <span class="text-amber-700 flex items-center gap-1">فتح الشيت <i class="fa-solid fa-arrow-left"></i></span>
                 </div>
             </a>
 
-          <!-- 🌟 الزر الثاني (المفعل): كشوف المناداة وبطاقات الجلوس 🌟 -->
-            <a href="control-calling.html" class="btn-page-launcher">
-                <div class="flex items-center gap-3">
-                    <div class="icon-box-btn bg-blue-50 text-blue-800 border border-blue-200">
-                        <i class="fa-solid fa-id-card-clip"></i>
+            <!-- ٢. شيت المطبوعات -->
+            <a href="control-calling.html" class="ctrl-card card-print md:col-span-2">
+                <div class="ctrl-card-top">
+                    <div class="flex items-center gap-3">
+                        <div class="ctrl-icon-box bg-sky-50 text-sky-700 border border-sky-200">
+                            <i class="fa-solid fa-print"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-black text-slate-900">شيت المطبوعات</h2>
+                            <p class="text-[11.5px] font-bold text-slate-500 mt-1 leading-relaxed">
+                                كشوف المناداة (٢/ورقة) • تيكت أرقام الجلوس • شيت الرصد الورقي (٢٠ اسماً)
+                            </p>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-sm font-black text-slate-900">٢. كشوف المناداة وبطاقات الجلوس</div>
-                        <div class="text-[11px] font-bold text-slate-500 mt-0.5">كروت المقاعد وقوائم توقيع الطلاب باللجان</div>
-                    </div>
+                    <span class="step-num-pill">٢</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded font-black border border-emerald-300">مفعل ✔️</span>
-                    <i class="fa-solid fa-chevron-left text-xs text-blue-600"></i>
-                </div>
-            </a>
-
-            <!-- زر 3: كشوف التكويد والترقيم السري -->
-            <div class="btn-page-launcher btn-page-disabled" title="سيتم بناؤها تالياً">
-                <div class="flex items-center gap-3">
-                    <div class="icon-box-btn bg-slate-200 text-slate-500">
-                        <i class="fa-solid fa-user-secret"></i>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-sm font-black text-slate-700">٣. كشوف التكويد والأرقام السرية</div>
-                        <div class="text-[11px] font-bold text-slate-400 mt-0.5">قسائم كراسات الإجابة والأكواد المشفرة</div>
-                    </div>
-                </div>
-                <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-bold">قريباً</span>
-            </div>
-
-            <!-- 🌟 الزر الرابع (المفعل): رصد الدرجات والمهام بالرقم السري 🌟 -->
-            <a href="control-entry.html" class="btn-page-launcher">
-                <div class="flex items-center gap-3">
-                    <div class="icon-box-btn bg-purple-50 text-purple-800 border border-purple-200">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-sm font-black text-slate-900">٤. رصد الدرجات والمهام بالرقم السري</div>
-                        <div class="text-[11px] font-bold text-slate-500 mt-0.5">تقييم ٤٠ وتوزيع النسب • اختبار ٦٠ بالسري • ترحيل للنتيجة</div>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded font-black border border-emerald-300">مفعل ✔️</span>
-                    <i class="fa-solid fa-chevron-left text-xs text-purple-600"></i>
+                <div class="ctrl-card-footer">
+                    <span class="bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-full border border-emerald-300">مفعل ✔️</span>
+                    <span class="text-sky-700 flex items-center gap-1">فتح المطبوعات <i class="fa-solid fa-arrow-left"></i></span>
                 </div>
             </a>
 
-<!-- 🌟 الزر الخامس (المفعل): شيت النتيجة المعتمد A3 🌟 -->
-            <a href="control-results.html" class="btn-page-launcher">
-                <div class="flex items-center gap-3">
-                    <div class="icon-box-btn bg-emerald-50 text-emerald-800 border border-emerald-200">
-                        <i class="fa-solid fa-scroll"></i>
+            <!-- ٣. شيت الرصد -->
+            <a href="control-entry.html" class="ctrl-card card-entry md:col-span-2">
+                <div class="ctrl-card-top">
+                    <div class="flex items-center gap-3">
+                        <div class="ctrl-icon-box bg-purple-50 text-purple-700 border border-purple-200">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-black text-slate-900">شيت الرصد</h2>
+                            <p class="text-[11.5px] font-bold text-slate-500 mt-1 leading-relaxed">
+                                رصد التحريري (٦٠) والتقييم (٤٠) بالمجموعة السرية • التوزيع غير النمطي • الترحيل
+                            </p>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-sm font-black text-slate-900">٥. شيت النتيجة النهائي المعتمد (A3)</div>
-                        <div class="text-[11px] font-bold text-slate-500 mt-0.5">نصف العام • آخر العام • المتوسط والألوان الأربعة</div>
-                    </div>
+                    <span class="step-num-pill">٣</span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded font-black border border-emerald-300">مفعل ✔️</span>
-                    <i class="fa-solid fa-chevron-left text-xs text-emerald-600"></i>
+                <div class="ctrl-card-footer">
+                    <span class="bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-full border border-emerald-300">مفعل ✔️</span>
+                    <span class="text-purple-700 flex items-center gap-1">بدء الرصد <i class="fa-solid fa-arrow-left"></i></span>
                 </div>
             </a>
 
-            <!-- زر 6: الشهادات وتحليل الأوائل -->
-            <div class="btn-page-launcher btn-page-disabled" title="سيتم بناؤها تالياً">
-                <div class="flex items-center gap-3">
-                    <div class="icon-box-btn bg-slate-200 text-slate-500">
-                        <i class="fa-solid fa-award"></i>
+            <!-- ٤. شيت النتيجة -->
+            <a href="control-results.html" class="ctrl-card card-results md:col-span-3">
+                <div class="ctrl-card-top">
+                    <div class="flex items-center gap-3.5">
+                        <div class="ctrl-icon-box bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <i class="fa-solid fa-scroll"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base sm:text-lg font-black text-slate-900">شيت النتيجة</h2>
+                            <p class="text-xs font-bold text-slate-500 mt-1 leading-relaxed">
+                                نتيجة الترم الأول • الترم الثاني • الشيت النهائي المجمّع (A3) بالمتوسط والألوان الأربعة وشرط التربية الدينية (٧٠)
+                            </p>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <div class="text-sm font-black text-slate-700">٦. الشهادات الملونة وكشف الأوائل</div>
-                        <div class="text-[11px] font-bold text-slate-400 mt-0.5">طباعة بطاقات الدرجات وتكريم المتفوقين</div>
-                    </div>
+                    <span class="step-num-pill">٤</span>
                 </div>
-                <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded font-bold">قريباً</span>
+                <div class="ctrl-card-footer">
+                    <span class="bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-full border border-emerald-300">مفعل ✔️</span>
+                    <span class="text-emerald-700 flex items-center gap-1">عرض وطباعة النتيجة <i class="fa-solid fa-arrow-left"></i></span>
+                </div>
+            </a>
+
+            <!-- ٥. شيت التحكم والاحصاء -->
+            <div class="ctrl-card card-stats is-disabled md:col-span-3" title="سيتم بناؤها في الخطوة التالية">
+                <div class="ctrl-card-top">
+                    <div class="flex items-center gap-3.5">
+                        <div class="ctrl-icon-box bg-rose-50 text-rose-600 border border-rose-200">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base sm:text-lg font-black text-slate-800">شيت التحكم والاحصاء</h2>
+                            <p class="text-xs font-bold text-slate-500 mt-1 leading-relaxed">
+                                الشهادات الملونة للتلاميذ • كشف العشرة الأوائل • كشوف الدور الثاني • الإحصاء الختامي ونسب النجاح
+                            </p>
+                        </div>
+                    </div>
+                    <span class="step-num-pill">٥</span>
+                </div>
+                <div class="ctrl-card-footer">
+                    <span class="bg-slate-200 text-slate-700 px-2.5 py-0.5 rounded-full">قريباً</span>
+                    <span class="text-slate-400 flex items-center gap-1">قيد التجهيز <i class="fa-solid fa-clock"></i></span>
+                </div>
             </div>
 
         </div>
@@ -314,6 +355,22 @@
         <span>•</span>
         <span>٢٠٢٦ / ٢٠٢٧ م</span>
     </footer>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
+            const tag = document.getElementById('system-mode-tag');
+            if (tag) {
+                if (mode === 'offline') {
+                    tag.className = "text-[11px] font-black px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1.5";
+                    tag.innerHTML = `<i class="fa-solid fa-laptop"></i> وضع محلي (أوفلاين)`;
+                } else {
+                    tag.className = "text-[11px] font-black px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center gap-1.5";
+                    tag.innerHTML = `<i class="fa-solid fa-wifi"></i> متصل بالسحابة`;
+                }
+            }
+        });
+    </script>
 
 </body>
 </html>
