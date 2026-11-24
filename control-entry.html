@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>رصد الدرجات والتقييمات - كنترول مستر زيزو</title>
+
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Supabase & Excel & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary: #0f2b48;
+            --primary-light: #1e3a8a;
+            --gold: #d97706;
+            --bg: #f8fafc;
+            --border: #cbd5e1;
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white; border-bottom: 4px solid var(--gold);
+        }
+
+        .btn-3d {
+            border-bottom: 3.5px solid rgba(0,0,0,0.25);
+            transition: all 0.12s ease;
+            touch-action: manipulation;
+        }
+        .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
+
+        .table-container {
+            width: 100%;
+            height: calc(100vh - 285px);
+            min-height: 360px;
+            overflow: auto;
+            border: 2px solid #94a3b8;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 4px 20px rgba(15, 43, 72, 0.08);
+            position: relative;
+        }
+
+        .entry-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: center;
+            font-size: 13px;
+        }
+        .entry-table.full-cols-mode {
+            min-width: 1180px;
+        }
+
+        .entry-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            background: #0f2b48;
+            color: white;
+            border: 1px solid #334155;
+            padding: 8px 6px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+
+        .entry-table tbody td {
+            border: 1px solid #cbd5e1;
+            padding: 3px 5px;
+            height: 40px;
+            font-weight: 800;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .entry-table tbody tr:nth-child(even) td { background-color: #f8fafc; }
+        .entry-table tbody tr:hover td { background-color: #eff6ff !important; }
+
+        /* تثبيت الأعمدة الأساسية في وضع العرض الكامل */
+        .entry-table.full-cols-mode .st-m    { position: sticky; right: 0;     z-index: 20; background: #f8fafc; width: 42px;  min-width: 42px; }
+        .entry-table.full-cols-mode .st-name { position: sticky; right: 42px;  z-index: 20; background: #ffffff; width: 210px; min-width: 210px; text-align: right !important; padding-right: 8px !important; }
+        .entry-table.full-cols-mode .st-cls  { position: sticky; right: 252px; z-index: 20; background: #f8fafc; width: 62px;  min-width: 62px; }
+        .entry-table.full-cols-mode .st-sec  { position: sticky; right: 314px; z-index: 20; background: #f5f3ff; width: 76px;  min-width: 76px; border-left: 2.5px solid #0f2b48 !important; }
+
+        .entry-table.full-cols-mode thead th.st-m,
+        .entry-table.full-cols-mode thead th.st-name,
+        .entry-table.full-cols-mode thead th.st-cls,
+        .entry-table.full-cols-mode thead th.st-sec {
+            z-index: 45 !important;
+            background: #0f2b48 !important;
+            color: #fcd34d !important;
+        }
+
+        /* إخفاء الأعمدة الإضافية في الوضع المختصر مع إبقاء الاسم والرقم السري وحقلي التحريري والتقييم */
+        .entry-table.compact-mode .extra-col {
+            display: none !important;
+        }
+        .entry-table.compact-mode .st-name {
+            text-align: right !important;
+            padding-right: 12px !important;
+            min-width: 220px;
+        }
+        .entry-table.compact-mode .st-sec {
+            background: #f5f3ff !important;
+            width: 110px;
+            min-width: 100px;
+            border-left: 2.5px solid #0f2b48 !important;
+        }
+
+        .score-inp {
+            width: 100%;
+            height: 32px;
+            border: 1.5px solid transparent;
+            border-radius: 6px;
+            background: transparent;
+            text-align: center;
+            font-weight: 900;
+            font-size: 14px;
+            color: #0f172a;
+            outline: none;
+            transition: all 0.12s;
+        }
+        .score-inp:focus {
+            background: #fef9c3 !important;
+            border-color: #d97706 !important;
+            box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+        }
+
+        .col-exam60 {
+            background: #eff6ff !important;
+            border-right: 2px solid #2563eb !important;
+            border-left: 2px solid #2563eb !important;
+            min-width: 125px;
+        }
+        .col-exam60 .score-inp { color: #1e3a8a; font-size: 15px; }
+        .col-exam60.is-absent-cell { background: #fee2e2 !important; }
+        .col-exam60.is-absent-cell .score-inp { color: #b91c1c !important; }
+
+        .col-raw40 {
+            background: #fffbeb !important;
+            border-left: 2px solid #d97706 !important;
+            min-width: 120px;
+        }
+        .col-raw40 .score-inp { color: #b45309; font-size: 15px; }
+
+        .col-split-sum { background: #ecfdf5 !important; color: #065f46; font-weight: 900; font-size: 14px; border-right: 2px solid #10b981 !important; }
+        .col-split-sum.diff-warn { background: #fef2f2 !important; color: #b91c1c; }
+
+        .col-att-pct { background: #f0f9ff !important; color: #0369a1; font-weight: 900; }
+
+        .swal2-container { z-index: 99999 !important; }
+    </style>
+</head>
+<body class="p-2 sm:p-3">
+
+    <!-- 1. الشريط العلوي -->
+    <header class="top-nav rounded-2xl shadow-md p-3 mb-2.5 flex flex-wrap justify-between items-center gap-3">
+        <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-yellow-300 text-xl shrink-0">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </div>
+            <div>
+                <h1 class="text-sm sm:text-base font-black leading-tight text-white flex items-center gap-2">
+                    ورقة الرصد وتوزيع درجات التقييم
+                </h1>
+                <p class="text-[11px] text-blue-200 font-bold">رصد التحريري (٦٠) + التقييم (٤٠) بالمجموعة السرية • توزيع غير نمطي • مستر زيزو</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+            <a href="control-results.html" class="btn-3d px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-scroll text-yellow-300"></i> شيت النتيجة (A3)
+            </a>
+            <a href="control-index.html" class="btn-3d px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-stamp"></i> بوابة الكنترول
+            </a>
+            <a href="index.html" class="btn-3d px-3.5 py-1.5 bg-blue-800 hover:bg-blue-700 text-white font-black rounded-xl text-xs flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-house"></i> الرئيسية
+            </a>
+        </div>
+    </header>
+
+    <!-- 2. شريط الفلاتر واختيار المجموعة والعمليات -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-3 mb-2.5 shadow-sm space-y-3">
+
+        <!-- فلاتر الصف والترم والمجموعة والفصل والمادة -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+            <div>
+                <label class="block text-[11px] font-black text-slate-600 mb-1">١. الصف الدراسي:</label>
+                <select id="sel-grade" onchange="onGradeChanged()" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black outline-none">
+                    <option value="الأول">الصف الأول</option>
+                    <option value="الثاني">الصف الثاني</option>
+                    <option value="الثالث">الصف الثالث</option>
+                    <option value="الرابع" selected>الصف الرابع</option>
+                    <option value="الخامس">الصف الخامس</option>
+                    <option value="السادس">الصف السادس</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-black text-slate-600 mb-1">٢. الترم:</label>
+                <select id="sel-term" onchange="onTermChanged()" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black outline-none">
+                    <option value="t1">الترم الأول (نصف العام)</option>
+                    <option value="t2">الترم الثاني (آخر العام)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-black text-purple-900 mb-1">٣. المجموعة السرية:</label>
+                <select id="sel-group" onchange="renderEntryTable()" class="w-full p-2 bg-purple-50 border-2 border-purple-400 rounded-xl text-xs font-black outline-none text-purple-950">
+                    <option value="ALL">جميع المجموعات</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-black text-slate-600 mb-1">٤. الفصل:</label>
+                <select id="sel-class" onchange="renderEntryTable()" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black outline-none">
+                    <option value="ALL">جميع الفصول</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-black text-slate-600 mb-1">٥. المادة:</label>
+                <select id="sel-subject" onchange="renderEntryTable()" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black outline-none text-blue-900"></select>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-black text-slate-600 mb-1">ترتيب الصفوف:</label>
+                <select id="sel-sort" onchange="renderEntryTable()" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black outline-none">
+                    <option value="secret" selected>حسب الرقم السري</option>
+                    <option value="serial">حسب المسلسل والجلوس</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- شريط أدوات الرصد والتوزيع وإظهار/إخفاء الأعمدة -->
+        <div class="flex flex-wrap justify-between items-center gap-2 pt-2.5 border-t border-slate-100">
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- زر التبديل بين الوضع المختصر وإظهار كل الأعمدة -->
+                <button type="button" id="btn-toggle-cols" onclick="toggleShowAllColumns()" class="btn-3d px-3.5 py-2 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow cursor-pointer">
+                    <i class="fa-solid fa-eye text-yellow-300"></i> <span>إظهار كل الأعمدة</span>
+                </button>
+
+                <div class="flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-2.5 py-1.5 rounded-xl text-xs font-black text-amber-950">
+                    <label>التقريب:</label>
+                    <select id="sel-round-mode" class="bg-white border border-amber-300 rounded-lg px-2 py-0.5 text-xs font-black outline-none">
+                        <option value="half" selected>نصف درجة (٠.٥)</option>
+                        <option value="int">عدد صحيح (بدون كسور)</option>
+                        <option value="dec">عشري (٠.١)</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-2.5 py-1.5 rounded-xl text-xs font-black text-blue-950">
+                    <label>التوزيع:</label>
+                    <select id="sel-dist-mode" class="bg-white border border-blue-300 rounded-lg px-2 py-0.5 text-xs font-black outline-none">
+                        <option value="direct" selected>نسب من ٤٠ (متنوع غير نمطي) + مواظبة (الحضور÷٢٠)</option>
+                        <option value="rem35">توزيع المتبقي بعد المواظبة على ٣٥ (غير نمطي)</option>
+                    </select>
+                </div>
+
+                <button type="button" onclick="distributeScoresByRatios()" class="btn-3d px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow cursor-pointer">
+                    <i class="fa-solid fa-wand-magic-sparkles text-yellow-200"></i> توزيع الدرجات بالنسب
+                </button>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-black text-slate-600 bg-slate-100 px-2.5 py-1.5 rounded-xl border">
+                    العدد: <b id="lbl-rows-count" class="text-blue-900">٠</b>
+                </span>
+                <button type="button" onclick="transferScoresToControlSheet()" id="btn-transfer-scores" class="btn-3d px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 shadow cursor-pointer">
+                    <i class="fa-solid fa-cloud-arrow-up text-yellow-300"></i> ترحيل المدخل إلى شيت الكنترول
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 3. جدول الرصد التفاعلي -->
+    <div class="table-container">
+        <table class="entry-table compact-mode" id="entryTable">
+            <thead>
+                <tr>
+                    <th class="st-m extra-col">م</th>
+                    <th class="st-name" style="text-align:center !important;">الاسم</th>
+                    <th class="st-cls extra-col">الفصل</th>
+                    <th class="st-sec">الرقم السرى</th>
+                    <th class="extra-col" style="width:82px; background:#0369a1;">نسبة الحضور</th>
+                    <th style="background:#1e3a8a; color:#fef08a; min-width:125px;">اختبار التحريرى<br>(من ٦٠ أو غ)</th>
+                    <th style="background:#b45309; color:#fef08a; min-width:120px;">درجة التقييم<br>(من ٤٠)</th>
+                    <th class="extra-col" style="width:82px;">واجب منزلى<br>(٥)</th>
+                    <th class="extra-col" style="width:88px;">كراسة النشاط<br>والحصة (٥)</th>
+                    <th class="extra-col" style="width:88px;">تقييم أسبوعى<br>(١٠)</th>
+                    <th class="extra-col" style="width:82px;">مواظبة<br>(٥)</th>
+                    <th class="extra-col" style="width:88px;">اختبار شهر<br>(١٥)</th>
+                    <th class="extra-col" style="width:115px; background:#065f46; color:#fef08a;">مجموع التقييم<br>بعد التقسيم</th>
+                </tr>
+            </thead>
+            <tbody id="entryTbody">
+                <tr><td colspan="13" class="p-10 text-slate-400 font-bold">جاري تحميل بيانات الطلاب...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
+        const DB_VERSION = 2;
+
+        let MASTER_STUDENTS = [];
+        let SCORES_DATA = { t1: {}, t2: {} };
+        let SHOW_ALL_COLUMNS = false; // الوضع المختصر افتراضياً (إخفاء الكل ماعدا الاسم والسري + حقلي الرصد)
+
+        const SUBJECTS_LOWER = [
+            { key: 'arabic',   name: 'لغة عربية' },
+            { key: 'math',     name: 'رياضيات' },
+            { key: 'english',  name: 'انجليزى' },
+            { key: 'religion', name: 'دين' }
+        ];
+
+        const SUBJECTS_UPPER = [
+            { key: 'arabic',   name: 'لغة عربية' },
+            { key: 'math',     name: 'رياضيات' },
+            { key: 'science',  name: 'علوم' },
+            { key: 'social',   name: 'دراسات' },
+            { key: 'english',  name: 'انجليزى' },
+            { key: 'tech',     name: 'تكنولوجيا' },
+            { key: 'religion', name: 'دين' }
+        ];
+
+        const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
+        const arToEn = v => String(v ?? '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+
+        function isLowerGrade(grade) {
+            return ["الأول", "الثاني", "الثالث"].includes(grade);
+        }
+
+        function getSubjectsForGrade(grade) {
+            return isLowerGrade(grade) ? SUBJECTS_LOWER : SUBJECTS_UPPER;
+        }
+
+        function getStudentKey(st) {
+            return st.code || st.nid || ('SEAT_' + (st.seat_t1 || st.seat_t2 || st.serial));
+        }
+
+        function extractSecretGroupLetter(secretVal) {
+            if (!secretVal) return '';
+            const cleaned = String(secretVal).trim().replace(/-2$/, '');
+            const m = cleaned.match(/^([A-Za-zأ-ي]+)\d+$/);
+            return m ? m[1].toUpperCase() : '';
+        }
+
+        function extractSecretNumberOnly(secretVal) {
+            if (!secretVal) return 999999;
+            const cleaned = String(secretVal).trim().replace(/-2$/, '');
+            const m = cleaned.match(/(\d+)$/);
+            return m ? parseInt(m[1], 10) : 999999;
+        }
+
+        function openLocalDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('system_capsules')) {
+                        db.createObjectStore('system_capsules', { keyPath: 'id' });
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function fetchCapsuleData(capsuleKey) {
+            const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
+            let dataOut = null;
+
+            if (mode === 'online') {
+                try {
+                    const { data, error } = await sbClient.from("system_capsules").select("data").eq("id", capsuleKey).maybeSingle();
+                    if (!error && data) dataOut = data.data;
+                } catch (e) { console.warn(e); }
+            }
+
+            if (!dataOut) {
+                try {
+                    const db = await openLocalDB();
+                    if (db.objectStoreNames.contains('system_capsules')) {
+                        dataOut = await new Promise((resolve) => {
+                            const tx = db.transaction('system_capsules', 'readonly');
+                            const req = tx.objectStore('system_capsules').get(capsuleKey);
+                            req.onsuccess = () => resolve(req.result ? req.result.data : null);
+                            req.onerror = () => resolve(null);
+                        });
+                    }
+                } catch (e) {}
+            }
+            return dataOut;
+        }
+
+        async function saveCapsuleData(capsuleKey, payload) {
+            const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
+
+            try {
+                const db = await openLocalDB();
+                if (db.objectStoreNames.contains('system_capsules')) {
+                    await new Promise((resolve, reject) => {
+                        const tx = db.transaction('system_capsules', 'readwrite');
+                        tx.objectStore('system_capsules').put({ id: capsuleKey, data: payload });
+                        tx.oncomplete = () => resolve();
+                        tx.onerror = () => reject(tx.error);
+                    });
+                }
+            } catch (e) { console.warn(e); }
+
+            if (mode === 'online') {
+                let { error } = await sbClient.from("system_capsules").upsert({
+                    id: capsuleKey,
+                    data: payload,
+                    updatedat: new Date().toLocaleString('ar-EG')
+                }, { onConflict: 'id' });
+
+                if (error) {
+                    const res2 = await sbClient.from("system_capsules").upsert({
+                        id: capsuleKey,
+                        data: payload
+                    }, { onConflict: 'id' });
+                    if (res2.error) throw res2.error;
+                }
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await onGradeChanged();
+        });
+
+        function toggleShowAllColumns() {
+            SHOW_ALL_COLUMNS = !SHOW_ALL_COLUMNS;
+            const table = document.getElementById('entryTable');
+            const btn = document.getElementById('btn-toggle-cols');
+
+            if (SHOW_ALL_COLUMNS) {
+                table.classList.remove('compact-mode');
+                table.classList.add('full-cols-mode');
+                btn.innerHTML = `<i class="fa-solid fa-eye-slash text-amber-300"></i> <span>إخفاء الأعمدة (الوضع المختصر)</span>`;
+            } else {
+                table.classList.remove('full-cols-mode');
+                table.classList.add('compact-mode');
+                btn.innerHTML = `<i class="fa-solid fa-eye text-yellow-300"></i> <span>إظهار كل الأعمدة</span>`;
+            }
+        }
+
+        async function onGradeChanged() {
+            const grade = document.getElementById('sel-grade').value;
+            const masterKey = `control_master_grade_${grade}`;
+            const scoresKey = `control_scores_grade_${grade}`;
+
+            document.getElementById('entryTbody').innerHTML = `<tr><td colspan="13" class="p-10 text-blue-900 font-black"><i class="fa-solid fa-spinner fa-spin text-xl mb-2 block"></i> جاري تحميل طلاب ودرجات الصف (${grade})...</td></tr>`;
+
+            try {
+                const [masterRaw, scoresRaw] = await Promise.all([
+                    fetchCapsuleData(masterKey),
+                    fetchCapsuleData(scoresKey)
+                ]);
+
+                MASTER_STUDENTS = Array.isArray(masterRaw)
+                    ? masterRaw
+                    : (masterRaw && Array.isArray(masterRaw.students) ? masterRaw.students : []);
+
+                SCORES_DATA = (scoresRaw && typeof scoresRaw === 'object')
+                    ? { t1: scoresRaw.t1 || {}, t2: scoresRaw.t2 || {} }
+                    : { t1: {}, t2: {} };
+
+                populateClassGroupSubjectSelectors(grade);
+                renderEntryTable();
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ', 'تعذر تحميل البيانات: ' + err.message, 'error');
+            }
+        }
+
+        function onTermChanged() {
+            populateGroupSelector();
+            renderEntryTable();
+        }
+
+        function populateClassGroupSubjectSelectors(grade) {
+            const clsSel = document.getElementById('sel-class');
+            const classes = [...new Set(MASTER_STUDENTS.map(s => String(s.class || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar', { numeric: true }));
+            clsSel.innerHTML = `<option value="ALL">جميع الفصول</option>` + classes.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            const subSel = document.getElementById('sel-subject');
+            const prevSub = subSel.value;
+            const subjects = getSubjectsForGrade(grade);
+            subSel.innerHTML = subjects.map(s => `<option value="${s.key}">${s.name}</option>`).join('');
+            if (subjects.some(s => s.key === prevSub)) subSel.value = prevSub;
+
+            populateGroupSelector();
+        }
+
+        function populateGroupSelector() {
+            const term = document.getElementById('sel-term').value;
+            const secField = term === 't1' ? 'secret_t1' : 'secret_t2';
+            const grpSel = document.getElementById('sel-group');
+            const prevGrp = grpSel.value;
+
+            const groupCounts = {};
+            MASTER_STUDENTS.forEach(st => {
+                const ltr = extractSecretGroupLetter(st[secField]);
+                if (ltr) {
+                    groupCounts[ltr] = (groupCounts[ltr] || 0) + 1;
+                }
+            });
+
+            const letters = Object.keys(groupCounts).sort();
+            if (letters.length === 0) {
+                grpSel.innerHTML = `<option value="ALL">جميع التلاميذ (لم تُولد مجموعات سرية)</option>`;
+            } else {
+                grpSel.innerHTML = `<option value="ALL">جميع المجموعات (${toAr(MASTER_STUDENTS.length)})</option>` +
+                    letters.map(l => `<option value="${l}">المجموعة ${l} (${toAr(groupCounts[l])} طالب)</option>`).join('');
+            }
+
+            if (letters.includes(prevGrp)) grpSel.value = prevGrp;
+        }
+
+        function getOrCreateSubjectRecord(stuKey, term, subKey) {
+            if (!SCORES_DATA[term]) SCORES_DATA[term] = {};
+            if (!SCORES_DATA[term][stuKey]) SCORES_DATA[term][stuKey] = {};
+            if (!SCORES_DATA[term][stuKey][subKey]) SCORES_DATA[term][stuKey][subKey] = {};
+            return SCORES_DATA[term][stuKey][subKey];
+        }
+
+        function getFilteredStudents() {
+            const cls = document.getElementById('sel-class').value;
+            const grp = document.getElementById('sel-group').value;
+            const term = document.getElementById('sel-term').value;
+            const sortMode = document.getElementById('sel-sort').value;
+            const secField = term === 't1' ? 'secret_t1' : 'secret_t2';
+
+            let list = MASTER_STUDENTS.filter(st => {
+                if (cls !== 'ALL' && String(st.class || '').trim() !== cls) return false;
+                if (grp !== 'ALL' && extractSecretGroupLetter(st[secField]) !== grp) return false;
+                return true;
+            });
+
+            if (sortMode === 'secret') {
+                list = list.slice().sort((a, b) => {
+                    const la = extractSecretGroupLetter(a[secField]);
+                    const lb = extractSecretGroupLetter(b[secField]);
+                    if (la !== lb) return la.localeCompare(lb, 'en');
+                    const na = extractSecretNumberOnly(a[secField]);
+                    const nb = extractSecretNumberOnly(b[secField]);
+                    if (na !== nb) return na - nb;
+                    return (a.serial || 0) - (b.serial || 0);
+                });
+            }
+
+            return list;
+        }
+
+        function parseNum(v) {
+            if (v === undefined || v === null || String(v).trim() === '') return null;
+            const n = parseFloat(arToEn(v));
+            return Number.isFinite(n) ? n : null;
+        }
+
+        function calcSplitSum(rec) {
+            if (!rec) return null;
+            const fields = ['hw', 'cw', 'eval', 'att', 'month'];
+            const hasAny = fields.some(f => rec[f] !== undefined && rec[f] !== null && String(rec[f]).trim() !== '');
+            if (!hasAny) return null;
+
+            const sum = fields.reduce((acc, f) => acc + (parseNum(rec[f]) || 0), 0);
+            return +sum.toFixed(1);
+        }
+
+        function renderEntryTable() {
+            const tbody = document.getElementById('entryTbody');
+            const term = document.getElementById('sel-term').value;
+            const subKey = document.getElementById('sel-subject').value;
+            const secField = term === 't1' ? 'secret_t1' : 'secret_t2';
+            const attField = term === 't1' ? 'attend_t1' : 'attend_t2';
+
+            const students = getFilteredStudents();
+            document.getElementById('lbl-rows-count').innerText = toAr(students.length);
+
+            if (MASTER_STUDENTS.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="13" class="p-10 text-rose-700 font-black">لا يوجد تلاميذ في الشيت المركزي لهذا الصف. اسحب التلاميذ من «الشيت المركزي الشامل» أولاً.</td></tr>`;
+                return;
+            }
+
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="13" class="p-8 text-slate-400 font-bold">لا يوجد تلاميذ مطابقون للمجموعة أو الفصل المحدد.</td></tr>`;
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+            students.forEach((st, idx) => {
+                const stuKey = getStudentKey(st);
+                const rec = (SCORES_DATA[term] && SCORES_DATA[term][stuKey] && SCORES_DATA[term][stuKey][subKey])
+                    ? SCORES_DATA[term][stuKey][subKey]
+                    : {};
+
+                const examVal = rec.exam !== undefined && rec.exam !== null ? rec.exam : '';
+                const isAbs = String(examVal).trim() === 'غ' || String(examVal).trim() === 'غائب';
+                const raw40 = rec.raw40 !== undefined && rec.raw40 !== null ? rec.raw40 : '';
+                const attPct = st[attField] !== undefined && st[attField] !== null && String(st[attField]).trim() !== ''
+                    ? st[attField]
+                    : '';
+                const splitSum = calcSplitSum(rec);
+                const rawNum = parseNum(raw40);
+                const isDiff = (splitSum !== null && rawNum !== null && Math.abs(splitSum - rawNum) > 0.01);
+
+                const tr = document.createElement('tr');
+                tr.dataset.stukey = stuKey;
+                tr.innerHTML = `
+                    <td class="st-m extra-col">${toAr(idx + 1)}</td>
+                    <td class="st-name" title="${st.name}">${st.name || ''}</td>
+                    <td class="st-cls extra-col">${st.class || '-'}</td>
+                    <td class="st-sec font-mono text-purple-900">${st[secField] || '-'}</td>
+                    <td class="col-att-pct font-mono extra-col">${attPct !== '' ? '%' + toAr(attPct) : '-'}</td>
+
+                    <!-- أول عمود رصد: الاختبار التحريري من 60 أو غ -->
+                    <td class="col-exam60 ${isAbs ? 'is-absent-cell' : ''}">
+                        <input type="text" class="score-inp"
+                               data-row="${idx}" data-col="exam" data-stukey="${stuKey}"
+                               value="${examVal}" placeholder="0:60 أو غ"
+                               oninput="onExamCellInput(this)"
+                               onkeydown="handleVerticalNav(event, ${idx}, 'exam')">
+                    </td>
+
+                    <!-- يليه عمود درجة التقييم من 40 -->
+                    <td class="col-raw40">
+                        <input type="text" inputmode="decimal" class="score-inp"
+                               data-row="${idx}" data-col="raw40" data-stukey="${stuKey}"
+                               value="${raw40}" placeholder="-"
+                               oninput="onScoreCellInput(this, 40)"
+                               onkeydown="handleVerticalNav(event, ${idx}, 'raw40')">
+                    </td>
+
+                    <!-- أعمدة التجزئة (تظهر عند الضغط على إظهار كل الأعمدة) -->
+                    <td class="extra-col">
+                        <input type="text" inputmode="decimal" class="score-inp"
+                               data-row="${idx}" data-col="hw" data-stukey="${stuKey}"
+                               value="${rec.hw ?? ''}" placeholder="-"
+                               oninput="onScoreCellInput(this, 5)"
+                               onkeydown="handleVerticalNav(event, ${idx}, 'hw')">
+                    </td>
+                    <td class="extra-col">
+                        <input type="text" inputmode="decimal" class="score-inp"
+                               data-row="${idx}" data-col="cw" data-stukey="${stuKey}"
+                               value="${rec.cw ?? ''}" placeholder="-"
+                               oninput="onScoreCellInput(this, 5)"
+                               onkeydown="handleVerticalNav(event, ${idx}, 'cw')">
+                    </td>
+                    <td class="extra-col">
+                        <input type="text" inputmode="decimal" class="score-inp"
+                               data-row="${idx}" data-col="eval" data-stukey="${stuKey}"
+                               value="${rec.eval ?? ''}" placeholder="-"
+                               oninput="onScoreCellInput(this, 10)"
+                               onkeydown="handleVerticalNav(event, ${idx}, 'eval')">
+                    </td>
+                    <td class="extra-col">
+                        <input type="text" inputmode="decimal" class="score-inp"
+                               data-row="${idx}" data-col="att" data-stukey="${stuKey}"
+                               value="${rec.att ?? ''}" placeholder="-"
+                               oninput="onScoreCellInput(this, 5)"
+                               onkeydown="handleVerticalNav(event, ${idx}, 'att')">
+                    </td>
+                    <td class="extra-col">
+                        <input type="text" inputmode="decimal" class="score-inp"
+                               data-row="${idx}" data-col="month" data-stukey="${stuKey}"
+                               value="${rec.month ?? ''}" placeholder="-"
+                               oninput="onScoreCellInput(this, 15)"
+                               onkeydown="handleVerticalNav(event, ${idx}, 'month')">
+                    </td>
+                    <td class="col-split-sum extra-col ${isDiff ? 'diff-warn' : ''}" id="split-sum-${stuKey}">
+                        ${splitSum !== null ? toAr(splitSum) : '-'}
+                    </td>
+                `;
+                fragment.appendChild(tr);
+            });
+
+            tbody.innerHTML = '';
+            tbody.appendChild(fragment);
+        }
+
+        function onExamCellInput(inp) {
+            const stuKey = inp.dataset.stukey;
+            const term = document.getElementById('sel-term').value;
+            const subKey = document.getElementById('sel-subject').value;
+            const rec = getOrCreateSubjectRecord(stuKey, term, subKey);
+            const td = inp.closest('td');
+
+            const raw = inp.value.trim();
+            if (raw === 'غ' || raw === 'غائب' || raw === 'غـ') {
+                rec.exam = 'غ';
+                inp.value = 'غ';
+                if (td) td.classList.add('is-absent-cell');
+            } else {
+                if (td) td.classList.remove('is-absent-cell');
+                let cleanStr = arToEn(raw).replace(/[^0-9.]/g, '');
+                let num = parseFloat(cleanStr);
+                if (cleanStr !== '' && !isNaN(num)) {
+                    if (num > 60) { num = 60; inp.value = 60; }
+                    if (num < 0)  { num = 0;  inp.value = 0;  }
+                    rec.exam = num;
+                } else {
+                    rec.exam = '';
+                }
+            }
+        }
+
+        function onScoreCellInput(inp, maxVal) {
+            const stuKey = inp.dataset.stukey;
+            const col = inp.dataset.col;
+            const term = document.getElementById('sel-term').value;
+            const subKey = document.getElementById('sel-subject').value;
+
+            let cleanStr = arToEn(inp.value).replace(/[^0-9.]/g, '');
+            let num = parseFloat(cleanStr);
+
+            if (cleanStr !== '' && !isNaN(num)) {
+                if (num > maxVal) {
+                    num = maxVal;
+                    inp.value = maxVal;
+                } else if (num < 0) {
+                    num = 0;
+                    inp.value = 0;
+                }
+            }
+
+            const rec = getOrCreateSubjectRecord(stuKey, term, subKey);
+            rec[col] = (cleanStr === '' || isNaN(num)) ? '' : num;
+
+            const splitSum = calcSplitSum(rec);
+            const rawNum = parseNum(rec.raw40);
+            const sumCell = document.getElementById(`split-sum-${stuKey}`);
+            if (sumCell) {
+                sumCell.innerText = splitSum !== null ? toAr(splitSum) : '-';
+                const isDiff = (splitSum !== null && rawNum !== null && Math.abs(splitSum - rawNum) > 0.01);
+                sumCell.classList.toggle('diff-warn', isDiff);
+            }
+        }
+
+        function handleVerticalNav(e, rowIdx, colName) {
+            let nextRow = null;
+            if (e.key === 'Enter' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                nextRow = rowIdx + 1;
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                nextRow = rowIdx - 1;
+            }
+            if (nextRow !== null) {
+                const target = document.querySelector(`.score-inp[data-row="${nextRow}"][data-col="${colName}"]`);
+                if (target) {
+                    target.focus();
+                    target.select();
+                }
+            }
+        }
+
+        function roundByMode(val, mode, maxVal) {
+            let r = val;
+            if (mode === 'half') r = Math.round(val * 2) / 2;
+            else if (mode === 'int') r = Math.round(val);
+            else r = Math.round(val * 10) / 10;
+            return Math.min(maxVal, Math.max(0, r));
+        }
+
+        // خوارزمية توزيع غير نمطية ومتوازنة للبنود الأربعة (واجب 5، كراسة 5، تقييم 10، شهر 15)
+        function distributeNonUniform(raw40, attScore, distMode, roundMode) {
+            const caps = [5, 5, 10, 15];
+            const step = (roundMode === 'int') ? 1 : 0.5;
+
+            let targetSum;
+            let base;
+            if (distMode === 'direct') {
+                targetSum = raw40 * (35 / 40);
+                base = caps.map(c => raw40 * (c / 40));
+            } else {
+                targetSum = Math.min(35, Math.max(0, raw40 - attScore));
+                base = caps.map(c => targetSum * (c / 35));
+            }
+
+            let vals = base.map((b, i) => roundByMode(b, roundMode, caps[i]));
+
+            // إذا كان المستهدف 0 أو الدرجة الكاملة 35 نثبت القيم الحدية مباشرة
+            const roundedTarget = roundByMode(targetSum, roundMode, 35);
+            if (roundedTarget <= 0) return [0, 0, 0, 0];
+            if (roundedTarget >= 35) return [5, 5, 10, 15];
+
+            // ضبط أي فرق بسيط ناتج عن التقريب للوصول لنفس المجموع المستهدف
+            let curSum = +(vals.reduce((a, b) => a + b, 0)).toFixed(2);
+            let guard = 0;
+            while (Math.abs(curSum - roundedTarget) >= step - 0.01 && guard < 40) {
+                guard++;
+                const idx = Math.floor(Math.random() * 4);
+                if (curSum < roundedTarget && vals[idx] + step <= caps[idx]) {
+                    vals[idx] = +(vals[idx] + step).toFixed(1);
+                    curSum = +(curSum + step).toFixed(2);
+                } else if (curSum > roundedTarget && vals[idx] - step >= 0) {
+                    vals[idx] = +(vals[idx] - step).toFixed(1);
+                    curSum = +(curSum - step).toFixed(2);
+                }
+            }
+
+            // إدخال تنويع عشوائي متوازن (كسر النمطية: واجب ≠ كراسة، وتنوع التقييم والشهر مع حفظ المجموع)
+            const allowedDeviation = [1.5, 1.5, 2.5, 3];
+            for (let k = 0; k < 8; k++) {
+                const i = Math.floor(Math.random() * 4);
+                const j = Math.floor(Math.random() * 4);
+                if (i === j) continue;
+
+                const canAdd = (vals[i] + step <= caps[i]) && (Math.abs((vals[i] + step) - base[i]) <= allowedDeviation[i]);
+                const canSub = (vals[j] - step >= 0) && (Math.abs((vals[j] - step) - base[j]) <= allowedDeviation[j]);
+
+                if (canAdd && canSub) {
+                    vals[i] = +(vals[i] + step).toFixed(1);
+                    vals[j] = +(vals[j] - step).toFixed(1);
+                }
+            }
+
+            return vals;
+        }
+
+        // ================= زر توزيع الدرجات بالنسب (غير نمطي + مواظبة = نسبة الحضور ÷ 20) =================
+        function distributeScoresByRatios() {
+            const students = getFilteredStudents();
+            if (students.length === 0) return;
+
+            const term = document.getElementById('sel-term').value;
+            const subKey = document.getElementById('sel-subject').value;
+            const roundMode = document.getElementById('sel-round-mode').value;
+            const distMode = document.getElementById('sel-dist-mode').value;
+            const attField = term === 't1' ? 'attend_t1' : 'attend_t2';
+
+            let distributedCount = 0;
+            let missingRawCount = 0;
+
+            students.forEach(st => {
+                const stuKey = getStudentKey(st);
+                const rec = getOrCreateSubjectRecord(stuKey, term, subKey);
+                const raw40 = parseNum(rec.raw40);
+
+                if (raw40 === null) {
+                    missingRawCount++;
+                    return;
+                }
+
+                // المواظبة = نسبة الحضور ÷ 20 (بحد أقصى 5)
+                const attPct = parseNum(st[attField]);
+                const attScore = attPct !== null ? roundByMode(attPct / 20, roundMode, 5) : 0;
+
+                const [hwScore, cwScore, evalScore, monthScore] = distributeNonUniform(raw40, attScore, distMode, roundMode);
+
+                // إبقاء درجة التقييم المرصودة raw40 كما هي دون تعديل
+                rec.hw = hwScore;
+                rec.cw = cwScore;
+                rec.eval = evalScore;
+                rec.att = attScore;
+                rec.month = monthScore;
+                distributedCount++;
+            });
+
+            renderEntryTable();
+
+            Swal.fire({
+                icon: distributedCount > 0 ? 'success' : 'warning',
+                title: distributedCount > 0 ? 'تم التوزيع غير النمطي بنجاح!' : 'لم يتم رصد درجات تقييم (٤٠)',
+                html: distributedCount > 0
+                    ? `تم توزيع الدرجات بشكل طبيعي متنوع لعدد <b>(${toAr(distributedCount)})</b> تلميذاً مع بقاء «درجة التقييم المرصودة» كما هي.<br><small class="text-slate-600">اضغط «إظهار كل الأعمدة» لمراجعة التفصيل أو «ترحيل» للحفظ.</small>${missingRawCount > 0 ? `<br><small class="text-slate-500">(تجاهل ${toAr(missingRawCount)} بدون درجة تقييم مرصودة)</small>` : ''}`
+                    : 'يرجى رصد «درجة التقييم (من ٤٠)» للتلاميذ أولاً ثم الضغط على زر التوزيع.',
+                confirmButtonColor: '#0f2b48'
+            });
+        }
+
+        // ================= زر ترحيل المدخل إلى شيت الكنترول =================
+        async function transferScoresToControlSheet() {
+            const grade = document.getElementById('sel-grade').value;
+            const term = document.getElementById('sel-term').value;
+            const subKey = document.getElementById('sel-subject').value;
+            const subName = document.getElementById('sel-subject').options[document.getElementById('sel-subject').selectedIndex].text;
+            const scoresKey = `control_scores_grade_${grade}`;
+
+            Swal.fire({ title: `جاري ترحيل درجات (${subName}) إلى شيت الكنترول...`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                const latestCloud = await fetchCapsuleData(scoresKey);
+                if (latestCloud && typeof latestCloud === 'object') {
+                    ['t1', 't2'].forEach(t => {
+                        if (!latestCloud[t]) latestCloud[t] = {};
+                        const localTerm = SCORES_DATA[t] || {};
+                        for (let stuKey in localTerm) {
+                            if (!latestCloud[t][stuKey]) latestCloud[t][stuKey] = {};
+                            for (let sKey in localTerm[stuKey]) {
+                                if (t === term && sKey === subKey) {
+                                    latestCloud[t][stuKey][sKey] = {
+                                        ...(latestCloud[t][stuKey][sKey] || {}),
+                                        ...localTerm[stuKey][sKey]
+                                    };
+                                } else if (!latestCloud[t][stuKey][sKey]) {
+                                    latestCloud[t][stuKey][sKey] = localTerm[stuKey][sKey];
+                                }
+                            }
+                        }
+                    });
+                    SCORES_DATA = latestCloud;
+                }
+
+                await saveCapsuleData(scoresKey, SCORES_DATA);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم الترحيل إلى شيت الكنترول بنجاح!',
+                    html: `تم حفظ وترحيل درجات مادة <b>(${subName})</b> للصف <b>(${grade})</b> بنجاح، وأصبحت متاحة الآن في <b>شيت النتيجة النهائي</b>.`,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ أثناء الترحيل', err.message || String(err), 'error');
+            }
+        }
+    </script>
+</body>
+</html>
