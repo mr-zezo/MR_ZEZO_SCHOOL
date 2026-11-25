@@ -175,7 +175,7 @@
                 <h1 class="text-sm sm:text-base font-black leading-tight text-white flex items-center gap-2">
                     ورقة الرصد وتوزيع درجات التقييم
                 </h1>
-                <p class="text-[11px] text-blue-200 font-bold">رصد التحريري (٦٠) + التقييم (٤٠) بالمجموعة السرية • توزيع غير نمطي • مستر زيزو</p>
+                <p class="text-[11px] text-blue-200 font-bold">رصد التحريري (٦٠) + التقييم (٤٠) بالمجموعة السرية • استيراد وتصدير إكسيل • مستر زيزو</p>
             </div>
         </div>
 
@@ -245,11 +245,11 @@
             </div>
         </div>
 
-        <!-- شريط أدوات الرصد والتوزيع وإظهار/إخفاء الأعمدة -->
+        <!-- شريط أدوات الرصد والتوزيع والإكسيل وإظهار/إخفاء الأعمدة -->
         <div class="flex flex-wrap justify-between items-center gap-2 pt-2.5 border-t border-slate-100">
             <div class="flex flex-wrap items-center gap-2">
                 <!-- زر التبديل بين الوضع المختصر وإظهار كل الأعمدة -->
-                <button type="button" id="btn-toggle-cols" onclick="toggleShowAllColumns()" class="btn-3d px-3.5 py-2 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow cursor-pointer">
+                <button type="button" id="btn-toggle-cols" onclick="toggleShowAllColumns()" class="btn-3d px-3 py-2 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow cursor-pointer">
                     <i class="fa-solid fa-eye text-yellow-300"></i> <span>إظهار كل الأعمدة</span>
                 </button>
 
@@ -265,22 +265,33 @@
                 <div class="flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-2.5 py-1.5 rounded-xl text-xs font-black text-blue-950">
                     <label>التوزيع:</label>
                     <select id="sel-dist-mode" class="bg-white border border-blue-300 rounded-lg px-2 py-0.5 text-xs font-black outline-none">
-                        <option value="direct" selected>نسب من ٤٠ (متنوع غير نمطي) + مواظبة (الحضور÷٢٠)</option>
+                        <option value="direct" selected>نسب من ٤٠ (غير نمطي) + مواظبة (الحضور÷٢٠)</option>
                         <option value="rem35">توزيع المتبقي بعد المواظبة على ٣٥ (غير نمطي)</option>
                     </select>
                 </div>
 
-                <button type="button" onclick="distributeScoresByRatios()" class="btn-3d px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow cursor-pointer">
+                <button type="button" onclick="distributeScoresByRatios()" class="btn-3d px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow cursor-pointer">
                     <i class="fa-solid fa-wand-magic-sparkles text-yellow-200"></i> توزيع الدرجات بالنسب
                 </button>
             </div>
 
-            <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5 flex-wrap">
                 <span class="text-xs font-black text-slate-600 bg-slate-100 px-2.5 py-1.5 rounded-xl border">
                     العدد: <b id="lbl-rows-count" class="text-blue-900">٠</b>
                 </span>
-                <button type="button" onclick="transferScoresToControlSheet()" id="btn-transfer-scores" class="btn-3d px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 shadow cursor-pointer">
-                    <i class="fa-solid fa-cloud-arrow-up text-yellow-300"></i> ترحيل المدخل إلى شيت الكنترول
+
+                <!-- استيراد وتصدير إكسيل -->
+                <input type="file" id="file-entry-excel" accept=".xlsx, .xls, .csv" class="hidden" onchange="importEntryFromExcel(event)">
+                <button type="button" onclick="document.getElementById('file-entry-excel').click()" class="btn-3d px-3.5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow cursor-pointer" title="استيراد درجات من ملف إكسيل">
+                    <i class="fa-solid fa-file-import text-yellow-200"></i> استيراد إكسيل
+                </button>
+
+                <button type="button" onclick="exportEntryToExcel()" class="btn-3d px-3.5 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow cursor-pointer" title="تصدير الجدول المعروض إلى ملف إكسيل">
+                    <i class="fa-solid fa-file-excel text-emerald-200"></i> تصدير إكسيل
+                </button>
+
+                <button type="button" onclick="transferScoresToControlSheet()" id="btn-transfer-scores" class="btn-3d px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow cursor-pointer">
+                    <i class="fa-solid fa-cloud-arrow-up text-yellow-300"></i> ترحيل المدخل لشيت الكنترول
                 </button>
             </div>
         </div>
@@ -323,7 +334,7 @@
 
         let MASTER_STUDENTS = [];
         let SCORES_DATA = { t1: {}, t2: {} };
-        let SHOW_ALL_COLUMNS = false; // الوضع المختصر افتراضياً (إخفاء الكل ماعدا الاسم والسري + حقلي الرصد)
+        let SHOW_ALL_COLUMNS = false;
 
         const SUBJECTS_LOWER = [
             { key: 'arabic',   name: 'لغة عربية' },
@@ -344,6 +355,19 @@
 
         const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
         const arToEn = v => String(v ?? '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+
+        function normalizeArabic(text) {
+            if (!text) return "";
+            return String(text)
+                .replace(/[أإآا]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[\u064B-\u0652]/g, '')
+                .replace(/\u0640/g, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+        }
 
         function isLowerGrade(grade) {
             return ["الأول", "الثاني", "الثالث"].includes(grade);
@@ -634,7 +658,6 @@
                     <td class="st-sec font-mono text-purple-900">${st[secField] || '-'}</td>
                     <td class="col-att-pct font-mono extra-col">${attPct !== '' ? '%' + toAr(attPct) : '-'}</td>
 
-                    <!-- أول عمود رصد: الاختبار التحريري من 60 أو غ -->
                     <td class="col-exam60 ${isAbs ? 'is-absent-cell' : ''}">
                         <input type="text" class="score-inp"
                                data-row="${idx}" data-col="exam" data-stukey="${stuKey}"
@@ -643,7 +666,6 @@
                                onkeydown="handleVerticalNav(event, ${idx}, 'exam')">
                     </td>
 
-                    <!-- يليه عمود درجة التقييم من 40 -->
                     <td class="col-raw40">
                         <input type="text" inputmode="decimal" class="score-inp"
                                data-row="${idx}" data-col="raw40" data-stukey="${stuKey}"
@@ -652,7 +674,6 @@
                                onkeydown="handleVerticalNav(event, ${idx}, 'raw40')">
                     </td>
 
-                    <!-- أعمدة التجزئة (تظهر عند الضغط على إظهار كل الأعمدة) -->
                     <td class="extra-col">
                         <input type="text" inputmode="decimal" class="score-inp"
                                data-row="${idx}" data-col="hw" data-stukey="${stuKey}"
@@ -783,7 +804,6 @@
             return Math.min(maxVal, Math.max(0, r));
         }
 
-        // خوارزمية توزيع غير نمطية ومتوازنة للبنود الأربعة (واجب 5، كراسة 5، تقييم 10، شهر 15)
         function distributeNonUniform(raw40, attScore, distMode, roundMode) {
             const caps = [5, 5, 10, 15];
             const step = (roundMode === 'int') ? 1 : 0.5;
@@ -800,12 +820,10 @@
 
             let vals = base.map((b, i) => roundByMode(b, roundMode, caps[i]));
 
-            // إذا كان المستهدف 0 أو الدرجة الكاملة 35 نثبت القيم الحدية مباشرة
             const roundedTarget = roundByMode(targetSum, roundMode, 35);
             if (roundedTarget <= 0) return [0, 0, 0, 0];
             if (roundedTarget >= 35) return [5, 5, 10, 15];
 
-            // ضبط أي فرق بسيط ناتج عن التقريب للوصول لنفس المجموع المستهدف
             let curSum = +(vals.reduce((a, b) => a + b, 0)).toFixed(2);
             let guard = 0;
             while (Math.abs(curSum - roundedTarget) >= step - 0.01 && guard < 40) {
@@ -820,7 +838,6 @@
                 }
             }
 
-            // إدخال تنويع عشوائي متوازن (كسر النمطية: واجب ≠ كراسة، وتنوع التقييم والشهر مع حفظ المجموع)
             const allowedDeviation = [1.5, 1.5, 2.5, 3];
             for (let k = 0; k < 8; k++) {
                 const i = Math.floor(Math.random() * 4);
@@ -839,7 +856,6 @@
             return vals;
         }
 
-        // ================= زر توزيع الدرجات بالنسب (غير نمطي + مواظبة = نسبة الحضور ÷ 20) =================
         function distributeScoresByRatios() {
             const students = getFilteredStudents();
             if (students.length === 0) return;
@@ -863,13 +879,11 @@
                     return;
                 }
 
-                // المواظبة = نسبة الحضور ÷ 20 (بحد أقصى 5)
                 const attPct = parseNum(st[attField]);
                 const attScore = attPct !== null ? roundByMode(attPct / 20, roundMode, 5) : 0;
 
                 const [hwScore, cwScore, evalScore, monthScore] = distributeNonUniform(raw40, attScore, distMode, roundMode);
 
-                // إبقاء درجة التقييم المرصودة raw40 كما هي دون تعديل
                 rec.hw = hwScore;
                 rec.cw = cwScore;
                 rec.eval = evalScore;
@@ -888,6 +902,258 @@
                     : 'يرجى رصد «درجة التقييم (من ٤٠)» للتلاميذ أولاً ثم الضغط على زر التوزيع.',
                 confirmButtonColor: '#0f2b48'
             });
+        }
+
+        // ================= تصدير جدول الرصد إلى ملف إكسيل =================
+        function exportEntryToExcel() {
+            const students = getFilteredStudents();
+            if (students.length === 0) {
+                Swal.fire('تنبيه', 'لا يوجد تلاميذ في العرض الحالي لتصديرهم!', 'warning');
+                return;
+            }
+
+            const grade = document.getElementById('sel-grade').value;
+            const term = document.getElementById('sel-term').value;
+            const termName = term === 't1' ? 'الترم_الأول' : 'الترم_الثاني';
+            const grp = document.getElementById('sel-group').value;
+            const cls = document.getElementById('sel-class').value;
+            const subKey = document.getElementById('sel-subject').value;
+            const subName = document.getElementById('sel-subject').options[document.getElementById('sel-subject').selectedIndex].text;
+
+            const seatField = term === 't1' ? 'seat_t1' : 'seat_t2';
+            const secField  = term === 't1' ? 'secret_t1' : 'secret_t2';
+            const attField  = term === 't1' ? 'attend_t1' : 'attend_t2';
+
+            const rows = students.map((st, idx) => {
+                const stuKey = getStudentKey(st);
+                const rec = (SCORES_DATA[term] && SCORES_DATA[term][stuKey] && SCORES_DATA[term][stuKey][subKey])
+                    ? SCORES_DATA[term][stuKey][subKey]
+                    : {};
+                const splitSum = calcSplitSum(rec);
+
+                return {
+                    "م": idx + 1,
+                    "الكود": stuKey,
+                    "الاسم": st.name || '',
+                    "الفصل": st.class || '',
+                    "رقم الجلوس": st[seatField] || '',
+                    "الرقم السرى": st[secField] || '',
+                    "نسبة الحضور": st[attField] !== undefined && st[attField] !== '' ? st[attField] : '',
+                    "اختبار التحريرى": rec.exam !== undefined ? rec.exam : '',
+                    "درجة التقييم": rec.raw40 !== undefined ? rec.raw40 : '',
+                    "واجب منزلى": rec.hw !== undefined ? rec.hw : '',
+                    "كراسة النشاط": rec.cw !== undefined ? rec.cw : '',
+                    "تقييم أسبوعى": rec.eval !== undefined ? rec.eval : '',
+                    "مواظبة": rec.att !== undefined ? rec.att : '',
+                    "اختبار شهر": rec.month !== undefined ? rec.month : '',
+                    "مجموع التقييم بعد التقسيم": splitSum !== null ? splitSum : ''
+                };
+            });
+
+            const ws = XLSX.utils.json_to_sheet(rows);
+            if (!ws['!views']) ws['!views'] = [];
+            ws['!views'].push({ rightToLeft: true });
+            ws['!cols'] = [
+                { wch: 5 }, { wch: 15 }, { wch: 30 }, { wch: 9 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
+                { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 10 }, { wch: 12 }, { wch: 22 }
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, `رصد_${subName}`.slice(0, 31));
+
+            let fileName = `رصد_${subName}_الصف_${grade}_${termName}`;
+            if (grp !== 'ALL') fileName += `_مجموعة_${grp}`;
+            if (cls !== 'ALL') fileName += `_فصل_${cls.replace(/[\\/:*?"<>|]/g, '-')}`;
+            XLSX.writeFile(wb, `${fileName}.xlsx`);
+        }
+
+        // ================= استيراد درجات الرصد من ملف إكسيل =================
+        function pickExcelColVal(normRow, exactKeys, partialIncludes = []) {
+            for (const k of exactKeys) {
+                const nk = normalizeArabic(k);
+                if (normRow[nk] !== undefined) return { found: true, val: normRow[nk] };
+            }
+            for (const rk in normRow) {
+                if (partialIncludes.some(p => rk.includes(normalizeArabic(p)))) {
+                    return { found: true, val: normRow[rk] };
+                }
+            }
+            return { found: false, val: undefined };
+        }
+
+        function importEntryFromExcel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (MASTER_STUDENTS.length === 0) {
+                Swal.fire('تنبيه', 'لا يوجد تلاميذ محملون لهذا الصف!', 'warning');
+                event.target.value = '';
+                return;
+            }
+
+            const term = document.getElementById('sel-term').value;
+            const subKey = document.getElementById('sel-subject').value;
+            const subName = document.getElementById('sel-subject').options[document.getElementById('sel-subject').selectedIndex].text;
+            const seatField = term === 't1' ? 'seat_t1' : 'seat_t2';
+            const secField  = term === 't1' ? 'secret_t1' : 'secret_t2';
+
+            const reader = new FileReader();
+            Swal.fire({ title: 'جاري قراءة ومطابقة ملف الإكسيل...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            reader.onload = async function(e) {
+                try {
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: '' });
+
+                    if (!jsonData || jsonData.length === 0) {
+                        Swal.fire('تنبيه', 'ملف الإكسيل فارغ!', 'warning');
+                        return;
+                    }
+
+                    // بناء خرائط البحث السريع لتلاميذ الصف
+                    const byCode = new Map();
+                    const bySecret = new Map();
+                    const bySeat = new Map();
+                    const byName = new Map();
+
+                    MASTER_STUDENTS.forEach(st => {
+                        const sKey = getStudentKey(st);
+                        byCode.set(String(sKey).trim(), st);
+                        if (st.code) byCode.set(String(st.code).trim(), st);
+                        if (st.nid)  byCode.set(String(st.nid).trim(), st);
+
+                        if (st[secField]) {
+                            const sUpper = String(st[secField]).trim().toUpperCase();
+                            bySecret.set(sUpper, st);
+                            bySecret.set(sUpper.replace(/-2$/, ''), st);
+                        }
+                        if (st[seatField]) {
+                            bySeat.set(arToEn(st[seatField]).trim(), st);
+                        }
+                        if (st.name) {
+                            byName.set(normalizeArabic(st.name), st);
+                        }
+                    });
+
+                    let updatedCount = 0;
+                    let unmatchedRows = [];
+
+                    jsonData.forEach((rawRow, rowIdx) => {
+                        const normRow = {};
+                        for (let k in rawRow) {
+                            normRow[normalizeArabic(k)] = rawRow[k];
+                        }
+
+                        const colCode   = pickExcelColVal(normRow, ['الكود', 'كود التلميذ', 'كود', 'code']);
+                        const colSecret = pickExcelColVal(normRow, ['الرقم السرى', 'الرقم السري', 'سرى', 'سري', 'secret']);
+                        const colSeat   = pickExcelColVal(normRow, ['رقم الجلوس', 'جلوس', 'seat']);
+                        const colName   = pickExcelColVal(normRow, ['الاسم', 'اسم التلميذ', 'اسم الطالب', 'name']);
+
+                        let matchedStudent = null;
+                        if (colCode.found && String(colCode.val).trim() !== '') {
+                            matchedStudent = byCode.get(String(colCode.val).trim()) || null;
+                        }
+                        if (!matchedStudent && colSecret.found && String(colSecret.val).trim() !== '') {
+                            const secClean = arToEn(colSecret.val).trim().toUpperCase();
+                            matchedStudent = bySecret.get(secClean) || bySecret.get(secClean.replace(/-2$/, '')) || null;
+                        }
+                        if (!matchedStudent && colSeat.found && String(colSeat.val).trim() !== '') {
+                            matchedStudent = bySeat.get(arToEn(colSeat.val).trim()) || null;
+                        }
+                        if (!matchedStudent && colName.found && String(colName.val).trim() !== '') {
+                            matchedStudent = byName.get(normalizeArabic(colName.val)) || null;
+                        }
+
+                        if (!matchedStudent) {
+                            const label = String(colName.val || colSecret.val || colSeat.val || `سطر ${rowIdx + 2}`).trim();
+                            if (label) unmatchedRows.push(label);
+                            return;
+                        }
+
+                        const stuKey = getStudentKey(matchedStudent);
+                        const rec = getOrCreateSubjectRecord(stuKey, term, subKey);
+                        let rowModified = false;
+
+                        // 1. اختبار التحريري (60 أو غ)
+                        const colExam = pickExcelColVal(normRow, ['اختبار التحريرى', 'اختبار التحريري', 'التحريرى', 'التحريري', 'درجة التحريري', 'درجة التحريرى', 'الاختبار', 'اختبار', 'exam']);
+                        if (colExam.found && String(colExam.val).trim() !== '') {
+                            const rawEx = String(colExam.val).trim();
+                            if (rawEx === 'غ' || rawEx === 'غائب' || rawEx === 'غـ') {
+                                rec.exam = 'غ';
+                                rowModified = true;
+                            } else {
+                                const num = parseNum(rawEx);
+                                if (num !== null) {
+                                    rec.exam = Math.min(60, Math.max(0, num));
+                                    rowModified = true;
+                                }
+                            }
+                        }
+
+                        // 2. درجة التقييم (من 40)
+                        const colRaw40 = pickExcelColVal(normRow, ['درجة التقييم', 'التقييم', 'اعمال السنة', 'درجة اعمال السنة', 'raw40']);
+                        if (colRaw40.found && String(colRaw40.val).trim() !== '') {
+                            const num = parseNum(colRaw40.val);
+                            if (num !== null) {
+                                rec.raw40 = Math.min(40, Math.max(0, num));
+                                rowModified = true;
+                            }
+                        }
+
+                        // 3. بنود التجزئة (إن وجدت في الملف)
+                        const splitFields = [
+                            { field: 'hw',    max: 5,  keys: ['واجب منزلى', 'واجب منزلي', 'الواجب', 'واجب', 'hw'] },
+                            { field: 'cw',    max: 5,  keys: ['كراسة النشاط', 'كراسة الحصة', 'كراسة النشاط والحصة', 'كراسة', 'cw'] },
+                            { field: 'eval',  max: 10, keys: ['تقييم اسبوعى', 'تقييم اسبوعي', 'التقييم الاسبوعي', 'eval'] },
+                            { field: 'att',   max: 5,  keys: ['مواظبة', 'المواظبة', 'att'] },
+                            { field: 'month', max: 15, keys: ['اختبار شهر', 'اختبار الشهر', 'شهر', 'month'] }
+                        ];
+
+                        splitFields.forEach(sf => {
+                            const cRes = pickExcelColVal(normRow, sf.keys);
+                            if (cRes.found && String(cRes.val).trim() !== '') {
+                                const num = parseNum(cRes.val);
+                                if (num !== null) {
+                                    rec[sf.field] = Math.min(sf.max, Math.max(0, num));
+                                    rowModified = true;
+                                }
+                            }
+                        });
+
+                        if (rowModified) updatedCount++;
+                    });
+
+                    renderEntryTable();
+
+                    const ask = await Swal.fire({
+                        icon: updatedCount > 0 ? 'success' : 'warning',
+                        title: updatedCount > 0 ? 'تم استيراد الدرجات بنجاح!' : 'لم يتم تحديث أي سجل!',
+                        html: `
+                            <div style="text-align:right; font-size:13px; line-height:1.8;">
+                                • المادة المختارة: <b>${subName}</b><br>
+                                • تم مطابقة واستيراد درجات: <b style="color:#15803d;">${toAr(updatedCount)}</b> تلميذاً.<br>
+                                ${unmatchedRows.length > 0 ? `• صفوف لم تُطابق (${toAr(unmatchedRows.length)}): <small style="color:#be123c;">${unmatchedRows.slice(0, 5).join('، ')}${unmatchedRows.length > 5 ? '...' : ''}</small>` : ''}
+                            </div>
+                        `,
+                        showCancelButton: updatedCount > 0,
+                        confirmButtonText: updatedCount > 0 ? '<i class="fa-solid fa-cloud-arrow-up"></i> ترحيل وحفظ الآن' : 'حسناً',
+                        cancelButtonText: 'مراجعة في الجدول أولاً',
+                        confirmButtonColor: '#15803d',
+                        cancelButtonColor: '#0f2b48'
+                    });
+
+                    if (updatedCount > 0 && ask.isConfirmed) {
+                        await transferScoresToControlSheet();
+                    }
+
+                } catch (err) {
+                    console.error(err);
+                    Swal.fire('خطأ في استيراد الملف', err.message || String(err), 'error');
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsArrayBuffer(file);
         }
 
         // ================= زر ترحيل المدخل إلى شيت الكنترول =================
