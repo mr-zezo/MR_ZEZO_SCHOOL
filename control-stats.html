@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>شيت التحكم والإحصاء - كنترول مستر زيزو</title>
 
     <!-- خط Cairo والأيقونات الرسمية -->
@@ -12,10 +12,15 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Supabase & Excel & SweetAlert2 -->
+    <!-- Supabase & Excel & SweetAlert2 & Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style id="dynamic-print-page">
+        @page { size: A4 landscape; margin: 7mm; }
+    </style>
 
     <style>
         :root {
@@ -26,8 +31,15 @@
             --border: #cbd5e1;
         }
 
-        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
-        body { background-color: var(--bg); color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
+        * {
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        body { background-color: var(--bg); color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
 
         .top-nav {
             background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
@@ -37,14 +49,13 @@
         .btn-3d {
             border-bottom: 3.5px solid rgba(0,0,0,0.25);
             transition: all 0.12s ease;
-            touch-action: manipulation;
         }
         .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
 
         .main-tab-btn {
-            padding: 10px 18px;
+            padding: 10px 12px;
             border-radius: 12px;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 900;
             background: #f1f5f9;
             color: #475569;
@@ -52,7 +63,8 @@
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            justify-content: center;
+            gap: 6px;
             transition: all 0.15s;
         }
         .main-tab-btn.active {
@@ -75,7 +87,8 @@
         }
         .combo-input {
             flex: 1;
-            padding: 10px 14px;
+            min-width: 0;
+            padding: 10px 12px;
             border: none;
             outline: none;
             font-size: 14px;
@@ -92,6 +105,7 @@
             color: #1e3a8a;
             cursor: pointer;
             font-size: 14px;
+            flex-shrink: 0;
         }
         .combo-toggle-btn:hover { background: #dbeafe; }
 
@@ -103,7 +117,7 @@
             background: #ffffff;
             border: 2px solid #0f2b48;
             border-radius: 14px;
-            max-height: 360px;
+            max-height: 56vh;
             overflow-y: auto;
             z-index: 2500;
             box-shadow: 0 16px 40px rgba(15, 23, 42, 0.25);
@@ -115,7 +129,7 @@
         .combo-group-header {
             position: sticky;
             top: 0;
-            padding: 6px 12px;
+            padding: 7px 12px;
             font-size: 11.5px;
             font-weight: 900;
             display: flex;
@@ -131,21 +145,22 @@
         .grp-na { background: #f1f5f9; color: #475569; }
 
         .combo-option {
-            padding: 9px 12px;
+            padding: 10px 12px;
             border-bottom: 1px solid #f1f5f9;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 8px;
+            min-height: 48px;
             transition: background 0.12s;
         }
-        .combo-option:hover, .combo-option.selected-opt {
+        .combo-option:hover, .combo-option:active, .combo-option.selected-opt {
             background: #eff6ff;
         }
 
         .fail-pill {
-            padding: 3px 9px;
+            padding: 5px 10px;
             border-radius: 20px;
             font-size: 11px;
             font-weight: 900;
@@ -161,7 +176,7 @@
             border-color: #0f2b48;
         }
 
-        /* جدول درجات التلميذ الفردي */
+        /* جدول درجات التلميذ للكمبيوتر */
         .stu-edit-table {
             width: 100%;
             min-width: 980px;
@@ -186,12 +201,12 @@
 
         .edit-inp {
             width: 100%;
-            height: 28px;
-            border: 1px solid #cbd5e1;
+            height: 32px;
+            border: 1.5px solid #cbd5e1;
             border-radius: 6px;
             text-align: center;
             font-weight: 900;
-            font-size: 12.5px;
+            font-size: 13.5px;
             background: #ffffff;
             outline: none;
         }
@@ -212,7 +227,8 @@
         .swatch-green  { background: #16a34a !important; color: #ffffff !important; font-weight: 900; }
         .swatch-blue   { background: #2563eb !important; color: #ffffff !important; font-weight: 900; }
 
-        /* جداول الإحصاء */
+        /* جداول الإحصاء والكشوف */
+        .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .stats-table {
             width: 100%;
             border-collapse: collapse;
@@ -225,11 +241,13 @@
             border: 1px solid #334155;
             padding: 7px 5px;
             font-weight: 900;
+            white-space: nowrap;
         }
         .stats-table td {
             border: 1px solid #cbd5e1;
             padding: 6px 5px;
             font-weight: 800;
+            white-space: nowrap;
         }
         .stats-table tr.row-total-sub td {
             background: #f1f5f9;
@@ -238,25 +256,90 @@
             border-bottom: 2px solid #0f2b48;
         }
 
+        .fail-sheet-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 13px;
+            border: 2px solid #000;
+        }
+        .fail-sheet-table th {
+            background: #e2e8f0;
+            color: #000;
+            border: 1.5px solid #000;
+            padding: 7px 6px;
+            font-weight: 900;
+        }
+        .fail-sheet-table td {
+            border: 1.25px solid #000;
+            padding: 6px 6px;
+            font-weight: 900;
+            color: #000;
+        }
+        .fail-sheet-table tr.stu-group-end td {
+            border-bottom: 2px solid #000 !important;
+        }
+
+        .chart-sub-pill {
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 900;
+            border: 1.5px solid #cbd5e1;
+            background: #f8fafc;
+            color: #334155;
+            cursor: pointer;
+        }
+        .chart-sub-pill.active {
+            background: #1e3a8a;
+            color: #ffffff;
+            border-color: #1e3a8a;
+        }
+
         .print-only { display: none; }
         .swal2-container { z-index: 99999 !important; }
 
+        /* ================= إعدادات الطباعة (كامل الإحصاء أو كشف محدد) ================= */
         @media print {
-            @page { size: A4 landscape; margin: 7mm; }
             body { background: white !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .no-print { display: none !important; }
             .print-only { display: block !important; }
-            .overflow-x-auto { overflow: visible !important; }
-            .stu-edit-table, .stats-table { min-width: 100% !important; width: 100% !important; border: 2px solid #000 !important; }
-            .stats-table th, .stats-table td, .stu-edit-table th, .stu-edit-table td { border: 1px solid #000 !important; }
+            .table-scroll, .overflow-x-auto { overflow: visible !important; }
+            .stats-table { min-width: 100% !important; width: 100% !important; border: 2px solid #000 !important; font-size: 11px !important; }
+            .stats-table th, .stats-table td { border: 1px solid #000 !important; padding: 4px !important; }
             .stats-card-box { border: none !important; box-shadow: none !important; padding: 0 !important; margin-bottom: 12px !important; page-break-inside: avoid; }
+
+            /* عند طباعة أحد كشوف الدور الثاني منفرداً على A4 */
+            body.print-single-fail-sheet #sec-control,
+            body.print-single-fail-sheet #sec-stats > *:not(.active-print-sheet),
+            body.print-single-fail-sheet header {
+                display: none !important;
+            }
+            body.print-single-fail-sheet #sec-stats {
+                display: block !important;
+            }
+            body.print-single-fail-sheet .active-print-sheet {
+                display: block !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                page-break-inside: auto !important;
+            }
+            body.print-single-fail-sheet .fail-sheet-table tr {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            body.print-single-fail-sheet .fail-sheet-table thead {
+                display: table-header-group;
+            }
         }
     </style>
 </head>
 <body class="p-2 sm:p-3">
 
     <!-- 1. الشريط العلوي -->
-    <header class="top-nav rounded-2xl shadow-md p-3 mb-3 flex flex-wrap justify-between items-center gap-3 no-print">
+    <header class="top-nav rounded-2xl shadow-md p-3 mb-2.5 flex flex-wrap justify-between items-center gap-2.5 no-print">
         <div class="flex items-center gap-2.5">
             <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-yellow-300 text-xl shrink-0">
                 <i class="fa-solid fa-chart-pie"></i>
@@ -265,57 +348,57 @@
                 <h1 class="text-sm sm:text-base font-black leading-tight text-white">
                     شيت التحكم والإحصاء الختامي
                 </h1>
-                <p class="text-[11px] text-blue-200 font-bold">مراجعة وتعديل درجات التلاميذ والراسبين + الإحصاء التفصيلي بنين/بنات والأوائل • مستر زيزو</p>
+                <p class="text-[10.5px] sm:text-[11px] text-blue-200 font-bold">مراجعة وتعديل درجات التلاميذ + الإحصاء والكشوف • مستر زيزو</p>
             </div>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap">
-            <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/20">
-                <label class="text-xs font-bold text-yellow-300"><i class="fa-solid fa-graduation-cap"></i> الصف:</label>
+        <div class="flex items-center gap-1.5 flex-wrap">
+            <div class="flex items-center gap-1 bg-white/10 px-2.5 py-1 rounded-xl border border-white/20">
+                <label class="text-xs font-bold text-yellow-300">الصف:</label>
                 <select id="sel-grade" onchange="loadGradeControlAndScores()" class="bg-blue-900 text-white text-xs font-black rounded-lg p-1 outline-none cursor-pointer">
-                    <option value="الأول">الصف الأول</option>
-                    <option value="الثاني">الصف الثاني</option>
-                    <option value="الثالث">الصف الثالث</option>
-                    <option value="الرابع" selected>الصف الرابع</option>
-                    <option value="الخامس">الصف الخامس</option>
-                    <option value="السادس">الصف السادس</option>
+                    <option value="الأول">الأول</option>
+                    <option value="الثاني">الثاني</option>
+                    <option value="الثالث">الثالث</option>
+                    <option value="الرابع" selected>الرابع</option>
+                    <option value="الخامس">الخامس</option>
+                    <option value="السادس">السادس</option>
                 </select>
             </div>
 
-            <a href="control-results.html" class="btn-3d px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
-                <i class="fa-solid fa-scroll text-yellow-300"></i> شيت النتيجة
+            <a href="control-results.html" class="btn-3d px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
+                <i class="fa-solid fa-scroll text-yellow-300"></i> <span class="hidden sm:inline">شيت النتيجة</span>
             </a>
-            <a href="control-index.html" class="btn-3d px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
-                <i class="fa-solid fa-stamp"></i> بوابة الكنترول
+            <a href="control-index.html" class="btn-3d px-2.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
+                <i class="fa-solid fa-stamp"></i> <span class="hidden sm:inline">بوابة الكنترول</span>
             </a>
-            <a href="index.html" class="btn-3d px-3 py-1.5 bg-blue-800 hover:bg-blue-700 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
-                <i class="fa-solid fa-house"></i> الرئيسية
+            <a href="index.html" class="btn-3d px-2.5 py-1.5 bg-blue-800 hover:bg-blue-700 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
+                <i class="fa-solid fa-house"></i>
             </a>
         </div>
     </header>
 
     <!-- 2. شريط التبويبين ونطاق التقييم -->
-    <div class="bg-white border border-slate-200 rounded-2xl p-2.5 mb-3 shadow-sm flex flex-wrap justify-between items-center gap-2.5 no-print">
-        <div class="flex flex-wrap gap-2">
+    <div class="bg-white border border-slate-200 rounded-2xl p-2.5 mb-3 shadow-sm flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 no-print">
+        <div class="grid grid-cols-2 sm:flex gap-2">
             <button id="btn-mtab-control" onclick="switchMainTab('control')" class="main-tab-btn active">
-                <i class="fa-solid fa-user-gear text-amber-400"></i> ١. التحكم وتعديل درجات التلميذ
+                <i class="fa-solid fa-user-gear text-amber-400"></i> ١. التحكم وتعديل الدرجات
             </button>
             <button id="btn-mtab-stats" onclick="switchMainTab('stats')" class="main-tab-btn">
-                <i class="fa-solid fa-chart-column text-emerald-600"></i> ٢. الإحصاء الشامل والأوائل (بنين / بنات / إجمالي)
+                <i class="fa-solid fa-chart-column text-emerald-600"></i> ٢. الإحصاء والكشوف
             </button>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-            <div class="flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-xl text-xs font-black text-blue-950">
-                <label>نطاق الحساب والفرز:</label>
-                <select id="sel-eval-scope" onchange="onEvalScopeChange()" class="bg-white border border-blue-300 rounded-lg px-2 py-1 text-xs font-black outline-none">
-                    <option value="combined" selected>النتيجة النهائية (متوسط الترمين)</option>
-                    <option value="t1">الترم الأول فقط (نصف العام)</option>
-                    <option value="t2">الترم الثاني فقط (آخر العام)</option>
+        <div class="flex items-center justify-between sm:justify-end gap-2">
+            <div class="flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-xl text-xs font-black text-blue-950 flex-1 sm:flex-initial">
+                <label class="whitespace-nowrap">النطاق:</label>
+                <select id="sel-eval-scope" onchange="onEvalScopeChange()" class="bg-white border border-blue-300 rounded-lg px-2 py-1 text-xs font-black outline-none w-full sm:w-auto">
+                    <option value="combined" selected>النتيجة النهائية (الترمين)</option>
+                    <option value="t1">الترم الأول فقط</option>
+                    <option value="t2">الترم الثاني فقط</option>
                 </select>
             </div>
 
-            <button onclick="loadGradeControlAndScores(true)" class="btn-3d px-3 py-1.5 bg-blue-800 hover:bg-blue-900 text-white rounded-xl text-xs font-black flex items-center gap-1 shadow">
+            <button onclick="loadGradeControlAndScores(true)" class="btn-3d px-3 py-1.5 bg-blue-800 hover:bg-blue-900 text-white rounded-xl text-xs font-black flex items-center gap-1 shadow shrink-0">
                 <i class="fa-solid fa-arrows-rotate text-yellow-300"></i> تحديث
             </button>
         </div>
@@ -327,23 +410,23 @@
     <section id="sec-control" class="space-y-3">
 
         <!-- كارت الكومبو بوكس الذكي والتصفية بالرسوب -->
-        <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm space-y-3 no-print">
+        <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm space-y-2.5 no-print">
             <div class="flex flex-wrap justify-between items-center gap-2">
-                <span class="text-xs sm:text-sm font-black text-[#0f2b48] flex items-center gap-2">
+                <span class="text-xs font-black text-[#0f2b48] flex items-center gap-1.5">
                     <i class="fa-solid fa-magnifying-glass text-blue-700"></i>
-                    ابحث بالاسم (أبجدي متتابع) أو بالرقم السري، أو اختر من قوائم الراسبين:
+                    البحث المتتابع بالاسم أو الرقم السري (الراسبون أولاً):
                 </span>
 
                 <div class="flex flex-wrap gap-1.5" id="fail-filter-pills">
                     <button type="button" class="fail-pill active" data-f="ALL" onclick="setFailCategoryFilter('ALL')">الكل (<span id="cnt-all">٠</span>)</button>
-                    <button type="button" class="fail-pill" data-f="F1" onclick="setFailCategoryFilter('F1')" style="border-color:#fca5a5; color:#991b1b;">راسب ١ مادة (<span id="cnt-f1">٠</span>)</button>
-                    <button type="button" class="fail-pill" data-f="F2" onclick="setFailCategoryFilter('F2')" style="border-color:#fdba74; color:#9a3412;">راسب مادتين (<span id="cnt-f2">٠</span>)</button>
-                    <button type="button" class="fail-pill" data-f="F3" onclick="setFailCategoryFilter('F3')" style="border-color:#fda4af; color:#881337;">٣ مواد فأكثر (<span id="cnt-f3">٠</span>)</button>
+                    <button type="button" class="fail-pill" data-f="F1" onclick="setFailCategoryFilter('F1')" style="border-color:#fca5a5; color:#991b1b;">١ مادة (<span id="cnt-f1">٠</span>)</button>
+                    <button type="button" class="fail-pill" data-f="F2" onclick="setFailCategoryFilter('F2')" style="border-color:#fdba74; color:#9a3412;">٢ مادتان (<span id="cnt-f2">٠</span>)</button>
+                    <button type="button" class="fail-pill" data-f="F3" onclick="setFailCategoryFilter('F3')" style="border-color:#fda4af; color:#881337;">٣+ مواد (<span id="cnt-f3">٠</span>)</button>
                     <button type="button" class="fail-pill" data-f="PASS" onclick="setFailCategoryFilter('PASS')" style="border-color:#86efac; color:#166534;">ناجح (<span id="cnt-pass">٠</span>)</button>
                 </div>
             </div>
 
-            <div class="flex gap-2 items-center">
+            <div class="flex gap-1.5 items-center">
                 <button type="button" onclick="navigateComboStudent(-1)" class="btn-3d w-10 h-11 bg-[#0f2b48] text-yellow-300 rounded-xl flex items-center justify-center shrink-0" title="التلميذ السابق">
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
@@ -353,7 +436,7 @@
                         <input type="text"
                                id="student-combo-input"
                                class="combo-input"
-                               placeholder="🔍 اكتب أول حروف اسم التلميذ (مثال: ع ثم عب) أو الرقم السري (مثال: D1)..."
+                               placeholder="🔍 اكتب بداية الاسم أو الرقم السري..."
                                autocomplete="off"
                                oninput="onComboSearchInput()"
                                onfocus="openComboDropdown()">
@@ -370,18 +453,18 @@
             </div>
         </div>
 
-        <!-- كارت عرض وتعديل درجات التلميذ المختار (ترم أول + ترم ثانٍ + المحصلة معاً) -->
-        <div id="student-editor-card" class="bg-white border-2 border-[#0f2b48] rounded-2xl p-3.5 shadow-md space-y-3 hidden">
+        <!-- كارت عرض وتعديل درجات التلميذ المختار -->
+        <div id="student-editor-card" class="bg-white border-2 border-[#0f2b48] rounded-2xl p-3 shadow-md space-y-3 hidden">
             
             <!-- شريط بيانات التلميذ وحالته الحية -->
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-wrap justify-between items-center gap-3">
-                <div class="space-y-1">
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                <div class="space-y-1 w-full md:w-auto">
                     <div class="flex items-center gap-2 flex-wrap">
-                        <span class="text-base font-black text-[#0f2b48]" id="ed-stu-name">-</span>
-                        <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900" id="ed-stu-class">فصل -</span>
+                        <span class="text-sm sm:text-base font-black text-[#0f2b48]" id="ed-stu-name">-</span>
+                        <span class="text-xs font-black px-2 py-0.5 rounded-full bg-blue-100 text-blue-900" id="ed-stu-class">فصل -</span>
                         <span id="ed-stu-dmj" class="hidden text-xs font-black px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">دمج</span>
                     </div>
-                    <div class="flex flex-wrap gap-3 text-xs font-bold text-slate-600">
+                    <div class="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 sm:gap-3 text-[11px] sm:text-xs font-bold text-slate-600">
                         <span>جلوس ت١: <b class="font-mono text-amber-800" id="ed-seat1">-</b></span>
                         <span>جلوس ت٢: <b class="font-mono text-blue-800" id="ed-seat2">-</b></span>
                         <span>سري ت١: <b class="font-mono text-purple-900" id="ed-sec1">-</b></span>
@@ -391,23 +474,23 @@
                     </div>
                 </div>
 
-                <div class="flex flex-wrap items-center gap-2.5">
-                    <div class="text-center px-3 py-1.5 bg-white border border-slate-300 rounded-xl">
-                        <div class="text-[10px] font-bold text-slate-500">المجموع الكلي (<span id="ed-max-total-lbl">٥٠٠</span>)</div>
-                        <div class="text-base font-black text-[#0f2b48]" id="ed-grand-sum">٠</div>
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+                    <div class="text-center px-3 py-1 bg-white border border-slate-300 rounded-xl">
+                        <div class="text-[10px] font-bold text-slate-500">المجموع (<span id="ed-max-total-lbl">٥٠٠</span>)</div>
+                        <div class="text-sm sm:text-base font-black text-[#0f2b48]" id="ed-grand-sum">٠</div>
                     </div>
-                    <div class="text-center px-3 py-1.5 bg-white border border-slate-300 rounded-xl">
-                        <div class="text-[10px] font-bold text-slate-500">النسبة المئوية</div>
-                        <div class="text-base font-black text-blue-800" id="ed-grand-pct">%٠</div>
+                    <div class="text-center px-3 py-1 bg-white border border-slate-300 rounded-xl">
+                        <div class="text-[10px] font-bold text-slate-500">النسبة</div>
+                        <div class="text-sm sm:text-base font-black text-blue-800" id="ed-grand-pct">%٠</div>
                     </div>
-                    <div id="ed-final-status-badge" class="px-3.5 py-2 rounded-xl text-xs font-black border">
+                    <div id="ed-final-status-badge" class="px-3 py-1.5 rounded-xl text-xs font-black border flex-1 sm:flex-initial text-center">
                         -
                     </div>
                 </div>
             </div>
 
-            <!-- جدول التعديل الكامل لكل مادة (ترم أول + ترم ثانٍ + متوسط الترمين) -->
-            <div class="overflow-x-auto border border-slate-300 rounded-xl">
+            <!-- عرض الكمبيوتر والتابلت (الجدول الكامل) -->
+            <div class="hidden md:block overflow-x-auto border border-slate-300 rounded-xl">
                 <table class="stu-edit-table">
                     <thead>
                         <tr>
@@ -431,52 +514,54 @@
                 </table>
             </div>
 
-            <!-- أزرار الحفظ -->
-            <div class="flex flex-wrap justify-between items-center gap-2 pt-1 no-print">
-                <span class="text-xs font-bold text-slate-500">
+            <!-- عرض الأندرويد موبايل المريح (بطاقات المواد) -->
+            <div id="ed-subjects-mobile-cards" class="md:hidden space-y-2.5"></div>
+
+            <!-- زر الحفظ -->
+            <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 pt-1 no-print">
+                <span class="text-[11px] font-bold text-slate-500">
                     <i class="fa-solid fa-circle-info text-blue-600 ml-1"></i>
-                    أي تعديل في بنود الترم الأول أو الثاني يحسب المتوسط والتقدير واللون النهائي لحظياً، واضغط حفظ لتثبيته في شيت الكنترول والنتيجة.
+                    أي تعديل يحسب المتوسط والتقدير النهائي لحظياً، اضغط حفظ لتثبيته.
                 </span>
-                <button type="button" onclick="saveSelectedStudentScores()" id="btn-save-student-scores" class="btn-3d px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-black flex items-center gap-2 shadow cursor-pointer">
+                <button type="button" onclick="saveSelectedStudentScores()" id="btn-save-student-scores" class="btn-3d px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-black flex items-center justify-center gap-2 shadow cursor-pointer">
                     <i class="fa-solid fa-cloud-arrow-up text-yellow-300"></i> حفظ وتحديث درجات التلميذ
                 </button>
             </div>
 
         </div>
 
-        <!-- رسالة مبدئية قبل اختيار تلميذ -->
-        <div id="student-editor-placeholder" class="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center text-slate-400 font-bold">
-            <i class="fa-solid fa-user-pen text-4xl mb-2 block opacity-50"></i>
+        <div id="student-editor-placeholder" class="bg-white border border-dashed border-slate-300 rounded-2xl p-8 text-center text-slate-400 font-bold text-xs sm:text-sm">
+            <i class="fa-solid fa-user-pen text-3xl mb-2 block opacity-50"></i>
             اختر تلميذاً من الكومبو بوكس بالأعلى لعرض وتعديل درجاته في الترمين معاً.
         </div>
 
     </section>
 
     <!-- ====================================================================== -->
-    <!-- القسم الثاني: الإحصاء الشامل (بنين/بنات/إجمالي + كل المواد + الأوائل) -->
+    <!-- القسم الثاني: الإحصاء الشامل والكشوف والرسم البياني                   -->
     <!-- ====================================================================== -->
     <section id="sec-stats" class="space-y-4 hidden">
 
         <!-- شريط أدوات الإحصاء -->
         <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm flex flex-wrap justify-between items-center gap-2 no-print">
-            <div class="flex flex-wrap items-center gap-2">
-                <label class="text-xs font-black text-slate-700">تصفية الإحصاء حسب الفصل:</label>
+            <div class="flex flex-wrap items-center gap-2 flex-1">
+                <label class="text-xs font-black text-slate-700">الفصل:</label>
                 <select id="stats-filter-class" onchange="renderAllStatistics()" class="p-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-black outline-none">
                     <option value="ALL">الصف بالكامل (جميع الفصول)</option>
                 </select>
             </div>
 
-            <div class="flex flex-wrap gap-2">
-                <button type="button" onclick="exportStatisticsToExcel()" class="btn-3d px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow">
-                    <i class="fa-solid fa-file-excel text-emerald-200"></i> تصدير كافة الإحصاءات (Excel)
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                <button type="button" onclick="exportStatisticsToExcel()" class="btn-3d flex-1 sm:flex-initial px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow">
+                    <i class="fa-solid fa-file-excel text-emerald-200"></i> تصدير إكسيل
                 </button>
-                <button type="button" onclick="window.print()" class="btn-3d px-4 py-2 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow">
-                    <i class="fa-solid fa-print text-yellow-300"></i> طباعة تقرير الإحصاء (A4)
+                <button type="button" onclick="printFullStatistics()" class="btn-3d flex-1 sm:flex-initial px-3.5 py-2 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 shadow">
+                    <i class="fa-solid fa-print text-yellow-300"></i> طباعة الإحصاء الشامل
                 </button>
             </div>
         </div>
 
-        <!-- ترويسة الطباعة -->
+        <!-- ترويسة الطباعة الشاملة -->
         <div class="print-only border-b-2 border-black pb-2 mb-3">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div style="font-size:12px; font-weight:900;">
@@ -484,7 +569,7 @@
                     <div>مدرسة الشهيد أشرف حبيب الابتدائية</div>
                 </div>
                 <div style="text-align:center;">
-                    <h2 id="stats-print-title" style="font-size:16px; font-weight:900; border:2px solid #000; padding:3px 16px; border-radius:8px; background:#f1f5f9;">التقرير الإحصائي العام للنتيجة</h2>
+                    <h2 id="stats-print-title" style="font-size:15px; font-weight:900; border:2px solid #000; padding:3px 14px; border-radius:8px; background:#f1f5f9;">التقرير الإحصائي العام للنتيجة</h2>
                 </div>
                 <div style="font-size:12px; font-weight:900; text-align:left;">
                     <div>تاريخ: <span id="stats-print-date"></span></div>
@@ -492,24 +577,24 @@
             </div>
         </div>
 
-        <!-- 1. الإحصاء العام على كل المواد إجمالاً (بنين / بنات / إجمالي) -->
-        <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm stats-card-box">
-            <h3 class="text-sm font-black text-[#0f2b48] mb-2.5 flex items-center gap-2">
-                <i class="fa-solid fa-users text-blue-700"></i>
-                ١. الإحصاء العام للنتيجة (على مستوى جميع المواد — بنين / بنات / إجمالي):
+        <!-- 1. الإحصاء العام على كل المواد إجمالاً (غائب في أي مادة = غائب) -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm stats-card-box">
+            <h3 class="text-xs sm:text-sm font-black text-[#0f2b48] mb-2 flex items-center justify-between flex-wrap gap-1">
+                <span><i class="fa-solid fa-users text-blue-700 ml-1"></i> ١. الإحصاء العام للنتيجة (على مستوى جميع المواد):</span>
+                <span class="text-[10.5px] bg-rose-50 text-rose-800 border border-rose-200 px-2 py-0.5 rounded-lg">الغائب في أي مادة يُحتسب غائباً</span>
             </h3>
-            <div class="overflow-x-auto">
+            <div class="table-scroll">
                 <table class="stats-table" id="tbl-stats-overall">
                     <thead>
                         <tr>
                             <th rowspan="2">النوع</th>
                             <th rowspan="2">مقيد</th>
                             <th rowspan="2">حاضر</th>
-                            <th rowspan="2">غائب<br>(مادة+)</th>
+                            <th rowspan="2">غائب</th>
                             <th rowspan="2" style="background:#15803d;">ناجح<br>(منقول)</th>
                             <th colspan="4" style="background:#991b1b;">المستحقون للدور الثاني / لم يتقن</th>
                             <th rowspan="2" style="background:#1e3a8a; color:#fef08a;">نسبة النجاح %</th>
-                            <th colspan="5">توزيع التقدير العام (للمتوسط الكلي)</th>
+                            <th colspan="5">توزيع التقدير العام</th>
                         </tr>
                         <tr>
                             <th style="background:#b91c1c;">١ مادة</th>
@@ -529,12 +614,12 @@
         </div>
 
         <!-- 2. الإحصاء التفصيلي لكل مادة (بنين / بنات / إجمالي) -->
-        <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm stats-card-box">
-            <h3 class="text-sm font-black text-[#0f2b48] mb-2.5 flex items-center gap-2">
+        <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm stats-card-box">
+            <h3 class="text-xs sm:text-sm font-black text-[#0f2b48] mb-2 flex items-center gap-2">
                 <i class="fa-solid fa-book-open text-amber-600"></i>
                 ٢. الإحصاء التفصيلي لكل مادة دراسية (بنين / بنات / إجمالي):
             </h3>
-            <div class="overflow-x-auto">
+            <div class="table-scroll">
                 <table class="stats-table" id="tbl-stats-subjects">
                     <thead>
                         <tr>
@@ -557,42 +642,44 @@
             </div>
         </div>
 
-        <!-- 3. مقارنة الفصول + العشرة الأوائل -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            
-            <!-- مقارنة الفصول -->
-            <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm stats-card-box">
-                <h3 class="text-sm font-black text-[#0f2b48] mb-2.5 flex items-center gap-2">
-                    <i class="fa-solid fa-layer-group text-indigo-700"></i>
-                    ٣. مقارنة نسب النجاح والتفوق بين الفصول:
+        <!-- 3. مقارنة الفصول (الجدول + الرسم البياني للتحريري فقط) -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm stats-card-box space-y-3">
+            <div class="flex flex-wrap justify-between items-center gap-2">
+                <h3 class="text-xs sm:text-sm font-black text-[#0f2b48] flex items-center gap-2">
+                    <i class="fa-solid fa-chart-simple text-indigo-700"></i>
+                    ٣. مقارنة الفصول والرسم البياني (متوسط درجة التحريري فقط من ٦٠):
                 </h3>
-                <div class="overflow-x-auto">
+                <div class="flex flex-wrap gap-1 no-print" id="chart-subject-pills"></div>
+            </div>
+
+            <div class="w-full h-72 sm:h-80 bg-slate-50 border border-slate-200 rounded-xl p-2">
+                <canvas id="classesExamChart"></canvas>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-1">
+                <div class="table-scroll">
                     <table class="stats-table" id="tbl-stats-classes">
                         <thead>
                             <tr>
                                 <th>الفصل</th>
                                 <th>مقيد</th>
+                                <th>حاضر</th>
                                 <th>ناجح</th>
                                 <th>دور ثانٍ</th>
                                 <th>نسبة النجاح %</th>
-                                <th>يفوق التوقعات</th>
-                                <th>متوسط المجموع</th>
+                                <th>متوسط التحريري</th>
                             </tr>
                         </thead>
                         <tbody id="tbody-stats-classes"></tbody>
                     </table>
                 </div>
-            </div>
 
-            <!-- كشف العشرة الأوائل -->
-            <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm stats-card-box">
-                <h3 class="text-sm font-black text-[#0f2b48] mb-2.5 flex items-center gap-2">
-                    <i class="fa-solid fa-award text-amber-500"></i>
-                    ٤. لوحة شرف العشرة الأوائل على الصف (الناجحون في كل المواد):
-                </h3>
-                <div class="overflow-x-auto">
+                <div class="table-scroll">
                     <table class="stats-table" id="tbl-stats-top10">
                         <thead>
+                            <tr>
+                                <th colspan="6" style="background:#b45309; color:#fef08a;">لوحة شرف العشرة الأوائل على الصف</th>
+                            </tr>
                             <tr>
                                 <th>الترتيب</th>
                                 <th style="text-align:right; padding-right:8px;">اسم التلميذ</th>
@@ -606,40 +693,143 @@
                     </table>
                 </div>
             </div>
-
         </div>
 
-        <!-- 4. كشف حصر طلاب الدور الثاني -->
-        <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm stats-card-box">
-            <h3 class="text-sm font-black text-rose-900 mb-2.5 flex items-center gap-2">
-                <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
-                ٥. كشف حصر التلاميذ المستحقين للدور الثاني / دون المستوى:
-            </h3>
-            <div class="overflow-x-auto">
-                <table class="stats-table" id="tbl-stats-failed">
-                    <thead>
-                        <tr>
-                            <th style="width:38px;">م</th>
-                            <th style="text-align:right; padding-right:8px;">الاسم</th>
-                            <th style="width:65px;">الفصل</th>
-                            <th style="width:65px;">جلوس</th>
-                            <th style="width:65px;">سرى</th>
-                            <th style="width:85px;">عدد المواد</th>
-                            <th style="text-align:right; padding-right:8px;">المواد الراسب بها ودرجاتها</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody-stats-failed"></tbody>
-                </table>
-            </div>
-        </div>
+        <!-- 4. الكشوف الثلاثة المجهزة للطباعة (١ مادة / مادتان / ٣ مواد فأكثر) -->
+        <div class="grid grid-cols-1 gap-4">
 
-        <!-- تذييل التوقيعات للطباعة -->
-        <div class="print-only" style="margin-top: 18px;">
-            <div style="display:flex; justify-content:space-between; padding: 0 35px; font-weight:900; font-size:13px;">
-                <div>مسئول الإحصاء والكنترول<br><br>...............................</div>
-                <div>رئيس الكنترول<br><br>...............................</div>
-                <div>يعتمد / مدير المدرسة<br><br>...............................</div>
+            <!-- كشف ١: التلاميذ أصحاب المادة الواحدة -->
+            <div id="fail-card-1" class="bg-white border-2 border-rose-200 rounded-2xl p-3.5 shadow-sm stats-card-box">
+                <div class="print-only border-b-2 border-black pb-2 mb-3">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:12px; font-weight:900;">مدرسة الشهيد أشرف حبيب الابتدائية • إدارة الشهداء</div>
+                        <div style="font-size:15px; font-weight:900; border:2px solid #000; padding:3px 14px; border-radius:8px; background:#f1f5f9;" id="print-title-f1">كشف التلاميذ أصحاب المادة الواحدة</div>
+                        <div style="font-size:12px; font-weight:900;" id="print-meta-f1"></div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-2.5 no-print">
+                    <h3 class="text-xs sm:text-sm font-black text-rose-900 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-rose-700 text-white inline-flex items-center justify-center text-xs">١</span>
+                        كشف التلاميذ أصحاب المادة الواحدة (<span id="badge-count-f1">٠</span>)
+                    </h3>
+                    <button type="button" onclick="printSingleFailSheet('fail-card-1')" class="btn-3d px-3.5 py-1.5 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-print"></i> طباعة كشف المادة الواحدة
+                    </button>
+                </div>
+
+                <div class="table-scroll">
+                    <table class="fail-sheet-table" id="tbl-fail-1">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">م</th>
+                                <th style="width:95px;">رقم الجلوس</th>
+                                <th style="width:95px;">الرقم السرى</th>
+                                <th>المادة</th>
+                                <th style="width:110px;">درجة التحريرى</th>
+                                <th style="width:130px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-fail-1"></tbody>
+                    </table>
+                </div>
+
+                <div class="print-only" style="margin-top: 22px;">
+                    <div style="display:flex; justify-content:space-between; padding: 0 35px; font-weight:900; font-size:13px;">
+                        <div>رئيس الكنترول<br><br>...............................</div>
+                        <div>مدير المدرسة<br><br>...............................</div>
+                    </div>
+                </div>
             </div>
+
+            <!-- كشف ٢: التلاميذ أصحاب المادتين -->
+            <div id="fail-card-2" class="bg-white border-2 border-orange-200 rounded-2xl p-3.5 shadow-sm stats-card-box">
+                <div class="print-only border-b-2 border-black pb-2 mb-3">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:12px; font-weight:900;">مدرسة الشهيد أشرف حبيب الابتدائية • إدارة الشهداء</div>
+                        <div style="font-size:15px; font-weight:900; border:2px solid #000; padding:3px 14px; border-radius:8px; background:#f1f5f9;" id="print-title-f2">كشف التلاميذ أصحاب المادتين</div>
+                        <div style="font-size:12px; font-weight:900;" id="print-meta-f2"></div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-2.5 no-print">
+                    <h3 class="text-xs sm:text-sm font-black text-orange-900 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-orange-600 text-white inline-flex items-center justify-center text-xs">٢</span>
+                        كشف التلاميذ أصحاب المادتين (<span id="badge-count-f2">٠</span>)
+                    </h3>
+                    <button type="button" onclick="printSingleFailSheet('fail-card-2')" class="btn-3d px-3.5 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-print"></i> طباعة كشف المادتين
+                    </button>
+                </div>
+
+                <div class="table-scroll">
+                    <table class="fail-sheet-table" id="tbl-fail-2">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">م</th>
+                                <th style="width:95px;">رقم الجلوس</th>
+                                <th style="width:95px;">الرقم السرى</th>
+                                <th>المادة</th>
+                                <th style="width:110px;">درجة التحريرى</th>
+                                <th style="width:130px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-fail-2"></tbody>
+                    </table>
+                </div>
+
+                <div class="print-only" style="margin-top: 22px;">
+                    <div style="display:flex; justify-content:space-between; padding: 0 35px; font-weight:900; font-size:13px;">
+                        <div>رئيس الكنترول<br><br>...............................</div>
+                        <div>مدير المدرسة<br><br>...............................</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- كشف ٣: التلاميذ أصحاب ٣ مواد فأكثر -->
+            <div id="fail-card-3" class="bg-white border-2 border-rose-300 rounded-2xl p-3.5 shadow-sm stats-card-box">
+                <div class="print-only border-b-2 border-black pb-2 mb-3">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-size:12px; font-weight:900;">مدرسة الشهيد أشرف حبيب الابتدائية • إدارة الشهداء</div>
+                        <div style="font-size:15px; font-weight:900; border:2px solid #000; padding:3px 14px; border-radius:8px; background:#f1f5f9;" id="print-title-f3">كشف التلاميذ أصحاب ٣ مواد فأكثر</div>
+                        <div style="font-size:12px; font-weight:900;" id="print-meta-f3"></div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-2.5 no-print">
+                    <h3 class="text-xs sm:text-sm font-black text-rose-950 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-rose-900 text-white inline-flex items-center justify-center text-xs">٣</span>
+                        كشف التلاميذ أصحاب ٣ مواد فأكثر (<span id="badge-count-f3">٠</span>)
+                    </h3>
+                    <button type="button" onclick="printSingleFailSheet('fail-card-3')" class="btn-3d px-3.5 py-1.5 bg-rose-900 hover:bg-rose-950 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-print"></i> طباعة كشف ٣ مواد فأكثر
+                    </button>
+                </div>
+
+                <div class="table-scroll">
+                    <table class="fail-sheet-table" id="tbl-fail-3">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">م</th>
+                                <th style="width:95px;">رقم الجلوس</th>
+                                <th style="width:95px;">الرقم السرى</th>
+                                <th>المادة</th>
+                                <th style="width:110px;">درجة التحريرى</th>
+                                <th style="width:130px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-fail-3"></tbody>
+                    </table>
+                </div>
+
+                <div class="print-only" style="margin-top: 22px;">
+                    <div style="display:flex; justify-content:space-between; padding: 0 35px; font-weight:900; font-size:13px;">
+                        <div>رئيس الكنترول<br><br>...............................</div>
+                        <div>مدير المدرسة<br><br>...............................</div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </section>
@@ -673,10 +863,12 @@
 
         let MASTER_STUDENTS = [];
         let SCORES_DATA = { t1: {}, t2: {} };
-        let ANALYZED_STUDENTS = []; // طلاب الصف بعد التحليل والحساب
+        let ANALYZED_STUDENTS = [];
         let COMBO_FILTERED_LIST = [];
-        let FAIL_FILTER = 'ALL'; // ALL | F1 | F2 | F3 | PASS
+        let FAIL_FILTER = 'ALL';
         let SELECTED_STUDENT_KEY = null;
+        let CHART_ACTIVE_SUBJECT = 'ALL';
+        let classesExamChartInstance = null;
 
         const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
         const arToEn = v => String(v ?? '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
@@ -810,6 +1002,7 @@
             const scoresKey = `control_scores_grade_${grade}`;
 
             SELECTED_STUDENT_KEY = null;
+            CHART_ACTIVE_SUBJECT = 'ALL';
             document.getElementById('student-combo-input').value = '';
             document.getElementById('student-editor-card').classList.add('hidden');
             document.getElementById('student-editor-placeholder').classList.remove('hidden');
@@ -856,7 +1049,7 @@
             renderAllStatistics();
         }
 
-        // ================= محرك الحساب والتقديرات الموحد =================
+        // ================= محرك الحساب والتقديرات =================
         function getStudentTermKeyAndRecord(st, term) {
             const map = SCORES_DATA[term] || {};
             if (st.code && map[st.code]) return { key: st.code, rec: map[st.code] };
@@ -924,8 +1117,9 @@
             const eval40 = +(hw + cw + ev + att + month).toFixed(1);
 
             const absent = isAbsentVal(rawSub.exam);
-            const exam60 = absent ? 0 : (parseNum(rawSub.exam) ?? 0);
-            const total100 = absent ? eval40 : +(eval40 + exam60).toFixed(1);
+            const hasExamVal = hasValue(rawSub.exam);
+            const exam60Num = absent ? 0 : parseNum(rawSub.exam);
+            const total100 = absent ? eval40 : +(eval40 + (exam60Num ?? 0)).toFixed(1);
             const meta = evaluateGradeAndColor(total100, absent, subjectKey);
 
             return {
@@ -936,7 +1130,9 @@
                 att: hasValue(rawSub.att) ? att : '',
                 month: hasValue(rawSub.month) ? month : '',
                 eval40,
-                exam60: absent ? 'غ' : (hasValue(rawSub.exam) ? exam60 : ''),
+                hasExam: hasExamVal,
+                exam60: absent ? 'غ' : (hasExamVal ? exam60Num : ''),
+                exam60Num: absent ? null : exam60Num,
                 total100Display: absent ? 'غ' : total100,
                 total100Numeric: absent ? eval40 : total100,
                 absent,
@@ -964,15 +1160,21 @@
                 let activeScore = 0;
                 let activeAbsent = false;
                 let activeHasData = false;
+                let activeExamDisplay = '';
+                let activeExamNum = null;
 
                 if (scope === 't1') {
                     activeHasData = r1.hasData;
                     activeAbsent = r1.absent;
                     activeScore = r1.hasData ? (r1.absent ? 0 : r1.total100Numeric) : 0;
+                    activeExamDisplay = r1.hasData ? r1.exam60 : '';
+                    activeExamNum = r1.hasData ? r1.exam60Num : null;
                 } else if (scope === 't2') {
                     activeHasData = r2.hasData;
                     activeAbsent = r2.absent;
                     activeScore = r2.hasData ? (r2.absent ? 0 : r2.total100Numeric) : 0;
+                    activeExamDisplay = r2.hasData ? r2.exam60 : '';
+                    activeExamNum = r2.hasData ? r2.exam60Num : null;
                 } else {
                     if (r1.hasData || r2.hasData) {
                         activeHasData = true;
@@ -985,10 +1187,18 @@
                             } else {
                                 activeScore = +((v1 + v2) / 2).toFixed(1);
                             }
+                            activeExamDisplay = r2.hasExam ? r2.exam60 : r1.exam60;
+                            if (r1.exam60Num !== null && r2.exam60Num !== null) {
+                                activeExamNum = +((r1.exam60Num + r2.exam60Num) / 2).toFixed(1);
+                            } else {
+                                activeExamNum = r2.exam60Num !== null ? r2.exam60Num : r1.exam60Num;
+                            }
                         } else {
                             const onlyR = r1.hasData ? r1 : r2;
                             activeAbsent = onlyR.absent;
                             activeScore = onlyR.absent ? 0 : onlyR.total100Numeric;
+                            activeExamDisplay = onlyR.exam60;
+                            activeExamNum = onlyR.exam60Num;
                         }
                     }
                 }
@@ -1001,7 +1211,15 @@
                     if (!activeMeta.passed) {
                         const passReq = (sub.key === 'religion') ? 70 : 50;
                         const deficit = activeAbsent ? 'غ' : +(passReq - activeScore).toFixed(1);
-                        failedList.push({ key: sub.key, name: sub.name, score: activeScore, absent: activeAbsent, deficit, passReq });
+                        failedList.push({
+                            key: sub.key,
+                            name: sub.name,
+                            score: activeScore,
+                            examDisplay: activeExamDisplay === '' ? '-' : activeExamDisplay,
+                            absent: activeAbsent,
+                            deficit,
+                            passReq
+                        });
                     }
                     if (CORE_TOTAL_KEYS.has(sub.key)) {
                         grandSum += activeAbsent ? 0 : activeScore;
@@ -1016,12 +1234,14 @@
                     activeHasData,
                     activeAbsent,
                     activeScore,
+                    activeExamDisplay,
+                    activeExamNum,
                     activeMeta
                 };
             });
 
             const failCount = failedList.length;
-            let category = 'NA'; // NA | F1 | F2 | F3 | PASS
+            let category = 'NA';
             if (hasAnyGrade) {
                 if (failCount === 1) category = 'F1';
                 else if (failCount === 2) category = 'F2';
@@ -1030,7 +1250,8 @@
             }
 
             const pct = maxPossible > 0 ? +((grandSum / maxPossible) * 100).toFixed(1) : 0;
-            const overallMeta = hasAnyGrade ? evaluateGradeAndColor(pct, absentAnySubject && pct === 0, 'arabic') : null;
+            // لو غائب أي مادة يُعتبر تقديره العام غائب (غ)
+            const overallMeta = hasAnyGrade ? evaluateGradeAndColor(pct, absentAnySubject, 'arabic') : null;
 
             return {
                 st,
@@ -1055,22 +1276,16 @@
 
             ANALYZED_STUDENTS = MASTER_STUDENTS.map(st => analyzeSingleStudent(st, grade, scope));
 
-            const cntAll  = ANALYZED_STUDENTS.length;
-            const cntF1   = ANALYZED_STUDENTS.filter(x => x.category === 'F1').length;
-            const cntF2   = ANALYZED_STUDENTS.filter(x => x.category === 'F2').length;
-            const cntF3   = ANALYZED_STUDENTS.filter(x => x.category === 'F3').length;
-            const cntPass = ANALYZED_STUDENTS.filter(x => x.category === 'PASS').length;
-
-            document.getElementById('cnt-all').innerText  = toAr(cntAll);
-            document.getElementById('cnt-f1').innerText   = toAr(cntF1);
-            document.getElementById('cnt-f2').innerText   = toAr(cntF2);
-            document.getElementById('cnt-f3').innerText   = toAr(cntF3);
-            document.getElementById('cnt-pass').innerText = toAr(cntPass);
+            document.getElementById('cnt-all').innerText  = toAr(ANALYZED_STUDENTS.length);
+            document.getElementById('cnt-f1').innerText   = toAr(ANALYZED_STUDENTS.filter(x => x.category === 'F1').length);
+            document.getElementById('cnt-f2').innerText   = toAr(ANALYZED_STUDENTS.filter(x => x.category === 'F2').length);
+            document.getElementById('cnt-f3').innerText   = toAr(ANALYZED_STUDENTS.filter(x => x.category === 'F3').length);
+            document.getElementById('cnt-pass').innerText = toAr(ANALYZED_STUDENTS.filter(x => x.category === 'PASS').length);
 
             renderComboDropdown();
         }
 
-        // ================= الكومبو بوكس الذكي المصنّف (راسب ١ -> ٢ -> ٣+ -> ناجح) =================
+        // ================= الكومبو بوكس الذكي المتوافق مع الأندرويد =================
         function setFailCategoryFilter(cat) {
             FAIL_FILTER = cat;
             document.querySelectorAll('#fail-filter-pills .fail-pill').forEach(p => {
@@ -1125,7 +1340,6 @@
                     const seat1 = String(st.seat_t1 || '');
                     const seat2 = String(st.seat_t2 || '');
 
-                    // مطابقة الاسم الأبجدية المتتابعة أو بالرقم السري أو الجلوس
                     const matchPrefixName = normQ && normName.startsWith(normQ);
                     const matchWordPrefix = normQ && normName.split(' ').some(w => w.startsWith(normQ));
                     const matchSecret = upperQ && (sec1.startsWith(upperQ) || sec2.startsWith(upperQ) || sec1 === upperQ || sec2 === upperQ);
@@ -1141,7 +1355,6 @@
                 });
             }
 
-            // تصنيف الكومبو بوكس حسب الأولوية: 1 مادة -> مادتان -> 3+ -> ناجح -> غير مرصود
             const groupsOrder = [
                 { key: 'F1',   title: 'أولاً: راسبون في مادة واحدة (١ مادة)',   cls: 'grp-f1' },
                 { key: 'F2',   title: 'ثانياً: راسبون في مادتين (٢ مادتان)',    cls: 'grp-f2' },
@@ -1157,7 +1370,6 @@
                 const items = pool.filter(x => x.category === grp.key);
                 if (items.length === 0) return;
 
-                // ترتيب داخلي: أبجدياً بالاسم
                 items.sort((a, b) => (a.st.name || '').localeCompare(b.st.name || '', 'ar'));
 
                 html += `<div class="combo-group-header ${grp.cls}"><span>${grp.title}</span><span>${toAr(items.length)} تلميذ</span></div>`;
@@ -1168,15 +1380,16 @@
                     const isSel = (item.stuKey === SELECTED_STUDENT_KEY);
                     const secText = `سري: ${st.secret_t1 || '-'} / ${st.secret_t2 || '-'}`;
                     const failInfo = item.failedList.length > 0
-                        ? `<span class="text-[11px] font-black text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg">${item.failedList.map(f => f.name).join('، ')}</span>`
+                        ? `<span class="text-[10.5px] font-black text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg">${item.failedList.map(f => f.name).join('، ')}</span>`
                         : (item.hasAnyGrade
-                            ? `<span class="text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">ناجح (${toAr(item.grandSum)})</span>`
-                            : `<span class="text-[11px] font-bold text-slate-400">غير مرصود</span>`);
+                            ? `<span class="text-[10.5px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">ناجح (${toAr(item.grandSum)})</span>`
+                            : `<span class="text-[10.5px] font-bold text-slate-400">غير مرصود</span>`);
 
+                    // استخدام onclick بدلاً من onmousedown لمنع التحديد الخاطئ أثناء التمرير على الأندرويد
                     html += `
-                        <div class="combo-option ${isSel ? 'selected-opt' : ''}" onmousedown="selectStudentFromCombo('${item.stuKey}')">
-                            <div>
-                                <div class="text-xs sm:text-sm font-black text-[#0f2b48]">${st.name}</div>
+                        <div class="combo-option ${isSel ? 'selected-opt' : ''}" onclick="selectStudentFromCombo('${item.stuKey}')">
+                            <div class="min-w-0">
+                                <div class="text-xs sm:text-sm font-black text-[#0f2b48] truncate">${st.name}</div>
                                 <div class="text-[11px] font-bold text-slate-500">فصل ${st.class || '-'} • <span class="font-mono text-purple-800">${secText}</span></div>
                             </div>
                             <div class="shrink-0">${failInfo}</div>
@@ -1211,7 +1424,7 @@
             selectStudentFromCombo(COMBO_FILTERED_LIST[idx].stuKey);
         }
 
-        // ================= محرر درجات التلميذ الفردي (ترم أول + ترم ثانٍ + المحصلة) =================
+        // ================= محرر درجات التلميذ (كمبيوتر + أندرويد موبايل) =================
         function renderStudentEditor(analyzed) {
             const st = analyzed.st;
             const grade = document.getElementById('sel-grade').value;
@@ -1236,7 +1449,9 @@
             updateEditorHeaderTotals(analyzed);
 
             const tbody = document.getElementById('ed-subjects-tbody');
-            let html = "";
+            const mobContainer = document.getElementById('ed-subjects-mobile-cards');
+            let desktopHtml = "";
+            let mobileHtml = "";
 
             subjects.forEach(sub => {
                 const subRes = analyzed.subjectResults[sub.key];
@@ -1247,51 +1462,83 @@
                     ? (sub.key === 'religion' ? '<br><small class="text-rose-700 font-bold">(نجاح ٧٠)</small>' : '<br><small class="text-slate-500 font-bold">(لا يضاف)</small>')
                     : '';
 
-                // حساب المتوسط والدرجة النهائية للمادة
                 const comb = computeCombinedForSubject(r1, r2, sub.key);
 
-                html += `
-                    <!-- صف الترم الأول -->
+                desktopHtml += `
                     <tr data-sub="${sub.key}" data-term="t1">
                         <td rowspan="2" style="background:#f8fafc; font-weight:900; color:#0f2b48; border-left:2px solid #0f2b48;">
                             ${sub.name}${subTitleNote}
                         </td>
                         <td style="background:#f0fdf4; color:#166534; font-weight:900;">نصف العام</td>
-                        <td><input type="text" class="edit-inp" value="${r1.hw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'hw', 5)"></td>
-                        <td><input type="text" class="edit-inp" value="${r1.cw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'cw', 5)"></td>
-                        <td><input type="text" class="edit-inp" value="${r1.eval ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'eval', 10)"></td>
-                        <td><input type="text" class="edit-inp" value="${r1.att ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'att', 5)"></td>
-                        <td><input type="text" class="edit-inp" value="${r1.month ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'month', 15)"></td>
+                        <td><input type="text" inputmode="decimal" class="edit-inp" value="${r1.hw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'hw', 5)"></td>
+                        <td><input type="text" inputmode="decimal" class="edit-inp" value="${r1.cw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'cw', 5)"></td>
+                        <td><input type="text" inputmode="decimal" class="edit-inp" value="${r1.eval ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'eval', 10)"></td>
+                        <td><input type="text" inputmode="decimal" class="edit-inp" value="${r1.att ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'att', 5)"></td>
+                        <td><input type="text" inputmode="decimal" class="edit-inp" value="${r1.month ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'month', 15)"></td>
                         <td style="background:#eff6ff; color:#1e3a8a; font-weight:900;" id="ed-eval40-${sub.key}-t1">${r1.hasData ? toAr(r1.eval40) : '-'}</td>
                         <td style="background:#fffbeb;"><input type="text" class="edit-inp" style="color:#b45309;" value="${r1.exam60 ?? ''}" placeholder="0:60 أو غ" oninput="onEditorExamInput(this, '${sub.key}', 't1')"></td>
                         <td style="background:#f1f5f9; font-weight:900;" id="ed-tot100-${sub.key}-t1">${r1.hasData ? (r1.absent ? 'غ' : toAr(r1.total100Numeric)) : '-'}</td>
                         <td class="${r1.hasData ? r1.meta.badgeCls : ''}" id="ed-grade-${sub.key}-t1">${r1.hasData ? r1.meta.label : '-'}</td>
 
-                        <!-- أعمدة المحصلة والترمين معاً (ممتدة لصفين) -->
                         <td rowspan="2" style="background:#ecfdf5; color:#065f46; font-weight:900; border-right:2px solid #0f2b48;" id="ed-sum200-${sub.key}">${comb.sum200Display}</td>
                         <td rowspan="2" style="background:#fefce8; color:#854d0e; font-weight:900; font-size:13.5px;" id="ed-avg100-${sub.key}">${comb.avg100Display}</td>
                         <td rowspan="2" class="${comb.finalMeta ? comb.finalMeta.badgeCls : ''}" id="ed-final-${sub.key}">
                             ${comb.finalBadgeHtml}
                         </td>
                     </tr>
-
-                    <!-- صف الترم الثاني -->
                     <tr data-sub="${sub.key}" data-term="t2" style="border-bottom: 2.5px solid #0f2b48;">
                         <td style="background:#eff6ff; color:#1e40af; font-weight:900;">آخر العام</td>
-                        <td><input type="text" class="edit-inp" value="${r2.hw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'hw', 5)"></td>
-                        <td><input type="text" class="edit-inp" value="${r2.cw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'cw', 5)"></td>
-                        <td><input type="text" class="edit-inp" value="${r2.eval ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'eval', 10)"></td>
-                        <td><input type="text" class="edit-inp" value="${r2.att ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'att', 5)"></td>
-                        <td><input type="text" class="edit-inp" value="${r2.month ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'month', 15)"></td>
+                        <td><input type="text" inputmode="decimal" class="edit-inp" value="${r2.hw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'hw', 5)"></td>
+                        <td><input type="text" inputmode="decimal" class="edit-inp" value="${r2.cw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'cw', 5)"></td>
+                        <td><input type="text" inputmode="decimal" class="edit-inp" value="${r2.eval ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'eval', 10)"></td>
+                        <td><input type="text" inputmode="decimal" class="edit-inp" value="${r2.att ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'att', 5)"></td>
+                        <td><input type="text" inputmode="decimal" class="edit-inp" value="${r2.month ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'month', 15)"></td>
                         <td style="background:#eff6ff; color:#1e3a8a; font-weight:900;" id="ed-eval40-${sub.key}-t2">${r2.hasData ? toAr(r2.eval40) : '-'}</td>
                         <td style="background:#fffbeb;"><input type="text" class="edit-inp" style="color:#b45309;" value="${r2.exam60 ?? ''}" placeholder="0:60 أو غ" oninput="onEditorExamInput(this, '${sub.key}', 't2')"></td>
                         <td style="background:#f1f5f9; font-weight:900;" id="ed-tot100-${sub.key}-t2">${r2.hasData ? (r2.absent ? 'غ' : toAr(r2.total100Numeric)) : '-'}</td>
                         <td class="${r2.hasData ? r2.meta.badgeCls : ''}" id="ed-grade-${sub.key}-t2">${r2.hasData ? r2.meta.label : '-'}</td>
                     </tr>
                 `;
+
+                // بناء كروت الأندرويد موبايل المريحة لكل مادة
+                const buildMobileTermBlock = (termCode, title, rObj, bgHdr) => `
+                    <div class="p-2 rounded-xl border border-slate-200 bg-slate-50/70 space-y-1.5">
+                        <div class="flex justify-between items-center text-[11px] font-black pb-1 border-b border-slate-200">
+                            <span class="px-2 py-0.5 rounded ${bgHdr}">${title}</span>
+                            <span>التقييم: <b id="mob-eval40-${sub.key}-${termCode}">${rObj.hasData ? toAr(rObj.eval40) : '-'}</b> | المجموع: <b id="mob-tot100-${sub.key}-${termCode}">${rObj.hasData ? (rObj.absent ? 'غ' : toAr(rObj.total100Numeric)) : '-'}</b></span>
+                            <span id="mob-grade-${sub.key}-${termCode}" class="px-2 py-0.5 rounded ${rObj.hasData ? rObj.meta.badgeCls : ''}">${rObj.hasData ? rObj.meta.label : '-'}</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1.5 text-[10px] font-bold text-center">
+                            <div><span class="block text-slate-500">واجب (٥)</span><input type="text" inputmode="decimal" class="edit-inp" value="${rObj.hw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', '${termCode}', 'hw', 5)"></div>
+                            <div><span class="block text-slate-500">كراسة (٥)</span><input type="text" inputmode="decimal" class="edit-inp" value="${rObj.cw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', '${termCode}', 'cw', 5)"></div>
+                            <div><span class="block text-slate-500">تقييم (١٠)</span><input type="text" inputmode="decimal" class="edit-inp" value="${rObj.eval ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', '${termCode}', 'eval', 10)"></div>
+                            <div><span class="block text-slate-500">مواظبة (٥)</span><input type="text" inputmode="decimal" class="edit-inp" value="${rObj.att ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', '${termCode}', 'att', 5)"></div>
+                            <div><span class="block text-slate-500">شهر (١٥)</span><input type="text" inputmode="decimal" class="edit-inp" value="${rObj.month ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', '${termCode}', 'month', 15)"></div>
+                            <div><span class="block text-amber-800">اختبار (٦٠/غ)</span><input type="text" class="edit-inp" style="border-color:#f59e0b; color:#b45309;" value="${rObj.exam60 ?? ''}" placeholder="0:60 / غ" oninput="onEditorExamInput(this, '${sub.key}', '${termCode}')"></div>
+                        </div>
+                    </div>
+                `;
+
+                mobileHtml += `
+                    <div class="border-2 border-slate-300 rounded-xl p-2.5 bg-white space-y-2">
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-1.5">
+                            <span class="text-sm font-black text-[#0f2b48]">${sub.name} ${!sub.inTotal ? (sub.key === 'religion' ? '<small class="text-rose-700">(نجاح ٧٠)</small>' : '<small class="text-slate-500">(لا يضاف)</small>') : ''}</span>
+                            <div class="flex items-center gap-1.5 text-[11px] font-black">
+                                <span class="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded">مجموع: <b id="mob-sum200-${sub.key}">${comb.sum200Display}</b></span>
+                                <span class="bg-amber-50 text-amber-900 px-2 py-0.5 rounded">متوسط: <b id="mob-avg100-${sub.key}">${comb.avg100Display}</b></span>
+                            </div>
+                        </div>
+                        ${buildMobileTermBlock('t1', 'نصف العام', r1, 'bg-emerald-100 text-emerald-900')}
+                        ${buildMobileTermBlock('t2', 'آخر العام', r2, 'bg-blue-100 text-blue-900')}
+                        <div id="mob-final-${sub.key}" class="text-center text-xs font-black p-1.5 rounded-lg border ${comb.finalMeta ? comb.finalMeta.badgeCls : 'bg-slate-50 text-slate-400'}">
+                            ${comb.finalBadgeHtml}
+                        </div>
+                    </div>
+                `;
             });
 
-            tbody.innerHTML = html;
+            tbody.innerHTML = desktopHtml;
+            mobContainer.innerHTML = mobileHtml;
         }
 
         function computeCombinedForSubject(r1, r2, subjectKey) {
@@ -1344,14 +1591,14 @@
 
             const badge = document.getElementById('ed-final-status-badge');
             if (!analyzed.hasAnyGrade) {
-                badge.className = "px-3.5 py-2 rounded-xl text-xs font-black border bg-slate-100 text-slate-500 border-slate-300";
+                badge.className = "px-3 py-1.5 rounded-xl text-xs font-black border bg-slate-100 text-slate-500 border-slate-300 flex-1 sm:flex-initial text-center";
                 badge.innerText = "لم تُرصد درجات";
             } else if (analyzed.failCount === 0) {
-                badge.className = "px-3.5 py-2 rounded-xl text-xs font-black border bg-emerald-100 text-emerald-900 border-emerald-300";
+                badge.className = "px-3 py-1.5 rounded-xl text-xs font-black border bg-emerald-100 text-emerald-900 border-emerald-300 flex-1 sm:flex-initial text-center";
                 badge.innerHTML = `<i class="fa-solid fa-circle-check ml-1"></i> منقول / ناجح`;
             } else {
-                badge.className = "px-3.5 py-2 rounded-xl text-xs font-black border bg-rose-100 text-rose-900 border-rose-300";
-                badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation ml-1"></i> دور ثانٍ في (${toAr(analyzed.failCount)}): ${analyzed.failedList.map(f => f.name).join('، ')}`;
+                badge.className = "px-3 py-1.5 rounded-xl text-xs font-black border bg-rose-100 text-rose-900 border-rose-300 flex-1 sm:flex-initial text-center";
+                badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation ml-1"></i> دور ثانٍ (${toAr(analyzed.failCount)}): ${analyzed.failedList.map(f => f.name).join('، ')}`;
             }
         }
 
@@ -1379,7 +1626,6 @@
             if (!resObj) return;
 
             resObj.rec[field] = (cleanStr === '' || isNaN(num)) ? '' : num;
-            // تحديث raw40 للمزامنة مع صفحة الرصد
             const evalSum = (parseNum(resObj.rec.hw) ?? 0) + (parseNum(resObj.rec.cw) ?? 0) + (parseNum(resObj.rec.eval) ?? 0) + (parseNum(resObj.rec.att) ?? 0) + (parseNum(resObj.rec.month) ?? 0);
             resObj.rec.raw40 = +evalSum.toFixed(1);
 
@@ -1420,25 +1666,34 @@
             const subRes = updated.subjectResults[subKey];
             const r1 = subRes.r1;
             const r2 = subRes.r2;
-
-            document.getElementById(`ed-eval40-${subKey}-t1`).innerText = r1.hasData ? toAr(r1.eval40) : '-';
-            document.getElementById(`ed-tot100-${subKey}-t1`).innerText = r1.hasData ? (r1.absent ? 'غ' : toAr(r1.total100Numeric)) : '-';
-            const g1El = document.getElementById(`ed-grade-${subKey}-t1`);
-            g1El.innerText = r1.hasData ? r1.meta.label : '-';
-            g1El.className = r1.hasData ? r1.meta.badgeCls : '';
-
-            document.getElementById(`ed-eval40-${subKey}-t2`).innerText = r2.hasData ? toAr(r2.eval40) : '-';
-            document.getElementById(`ed-tot100-${subKey}-t2`).innerText = r2.hasData ? (r2.absent ? 'غ' : toAr(r2.total100Numeric)) : '-';
-            const g2El = document.getElementById(`ed-grade-${subKey}-t2`);
-            g2El.innerText = r2.hasData ? r2.meta.label : '-';
-            g2El.className = r2.hasData ? r2.meta.badgeCls : '';
-
             const comb = computeCombinedForSubject(r1, r2, subKey);
-            document.getElementById(`ed-sum200-${subKey}`).innerText = comb.sum200Display;
-            document.getElementById(`ed-avg100-${subKey}`).innerText = comb.avg100Display;
-            const fEl = document.getElementById(`ed-final-${subKey}`);
-            fEl.innerHTML = comb.finalBadgeHtml;
-            fEl.className = comb.finalMeta ? comb.finalMeta.badgeCls : '';
+
+            // تحديث جدول الكمبيوتر وبطاقات الموبايل معاً
+            const setEl = (id, txt, cls) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (txt !== undefined) el.innerText = txt;
+                if (cls !== undefined) el.className = cls;
+            };
+
+            ['', 'mob-'].forEach(prefix => {
+                setEl(`${prefix}eval40-${subKey}-t1`, r1.hasData ? toAr(r1.eval40) : '-');
+                setEl(`${prefix}tot100-${subKey}-t1`, r1.hasData ? (r1.absent ? 'غ' : toAr(r1.total100Numeric)) : '-');
+                setEl(`${prefix}grade-${subKey}-t1`, r1.hasData ? r1.meta.label : '-', (prefix ? 'px-2 py-0.5 rounded ' : '') + (r1.hasData ? r1.meta.badgeCls : ''));
+
+                setEl(`${prefix}eval40-${subKey}-t2`, r2.hasData ? toAr(r2.eval40) : '-');
+                setEl(`${prefix}tot100-${subKey}-t2`, r2.hasData ? (r2.absent ? 'غ' : toAr(r2.total100Numeric)) : '-');
+                setEl(`${prefix}grade-${subKey}-t2`, r2.hasData ? r2.meta.label : '-', (prefix ? 'px-2 py-0.5 rounded ' : '') + (r2.hasData ? r2.meta.badgeCls : ''));
+
+                setEl(`${prefix}sum200-${subKey}`, comb.sum200Display);
+                setEl(`${prefix}avg100-${subKey}`, comb.avg100Display);
+
+                const fEl = document.getElementById(`${prefix}final-${subKey}`);
+                if (fEl) {
+                    fEl.innerHTML = comb.finalBadgeHtml;
+                    fEl.className = (prefix ? 'text-center text-xs font-black p-1.5 rounded-lg border ' : '') + (comb.finalMeta ? comb.finalMeta.badgeCls : '');
+                }
+            });
 
             updateEditorHeaderTotals(updated);
         }
@@ -1482,9 +1737,10 @@
 
             renderOverallStatsTable(pool);
             renderPerSubjectStatsTable(pool, subjects);
-            renderClassComparisonTable(pool);
+            renderChartSubjectPills(subjects);
+            renderClassComparisonAndChart(pool, subjects);
             renderTop10Table(pool);
-            renderFailedStudentsTable(pool, scope);
+            renderThreeFailSheets(pool, grade, scopeTitle, clsTitle);
         }
 
         function createEmptyOverallBucket() {
@@ -1501,15 +1757,20 @@
                 buckets.forEach(b => {
                     b.enrolled++;
                     if (item.hasAnyGrade) {
-                        if (item.absentAnySubject) b.absent++;
-                        else b.present++;
+                        // لو غايب أي مادة يُعتبر غائباً
+                        if (item.absentAnySubject) {
+                            b.absent++;
+                        } else {
+                            b.present++;
+                        }
 
-                        if (item.failCount === 0) b.pass++;
-                        else {
+                        if (item.failCount === 0 && !item.absentAnySubject) {
+                            b.pass++;
+                        } else {
                             b.failTotal++;
                             if (item.failCount === 1) b.f1++;
                             else if (item.failCount === 2) b.f2++;
-                            else b.f3++;
+                            else if (item.failCount >= 3) b.f3++;
                         }
 
                         if (item.overallMeta) {
@@ -1530,13 +1791,13 @@
             ];
 
             document.getElementById('tbody-stats-overall').innerHTML = rows.map(r => {
-                const pct = r.d.present > 0 ? ((r.d.pass / r.d.present) * 100).toFixed(1) : (r.d.enrolled > 0 && r.d.pass > 0 ? ((r.d.pass / r.d.enrolled) * 100).toFixed(1) : 0);
+                const pct = r.d.present > 0 ? ((r.d.pass / r.d.present) * 100).toFixed(1) : 0;
                 return `
                     <tr class="${r.cls}">
                         <td style="font-weight:900;">${r.label}</td>
                         <td>${toAr(r.d.enrolled)}</td>
                         <td>${toAr(r.d.present)}</td>
-                        <td class="text-rose-700">${toAr(r.d.absent)}</td>
+                        <td class="text-rose-700 font-black">${toAr(r.d.absent)}</td>
                         <td class="text-emerald-800 font-black">${toAr(r.d.pass)}</td>
                         <td>${toAr(r.d.f1)}</td>
                         <td>${toAr(r.d.f2)}</td>
@@ -1547,7 +1808,7 @@
                         <td>${toAr(r.d.green)}</td>
                         <td>${toAr(r.d.yellow)}</td>
                         <td>${toAr(r.d.red)}</td>
-                        <td>${toAr(r.d.absGrade)}</td>
+                        <td class="text-rose-700 font-black">${toAr(r.d.absGrade)}</td>
                     </tr>
                 `;
             }).join('');
@@ -1620,37 +1881,157 @@
             tbody.innerHTML = html;
         }
 
-        function renderClassComparisonTable(pool) {
+        // ================= مقارنة الفصول + الرسم البياني للتحريري فقط =================
+        function renderChartSubjectPills(subjects) {
+            const container = document.getElementById('chart-subject-pills');
+            const pills = [{ key: 'ALL', name: 'كل المواد معاً' }, ...subjects];
+            container.innerHTML = pills.map(p => `
+                <button type="button" class="chart-sub-pill ${CHART_ACTIVE_SUBJECT === p.key ? 'active' : ''}" onclick="setChartSubjectFilter('${p.key}')">${p.name}</button>
+            `).join('');
+        }
+
+        function setChartSubjectFilter(subKey) {
+            CHART_ACTIVE_SUBJECT = subKey;
+            const grade = document.getElementById('sel-grade').value;
+            const subjects = getSubjectsForGrade(grade);
+            const clsFilter = document.getElementById('stats-filter-class').value;
+            const pool = ANALYZED_STUDENTS.filter(item => clsFilter === 'ALL' || String(item.st.class || '').trim() === clsFilter);
+
+            renderChartSubjectPills(subjects);
+            renderClassComparisonAndChart(pool, subjects);
+        }
+
+        const examBarLabelPlugin = {
+            id: 'examBarLabelPlugin',
+            afterDatasetsDraw: (chart) => {
+                if (chart.data.datasets.length !== 1) return;
+                const { ctx, data } = chart;
+                ctx.save();
+                ctx.font = 'bold 11.5px Cairo';
+                ctx.fillStyle = '#0f2b48';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                chart.getDatasetMeta(0).data.forEach((bar, index) => {
+                    const v = data.datasets[0].data[index];
+                    if (v !== null && v !== undefined && !isNaN(v)) {
+                        ctx.fillText(toAr(v), bar.x, bar.y - 3);
+                    }
+                });
+                ctx.restore();
+            }
+        };
+
+        function renderClassComparisonAndChart(pool, subjects) {
             const clsMap = {};
             pool.forEach(item => {
                 const c = String(item.st.class || 'غير محدد').trim();
-                if (!clsMap[c]) clsMap[c] = { name: c, enrolled: 0, graded: 0, pass: 0, fail: 0, blue: 0, sumTotals: 0 };
+                if (!clsMap[c]) {
+                    clsMap[c] = { name: c, enrolled: 0, present: 0, graded: 0, pass: 0, fail: 0, examSumAll: 0, examCountAll: 0, subExams: {} };
+                    subjects.forEach(s => { clsMap[c].subExams[s.key] = { sum: 0, count: 0 }; });
+                }
                 clsMap[c].enrolled++;
                 if (item.hasAnyGrade) {
                     clsMap[c].graded++;
-                    if (item.failCount === 0) clsMap[c].pass++;
+                    if (!item.absentAnySubject) clsMap[c].present++;
+                    if (item.failCount === 0 && !item.absentAnySubject) clsMap[c].pass++;
                     else clsMap[c].fail++;
-                    if (item.overallMeta && item.overallMeta.key === 'blue') clsMap[c].blue++;
-                    clsMap[c].sumTotals += item.grandSum;
                 }
+
+                subjects.forEach(s => {
+                    const sr = item.subjectResults[s.key];
+                    if (sr && sr.activeHasData && !sr.activeAbsent && sr.activeExamNum !== null) {
+                        clsMap[c].subExams[s.key].sum += sr.activeExamNum;
+                        clsMap[c].subExams[s.key].count++;
+                        clsMap[c].examSumAll += sr.activeExamNum;
+                        clsMap[c].examCountAll++;
+                    }
+                });
             });
 
             const rows = Object.values(clsMap).sort((a, b) => a.name.localeCompare(b.name, 'ar', { numeric: true }));
+
             document.getElementById('tbody-stats-classes').innerHTML = rows.map(c => {
-                const pct = c.graded > 0 ? ((c.pass / c.graded) * 100).toFixed(1) : 0;
-                const avgSum = c.graded > 0 ? (c.sumTotals / c.graded).toFixed(1) : 0;
+                const pct = c.present > 0 ? ((c.pass / c.present) * 100).toFixed(1) : 0;
+                const avgExam = c.examCountAll > 0 ? (c.examSumAll / c.examCountAll).toFixed(1) : 0;
                 return `
                     <tr>
                         <td class="font-black text-[#0f2b48]">${c.name}</td>
                         <td>${toAr(c.enrolled)}</td>
+                        <td>${toAr(c.present)}</td>
                         <td class="text-emerald-800 font-black">${toAr(c.pass)}</td>
                         <td class="text-rose-700 font-black">${toAr(c.fail)}</td>
                         <td class="bg-blue-50 text-blue-900 font-black">%${toAr(pct)}</td>
-                        <td class="text-blue-700 font-black">${toAr(c.blue)}</td>
-                        <td>${toAr(avgSum)}</td>
+                        <td class="font-black text-amber-800">${toAr(avgExam)} / ٦٠</td>
                     </tr>
                 `;
             }).join('') || `<tr><td colspan="7" class="p-4 text-slate-400">لا توجد بيانات</td></tr>`;
+
+            // بناء الرسم البياني لمتوسط التحريري فقط (من 60)
+            const ctx = document.getElementById('classesExamChart').getContext('2d');
+            if (classesExamChartInstance) classesExamChartInstance.destroy();
+
+            const palette = ['#1e3a8a', '#0284c7', '#16a34a', '#d97706', '#7c3aed', '#be123c', '#0d9488'];
+            let datasets = [];
+
+            if (CHART_ACTIVE_SUBJECT === 'ALL') {
+                datasets = subjects.map((sub, sIdx) => ({
+                    label: sub.name,
+                    data: rows.map(c => {
+                        const se = c.subExams[sub.key];
+                        return se.count > 0 ? +(se.sum / se.count).toFixed(1) : 0;
+                    }),
+                    backgroundColor: palette[sIdx % palette.length],
+                    borderRadius: 4
+                }));
+            } else {
+                const subObj = subjects.find(s => s.key === CHART_ACTIVE_SUBJECT) || subjects[0];
+                datasets = [{
+                    label: `متوسط تحريري ${subObj.name} (من ٦٠)`,
+                    data: rows.map(c => {
+                        const se = c.subExams[subObj.key];
+                        return se.count > 0 ? +(se.sum / se.count).toFixed(1) : 0;
+                    }),
+                    backgroundColor: '#1e3a8a',
+                    borderRadius: 6,
+                    barPercentage: 0.6
+                }];
+            }
+
+            classesExamChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: rows.map(c => `فصل ${c.name}`),
+                    datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: CHART_ACTIVE_SUBJECT === 'ALL',
+                            labels: { font: { family: 'Cairo', weight: 'bold', size: 11 } }
+                        },
+                        tooltip: {
+                            titleFont: { family: 'Cairo', weight: 'bold' },
+                            bodyFont: { family: 'Cairo', weight: 'bold' },
+                            callbacks: {
+                                label: (c) => `${c.dataset.label}: ${toAr(c.raw)} من ٦٠`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 65,
+                            ticks: { font: { family: 'Cairo', weight: 'bold' }, callback: v => v <= 60 ? toAr(v) : '' }
+                        },
+                        x: {
+                            ticks: { font: { family: 'Cairo', weight: '900', size: 11.5 } }
+                        }
+                    }
+                },
+                plugins: [examBarLabelPlugin]
+            });
         }
 
         function renderTop10Table(pool) {
@@ -1677,34 +2058,92 @@
             `).join('');
         }
 
-        function renderFailedStudentsTable(pool, scope) {
-            const failed = pool
-                .filter(x => x.failCount > 0)
-                .sort((a, b) => a.failCount - b.failCount || (a.st.name || '').localeCompare(b.st.name || '', 'ar'));
-
-            const tbody = document.getElementById('tbody-stats-failed');
-            if (failed.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-emerald-700 font-black">🎉 لا يوجد تلاميذ مستحقون للدور الثاني في هذا النطاق!</td></tr>`;
-                return;
+        // ================= الكشوف الثلاثة للطباعة (١ مادة / مادتان / ٣+ مواد) =================
+        function buildSingleFailSheetRows(list, scope) {
+            if (list.length === 0) {
+                return `<tr><td colspan="6" class="p-6 text-emerald-700 font-black">لا يوجد تلاميذ في هذه الفئة.</td></tr>`;
             }
 
-            tbody.innerHTML = failed.map((x, idx) => {
-                const seat = (scope === 't1') ? x.st.seat_t1 : (x.st.seat_t2 || x.st.seat_t1);
-                const sec  = (scope === 't1') ? x.st.secret_t1 : (x.st.secret_t2 || x.st.secret_t1);
-                const subsTxt = x.failedList.map(f => `${f.name} (${f.absent ? 'غ' : toAr(f.score)})`).join(' — ');
+            let html = "";
+            list.forEach((item, idx) => {
+                const st = item.st;
+                const seat = (scope === 't1') ? st.seat_t1 : (st.seat_t2 || st.seat_t1);
+                const sec  = (scope === 't1') ? st.secret_t1 : (st.secret_t2 || st.secret_t1);
+                const rowCount = item.failedList.length;
 
-                return `
-                    <tr>
-                        <td>${toAr(idx + 1)}</td>
-                        <td style="text-align:right; padding-right:8px; font-weight:900; color:#0f2b48;">${x.st.name || ''}</td>
-                        <td>${x.st.class || '-'}</td>
-                        <td class="font-mono">${toAr(seat || '-')}</td>
-                        <td class="font-mono text-purple-900">${sec || '-'}</td>
-                        <td class="grade-red">${toAr(x.failCount)} مادة</td>
-                        <td style="text-align:right; padding-right:8px; color:#b91c1c; font-weight:900;">${subsTxt}</td>
-                    </tr>
-                `;
-            }).join('');
+                item.failedList.forEach((f, fIdx) => {
+                    const isLastSub = (fIdx === rowCount - 1);
+                    const examDisp = f.absent ? 'غ' : (f.examDisplay !== '' && f.examDisplay !== '-' ? toAr(f.examDisplay) : '-');
+                    html += `
+                        <tr class="${isLastSub ? 'stu-group-end' : ''}">
+                            ${fIdx === 0 ? `<td rowspan="${rowCount}">${toAr(idx + 1)}</td>` : ''}
+                            ${fIdx === 0 ? `<td rowspan="${rowCount}" class="font-mono">${seat ? toAr(seat) : '-'}</td>` : ''}
+                            ${fIdx === 0 ? `<td rowspan="${rowCount}" class="font-mono">${sec || '-'}</td>` : ''}
+                            <td>${f.name}</td>
+                            <td class="${f.absent ? 'grade-red' : ''}">${examDisp}</td>
+                            <td></td>
+                        </tr>
+                    `;
+                });
+            });
+            return html;
+        }
+
+        function renderThreeFailSheets(pool, grade, scopeTitle, clsTitle) {
+            const scope = document.getElementById('sel-eval-scope').value;
+            const sortFn = (a, b) => {
+                const sa = parseInt(arToEn((scope === 't1' ? a.st.seat_t1 : (a.st.seat_t2 || a.st.seat_t1)) || '0'), 10);
+                const sb = parseInt(arToEn((scope === 't1' ? b.st.seat_t1 : (b.st.seat_t2 || b.st.seat_t1)) || '0'), 10);
+                return sa - sb;
+            };
+
+            const listF1 = pool.filter(x => x.failCount === 1).sort(sortFn);
+            const listF2 = pool.filter(x => x.failCount === 2).sort(sortFn);
+            const listF3 = pool.filter(x => x.failCount >= 3).sort(sortFn);
+
+            document.getElementById('badge-count-f1').innerText = `${toAr(listF1.length)} تلميذ`;
+            document.getElementById('badge-count-f2').innerText = `${toAr(listF2.length)} تلميذ`;
+            document.getElementById('badge-count-f3').innerText = `${toAr(listF3.length)} تلميذ`;
+
+            document.getElementById('print-title-f1').innerText = `كشف التلاميذ أصحاب المادة الواحدة — الصف ${grade}`;
+            document.getElementById('print-title-f2').innerText = `كشف التلاميذ أصحاب المادتين — الصف ${grade}`;
+            document.getElementById('print-title-f3').innerText = `كشف التلاميذ أصحاب ٣ مواد فأكثر — الصف ${grade}`;
+
+            const metaText = `${clsTitle} • ${scopeTitle}`;
+            document.getElementById('print-meta-f1').innerText = `${metaText} (${toAr(listF1.length)})`;
+            document.getElementById('print-meta-f2').innerText = `${metaText} (${toAr(listF2.length)})`;
+            document.getElementById('print-meta-f3').innerText = `${metaText} (${toAr(listF3.length)})`;
+
+            document.getElementById('tbody-fail-1').innerHTML = buildSingleFailSheetRows(listF1, scope);
+            document.getElementById('tbody-fail-2').innerHTML = buildSingleFailSheetRows(listF2, scope);
+            document.getElementById('tbody-fail-3').innerHTML = buildSingleFailSheetRows(listF3, scope);
+        }
+
+        function printFullStatistics() {
+            document.getElementById('dynamic-print-page').innerHTML = `@page { size: A4 landscape; margin: 7mm; }`;
+            document.body.classList.remove('print-single-fail-sheet');
+            document.querySelectorAll('.active-print-sheet').forEach(el => el.classList.remove('active-print-sheet'));
+            window.print();
+        }
+
+        function printSingleFailSheet(cardId) {
+            document.getElementById('dynamic-print-page').innerHTML = `@page { size: A4 portrait; margin: 10mm; }`;
+            document.querySelectorAll('.active-print-sheet').forEach(el => el.classList.remove('active-print-sheet'));
+            const card = document.getElementById(cardId);
+            if (!card) return;
+
+            card.classList.add('active-print-sheet');
+            document.body.classList.add('print-single-fail-sheet');
+
+            const cleanup = () => {
+                document.body.classList.remove('print-single-fail-sheet');
+                card.classList.remove('active-print-sheet');
+                document.getElementById('dynamic-print-page').innerHTML = `@page { size: A4 landscape; margin: 7mm; }`;
+            };
+
+            window.addEventListener('afterprint', cleanup, { once: true });
+            window.print();
+            setTimeout(cleanup, 1500);
         }
 
         // ================= تصدير كافة الإحصاءات إلى Excel =================
@@ -1717,7 +2156,9 @@
                 { id: 'tbl-stats-subjects', name: 'إحصاء المواد' },
                 { id: 'tbl-stats-classes',  name: 'مقارنة الفصول' },
                 { id: 'tbl-stats-top10',    name: 'العشرة الأوائل' },
-                { id: 'tbl-stats-failed',   name: 'كشف الدور الثاني' }
+                { id: 'tbl-fail-1',         name: 'كشف مادة واحدة' },
+                { id: 'tbl-fail-2',         name: 'كشف مادتين' },
+                { id: 'tbl-fail-3',         name: 'كشف ٣ مواد فأكثر' }
             ];
 
             sheets.forEach(s => {
@@ -1730,7 +2171,7 @@
                 }
             });
 
-            XLSX.writeFile(wb, `إحصاء_التحكم_والنتيجة_الصف_${grade}.xlsx`);
+            XLSX.writeFile(wb, `إحصاء_التحكم_والكشوف_الصف_${grade}.xlsx`);
         }
     </script>
 </body>
