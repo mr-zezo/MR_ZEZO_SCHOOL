@@ -303,11 +303,12 @@
             padding: 12px 10px; 
             text-align: center;
             box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            position: relative;
         }
         .kpi-card.kpi-quota { border-bottom-color: #3b82f6; }
         .kpi-card.kpi-weekly { border-bottom-color: #6366f1; }
         .kpi-card.kpi-month-classes { border-bottom-color: #0284c7; }
-        .kpi-card.kpi-abs { border-bottom-color: var(--danger); }
+        .kpi-card.kpi-abs { border-bottom-color: var(--danger); background: #fff1f2; }
         .kpi-card.kpi-attend { 
             border-bottom-color: var(--gold); 
             background: var(--gold-light); 
@@ -556,7 +557,7 @@
                     </div>
                 </div>
 
-                <!-- 🌟 أزرار الإجراءات العلوية مع الزر المباشر الجديد 🌟 -->
+                <!-- أزرار الإجراءات العلوية -->
                 <div class="flex gap-2 items-end flex-wrap">
                     <button type="button" class="btn-roster-simple" onclick="openSimpleRosterModal()" title="عرض كشف البيانات المباشر بالرؤوس المطلوبة مع إمكانية حفظ إكسيل">
                         <i class="fa-solid fa-table text-yellow-300"></i>
@@ -637,9 +638,13 @@
                     <span class="kpi-label">إجمالي الحصص الشهري</span>
                     <span class="kpi-val text-blue-900" id="kpi-monthly-classes">٠ حصة</span>
                 </div>
-                <div class="kpi-card kpi-abs">
-                    <span class="kpi-label">أيام الغياب بالشهر</span>
+                <div class="kpi-card kpi-abs" title="يتم جلب الغياب آلياً من دفتر الإجازات والعارضة">
+                    <span class="kpi-label flex items-center justify-center gap-1">
+                        أيام الغياب بالشهر
+                        <i class="fa-solid fa-cloud-arrow-down text-rose-500 text-[10px]" title="مربوط بالسحابة تلقائياً"></i>
+                    </span>
                     <span class="kpi-val text-rose-700" id="kpi-month-abs">٠ يوم</span>
+                    <span class="block text-[9.5px] font-bold text-rose-600 mt-0.5" id="kpi-abs-source-hint">سحب آلي من الدفتر</span>
                 </div>
                 <div class="kpi-card kpi-attend">
                     <span class="kpi-label">عدد أيام الحضور (فعلي)</span>
@@ -708,7 +713,7 @@
             </button>
 
             <button type="button" class="btn-action btn-open-abs" onclick="openAbsenceModal()">
-                <i class="fa-solid fa-calendar-xmark text-yellow-300"></i> تسجيل غياب المعلم
+                <i class="fa-solid fa-calendar-xmark text-yellow-300"></i> مراجعة غياب المعلم
             </button>
 
             <button type="button" class="btn-action btn-clear-view" onclick="clearScheduleInputsOnly()">
@@ -763,21 +768,22 @@
         </div>
     </div>
 
-    <!-- 5. نافذة تسجيل غياب المعلم بالحافز (حفظ مباشر) -->
+    <!-- 5. نافذة تسجيل ومراجعة غياب المعلم بالحافز -->
     <div class="modal-overlay no-print" id="absModal" onclick="if(event.target===this) this.classList.remove('active')">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content" style="max-width: 620px;">
             <div class="modal-head">
-                <h3 class="text-sm font-black flex items-center gap-2"><i class="fa-solid fa-calendar-xmark text-yellow-300"></i> تسجيل أيام غياب المعلم لشهر الحساب</h3>
+                <h3 class="text-sm font-black flex items-center gap-2"><i class="fa-solid fa-calendar-xmark text-yellow-300"></i> مراجعة وتعديل أيام غياب المعلم</h3>
                 <button onclick="document.getElementById('absModal').classList.remove('active')" class="text-white text-2xl font-bold">&times;</button>
             </div>
             <div class="modal-body space-y-3">
-                <div class="text-xs font-bold text-slate-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
-                    أيام الغياب المسجلة هنا تُحفظ مباشرة في السحابة وتُخصم حصصها تلقائياً من الحصص الشهرية وأيام الحضور.
+                <div class="text-xs font-bold text-slate-700 bg-blue-50 p-2.5 rounded-lg border border-blue-200">
+                    <i class="fa-solid fa-info-circle text-blue-700 ml-1"></i>
+                    يتم سحب الغياب المعتمد (العارضة والإجازات الممتدة) <b>أوتوماتيكياً</b> من دفتر رصد الإجازات. يمكنك أيضاً إضافة أيام غياب يدوية إضافية خاصة بحساب هذا الشهر إن رغبت.
                 </div>
                 <div id="abs-days-tags-container" class="flex flex-wrap gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl min-h-[60px]"></div>
                 <div class="flex gap-2">
-                    <input type="number" id="inp-new-abs-day" min="1" max="31" placeholder="أدخل رقم اليوم (1-31)" class="p-2 border border-slate-300 rounded-lg text-xs font-bold flex-1 text-center">
-                    <button type="button" onclick="addAbsDayDirect()" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-lg text-xs font-bold"><i class="fa-solid fa-plus"></i> إضافة يوم</button>
+                    <input type="number" id="inp-new-abs-day" min="1" max="31" placeholder="أدخل رقم اليوم الإضافي (1-31)" class="p-2 border border-slate-300 rounded-lg text-xs font-bold flex-1 text-center">
+                    <button type="button" onclick="addAbsDayDirect()" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-lg text-xs font-bold"><i class="fa-solid fa-plus"></i> إضافة يوم إضافي</button>
                 </div>
                 <button type="button" id="btn-save-abs-direct" onclick="saveAbsenceOnlyDirect()" class="btn-manage-eligible w-full py-2.5 justify-center"><i class="fa-solid fa-cloud-arrow-up"></i> اعتماد وحفظ أيام الغياب مباشرة في السحابة</button>
             </div>
@@ -805,7 +811,7 @@
         </div>
     </div>
 
-    <!-- ================= 🌟 7. نافذة كشف البيانات المباشر الجديد (مع تصدير Excel) 🌟 ================= -->
+    <!-- ================= 7. نافذة كشف البيانات المباشر الجديد (مع تصدير Excel) ================= -->
     <div class="modal-overlay no-print" id="simpleRosterModal" onclick="if(event.target===this) closeSimpleRosterModal()">
         <div class="modal-content" style="max-width: 1100px;">
             <div class="modal-head">
@@ -842,16 +848,17 @@
         const days = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس"];
         const jsDaysMap = ["الاحد", "الاثنين", "الثلاثاء", "الاربعاء", "الخميس", "الجمعة", "السبت"];
 
+        // ربط مفاتيح الشهور مع شهور دفتر الغياب (mKey)
         const MONTH_CALENDAR_MAP = {
-            "m_sept": { m: 9, y: 2026, name: "سبتمبر" },
-            "m_oct":  { m: 10, y: 2026, name: "أكتوبر" },
-            "m_nov":  { m: 11, y: 2026, name: "نوفمبر" },
-            "m_dec":  { m: 12, y: 2026, name: "ديسمبر" },
-            "m_jan":  { m: 1, y: 2027, name: "يناير" },
-            "m_feb":  { m: 2, y: 2027, name: "فبراير" },
-            "m_mar":  { m: 3, y: 2027, name: "مارس" },
-            "m_apr":  { m: 4, y: 2027, name: "أبريل" },
-            "m_may":  { m: 5, y: 2027, name: "مايو" }
+            "m_sept": { m: 9,  y: 2026, name: "سبتمبر", mKey: "m9"  },
+            "m_oct":  { m: 10, y: 2026, name: "أكتوبر", mKey: "m10" },
+            "m_nov":  { m: 11, y: 2026, name: "نوفمبر", mKey: "m11" },
+            "m_dec":  { m: 12, y: 2026, name: "ديسمبر", mKey: "m12" },
+            "m_jan":  { m: 1,  y: 2027, name: "يناير",  mKey: "m1"  },
+            "m_feb":  { m: 2,  y: 2027, name: "فبراير", mKey: "m2"  },
+            "m_mar":  { m: 3,  y: 2027, name: "مارس",   mKey: "m3"  },
+            "m_apr":  { m: 4,  y: 2027, name: "أبريل",  mKey: "m4"  },
+            "m_may":  { m: 5,  y: 2027, name: "مايو",   mKey: "m5"  }
         };
 
         const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
@@ -860,7 +867,7 @@
         let ELIGIBLE_TEACHERS_LIST = []; 
         let CURRENT_TEACHER = null;
         let CURRENT_TEACHER_RECORD = {};
-        let SIMPLE_ROSTER_DATA_CACHE = []; // كاش لبيانات الكشف المباشر لتصدير الإكسيل
+        let SIMPLE_ROSTER_DATA_CACHE = [];
 
         function normalizeArabic(text) {
             if (!text) return "";
@@ -880,6 +887,86 @@
             await fetchAllSchoolTeachers();
             await loadEligibleTeachersList();
         });
+
+        // ================= 🌟 محرك استخراج الغياب الرسمي من دفتر الإجازات 🌟 =================
+        function extractOfficialAbsenceDays(teacher, monthKey) {
+            if (!teacher || !teacher.absences) return [];
+            let abs = teacher.absences;
+            if (typeof abs === 'string') {
+                try { abs = JSON.parse(abs); } catch(e) { abs = {}; }
+            }
+            if (!abs || typeof abs !== 'object') return [];
+
+            const mMeta = MONTH_CALENDAR_MAP[monthKey];
+            if (!mMeta) return [];
+
+            const daysSet = new Set();
+
+            // 1) سحب أيام العارضة من مصفوفة الشهر المباشرة (مثل m10)
+            if (Array.isArray(abs[mMeta.mKey])) {
+                abs[mMeta.mKey].forEach(d => {
+                    const dn = parseInt(d, 10);
+                    if (!isNaN(dn) && dn >= 1 && dn <= 31) daysSet.add(dn);
+                });
+            }
+
+            // 2) سحب التواريخ المسجلة في casual_days
+            if (Array.isArray(abs.casual_days)) {
+                const prefix = `${mMeta.y}-${String(mMeta.m).padStart(2, '0')}-`;
+                abs.casual_days.forEach(item => {
+                    const dStr = typeof item === 'string' ? item : (item && item.date ? item.date : '');
+                    if (dStr && dStr.startsWith(prefix)) {
+                        const dayNum = parseInt(dStr.split('-')[2], 10);
+                        if (!isNaN(dayNum)) daysSet.add(dayNum);
+                    }
+                });
+            }
+
+            // 3) سحب وفحص الإجازات الممتدة الواقعة في هذا الشهر
+            if (Array.isArray(abs.extended_leaves)) {
+                abs.extended_leaves.forEach(lv => {
+                    if (!lv || !lv.from || !lv.to) return;
+                    const partsFrom = lv.from.split('-').map(Number);
+                    const partsTo = lv.to.split('-').map(Number);
+                    if (partsFrom.length !== 3 || partsTo.length !== 3) return;
+
+                    const dFrom = new Date(partsFrom[0], partsFrom[1] - 1, partsFrom[2]);
+                    const dTo = new Date(partsTo[0], partsTo[1] - 1, partsTo[2]);
+                    if (isNaN(dFrom) || isNaN(dTo)) return;
+
+                    let curr = new Date(dFrom);
+                    while (curr <= dTo) {
+                        const dow = curr.getDay();
+                        // احتساب أيام العمل الرسمية فقط (استبعاد الجمعة 5 والسبت 6)
+                        if (dow !== 5 && dow !== 6) {
+                            if (curr.getFullYear() === mMeta.y && (curr.getMonth() + 1) === mMeta.m) {
+                                daysSet.add(curr.getDate());
+                            }
+                        }
+                        curr.setDate(curr.getDate() + 1);
+                    }
+                });
+            }
+
+            return Array.from(daysSet).sort((a, b) => a - b);
+        }
+
+        // دمج الغياب الرسمي التلقائي مع أي غياب مدخل يدوي في الحافز
+        function getEffectiveAbsenceDaysForTeacher(teacher, monthKey, capsuleAbsencesObj = null) {
+            const officialDays = extractOfficialAbsenceDays(teacher, monthKey);
+            const customDays = (capsuleAbsencesObj && Array.isArray(capsuleAbsencesObj[monthKey]))
+                ? capsuleAbsencesObj[monthKey]
+                : [];
+            
+            const merged = Array.from(new Set([...officialDays, ...customDays])).sort((a, b) => a - b);
+            return {
+                allDays: merged,
+                officialCount: officialDays.length,
+                customCount: customDays.filter(d => !officialDays.includes(d)).length,
+                officialDays: officialDays,
+                customDays: customDays
+            };
+        }
 
         // 1. استنتاج الدرجة المالية والنصاب القانوني بحسب عمود الدرجة
         function deriveDegreeAndQuota(cadreVal) {
@@ -958,10 +1045,11 @@
             return "";
         }
 
+        // ================= جلب المعلمين مع حقل الغياب (absences) =================
         async function fetchAllSchoolTeachers() {
             try {
                 const [resRegular, resContract] = await Promise.all([
-                    sbClient.from("teachers").select("name, nid, code, subject, cadre_job, quota, fin_degree, photo, emp_status, schedule"),
+                    sbClient.from("teachers").select("name, nid, code, subject, cadre_job, quota, fin_degree, photo, emp_status, schedule, absences"),
                     sbClient.from("contract_teachers").select("name, nid, subject, quota, photo, status, schedule, pay_rate")
                 ]);
 
@@ -989,7 +1077,8 @@
                             legalQuota: derived.quota,
                             photo: t.photo,
                             type: (st === "مؤقت") ? "معلم مؤقت" : "معلم أساسي",
-                            officialSchedule: t.schedule || {}
+                            officialSchedule: t.schedule || {},
+                            absences: t.absences || {} // حقل غياب المعلمين المسجل رسمياً
                         });
                     }
                 });
@@ -1010,7 +1099,8 @@
                             legalQuota: derived.quota || 24,
                             photo: t.photo,
                             type: "معلم أجر",
-                            officialSchedule: t.schedule || {}
+                            officialSchedule: t.schedule || {},
+                            absences: {}
                         });
                     }
                 });
@@ -1138,7 +1228,7 @@
             }
         });
 
-        // ================= استدعاء ملف المعلم في صمت تام =================
+        // ================= استدعاء ملف المعلم ودمج الغياب المسجل سحابياً =================
         async function loadSelectedTeacherIncentiveProfile(nid) {
             CURRENT_TEACHER = ALL_SCHOOL_TEACHERS.find(t => t.nid === nid);
             if (!CURRENT_TEACHER) return;
@@ -1204,7 +1294,7 @@
             }
         }
 
-        // ================= محرك الحساب وتفصيل الحصص =================
+        // ================= محرك الحساب الحي (المربوط أوتوماتيكياً بالغياب) =================
         function calculateIncentiveLive() {
             if (!CURRENT_TEACHER) return;
 
@@ -1233,9 +1323,9 @@
             let weekdayFrequency = { "الاحد": 0, "الاثنين": 0, "الثلاثاء": 0, "الاربعاء": 0, "الخميس": 0 };
             let weekdayAbsences = { "الاحد": 0, "الاثنين": 0, "الثلاثاء": 0, "الاربعاء": 0, "الخميس": 0 };
 
-            const teacherAbsDays = (CURRENT_TEACHER_RECORD.absences && Array.isArray(CURRENT_TEACHER_RECORD.absences[monthKey]))
-                ? CURRENT_TEACHER_RECORD.absences[monthKey]
-                : [];
+            // 🌟 سحب الغياب المعتمد المسجل في جدول الإجازات والعارضة مدمجاً بالحافز 🌟
+            const effAbs = getEffectiveAbsenceDaysForTeacher(CURRENT_TEACHER, monthKey, CURRENT_TEACHER_RECORD.absences);
+            const teacherAbsDays = effAbs.allDays;
 
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateObj = new Date(monthMeta.y, monthMeta.m - 1, d);
@@ -1257,6 +1347,13 @@
 
             document.getElementById("kpi-month-abs").innerText = toAr(teacherAbsDays.length) + " يوم";
             document.getElementById("kpi-month-attendance").innerText = toAr(actualAttendanceDays) + " يوم";
+
+            const hintEl = document.getElementById("kpi-abs-source-hint");
+            if (hintEl) {
+                hintEl.innerText = effAbs.officialCount > 0 
+                    ? `(${toAr(effAbs.officialCount)} مسحوب من الدفتر)` 
+                    : (teacherAbsDays.length > 0 ? "غياب مسجل" : "لا يوجد غياب");
+            }
 
             let totalMonthlyClasses = 0;
             days.forEach(d => {
@@ -1397,10 +1494,10 @@
             }
         }
 
-        // ================= نافذة الغياب مع الحفظ المباشر =================
+        // ================= نافذة الغياب مع تمييز الغياب المسحوب تلقائياً =================
         function openAbsenceModal() {
             if (!CURRENT_TEACHER) {
-                Swal.fire('تنبيه', 'اختر معلماً أولاً لتسجيل غيابه!', 'warning');
+                Swal.fire('تنبيه', 'اختر معلماً أولاً لمراجعة غيابه!', 'warning');
                 return;
             }
             renderAbsDaysTags();
@@ -1413,29 +1510,41 @@
             container.innerHTML = "";
 
             if (!CURRENT_TEACHER_RECORD.absences) CURRENT_TEACHER_RECORD.absences = {};
-            const daysArr = CURRENT_TEACHER_RECORD.absences[monthKey] || [];
 
-            if (daysArr.length === 0) {
-                container.innerHTML = `<span class="text-xs text-slate-400 font-bold">لا يوجد غياب مسجل لهذا الشهر.</span>`;
+            const effAbs = getEffectiveAbsenceDaysForTeacher(CURRENT_TEACHER, monthKey, CURRENT_TEACHER_RECORD.absences);
+
+            if (effAbs.allDays.length === 0) {
+                container.innerHTML = `<span class="text-xs text-slate-400 font-bold">لا يوجد غياب مسجل لهذا المعلم في هذا الشهر.</span>`;
                 return;
             }
 
-            daysArr.forEach(d => {
-                container.innerHTML += `
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-rose-100 text-rose-800 text-xs font-black">
-                        يوم ${d}
-                        <i class="fa-solid fa-xmark cursor-pointer hover:text-red-900" onclick="removeAbsDay(${d})"></i>
-                    </span>
-                `;
+            effAbs.allDays.forEach(d => {
+                const isOfficial = effAbs.officialDays.includes(d);
+                if (isOfficial) {
+                    container.innerHTML += `
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-amber-100 text-amber-900 border border-amber-300 text-xs font-black" title="تم سحبه أوتوماتيكياً من دفتر الإجازات الرسمية">
+                            <i class="fa-solid fa-cloud-arrow-down text-amber-700"></i>
+                            يوم ${toAr(d)} (رسمي)
+                        </span>
+                    `;
+                } else {
+                    container.innerHTML += `
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-rose-100 text-rose-800 text-xs font-black">
+                            يوم ${toAr(d)} (إضافي)
+                            <i class="fa-solid fa-xmark cursor-pointer hover:text-red-900 mr-1" onclick="removeAbsDay(${d})"></i>
+                        </span>
+                    `;
+                }
             });
         }
 
         function addAbsDayDirect() {
             const inp = document.getElementById("inp-new-abs-day");
-            const d = parseInt(inp.value);
+            const d = parseInt(inp.value, 10);
             if (!d || d < 1 || d > 31) return;
 
             const monthKey = document.getElementById("incentive-month-select").value;
+            if (!CURRENT_TEACHER_RECORD.absences) CURRENT_TEACHER_RECORD.absences = {};
             if (!CURRENT_TEACHER_RECORD.absences[monthKey]) CURRENT_TEACHER_RECORD.absences[monthKey] = [];
             
             if (!CURRENT_TEACHER_RECORD.absences[monthKey].includes(d)) {
@@ -1444,6 +1553,7 @@
             }
             inp.value = "";
             renderAbsDaysTags();
+            calculateIncentiveLive();
         }
 
         function removeAbsDay(d) {
@@ -1452,6 +1562,7 @@
                 CURRENT_TEACHER_RECORD.absences[monthKey] = CURRENT_TEACHER_RECORD.absences[monthKey].filter(x => x !== d);
             }
             renderAbsDaysTags();
+            calculateIncentiveLive();
         }
 
         async function saveAbsenceOnlyDirect() {
@@ -1478,7 +1589,7 @@
                     toast: true,
                     position: 'top',
                     icon: 'success',
-                    title: 'تم حفظ أيام الغياب مباشرة في السحابة وتحديث الحسابات بنجاح!',
+                    title: 'تم حفظ أيام الغياب مباشرة وتحديث الحسابات بنجاح!',
                     timer: 1800,
                     showConfirmButton: false
                 });
@@ -1584,7 +1695,7 @@
 
             Swal.fire({
                 title: 'جاري ترحيل البيانات وتوليد استمارة الإكسيل...',
-                text: 'يتم حقن البيانات في ملف الماكرو الرسمي (TADDST.xlsm)',
+                text: 'يتم حقن البيانات والغياب الآلي في ملف الماكرو الرسمي (TADDST.xlsm)',
                 allowOutsideClick: false,
                 didOpen: () => Swal.showLoading()
             });
@@ -1619,9 +1730,9 @@
                 const monthKey = document.getElementById("incentive-month-select").value;
                 const monthMeta = MONTH_CALENDAR_MAP[monthKey] || { m: 10, y: 2026, name: "أكتوبر" };
 
-                const teacherAbsDays = (CURRENT_TEACHER_RECORD.absences && Array.isArray(CURRENT_TEACHER_RECORD.absences[monthKey]))
-                    ? CURRENT_TEACHER_RECORD.absences[monthKey]
-                    : [];
+                // 🌟 الغياب الفعلي المعتمد 🌟
+                const effAbs = getEffectiveAbsenceDaysForTeacher(CURRENT_TEACHER, monthKey, CURRENT_TEACHER_RECORD.absences);
+                const teacherAbsDays = effAbs.allDays;
 
                 const daysInMonth = new Date(monthMeta.y, monthMeta.m, 0).getDate();
                 let schoolWorkDays = 0;
@@ -1681,7 +1792,7 @@
                 setCellInXml(xmlDoc, 'E8', CURRENT_TEACHER.cadre);                 // الوظيفة
                 setCellInXml(xmlDoc, 'J7', CURRENT_TEACHER.degree);                // الدرجة
                 setCellInXml(xmlDoc, 'J8', CURRENT_TEACHER.legalQuota, true);       // النصاب القانوني
-                setCellInXml(xmlDoc, 'J9', teacherAbsDays.length, true);           // عدد أيام الغياب
+                setCellInXml(xmlDoc, 'J9', teacherAbsDays.length, true);           // عدد أيام الغياب الفعلي
                 setCellInXml(xmlDoc, 'J10', totalMonthlyClasses, true);            // النصاب الشهري
                 setCellInXml(xmlDoc, 'E9', actualAttendanceDays, true);            // عدد أيام الحضور
                 setCellInXml(xmlDoc, 'E10', totalWeeklyClasses, true);             // النصاب الاسبوعي
@@ -1712,7 +1823,6 @@
                     mimeType: "application/vnd.ms-excel.sheet.macroEnabled.12"
                 });
 
-                // 🌟 الحفظ باسم المعلم والشهر فقط 🌟
                 const cleanName = (CURRENT_TEACHER.name || "معلم").trim();
                 const fileName = `${cleanName} ${monthMeta.name}.xlsm`;
 
@@ -1823,7 +1933,7 @@
             }
         }
 
-        // ================= 🌟 7. محرك كشف البيانات المباشر الجديد (مع تصدير Excel) 🌟 =================
+        // ================= 🌟 7. محرك كشف البيانات المباشر (مع سحب الغياب الفعلي للجميع) 🌟 =================
         async function openSimpleRosterModal() {
             if (ELIGIBLE_TEACHERS_LIST.length === 0) {
                 Swal.fire('تنبيه', 'لا يوجد معلمين مستحقين معتمدين بالقائمة بعد!', 'warning');
@@ -1834,7 +1944,7 @@
             const monthMeta = MONTH_CALENDAR_MAP[monthKey] || { m: 10, y: 2026, name: "أكتوبر" };
             document.getElementById("simple-roster-month-txt").innerText = `شهر ${monthMeta.name} ${monthMeta.y}`;
 
-            Swal.fire({ title: 'جاري استخراج كشف البيانات...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'جاري استخراج كشف البيانات وسحب الغياب...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
             // حساب أيام العمل بالشهر
             const daysInMonth = new Date(monthMeta.y, monthMeta.m, 0).getDate();
@@ -1880,9 +1990,9 @@
                 }
                 const displayActualQuota = (actualClasses > 0) ? actualClasses : derived.quota;
 
-                // حساب أيام الغياب والحضور
-                const absDays = (rec.absences && Array.isArray(rec.absences[monthKey])) ? rec.absences[monthKey] : [];
-                const attendanceDays = Math.max(0, schoolWorkDays - absDays.length);
+                // 🌟 سحب الغياب المعتمد المسجل في جدول الإجازات لهذا المعلم أوتوماتيكياً 🌟
+                const effAbs = getEffectiveAbsenceDaysForTeacher(fullTeacher, monthKey, rec.absences);
+                const attendanceDays = Math.max(0, schoolWorkDays - effAbs.allDays.length);
 
                 rosterData.push({
                     idx: idx++,
@@ -1899,7 +2009,6 @@
 
             SIMPLE_ROSTER_DATA_CACHE = rosterData;
 
-            // بناء الجدول النظيف في المودال
             let tableHtml = `
                 <table class="simple-roster-table" id="simple-roster-export-table">
                     <thead>
@@ -1942,7 +2051,6 @@
             document.getElementById("simpleRosterModal").classList.remove("active");
         }
 
-        // حفظ نسخة Excel مباشرة على الجهاز بالرؤوس المطلوبة
         function exportSimpleRosterToExcel() {
             if (SIMPLE_ROSTER_DATA_CACHE.length === 0) {
                 Swal.fire('تنبيه', 'لا توجد بيانات لتصديرها!', 'warning');
@@ -1952,7 +2060,6 @@
             const monthKey = document.getElementById("incentive-month-select").value;
             const monthMeta = MONTH_CALENDAR_MAP[monthKey] || { name: "الشهر" };
 
-            // بناء بيانات الإكسيل بالرؤوس المطلوبة بدقة
             const excelRows = SIMPLE_ROSTER_DATA_CACHE.map(r => ({
                 "م": r.idx,
                 "اسم المدرسة": r.schoolName,
@@ -1967,19 +2074,18 @@
 
             const ws = XLSX.utils.json_to_sheet(excelRows);
             if (!ws['!views']) ws['!views'] = [];
-            ws['!views'].push({ rightToLeft: true }); // شيت RTL عربي
+            ws['!views'].push({ rightToLeft: true });
 
-            // ضبط عروض الأعمدة بالإكسيل
             ws['!cols'] = [
-                { wch: 5 },   // م
-                { wch: 28 },  // اسم المدرسة
-                { wch: 18 },  // الوظيفة
-                { wch: 32 },  // الاسم رباعي
-                { wch: 18 },  // الرقم القومي
-                { wch: 14 },  // الدرجه
-                { wch: 22 },  // النصاب الاسبوعي الرسمي
-                { wch: 16 },  // النصاب الفعلي
-                { wch: 16 }   // عدد ايام الحضور
+                { wch: 5 },   
+                { wch: 28 },  
+                { wch: 18 },  
+                { wch: 32 },  
+                { wch: 18 },  
+                { wch: 14 },  
+                { wch: 22 },  
+                { wch: 16 },  
+                { wch: 16 }   
             ];
 
             const wb = XLSX.utils.book_new();
