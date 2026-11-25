@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>طباعة الشهادات الملونة - كنترول مستر زيزو</title>
+
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Supabase & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- تحكم ديناميكي في مقاس واتجاه الورقة عند الطباعة -->
+    <style id="dynamic-print-style">
+        @page { size: A4 landscape; margin: 0; }
+    </style>
+
+    <style>
+        :root {
+            --primary: #0f2b48;
+            --primary-light: #1e3a8a;
+            --gold: #d97706;
+            --bg: #f8fafc;
+
+            /* 1. الهوامش والمسافات الفاصلة */
+            --c-pad-top: 6mm;
+            --c-pad-bottom: 6mm;
+            --c-pad-right: 6mm;
+            --c-pad-left: 6mm;
+            --c-split-gap: 10mm;
+            --c-gap-head: 2.5mm;
+            --c-gap-act: 2.5mm;
+            --c-gap-legend: 3mm;
+            --c-gap-footer: 10mm; /* مسافة 1 سم بين شريط الألوان والتذييل */
+
+            /* 2. ارتفاعات جميع الصفوف */
+            --c-h-top-header: 13mm;
+            --c-h-pill: 10.5mm;
+            --c-h-name: 8mm;
+            --c-h-tbl-head: 13mm;
+            --c-h-tbl-max: 5.5mm;
+            --c-h-sub-row: 7mm;
+            --c-h-divider: 6.5mm;
+            --c-h-nonadd-row: 7mm;
+            --c-h-att: 7mm;
+            --c-h-act-row: 7mm;
+            --c-h-legend: 10mm;
+            --c-h-footer: 12mm;
+
+            /* 3. عروض الأعمدة الدقيقة الـ 10 */
+            --c-w-subj: 20%;
+            --c-w-hw: 7.5%;
+            --c-w-cw: 8.5%;
+            --c-w-eval: 8%;
+            --c-w-att: 7.5%;
+            --c-w-month: 8%;
+            --c-w-eval40: 10%;
+            --c-w-exam: 12%;
+            --c-w-total: 10.5%;
+            --c-w-color: 8%;
+
+            /* 4. مقاسات إضافية وأحجام الخطوط */
+            --c-logo-size: 46px;
+            --c-dot-size: 13px;
+
+            --c-f-header: 11px;
+            --c-f-pill: 10.5px;
+            --c-f-name: 13.5px;
+            --c-f-tbl-head: 9px;
+            --c-f-tbl-max: 10px;
+            --c-f-subj: 10.5px;
+            --c-f-scores: 11px;
+            --c-f-att: 12px;
+            --c-f-act: 10.5px;
+            --c-f-legend: 10px;
+            --c-f-footer: 11px;
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 12px; }
+
+        .app-container { width: 100%; max-width: 1280px; }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white; border-bottom: 4px solid var(--gold);
+        }
+
+        .btn-3d {
+            border-bottom: 3.5px solid rgba(0,0,0,0.25);
+            transition: all 0.12s ease;
+            touch-action: manipulation;
+        }
+        .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
+
+        /* تبويبات الصفحة الرئيسية */
+        .page-tab-btn {
+            padding: 10px 18px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 900;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1.5px solid #cbd5e1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s;
+        }
+        .page-tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(15, 43, 72, 0.25);
+        }
+
+        /* كومبو بوكس البحث في الشهادة الفردية */
+        .combo-wrapper { position: relative; width: 100%; }
+        .combo-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 2px solid #0f2b48;
+            border-radius: 12px;
+            max-height: 280px;
+            overflow-y: auto;
+            z-index: 2500;
+            box-shadow: 0 16px 35px rgba(15, 23, 42, 0.25);
+            display: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .combo-option {
+            padding: 9px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 800;
+        }
+        .combo-option:hover, .combo-option:active { background: #eff6ff; color: #1e3a8a; }
+
+        /* ================= 1. ورقة A4 أفقية تحتوي على شهادتين ================= */
+        #certs-print-area {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .cert-a4-sheet {
+            width: 296mm;
+            height: 208mm; /* محكوم بـ 208 مم بدلاً من 209 مم لمنع أي تسريب لصفحة فارغة */
+            max-height: 208mm;
+            background: #ffffff;
+            padding: var(--c-pad-top) var(--c-pad-right) var(--c-pad-bottom) var(--c-pad-left);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+            border: 1px solid #cbd5e1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--c-split-gap);
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* خط فاصل التقطيع في المنتصف */
+        .cert-a4-sheet::after {
+            content: "";
+            position: absolute;
+            top: 4mm;
+            bottom: 4mm;
+            left: 50%;
+            border-left: 1.5px dashed #94a3b8;
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        /* ================= 2. ورقة A5 عمودية لشهادة واحدة فردية ================= */
+        #single-cert-print-area {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .cert-a5-sheet {
+            width: 148mm;
+            height: 208mm;
+            max-height: 208mm;
+            background: #ffffff;
+            padding: var(--c-pad-top) var(--c-pad-right) var(--c-pad-bottom) var(--c-pad-left);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.15);
+            border: 1px solid #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            margin: 0 auto;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .single-cert {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            min-width: 0;
+            color: #000;
+            position: relative;
+            height: 100%;
+        }
+
+        /* 1. الترويسة العلوية للشهادة */
+        .cert-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: var(--c-h-top-header);
+            margin-bottom: 1.5mm;
+        }
+        .cert-admin-info {
+            font-size: var(--c-f-header);
+            font-weight: 900;
+            line-height: 1.45;
+            text-align: center;
+        }
+        .cert-logo-wrap img {
+            height: var(--c-logo-size);
+            width: auto;
+            object-fit: contain;
+        }
+
+        /* 2. الإطار المستدير (الصف + القرار الوزاري) */
+        .cert-pill-box {
+            width: 86%;
+            margin: 0 auto var(--c-gap-head) auto;
+            border: 1.5px solid #000;
+            border-radius: 10px;
+            display: flex;
+            align-items: stretch;
+            min-height: var(--c-h-pill);
+            overflow: hidden;
+            background: #ffffff;
+        }
+        .cert-pill-grade {
+            width: 22%;
+            border-left: 1.5px solid #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--c-f-pill);
+            font-weight: 900;
+            line-height: 1.25;
+            padding: 2px 4px;
+        }
+        .cert-pill-title {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--c-f-pill);
+            font-weight: 900;
+            line-height: 1.3;
+            padding: 2px 6px;
+            text-align: center;
+        }
+
+        /* 3. سطر اسم التلميذ */
+        .cert-student-name-row {
+            height: var(--c-h-name);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: var(--c-f-name);
+            font-weight: 900;
+            margin-bottom: 1.5mm;
+        }
+
+        /* 4. جدول الدرجات الرئيسي بالتقسيم الدقيق */
+        .cert-grades-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2px solid #000;
+            text-align: center;
+            table-layout: fixed;
+            color: #000;
+        }
+        .cert-grades-table th, .cert-grades-table td {
+            border: 1.25px solid #000;
+            vertical-align: middle;
+            padding: 1px 2px;
+            overflow: hidden;
+        }
+        .cert-grades-table thead tr.cg-head-r1 th {
+            height: var(--c-h-tbl-head);
+            font-size: var(--c-f-tbl-head);
+            font-weight: 900;
+            line-height: 1.2;
+            background: #ffffff;
+        }
+        .cert-grades-table thead tr.cg-head-r2 th {
+            height: var(--c-h-tbl-max);
+            font-size: var(--c-f-tbl-max);
+            font-weight: 900;
+            background: #ffffff;
+        }
+        .cert-grades-table tbody tr.cg-sub-row td {
+            height: var(--c-h-sub-row);
+            font-size: var(--c-f-scores);
+            font-weight: 800;
+        }
+        .cert-grades-table tbody tr.cg-divider-row td {
+            height: var(--c-h-divider);
+            font-size: calc(var(--c-f-subj) - 0.5px);
+            font-weight: 900;
+            background: #f8fafc;
+        }
+        .cert-grades-table tbody tr.cg-nonadd-row td {
+            height: var(--c-h-nonadd-row);
+            font-size: var(--c-f-scores);
+            font-weight: 800;
+        }
+        .cg-subj-name {
+            font-size: var(--c-f-subj) !important;
+            font-weight: 900 !important;
+        }
+        .cg-eval40-cell {
+            background: #f8fafc;
+            font-weight: 900 !important;
+        }
+        .cg-total-cell {
+            font-weight: 900 !important;
+        }
+
+        .color-dot {
+            display: inline-block;
+            width: var(--c-dot-size);
+            height: var(--c-dot-size);
+            border-radius: 50%;
+            vertical-align: middle;
+            border: 1px solid rgba(0,0,0,0.2);
+        }
+        .dot-blue   { background-color: #2563eb !important; }
+        .dot-green  { background-color: #16a34a !important; }
+        .dot-yellow { background-color: #facc15 !important; }
+        .dot-red    { background-color: #dc2626 !important; }
+
+        /* 5. سطر النسبة المئوية للحضور */
+        .cert-attendance-row {
+            height: var(--c-h-att);
+            margin-top: var(--c-gap-act);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            font-size: var(--c-f-att);
+            font-weight: 900;
+        }
+
+        /* 6. جدول الأنشطة */
+        .cert-activities-table {
+            width: 88%;
+            margin: 1mm auto var(--c-gap-legend) auto;
+            border-collapse: collapse;
+            border: 2px solid #000;
+            text-align: center;
+            table-layout: fixed;
+            color: #000;
+        }
+        .cert-activities-table td {
+            border: 1.25px solid #000;
+            height: var(--c-h-act-row);
+            font-size: var(--c-f-act);
+            font-weight: 900;
+            padding: 1px 4px;
+            line-height: 1.15;
+        }
+
+        /* 7. شريط دلالات الألوان (رمادي فاتح جداً توفيراً للأحبار) */
+        .cert-legend-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            min-height: var(--c-h-legend);
+            align-items: start;
+            text-align: center;
+            margin-bottom: 0;
+        }
+        .legend-pill {
+            display: inline-block;
+            width: 72%;
+            padding: 2px 6px;
+            border-radius: 5px;
+            font-size: var(--c-f-legend);
+            font-weight: 900;
+            margin-bottom: 2px;
+            background: #f1f5f9 !important;
+            border: 1px solid #cbd5e1;
+            color: #000 !important;
+        }
+        .legend-desc {
+            font-size: calc(var(--c-f-legend) - 0.5px);
+            font-weight: 900;
+            color: #000;
+        }
+
+        /* 8. التذييل والتوقيعات (بمسافة 1 سم فقط أسفل شريط الألوان) */
+        .cert-footer {
+            margin-top: var(--c-gap-footer);
+            min-height: var(--c-h-footer);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            font-size: var(--c-f-footer);
+            font-weight: 900;
+            padding: 0 4px;
+        }
+        .cert-sig-block {
+            text-align: center;
+            line-height: 1.35;
+        }
+        .cert-mrzezo-mark {
+            font-family: 'Brush Script MT', cursive, 'Cairo';
+            font-size: 18px;
+            font-weight: 900;
+            color: #b91c1c;
+            transform: rotate(-6deg);
+            display: inline-block;
+            letter-spacing: 0.5px;
+        }
+        .cert-seat-num {
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        /* نافذة الضبط الشاملة */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(4px);
+            display: none; justify-content: center; align-items: center; z-index: 3000; padding: 10px;
+        }
+        .modal-overlay.active { display: flex; }
+        .cfg-box {
+            background: #f8fafc; width: 100%; max-width: 960px; border-radius: 18px;
+            overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.45);
+            display: flex; flex-direction: column; max-height: 94vh;
+        }
+        .cfg-tabs { display: flex; gap: 6px; padding: 10px 14px 0 14px; background: #e2e8f0; flex-wrap: wrap; }
+        .cfg-tab-btn {
+            padding: 8px 14px; border-radius: 10px 10px 0 0; font-size: 12px; font-weight: 900;
+            background: #cbd5e1; color: #334155; border: none; cursor: pointer;
+        }
+        .cfg-tab-btn.active { background: #f8fafc; color: #0f2b48; }
+
+        .cfg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; }
+        .cfg-item {
+            background: white; border: 1px solid #cbd5e1; border-radius: 10px; padding: 8px 10px;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .cfg-item label {
+            font-size: 11.5px; font-weight: 800; color: #334155;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .cfg-item label b { color: #1e3a8a; font-family: Arial, sans-serif; font-size: 12px; }
+        .cfg-item input[type="range"] { width: 100%; accent-color: #0f2b48; cursor: pointer; }
+
+        .swal2-container { z-index: 99999 !important; }
+
+        /* ================= إعدادات الطباعة المقفلة بدون أي صفحات فارغة ================= */
+        @media print {
+            html, body {
+                background: white !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                height: auto !important;
+            }
+            .no-print { display: none !important; }
+            .app-container {
+                max-width: 100% !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: block !important;
+            }
+            .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+                margin-top: 0 !important;
+                margin-bottom: 0 !important;
+            }
+
+            /* طباعة الدفعات (A4 أفقي) */
+            body.print-mode-batch #single-cert-print-area { display: none !important; }
+            body.print-mode-batch #certs-print-area {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                gap: 0 !important;
+            }
+            body.print-mode-batch .cert-a4-sheet {
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 !important;
+                height: 208mm !important;
+                max-height: 208mm !important;
+                page-break-after: always !important;
+                break-after: page !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            body.print-mode-batch .cert-a4-sheet:last-child {
+                page-break-after: auto !important;
+                break-after: auto !important;
+            }
+
+            /* طباعة الشهادة الفردية (A5 عمودي) */
+            body.print-mode-single #certs-print-area { display: none !important; }
+            body.print-mode-single #single-cert-print-area {
+                display: block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            body.print-mode-single .cert-a5-sheet {
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 auto !important;
+                height: 208mm !important;
+                max-height: 208mm !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+        }
+    </style>
+</head>
+<body class="print-mode-batch">
+
+    <div class="app-container space-y-3">
+
+        <!-- 1. الشريط العلوي -->
+        <header class="top-nav rounded-2xl shadow-lg p-3 sm:p-4 flex flex-wrap justify-between items-center gap-3 no-print">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-yellow-300 text-2xl shrink-0">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm sm:text-base font-black leading-tight text-white">
+                        طباعة الشهادات الملونة
+                    </h1>
+                    <p class="text-[11px] text-blue-200 font-bold">دفعات A4 أفقية بالقص الذكي • شهادة فردية A5 عمودي • مستر زيزو</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+                <a href="control-stats.html" class="btn-3d px-3 py-1.5 bg-rose-700 hover:bg-rose-600 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-chart-pie text-yellow-300"></i> التحكم والإحصاء
+                </a>
+                <a href="control-results.html" class="btn-3d px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-scroll text-yellow-300"></i> شيت النتيجة
+                </a>
+                <a href="control-index.html" class="btn-3d px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-stamp"></i> بوابة الكنترول
+                </a>
+                <a href="index.html" class="btn-3d px-3.5 py-1.5 bg-blue-800 hover:bg-blue-700 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-house"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- 2. التبويبان الرئيسيان: طباعة الدفعات (A4 أفقي) أو شهادة فردية (A5 عمودي) -->
+        <div class="flex flex-wrap gap-2 no-print">
+            <button id="btn-tab-batch" type="button" onclick="switchMainPageTab('batch')" class="page-tab-btn active flex-1 justify-center sm:flex-initial">
+                <i class="fa-solid fa-layer-group text-amber-500"></i> طباعة الدفعات (شهادتان / ورقة A4 أفقي بالقص الذكي)
+            </button>
+            <button id="btn-tab-single" type="button" onclick="switchMainPageTab('single')" class="page-tab-btn flex-1 justify-center sm:flex-initial">
+                <i class="fa-solid fa-user-check text-blue-500"></i> طباعة شهادة فردية (A5 عمودي)
+            </button>
+        </div>
+
+        <!-- 3. لوحة تحكم طباعة الدفعات (10 شهادات في كل مرة) -->
+        <div id="section-batch-controls" class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm space-y-3 no-print">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <div>
+                    <label class="block text-[11px] font-black text-slate-600 mb-1">١. الصف الدراسي:</label>
+                    <select id="sel-grade" onchange="loadCertificatesData()" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-black outline-none">
+                        <option value="الأول">الصف الأول</option>
+                        <option value="الثاني">الصف الثاني</option>
+                        <option value="الثالث">الصف الثالث</option>
+                        <option value="الرابع" selected>الصف الرابع</option>
+                        <option value="الخامس">الصف الخامس</option>
+                        <option value="السادس">الصف السادس</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-black text-slate-600 mb-1">٢. الترم:</label>
+                    <select id="sel-term" onchange="onCertFilterChange()" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-black outline-none">
+                        <option value="t1">الفصل الدراسى الأول (نصف العام)</option>
+                        <option value="t2">الفصل الدراسى الثانى (آخر العام)</option>
+                        <option value="combined">متوسط الترمين (نهاية العام)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-black text-slate-600 mb-1">٣. الفصل:</label>
+                    <select id="sel-class" onchange="onCertFilterChange()" class="w-full p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs sm:text-sm font-black outline-none">
+                        <option value="ALL">جميع فصول الصف</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-black text-slate-600 mb-1">٤. الدفعة (١٠ شهادات = ٥ ورقات):</label>
+                    <div class="flex gap-1">
+                        <button type="button" onclick="stepBatch(-1)" class="btn-3d px-2.5 bg-[#0f2b48] text-yellow-300 rounded-xl text-xs" title="الدفعة السابقة">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <select id="sel-batch" onchange="renderCurrentBatch()" class="flex-1 min-w-0 p-2 bg-amber-50 border-2 border-amber-400 rounded-xl text-xs font-black outline-none text-amber-950"></select>
+                        <button type="button" onclick="stepBatch(1)" class="btn-3d px-2.5 bg-[#0f2b48] text-yellow-300 rounded-xl text-xs" title="الدفعة التالية">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-slate-100">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" onclick="openCertSettingsModal()" class="btn-3d px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-1.5 shadow cursor-pointer">
+                        <i class="fa-solid fa-sliders text-yellow-300"></i> ضبط أبعاد كل شيء في الشهادة
+                    </button>
+
+                    <button type="button" onclick="loadCertificatesData(true)" class="btn-3d px-3.5 py-2 bg-blue-800 hover:bg-blue-900 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow cursor-pointer">
+                        <i class="fa-solid fa-arrows-rotate text-yellow-300"></i> تحديث الدرجات
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-black text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border" id="batch-info-pill">
+                        جاهز للطباعة: ٠ شهادة
+                    </span>
+                    <button type="button" onclick="printCertificatesNow('batch')" class="btn-3d px-6 py-2 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 shadow cursor-pointer">
+                        <i class="fa-solid fa-print text-yellow-400"></i> طباعة الدفعة الحالية (٥ ورقات A4 أفقي)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. لوحة تحكم طباعة شهادة فردية (A5 عمودي) -->
+        <div id="section-single-controls" class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm space-y-3 no-print hidden">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div>
+                    <label class="block text-[11px] font-black text-slate-600 mb-1">الصف والترم:</label>
+                    <div class="flex gap-2">
+                        <select id="sel-grade-single" onchange="syncGradeToSingle()" class="flex-1 p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black outline-none">
+                            <option value="الأول">الأول</option><option value="الثاني">الثاني</option><option value="الثالث">الثالث</option>
+                            <option value="الرابع" selected>الرابع</option><option value="الخامس">الخامس</option><option value="السادس">السادس</option>
+                        </select>
+                        <select id="sel-term-single" onchange="syncTermToSingle()" class="flex-1 p-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-black outline-none">
+                            <option value="t1">الترم الأول</option><option value="t2">الترم الثاني</option><option value="combined">متوسط الترمين</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block text-[11px] font-black text-slate-600 mb-1">البحث عن تلميذ بالاسم أو الرقم السري أو رقم الجلوس:</label>
+                    <div class="flex gap-1.5 items-center">
+                        <button type="button" onclick="navigateSingleStudent(-1)" class="btn-3d w-10 h-10 bg-[#0f2b48] text-yellow-300 rounded-xl flex items-center justify-center shrink-0" title="السابق">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                        <div class="combo-wrapper flex-1">
+                            <input type="text"
+                                   id="single-search-input"
+                                   class="w-full p-2 bg-white border-2 border-blue-900 rounded-xl text-xs sm:text-sm font-black outline-none text-[#0f2b48]"
+                                   placeholder="🔍 اكتب بداية اسم التلميذ أو الرقم السري أو الجلوس..."
+                                   autocomplete="off"
+                                   oninput="onSingleSearchInput()"
+                                   onfocus="openSingleDropdown()">
+                            <div id="single-search-dropdown" class="combo-dropdown"></div>
+                        </div>
+                        <button type="button" onclick="navigateSingleStudent(1)" class="btn-3d w-10 h-10 bg-[#0f2b48] text-yellow-300 rounded-xl flex items-center justify-center shrink-0" title="التالي">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap justify-between items-center gap-2 pt-2 border-t border-slate-100">
+                <span class="text-xs font-black text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl border" id="single-student-pill">
+                    لم يُحدد تلميذ
+                </span>
+                <div class="flex gap-2">
+                    <button type="button" onclick="openCertSettingsModal()" class="btn-3d px-3.5 py-2 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow cursor-pointer">
+                        <i class="fa-solid fa-sliders text-yellow-300"></i> ضبط الأبعاد
+                    </button>
+                    <button type="button" onclick="printCertificatesNow('single')" class="btn-3d px-6 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs sm:text-sm font-black flex items-center gap-2 shadow cursor-pointer">
+                        <i class="fa-solid fa-print text-yellow-300"></i> طباعة الشهادة الفردية (A5 عمودي)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. منطقة عرض وطباعة الدفعات (A4 أفقي - 5 ورقات) -->
+        <div id="certs-print-area">
+            <div class="p-10 text-center text-slate-400 font-bold no-print">
+                <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block text-blue-900"></i>
+                جاري تحميل الشهادات...
+            </div>
+        </div>
+
+        <!-- 6. منطقة عرض وطباعة الشهادة الفردية (A5 عمودي) -->
+        <div id="single-cert-print-area" class="hidden">
+            <div class="p-10 text-center text-slate-400 font-bold no-print">
+                اختر تلميذاً من خانة البحث بالأعلى لعرض وطباعة شهادته الفردية.
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ================= 7. نافذة ضبط أبعاد كل شيء في الشهادة ================= -->
+    <div class="modal-overlay no-print" id="certSettingsModal" onclick="if(event.target===this) closeCertSettingsModal()">
+        <div class="cfg-box">
+            <div class="bg-gradient-to-r from-[#0f2b48] to-[#1e3a8a] text-white p-3.5 flex justify-between items-center border-b-4 border-amber-500">
+                <h2 class="text-sm sm:text-base font-black flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-yellow-300"></i> لوحة الضبط التفصيلية لكل أبعاد وعناصر الشهادة (معاينة حية)
+                </h2>
+                <button onclick="closeCertSettingsModal()" class="text-white text-2xl leading-none">&times;</button>
+            </div>
+
+            <div class="cfg-tabs">
+                <button type="button" class="cfg-tab-btn active" id="ctab-margins" onclick="switchCfgTab('margins')">١. الهوامش والمسافات</button>
+                <button type="button" class="cfg-tab-btn" id="ctab-rows" onclick="switchCfgTab('rows')">٢. ارتفاع كل صف</button>
+                <button type="button" class="cfg-tab-btn" id="ctab-cols" onclick="switchCfgTab('cols')">٣. عرض كل عمود</button>
+                <button type="button" class="cfg-tab-btn" id="ctab-fonts" onclick="switchCfgTab('fonts')">٤. الخطوط والتذييل والبيانات</button>
+            </div>
+
+            <div class="p-3.5 overflow-y-auto flex-1">
+                
+                <!-- تبويب 1: الهوامش والمسافات الفاصلة -->
+                <div id="csec-margins" class="cfg-grid">
+                    <div class="cfg-item"><label>الهامش العلوي للورقة <b><span id="l_padTop">6mm</span></b></label><input type="range" id="r_padTop" min="1" max="20" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>الهامش السفلي للورقة <b><span id="l_padBottom">6mm</span></b></label><input type="range" id="r_padBottom" min="1" max="20" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>الهامش الأيمن للورقة <b><span id="l_padRight">6mm</span></b></label><input type="range" id="r_padRight" min="1" max="20" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>الهامش الأيسر للورقة <b><span id="l_padLeft">6mm</span></b></label><input type="range" id="r_padLeft" min="1" max="20" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>المسافة الفاصلة للتقطيع (وسط A4) <b><span id="l_splitGap">10mm</span></b></label><input type="range" id="r_splitGap" min="2" max="24" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>المسافة أسفل إطار الصف <b><span id="l_gapHead">2.5mm</span></b></label><input type="range" id="r_gapHead" min="0" max="10" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>المسافة قبل جدول الأنشطة <b><span id="l_gapAct">2.5mm</span></b></label><input type="range" id="r_gapAct" min="0" max="10" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>المسافة قبل شريط الألوان <b><span id="l_gapLegend">3mm</span></b></label><input type="range" id="r_gapLegend" min="0" max="12" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>المسافة بين شريط الألوان والتذييل <b><span id="l_gapFooter">10mm</span></b></label><input type="range" id="r_gapFooter" min="2" max="25" step="0.5" oninput="onCertSliderChange()"></div>
+                </div>
+
+                <!-- تبويب 2: ارتفاع كل صف -->
+                <div id="csec-rows" class="cfg-grid hidden">
+                    <div class="cfg-item"><label>ارتفاع الترويسة العلوية <b><span id="l_hTopHeader">13mm</span></b></label><input type="range" id="r_hTopHeader" min="7" max="24" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>ارتفاع إطار القرار والصف <b><span id="l_hPill">10.5mm</span></b></label><input type="range" id="r_hPill" min="6" max="18" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>ارتفاع صف اسم التلميذ <b><span id="l_hName">8mm</span></b></label><input type="range" id="r_hName" min="5" max="15" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>ارتفاع رأس جدول الدرجات <b><span id="l_hTblHead">13mm</span></b></label><input type="range" id="r_hTblHead" min="7" max="22" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>ارتفاع صف النهاية العظمى <b><span id="l_hTblMax">5.5mm</span></b></label><input type="range" id="r_hTblMax" min="3.5" max="10" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>ارتفاع صفوف المواد الأساسية <b><span id="l_hSubRow">7mm</span></b></label><input type="range" id="r_hSubRow" min="4.5" max="12" step="0.2" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>ارتفاع فاصل (مواد غير مضافة) <b><span id="l_hDivider">6.5mm</span></b></label><input type="range" id="r_hDivider" min="4" max="11" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>ارتفاع صفوف الدين والـ ICT <b><span id="l_hNonAddRow">7mm</span></b></label><input type="range" id="r_hNonAddRow" min="4.5" max="12" step="0.2" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>ارتفاع سطر نسبة الحضور <b><span id="l_hAtt">7mm</span></b></label><input type="range" id="r_hAtt" min="4" max="12" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>ارتفاع صفوف جدول الأنشطة <b><span id="l_hActRow">7mm</span></b></label><input type="range" id="r_hActRow" min="4.5" max="12" step="0.2" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>ارتفاع شريط الألوان الأربعة <b><span id="l_hLegend">10mm</span></b></label><input type="range" id="r_hLegend" min="6" max="18" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>ارتفاع منطقة التذييل والتوقيعات <b><span id="l_hFooter">12mm</span></b></label><input type="range" id="r_hFooter" min="7" max="22" step="0.5" oninput="onCertSliderChange()"></div>
+                </div>
+
+                <!-- تبويب 3: عرض كل عمود -->
+                <div id="csec-cols" class="cfg-grid hidden">
+                    <div class="cfg-item"><label>عرض عمود (المادة) <b><span id="l_wSubj">20%</span></b></label><input type="range" id="r_wSubj" min="12" max="32" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>عرض عمود (واجب منزلى) <b><span id="l_wHw">7.5%</span></b></label><input type="range" id="r_wHw" min="5" max="15" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>عرض عمود (كراسة النشاط والحصة) <b><span id="l_wCw">8.5%</span></b></label><input type="range" id="r_wCw" min="5" max="16" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>عرض عمود (تقييم أسبوعى) <b><span id="l_wEval">8%</span></b></label><input type="range" id="r_wEval" min="5" max="15" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>عرض عمود (مواظبة) <b><span id="l_wAtt">7.5%</span></b></label><input type="range" id="r_wAtt" min="5" max="15" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>عرض عمود (اختبار شهر) <b><span id="l_wMonth">8%</span></b></label><input type="range" id="r_wMonth" min="5" max="15" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>عرض عمود (مجموع التقييم ٤٠) <b><span id="l_wEval40">10%</span></b></label><input type="range" id="r_wEval40" min="6" max="16" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>عرض عمود (اختبار نصف/آخر العام) <b><span id="l_wExam">12%</span></b></label><input type="range" id="r_wExam" min="6" max="18" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>عرض عمود (المجموع ١٠٠) <b><span id="l_wTotal">10.5%</span></b></label><input type="range" id="r_wTotal" min="6" max="18" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>عرض عمود (اللون) <b><span id="l_wColor">8%</span></b></label><input type="range" id="r_wColor" min="4" max="15" step="0.5" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>حجم الدائرة الملونة <b><span id="l_dotSize">13px</span></b></label><input type="range" id="r_dotSize" min="8" max="22" step="1" oninput="onCertSliderChange()"></div>
+                    <div class="cfg-item"><label>حجم شعار المدرسة (اللوجو) <b><span id="l_logoSize">46px</span></b></label><input type="range" id="r_logoSize" min="24" max="75" step="1" oninput="onCertSliderChange()"></div>
+                </div>
+
+                <!-- تبويب 4: أحجام الخطوط والتذييل والبيانات -->
+                <div id="csec-fonts" class="space-y-3 hidden">
+                    <div class="cfg-grid">
+                        <div class="cfg-item"><label>خط الترويسة (الإدارة والمدرسة) <b><span id="l_fHeader">11px</span></b></label><input type="range" id="r_fHeader" min="8" max="16" step="0.5" oninput="onCertSliderChange()"></div>
+                        <div class="cfg-item"><label>خط إطار القرار والصف <b><span id="l_fPill">10.5px</span></b></label><input type="range" id="r_fPill" min="8" max="15" step="0.5" oninput="onCertSliderChange()"></div>
+                        <div class="cfg-item"><label>خط اسم التلميذ <b><span id="l_fName">13.5px</span></b></label><input type="range" id="r_fName" min="10" max="20" step="0.5" oninput="onCertSliderChange()"></div>
+                        <div class="cfg-item"><label>خط عناوين الجدول <b><span id="l_fTblHead">9px</span></b></label><input type="range" id="r_fTblHead" min="7" max="14" step="0.5" oninput="onCertSliderChange()"></div>
+                        <div class="cfg-item"><label>خط صف الدرجات العظمى <b><span id="l_fTblMax">10px</span></b></label><input type="range" id="r_fTblMax" min="7" max="14" step="0.5" oninput="onCertSliderChange()"></div>
+                        <div class="cfg-item"><label>خط أسماء المواد <b><span id="l_fSubj">10.5px</span></b></label><input type="range" id="r_fSubj" min="8" max="15" step="0.5" oninput="onCertSliderChange()"></div>
+                        <div class="cfg-item"><label>خط الدرجات والأرقام <b><span id="l_fScores">11px</span></b></label><input type="range" id="r_fScores" min="8" max="16" step="0.5" oninput="onCertSliderChange()"></div>
+                        <div class="cfg-item"><label>خط النسبة المئوية للحضور <b><span id="l_fAtt">12px</span></b></label><input type="range" id="r_fAtt" min="9" max="17" step="0.5" oninput="onCertSliderChange()"></div>
+                        <div class="cfg-item"><label>خط جدول الأنشطة <b><span id="l_fAct">10.5px</span></b></label><input type="range" id="r_fAct" min="8" max="15" step="0.5" oninput="onCertSliderChange()"></div>
+                        <div class="cfg-item"><label>خط شريط الألوان <b><span id="l_fLegend">10px</span></b></label><input type="range" id="r_fLegend" min="7.5" max="14" step="0.5" oninput="onCertSliderChange()"></div>
+                        <div class="cfg-item"><label>خط التذييل والتوقيعات <b><span id="l_fFooter">11px</span></b></label><input type="range" id="r_fFooter" min="8" max="15" step="0.5" oninput="onCertSliderChange()"></div>
+                    </div>
+
+                    <div class="bg-white border border-slate-300 rounded-xl p-3 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-bold">
+                        <div>
+                            <label class="block text-slate-600 mb-1">العام الدراسي:</label>
+                            <input type="text" id="inp_yearLabel" value="٢٠٢٦ / ٢٠٢٧ م" oninput="onCertTextMetaChange()" class="w-full p-2 border border-slate-300 rounded-lg font-black text-center">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 mb-1">رئيس الكنترول:</label>
+                            <input type="text" id="inp_controlHead" value="أ / خالد عمارة" oninput="onCertTextMetaChange()" class="w-full p-2 border border-slate-300 rounded-lg font-black text-center">
+                        </div>
+                        <div>
+                            <label class="block text-slate-600 mb-1">مدير المدرسة:</label>
+                            <input type="text" id="inp_managerName" value="أ / عبدالمنعم معروف" oninput="onCertTextMetaChange()" class="w-full p-2 border border-slate-300 rounded-lg font-black text-center">
+                        </div>
+                        <div class="sm:col-span-3 flex flex-wrap gap-4 pt-1 border-t">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="chk_showMrZezo" checked onchange="onCertTextMetaChange()" class="w-4 h-4 accent-blue-900">
+                                <span>إظهار توقيع (Mr-Zezo) أسفل الشهادة</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="chk_showLogo" checked onchange="onCertTextMetaChange()" class="w-4 h-4 accent-blue-900">
+                                <span>إظهار شعار المدرسة (logo.png)</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="chk_showCutLine" checked onchange="onCertTextMetaChange()" class="w-4 h-4 accent-blue-900">
+                                <span>إظهار خط التقطيع المتقطع في المنتصف (A4)</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="p-3 bg-white border-t border-slate-200 flex flex-wrap justify-between items-center gap-2">
+                <button type="button" onclick="resetCertSettings()" class="btn-3d px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-left"></i> استعادة الافتراضي
+                </button>
+                <div class="flex gap-2">
+                    <button type="button" onclick="saveCertSettings()" class="btn-3d px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow">
+                        <i class="fa-solid fa-floppy-disk text-yellow-300"></i> حفظ وتثبيت الإعدادات
+                    </button>
+                    <button type="button" onclick="closeCertSettingsModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-black">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
+        const DB_VERSION = 2;
+        const CERT_SETTINGS_KEY = "control_certificates_settings_v3";
+
+        let MASTER_STUDENTS = [];
+        let SCORES_DATA = { t1: {}, t2: {} };
+        let FILTERED_STUDENTS = [];
+        let ACTIVE_PAGE_TAB = 'batch'; // batch | single
+        let SINGLE_SELECTED_STUDENT_KEY = null;
+        let SINGLE_FILTERED_LIST = [];
+
+        const DEFAULT_CERT_CFG = {
+            padTop: 6, padBottom: 6, padRight: 6, padLeft: 6,
+            splitGap: 10, gapHead: 2.5, gapAct: 2.5, gapLegend: 3, gapFooter: 10,
+
+            hTopHeader: 13, hPill: 10.5, hName: 8, hTblHead: 13, hTblMax: 5.5,
+            hSubRow: 7, hDivider: 6.5, hNonAddRow: 7, hAtt: 7, hActRow: 7, hLegend: 10, hFooter: 12,
+
+            wSubj: 20, wHw: 7.5, wCw: 8.5, wEval: 8, wAtt: 7.5, wMonth: 8, wEval40: 10, wExam: 12, wTotal: 10.5, wColor: 8,
+            dotSize: 13, logoSize: 46,
+
+            fHeader: 11, fPill: 10.5, fName: 13.5, fTblHead: 9, fTblMax: 10,
+            fSubj: 10.5, fScores: 11, fAtt: 12, fAct: 10.5, fLegend: 10, fFooter: 11,
+
+            yearLabel: "٢٠٢٦ / ٢٠٢٧ م",
+            controlHead: "أ / خالد عمارة",
+            managerName: "أ / عبدالمنعم معروف",
+            showMrZezo: true,
+            showLogo: true,
+            showCutLine: true
+        };
+
+        let CERT_CFG = { ...DEFAULT_CERT_CFG };
+
+        const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
+        const arToEn = v => String(v ?? '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+        const toNum = v => { const n = parseInt(arToEn(v), 10); return Number.isFinite(n) ? n : null; };
+
+        function normalizeArabic(text) {
+            if (!text) return "";
+            return String(text)
+                .replace(/[أإآا]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[\u064B-\u0652]/g, '')
+                .replace(/\u0640/g, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+        }
+
+        function isLowerGrade(grade) {
+            return ["الأول", "الثاني", "الثالث"].includes(grade);
+        }
+
+        function getStudentKey(st) {
+            return st.code || st.nid || ('SEAT_' + (st.seat_t1 || st.seat_t2 || st.serial));
+        }
+
+        function openLocalDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('system_capsules')) {
+                        db.createObjectStore('system_capsules', { keyPath: 'id' });
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function fetchCapsuleData(capsuleKey) {
+            const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
+            let dataOut = null;
+
+            if (mode === 'online') {
+                try {
+                    const { data, error } = await sbClient.from("system_capsules").select("data").eq("id", capsuleKey).maybeSingle();
+                    if (!error && data) dataOut = data.data;
+                } catch (e) { console.warn(e); }
+            }
+
+            if (!dataOut) {
+                try {
+                    const db = await openLocalDB();
+                    if (db.objectStoreNames.contains('system_capsules')) {
+                        dataOut = await new Promise((resolve) => {
+                            const tx = db.transaction('system_capsules', 'readonly');
+                            const req = tx.objectStore('system_capsules').get(capsuleKey);
+                            req.onsuccess = () => resolve(req.result ? req.result.data : null);
+                            req.onerror = () => resolve(null);
+                        });
+                    }
+                } catch (e) {}
+            }
+            return dataOut;
+        }
+
+        async function saveCapsuleData(capsuleKey, payload) {
+            const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
+            try {
+                const db = await openLocalDB();
+                if (db.objectStoreNames.contains('system_capsules')) {
+                    await new Promise((resolve, reject) => {
+                        const tx = db.transaction('system_capsules', 'readwrite');
+                        tx.objectStore('system_capsules').put({ id: capsuleKey, data: payload });
+                        tx.oncomplete = () => resolve();
+                        tx.onerror = () => reject(tx.error);
+                    });
+                }
+            } catch (e) {}
+
+            if (mode === 'online') {
+                let { error } = await sbClient.from("system_capsules").upsert({
+                    id: capsuleKey,
+                    data: payload,
+                    updatedat: new Date().toLocaleString('ar-EG')
+                }, { onConflict: 'id' });
+                if (error) {
+                    const res2 = await sbClient.from("system_capsules").upsert({ id: capsuleKey, data: payload }, { onConflict: 'id' });
+                    if (res2.error) throw res2.error;
+                }
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            await loadSavedCertSettings();
+            await loadCertificatesData();
+        });
+
+        // تبديل التبويبين الرئيسيين (دفعات A4 أفقي أو فردي A5 عمودي)
+        function switchMainPageTab(tab) {
+            ACTIVE_PAGE_TAB = tab;
+            document.getElementById('btn-tab-batch').classList.toggle('active', tab === 'batch');
+            document.getElementById('btn-tab-single').classList.toggle('active', tab === 'single');
+            document.getElementById('section-batch-controls').classList.toggle('hidden', tab !== 'batch');
+            document.getElementById('section-single-controls').classList.toggle('hidden', tab !== 'single');
+            document.getElementById('certs-print-area').classList.toggle('hidden', tab !== 'batch');
+            document.getElementById('single-cert-print-area').classList.toggle('hidden', tab !== 'single');
+
+            updatePrintModeAndStyle(tab);
+
+            if (tab === 'single') {
+                document.getElementById('sel-grade-single').value = document.getElementById('sel-grade').value;
+                document.getElementById('sel-term-single').value = document.getElementById('sel-term').value;
+                if (!SINGLE_SELECTED_STUDENT_KEY && FILTERED_STUDENTS.length > 0) {
+                    selectSingleStudent(getStudentKey(FILTERED_STUDENTS[0]));
+                }
+            }
+        }
+
+        function updatePrintModeAndStyle(tab) {
+            const styleEl = document.getElementById('dynamic-print-style');
+            if (tab === 'single') {
+                document.body.classList.remove('print-mode-batch');
+                document.body.classList.add('print-mode-single');
+                styleEl.innerHTML = `@page { size: A5 portrait !important; margin: 0 !important; }`;
+            } else {
+                document.body.classList.remove('print-mode-single');
+                document.body.classList.add('print-mode-batch');
+                styleEl.innerHTML = `@page { size: A4 landscape !important; margin: 0 !important; }`;
+            }
+        }
+
+        function printCertificatesNow(mode) {
+            updatePrintModeAndStyle(mode);
+            window.print();
+        }
+
+        // ================= استدعاء بيانات الطلاب والدرجات =================
+        async function loadCertificatesData(showToast = false) {
+            const grade = document.getElementById('sel-grade').value;
+            const masterKey = `control_master_grade_${grade}`;
+            const scoresKey = `control_scores_grade_${grade}`;
+
+            document.getElementById('certs-print-area').innerHTML = `
+                <div class="p-10 text-center text-slate-500 font-bold no-print">
+                    <i class="fa-solid fa-spinner fa-spin text-2xl mb-2 block text-blue-900"></i>
+                    جاري تحميل بيانات الشهادات للصف (${grade})...
+                </div>`;
+
+            try {
+                const [masterRaw, scoresRaw] = await Promise.all([
+                    fetchCapsuleData(masterKey),
+                    fetchCapsuleData(scoresKey)
+                ]);
+
+                MASTER_STUDENTS = Array.isArray(masterRaw)
+                    ? masterRaw
+                    : (masterRaw && Array.isArray(masterRaw.students) ? masterRaw.students : []);
+
+                SCORES_DATA = (scoresRaw && typeof scoresRaw === 'object')
+                    ? { t1: scoresRaw.t1 || {}, t2: scoresRaw.t2 || {} }
+                    : { t1: {}, t2: {} };
+
+                populateClassFilter();
+                onCertFilterChange();
+
+                if (showToast) {
+                    Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم تحديث الشهادات', timer: 1200, showConfirmButton: false });
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ', 'تعذر تحميل الشهادات: ' + err.message, 'error');
+            }
+        }
+
+        function populateClassFilter() {
+            const sel = document.getElementById('sel-class');
+            const prev = sel.value;
+            const classes = [...new Set(MASTER_STUDENTS.map(s => String(s.class || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar', { numeric: true }));
+            sel.innerHTML = `<option value="ALL">جميع فصول الصف</option>` + classes.map(c => `<option value="${c}">فصل ${c}</option>`).join('');
+            if (classes.includes(prev)) sel.value = prev;
+        }
+
+        function onCertFilterChange() {
+            const term = document.getElementById('sel-term').value;
+            const cls = document.getElementById('sel-class').value;
+            const seatField = (term === 't2') ? 'seat_t2' : 'seat_t1';
+
+            FILTERED_STUDENTS = MASTER_STUDENTS
+                .filter(st => cls === 'ALL' || String(st.class || '').trim() === cls)
+                .slice()
+                .sort((a, b) => {
+                    const sa = toNum(a[seatField] || a.seat_t1 || a.serial) ?? 999999;
+                    const sb = toNum(b[seatField] || b.seat_t1 || b.serial) ?? 999999;
+                    return sa - sb;
+                });
+
+            const batchSel = document.getElementById('sel-batch');
+            const totalBatches = Math.ceil(FILTERED_STUDENTS.length / 10);
+
+            if (totalBatches === 0) {
+                batchSel.innerHTML = `<option value="0">لا يوجد طلاب</option>`;
+                document.getElementById('certs-print-area').innerHTML = `
+                    <div class="p-10 text-center text-rose-700 font-black no-print">لا يوجد تلاميذ في هذا الاختيار.</div>`;
+                document.getElementById('batch-info-pill').innerText = "جاهز للطباعة: ٠ شهادة";
+                renderSingleStudentCertificate(null);
+                return;
+            }
+
+            let opts = "";
+            for (let b = 0; b < totalBatches; b++) {
+                const startIdx = b * 10;
+                const endIdx = Math.min((b + 1) * 10, FILTERED_STUDENTS.length);
+                const firstSeat = FILTERED_STUDENTS[startIdx][seatField] || (startIdx + 1);
+                const lastSeat  = FILTERED_STUDENTS[endIdx - 1][seatField] || endIdx;
+                opts += `<option value="${b}">الدفعة ${toAr(b + 1)} (${toAr(startIdx + 1)} : ${toAr(endIdx)} | جلوس ${toAr(firstSeat)} : ${toAr(lastSeat)})</option>`;
+            }
+            batchSel.innerHTML = opts;
+            batchSel.value = "0";
+            renderCurrentBatch();
+
+            if (ACTIVE_PAGE_TAB === 'single') {
+                if (!SINGLE_SELECTED_STUDENT_KEY || !FILTERED_STUDENTS.some(x => getStudentKey(x) === SINGLE_SELECTED_STUDENT_KEY)) {
+                    if (FILTERED_STUDENTS.length > 0) selectSingleStudent(getStudentKey(FILTERED_STUDENTS[0]));
+                }
+            }
+        }
+
+        function stepBatch(dir) {
+            const sel = document.getElementById('sel-batch');
+            const total = sel.options.length;
+            if (total <= 1) return;
+            let next = parseInt(sel.value, 10) + dir;
+            if (next < 0) next = 0;
+            if (next >= total) next = total - 1;
+            sel.value = String(next);
+            renderCurrentBatch();
+        }
+
+        // ================= قراءة الدرجات المباشرة =================
+        function getStudentTermRecord(st, term) {
+            const map = SCORES_DATA[term] || {};
+            if (st.code && map[st.code]) return map[st.code];
+            if (st.nid && map[st.nid]) return map[st.nid];
+            const seatKey = term === 't1' ? st.seat_t1 : st.seat_t2;
+            const secKey  = term === 't1' ? st.secret_t1 : st.secret_t2;
+            if (seatKey && map[`SEAT_${seatKey}`]) return map[`SEAT_${seatKey}`];
+            if (secKey  && map[`SEC_${secKey}`])   return map[`SEC_${secKey}`];
+            return {};
+        }
+
+        function parseNum(v) {
+            if (v === undefined || v === null || String(v).trim() === '') return null;
+            const n = parseFloat(arToEn(v));
+            return Number.isFinite(n) ? n : null;
+        }
+        function hasVal(v) { return v !== undefined && v !== null && String(v).trim() !== ''; }
+        function isAbs(v) { const s = String(v ?? '').trim(); return s === 'غ' || s === 'غائب' || s === 'غـ'; }
+        function roundHalf(v) { return Math.round(v * 2) / 2; }
+
+        function computeTermSubjectForCert(rawSub, subjectKey) {
+            if (!rawSub || typeof rawSub !== 'object') return { hasData: false };
+            const any = hasVal(rawSub.hw) || hasVal(rawSub.cw) || hasVal(rawSub.eval) ||
+                        hasVal(rawSub.att) || hasVal(rawSub.month) || hasVal(rawSub.exam) || hasVal(rawSub.raw40);
+            if (!any) return { hasData: false };
+
+            const hasSplit = hasVal(rawSub.hw) || hasVal(rawSub.cw) || hasVal(rawSub.eval) || hasVal(rawSub.att) || hasVal(rawSub.month);
+
+            const hw5    = hasSplit ? (parseNum(rawSub.hw) ?? 0) : '';
+            const cw5    = hasSplit ? (parseNum(rawSub.cw) ?? 0) : '';
+            const eval10 = hasSplit ? (parseNum(rawSub.eval) ?? 0) : '';
+            const att5   = hasSplit ? (parseNum(rawSub.att) ?? 0) : '';
+            const month15= hasSplit ? (parseNum(rawSub.month) ?? 0) : '';
+
+            const eval40 = hasSplit
+                ? +((hw5 || 0) + (cw5 || 0) + (eval10 || 0) + (att5 || 0) + (month15 || 0)).toFixed(1)
+                : (parseNum(rawSub.raw40) ?? 0);
+
+            const absent = isAbs(rawSub.exam);
+            const exam60 = absent ? 0 : (parseNum(rawSub.exam) ?? 0);
+            const total100 = absent ? eval40 : +(eval40 + exam60).toFixed(1);
+
+            return {
+                hasData: true,
+                hw5, cw5, eval10, att5, month15, eval40,
+                exam60: absent ? 'غ' : (hasVal(rawSub.exam) ? exam60 : ''),
+                exam60Num: absent ? 0 : exam60,
+                total100Display: absent ? 'غ' : total100,
+                total100Numeric: total100,
+                absent,
+                dotClass: getColorDotClass(total100, absent, subjectKey)
+            };
+        }
+
+        function getColorDotClass(score100, absent, subjectKey) {
+            if (absent) return 'dot-red';
+            if (subjectKey === 'religion') {
+                if (score100 < 70) return 'dot-red';
+                if (score100 < 85) return 'dot-green';
+                return 'dot-blue';
+            }
+            if (score100 < 50) return 'dot-red';
+            if (score100 < 65) return 'dot-yellow';
+            if (score100 < 85) return 'dot-green';
+            return 'dot-blue';
+        }
+
+        function getSubjectCertRowData(st, subjectKey, termMode) {
+            if (termMode === 't1' || termMode === 't2') {
+                const rawMap = getStudentTermRecord(st, termMode);
+                return computeTermSubjectForCert(rawMap[subjectKey], subjectKey);
+            }
+
+            const r1 = computeTermSubjectForCert(getStudentTermRecord(st, 't1')[subjectKey], subjectKey);
+            const r2 = computeTermSubjectForCert(getStudentTermRecord(st, 't2')[subjectKey], subjectKey);
+            if (!r1.hasData && !r2.hasData) return { hasData: false };
+            if (r1.hasData && !r2.hasData) return r1;
+            if (!r1.hasData && r2.hasData) return r2;
+
+            const avgField = (f) => {
+                if (r1[f] === '' && r2[f] === '') return '';
+                return roundHalf(((parseNum(r1[f]) ?? 0) + (parseNum(r2[f]) ?? 0)) / 2);
+            };
+            const finalAbsent = (r1.absent && r2.absent) || r2.absent;
+            const avgEval40 = +((r1.eval40 + r2.eval40) / 2).toFixed(1);
+            const avgExam = finalAbsent ? 'غ' : roundHalf((r1.exam60Num + r2.exam60Num) / 2);
+            const avgTotal = finalAbsent ? 0 : +((r1.total100Numeric + r2.total100Numeric) / 2).toFixed(1);
+
+            return {
+                hasData: true,
+                hw5: avgField('hw5'),
+                cw5: avgField('cw5'),
+                eval10: avgField('eval10'),
+                att5: avgField('att5'),
+                month15: avgField('month15'),
+                eval40: avgEval40,
+                exam60: avgExam,
+                total100Display: finalAbsent ? 'غ' : avgTotal,
+                dotClass: getColorDotClass(avgTotal, finalAbsent, subjectKey)
+            };
+        }
+
+        function buildSingleCertificateHtml(st, grade, termMode) {
+            if (!st) {
+                return `<div class="single-cert"></div>`;
+            }
+
+            const lower = isLowerGrade(grade);
+            const coreSubjects = lower
+                ? [
+                    { key: 'arabic',  name: 'اللغة العربية' },
+                    { key: 'math',    name: 'الرياضيات' },
+                    { key: 'english', name: 'انجليزى' }
+                  ]
+                : [
+                    { key: 'arabic',  name: 'اللغة العربية' },
+                    { key: 'math',    name: 'الرياضيات' },
+                    { key: 'science', name: 'العلوم' },
+                    { key: 'social',  name: 'الدراسات' },
+                    { key: 'english', name: 'انجليزى' }
+                  ];
+
+            const nonAddSubjects = lower
+                ? [{ key: 'religion', name: 'تربية دينية' }]
+                : [{ key: 'religion', name: 'تربية دينية' }, { key: 'tech', name: 'I C T' }];
+
+            const termTitleText = termMode === 't1'
+                ? `الفصل الدراسى الأول ${CERT_CFG.yearLabel}`
+                : (termMode === 't2' ? `الفصل الدراسى الثانى ${CERT_CFG.yearLabel}` : `نتيجة نهاية العام ${CERT_CFG.yearLabel}`);
+
+            const examColHeader = termMode === 't1'
+                ? 'اختبار<br>نصف<br>العام'
+                : (termMode === 't2' ? 'اختبار<br>آخر<br>العام' : 'متوسط<br>الاختبار');
+
+            const seatField = termMode === 't2' ? 'seat_t2' : 'seat_t1';
+            const seatDisplay = st[seatField] || st.seat_t1 || '';
+
+            const attField = termMode === 't2' ? 'attend_t2' : 'attend_t1';
+            const attRaw = st[attField] || st.attend_t1 || '';
+            const attDisplay = attRaw !== '' ? `%${toAr(Math.round(parseFloat(arToEn(attRaw))))}` : '-';
+
+            const renderRow = (sub, rowClass) => {
+                const d = getSubjectCertRowData(st, sub.key, termMode);
+                if (!d.hasData) {
+                    return `
+                        <tr class="${rowClass}">
+                            <td class="cg-subj-name">${sub.name}</td>
+                            <td></td><td></td><td></td><td></td><td></td>
+                            <td class="cg-eval40-cell"></td>
+                            <td></td>
+                            <td class="cg-total-cell"></td>
+                            <td></td>
+                        </tr>
+                    `;
+                }
+                return `
+                    <tr class="${rowClass}">
+                        <td class="cg-subj-name">${sub.name}</td>
+                        <td>${d.hw5 === '' ? '' : toAr(d.hw5)}</td>
+                        <td>${d.cw5 === '' ? '' : toAr(d.cw5)}</td>
+                        <td>${d.eval10 === '' ? '' : toAr(d.eval10)}</td>
+                        <td>${d.att5 === '' ? '' : toAr(d.att5)}</td>
+                        <td>${d.month15 === '' ? '' : toAr(d.month15)}</td>
+                        <td class="cg-eval40-cell">${toAr(d.eval40)}</td>
+                        <td>${d.exam60 === 'غ' ? '<span style="color:#dc2626; font-weight:900;">غ</span>' : toAr(d.exam60)}</td>
+                        <td class="cg-total-cell">${d.total100Display === 'غ' ? '<span style="color:#dc2626;">غ</span>' : toAr(d.total100Display)}</td>
+                        <td><span class="color-dot ${d.dotClass}"></span></td>
+                    </tr>
+                `;
+            };
+
+            const colgroupHtml = `
+                <colgroup>
+                    <col style="width: var(--c-w-subj);">
+                    <col style="width: var(--c-w-hw);">
+                    <col style="width: var(--c-w-cw);">
+                    <col style="width: var(--c-w-eval);">
+                    <col style="width: var(--c-w-att);">
+                    <col style="width: var(--c-w-month);">
+                    <col style="width: var(--c-w-eval40);">
+                    <col style="width: var(--c-w-exam);">
+                    <col style="width: var(--c-w-total);">
+                    <col style="width: var(--c-w-color);">
+                </colgroup>
+            `;
+
+            const activitiesHtml = lower
+                ? `
+                    <tr>
+                        <td style="width:28%;">تربية بدنية</td>
+                        <td style="width:22%;">اجتاز</td>
+                        <td style="width:28%;">تربية فنية</td>
+                        <td style="width:22%;">اجتاز</td>
+                    </tr>
+                    <tr>
+                        <td>توكاتسو</td>
+                        <td>اجتاز</td>
+                        <td>أنشطة</td>
+                        <td>اجتاز</td>
+                    </tr>
+                `
+                : `
+                    <tr>
+                        <td style="width:28%;">تربية بدنية</td>
+                        <td style="width:22%;">اجتاز</td>
+                        <td style="width:28%;">تربية فنية</td>
+                        <td style="width:22%;">اجتاز</td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:calc(var(--c-f-act) - 1.5px);">مهارات مهنية<br>مـــــــــوسيقى</td>
+                        <td>اجتاز</td>
+                        <td>توكاتسو</td>
+                        <td>اجتاز</td>
+                    </tr>
+                `;
+
+            return `
+                <div class="single-cert">
+                    <!-- 1. الترويسة -->
+                    <div class="cert-top-bar">
+                        <div class="cert-admin-info">
+                            <div>إدارة الشهداء التعليمية</div>
+                            <div>مدرسة الشهيد أشرف حبيب</div>
+                        </div>
+                        <div class="cert-logo-wrap" style="display:${CERT_CFG.showLogo ? 'block' : 'none'};">
+                            <img src="logo.png" alt="الشعار" onerror="this.style.display='none'">
+                        </div>
+                    </div>
+
+                    <!-- 2. إطار الصف والقرار الوزاري -->
+                    <div class="cert-pill-box">
+                        <div class="cert-pill-grade">
+                            <span>الصف</span>
+                            <span>${grade}</span>
+                        </div>
+                        <div class="cert-pill-title">
+                            <span>استمارة تقييم طالب وفقاً للقرار الوزاري رقم ١٣٦</span>
+                            <span>${termTitleText}</span>
+                        </div>
+                    </div>
+
+                    <!-- 3. اسم التلميذ -->
+                    <div class="cert-student-name-row">
+                        <span>اســـــم التلميـــــذ /</span>
+                        <span>${st.name || ''}</span>
+                    </div>
+
+                    <!-- 4. جدول الدرجات بالتقسيم الدقيق -->
+                    <table class="cert-grades-table">
+                        ${colgroupHtml}
+                        <thead>
+                            <tr class="cg-head-r1">
+                                <th rowspan="2">المادة</th>
+                                <th>واجب<br>منزلى</th>
+                                <th>كراسة<br>النشاط<br>والحصة</th>
+                                <th>تقييم<br>أسبوعى</th>
+                                <th>مواظبة</th>
+                                <th>اختبار<br>شهر</th>
+                                <th>مجموع<br>التقييم</th>
+                                <th>${examColHeader}</th>
+                                <th>المجموع</th>
+                                <th rowspan="2">اللون</th>
+                            </tr>
+                            <tr class="cg-head-r2">
+                                <th>٥</th>
+                                <th>٥</th>
+                                <th>١٠</th>
+                                <th>٥</th>
+                                <th>١٥</th>
+                                <th>٤٠</th>
+                                <th>٦٠</th>
+                                <th>١٠٠</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${coreSubjects.map(s => renderRow(s, 'cg-sub-row')).join('')}
+                            <tr class="cg-divider-row">
+                                <td colspan="10">مواد غير مضافة ( يتطلب النجاح في التربية الدينية حصول الطالب على ٧٠ % من الدرجة الكلية )</td>
+                            </tr>
+                            ${nonAddSubjects.map(s => renderRow(s, 'cg-nonadd-row')).join('')}
+                        </tbody>
+                    </table>
+
+                    <!-- 5. النسبة المئوية للحضور -->
+                    <div class="cert-attendance-row">
+                        <span>النسبـة المئــوية للحضـــــور /</span>
+                        <span style="font-size: calc(var(--c-f-att) + 2px);">${attDisplay}</span>
+                    </div>
+
+                    <!-- 6. جدول الأنشطة -->
+                    <table class="cert-activities-table">
+                        <tbody>${activitiesHtml}</tbody>
+                    </table>
+
+                    <!-- 7. شريط دلالات الألوان (رمادي فاتح جداً توفيراً للأحبار) -->
+                    <div class="cert-legend-grid">
+                        <div>
+                            <div class="legend-pill">ازرق</div>
+                            <div class="legend-desc">يفوق التوقعات</div>
+                        </div>
+                        <div>
+                            <div class="legend-pill">أخضر</div>
+                            <div class="legend-desc">يلبى التوقعات</div>
+                        </div>
+                        <div>
+                            <div class="legend-pill">أصفر</div>
+                            <div class="legend-desc">يلبى التوقعات أحيانا</div>
+                        </div>
+                        <div>
+                            <div class="legend-pill">أحمر</div>
+                            <div class="legend-desc">اقل من المتوقع</div>
+                        </div>
+                    </div>
+
+                    <!-- 8. التذييل بمسافة 1 سم فقط أسفل شريط الألوان -->
+                    <div class="cert-footer">
+                        <div class="cert-sig-block" style="display:flex; align-items:center; gap:10px;">
+                            <span class="cert-mrzezo-mark" style="display:${CERT_CFG.showMrZezo ? 'inline-block' : 'none'};">Mr-Zezo</span>
+                            <span class="cert-seat-num">${seatDisplay ? toAr(seatDisplay) : ''}</span>
+                        </div>
+                        <div class="cert-sig-block">
+                            <div>رئيس الكنترول</div>
+                            <div>${CERT_CFG.controlHead}</div>
+                        </div>
+                        <div class="cert-sig-block">
+                            <div>مدير المدرسة</div>
+                            <div>${CERT_CFG.managerName}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ================= عرض الدفعة الحالية (10 شهادات = 5 ورقات A4 أفقي بترتيب القص 1 مع 6) =================
+        function renderCurrentBatch() {
+            const container = document.getElementById('certs-print-area');
+            const grade = document.getElementById('sel-grade').value;
+            const termMode = document.getElementById('sel-term').value;
+            const batchIdx = parseInt(document.getElementById('sel-batch').value, 10) || 0;
+
+            if (FILTERED_STUDENTS.length === 0) return;
+
+            const start = batchIdx * 10;
+            const slice = FILTERED_STUDENTS.slice(start, start + 10);
+
+            document.getElementById('batch-info-pill').innerText =
+                `الدفعة المعروضة: ${toAr(slice.length)} شهادة (٥ ورقات بالقص المرتب)`;
+
+            let sheetsHtml = "";
+
+            for (let r = 0; r < 5; r++) {
+                const stRight = slice[r] || null;
+                const stLeft  = slice[r + 5] || null;
+
+                if (!stRight && !stLeft) continue;
+
+                sheetsHtml += `
+                    <div class="cert-a4-sheet">
+                        ${buildSingleCertificateHtml(stRight, grade, termMode)}
+                        ${buildSingleCertificateHtml(stLeft, grade, termMode)}
+                    </div>
+                `;
+            }
+
+            container.innerHTML = sheetsHtml;
+            applyCertSettingsToDOM();
+        }
+
+        // ================= التبويب الثاني: البحث والشهادة الفردية A5 عمودي =================
+        function syncGradeToSingle() {
+            document.getElementById('sel-grade').value = document.getElementById('sel-grade-single').value;
+            loadCertificatesData();
+        }
+
+        function syncTermToSingle() {
+            document.getElementById('sel-term').value = document.getElementById('sel-term-single').value;
+            onCertFilterChange();
+            if (SINGLE_SELECTED_STUDENT_KEY) {
+                renderSingleStudentCertificate(SINGLE_SELECTED_STUDENT_KEY);
+            }
+        }
+
+        function onSingleSearchInput() {
+            renderSingleDropdown();
+            openSingleDropdown();
+        }
+
+        function openSingleDropdown() {
+            document.getElementById('single-search-dropdown').style.display = 'block';
+        }
+
+        function closeSingleDropdown() {
+            document.getElementById('single-search-dropdown').style.display = 'none';
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.combo-wrapper')) {
+                closeSingleDropdown();
+            }
+        });
+
+        function renderSingleDropdown() {
+            const dd = document.getElementById('single-search-dropdown');
+            const rawQ = document.getElementById('single-search-input').value.trim();
+            const normQ = normalizeArabic(rawQ);
+            const upperQ = arToEn(rawQ).toUpperCase().trim();
+            const term = document.getElementById('sel-term').value;
+            const seatField = (term === 't2') ? 'seat_t2' : 'seat_t1';
+            const secField  = (term === 't2') ? 'secret_t2' : 'secret_t1';
+
+            SINGLE_FILTERED_LIST = FILTERED_STUDENTS.filter(st => {
+                if (!rawQ) return true;
+                const normName = normalizeArabic(st.name || '');
+                const secVal = String(st[secField] || '').toUpperCase();
+                const seatVal = String(st[seatField] || '');
+
+                const matchPrefixName = normQ && normName.startsWith(normQ);
+                const matchWordPrefix = normQ && normName.split(' ').some(w => w.startsWith(normQ));
+                const matchSec = upperQ && secVal.includes(upperQ);
+                const matchSeat = upperQ && seatVal === upperQ;
+
+                return matchPrefixName || matchWordPrefix || matchSec || matchSeat;
+            });
+
+            if (SINGLE_FILTERED_LIST.length === 0) {
+                dd.innerHTML = `<div class="p-3 text-center text-slate-400 font-bold text-xs">لا يوجد تلميذ مطابق للبحث.</div>`;
+            } else {
+                dd.innerHTML = SINGLE_FILTERED_LIST.slice(0, 30).map(st => {
+                    const sKey = getStudentKey(st);
+                    const seat = st[seatField] ? `جلوس: ${toAr(st[seatField])}` : '';
+                    const sec = st[secField] ? `سري: ${st[secField]}` : '';
+                    return `
+                        <div class="combo-option" onclick="selectSingleStudent('${sKey}')">
+                            <div>
+                                <span class="text-xs sm:text-sm font-black text-[#0f2b48]">${st.name}</span>
+                                <span class="text-[11px] text-slate-500 mr-1.5 font-bold">(فصل ${st.class || '-'})</span>
+                            </div>
+                            <div class="text-[11px] font-mono text-purple-900 font-bold">
+                                ${seat} ${sec ? '• ' + sec : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function selectSingleStudent(stuKey) {
+            SINGLE_SELECTED_STUDENT_KEY = stuKey;
+            const st = FILTERED_STUDENTS.find(x => getStudentKey(x) === stuKey);
+            if (!st) return;
+
+            document.getElementById('single-search-input').value = st.name || '';
+            closeSingleDropdown();
+            renderSingleStudentCertificate(stuKey);
+        }
+
+        function navigateSingleStudent(dir) {
+            if (FILTERED_STUDENTS.length === 0) return;
+            let idx = FILTERED_STUDENTS.findIndex(x => getStudentKey(x) === SINGLE_SELECTED_STUDENT_KEY);
+            if (idx === -1) idx = (dir > 0) ? 0 : FILTERED_STUDENTS.length - 1;
+            else idx = (idx + dir + FILTERED_STUDENTS.length) % FILTERED_STUDENTS.length;
+
+            selectSingleStudent(getStudentKey(FILTERED_STUDENTS[idx]));
+        }
+
+        function renderSingleStudentCertificate(stuKey) {
+            const container = document.getElementById('single-cert-print-area');
+            const pill = document.getElementById('single-student-pill');
+            const grade = document.getElementById('sel-grade').value;
+            const termMode = document.getElementById('sel-term').value;
+
+            const st = FILTERED_STUDENTS.find(x => getStudentKey(x) === stuKey);
+            if (!st) {
+                pill.innerText = "لم يُحدد تلميذ";
+                container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold no-print">اختر تلميذاً من خانة البحث بالأعلى.</div>`;
+                return;
+            }
+
+            const seatField = (termMode === 't2') ? 'seat_t2' : 'seat_t1';
+            const seatVal = st[seatField] || st.seat_t1 || '-';
+            pill.innerHTML = `التلميذ المختار: <b class="text-blue-900">${st.name}</b> • فصل <b class="text-blue-900">${st.class || '-'}</b> • جلوس <b class="text-amber-800">${toAr(seatVal)}</b>`;
+
+            container.innerHTML = `
+                <div class="cert-a5-sheet" id="single-cert-sheet">
+                    ${buildSingleCertificateHtml(st, grade, termMode)}
+                </div>
+            `;
+
+            applyCertSettingsToDOM();
+        }
+
+        // ================= نافذة الضبط التفصيلي لكل الأبعاد والخطوط =================
+        function openCertSettingsModal() {
+            syncCertSlidersFromConfig();
+            document.getElementById('certSettingsModal').classList.add('active');
+        }
+
+        function closeCertSettingsModal() {
+            document.getElementById('certSettingsModal').classList.remove('active');
+        }
+
+        function switchCfgTab(tab) {
+            ['margins', 'rows', 'cols', 'fonts'].forEach(t => {
+                document.getElementById(`ctab-${t}`).classList.toggle('active', t === tab);
+                document.getElementById(`csec-${t}`).classList.toggle('hidden', t !== tab);
+            });
+        }
+
+        const SLIDER_MAPPINGS = [
+            ['padTop',     'mm'], ['padBottom',  'mm'], ['padRight',  'mm'], ['padLeft',   'mm'],
+            ['splitGap',   'mm'], ['gapHead',    'mm'], ['gapAct',    'mm'], ['gapLegend', 'mm'], ['gapFooter', 'mm'],
+            ['hTopHeader', 'mm'], ['hPill',      'mm'], ['hName',     'mm'], ['hTblHead',  'mm'], ['hTblMax',   'mm'],
+            ['hSubRow',    'mm'], ['hDivider',   'mm'], ['hNonAddRow','mm'], ['hAtt',      'mm'], ['hActRow',   'mm'],
+            ['hLegend',    'mm'], ['hFooter',    'mm'],
+            ['wSubj',      '%'],  ['wHw',        '%'],  ['wCw',       '%'],  ['wEval',     '%'],  ['wAtt',      '%'],
+            ['wMonth',     '%'],  ['wEval40',    '%'],  ['wExam',     '%'],  ['wTotal',    '%'],  ['wColor',    '%'],
+            ['dotSize',    'px'], ['logoSize',   'px'],
+            ['fHeader',    'px'], ['fPill',      'px'], ['fName',     'px'], ['fTblHead',  'px'], ['fTblMax',   'px'],
+            ['fSubj',      'px'], ['fScores',    'px'], ['fAtt',      'px'], ['fAct',      'px'], ['fLegend',   'px'], ['fFooter', 'px']
+        ];
+
+        function syncCertSlidersFromConfig() {
+            SLIDER_MAPPINGS.forEach(([key, unit]) => {
+                const inp = document.getElementById(`r_${key}`);
+                const lbl = document.getElementById(`l_${key}`);
+                if (inp) inp.value = CERT_CFG[key];
+                if (lbl) lbl.innerText = CERT_CFG[key] + unit;
+            });
+
+            document.getElementById('inp_yearLabel').value   = CERT_CFG.yearLabel;
+            document.getElementById('inp_controlHead').value = CERT_CFG.controlHead;
+            document.getElementById('inp_managerName').value = CERT_CFG.managerName;
+            document.getElementById('chk_showMrZezo').checked  = CERT_CFG.showMrZezo;
+            document.getElementById('chk_showLogo').checked    = CERT_CFG.showLogo;
+            document.getElementById('chk_showCutLine').checked = CERT_CFG.showCutLine;
+        }
+
+        function onCertSliderChange() {
+            SLIDER_MAPPINGS.forEach(([key, unit]) => {
+                const inp = document.getElementById(`r_${key}`);
+                const lbl = document.getElementById(`l_${key}`);
+                if (inp) {
+                    CERT_CFG[key] = parseFloat(inp.value);
+                    if (lbl) lbl.innerText = CERT_CFG[key] + unit;
+                }
+            });
+            applyCertSettingsToDOM();
+        }
+
+        function onCertTextMetaChange() {
+            CERT_CFG.yearLabel   = document.getElementById('inp_yearLabel').value;
+            CERT_CFG.controlHead = document.getElementById('inp_controlHead').value;
+            CERT_CFG.managerName = document.getElementById('inp_managerName').value;
+            CERT_CFG.showMrZezo  = document.getElementById('chk_showMrZezo').checked;
+            CERT_CFG.showLogo    = document.getElementById('chk_showLogo').checked;
+            CERT_CFG.showCutLine = document.getElementById('chk_showCutLine').checked;
+            renderCurrentBatch();
+            if (SINGLE_SELECTED_STUDENT_KEY) {
+                renderSingleStudentCertificate(SINGLE_SELECTED_STUDENT_KEY);
+            }
+        }
+
+        function applyCertSettingsToDOM() {
+            const root = document.documentElement.style;
+            root.setProperty('--c-pad-top',      CERT_CFG.padTop + 'mm');
+            root.setProperty('--c-pad-bottom',   CERT_CFG.padBottom + 'mm');
+            root.setProperty('--c-pad-right',    CERT_CFG.padRight + 'mm');
+            root.setProperty('--c-pad-left',     CERT_CFG.padLeft + 'mm');
+            root.setProperty('--c-split-gap',    CERT_CFG.splitGap + 'mm');
+            root.setProperty('--c-gap-head',     CERT_CFG.gapHead + 'mm');
+            root.setProperty('--c-gap-act',      CERT_CFG.gapAct + 'mm');
+            root.setProperty('--c-gap-legend',   CERT_CFG.gapLegend + 'mm');
+            root.setProperty('--c-gap-footer',   CERT_CFG.gapFooter + 'mm');
+
+            root.setProperty('--c-h-top-header', CERT_CFG.hTopHeader + 'mm');
+            root.setProperty('--c-h-pill',       CERT_CFG.hPill + 'mm');
+            root.setProperty('--c-h-name',       CERT_CFG.hName + 'mm');
+            root.setProperty('--c-h-tbl-head',   CERT_CFG.hTblHead + 'mm');
+            root.setProperty('--c-h-tbl-max',    CERT_CFG.hTblMax + 'mm');
+            root.setProperty('--c-h-sub-row',    CERT_CFG.hSubRow + 'mm');
+            root.setProperty('--c-h-divider',    CERT_CFG.hDivider + 'mm');
+            root.setProperty('--c-h-nonadd-row', CERT_CFG.hNonAddRow + 'mm');
+            root.setProperty('--c-h-att',        CERT_CFG.hAtt + 'mm');
+            root.setProperty('--c-h-act-row',    CERT_CFG.hActRow + 'mm');
+            root.setProperty('--c-h-legend',     CERT_CFG.hLegend + 'mm');
+            root.setProperty('--c-h-footer',     CERT_CFG.hFooter + 'mm');
+
+            const colSum = CERT_CFG.wSubj + CERT_CFG.wHw + CERT_CFG.wCw + CERT_CFG.wEval +
+                           CERT_CFG.wAtt + CERT_CFG.wMonth + CERT_CFG.wEval40 + CERT_CFG.wExam +
+                           CERT_CFG.wTotal + CERT_CFG.wColor;
+            const norm = v => ((v / colSum) * 100).toFixed(3) + '%';
+
+            root.setProperty('--c-w-subj',   norm(CERT_CFG.wSubj));
+            root.setProperty('--c-w-hw',     norm(CERT_CFG.wHw));
+            root.setProperty('--c-w-cw',     norm(CERT_CFG.wCw));
+            root.setProperty('--c-w-eval',   norm(CERT_CFG.wEval));
+            root.setProperty('--c-w-att',    norm(CERT_CFG.wAtt));
+            root.setProperty('--c-w-month',  norm(CERT_CFG.wMonth));
+            root.setProperty('--c-w-eval40', norm(CERT_CFG.wEval40));
+            root.setProperty('--c-w-exam',   norm(CERT_CFG.wExam));
+            root.setProperty('--c-w-total',  norm(CERT_CFG.wTotal));
+            root.setProperty('--c-w-color',  norm(CERT_CFG.wColor));
+
+            root.setProperty('--c-dot-size',  CERT_CFG.dotSize + 'px');
+            root.setProperty('--c-logo-size', CERT_CFG.logoSize + 'px');
+
+            root.setProperty('--c-f-header',  CERT_CFG.fHeader + 'px');
+            root.setProperty('--c-f-pill',    CERT_CFG.fPill + 'px');
+            root.setProperty('--c-f-name',    CERT_CFG.fName + 'px');
+            root.setProperty('--c-f-tbl-head',CERT_CFG.fTblHead + 'px');
+            root.setProperty('--c-f-tbl-max', CERT_CFG.fTblMax + 'px');
+            root.setProperty('--c-f-subj',    CERT_CFG.fSubj + 'px');
+            root.setProperty('--c-f-scores',  CERT_CFG.fScores + 'px');
+            root.setProperty('--c-f-att',     CERT_CFG.fAtt + 'px');
+            root.setProperty('--c-f-act',     CERT_CFG.fAct + 'px');
+            root.setProperty('--c-f-legend',  CERT_CFG.fLegend + 'px');
+            root.setProperty('--c-f-footer',  CERT_CFG.fFooter + 'px');
+
+            const existingNoCutStyle = document.getElementById('cut-line-toggle-style');
+            if (!CERT_CFG.showCutLine) {
+                if (!existingNoCutStyle) {
+                    const stEl = document.createElement('style');
+                    stEl.id = 'cut-line-toggle-style';
+                    stEl.innerHTML = `.cert-a4-sheet::after { display: none !important; }`;
+                    document.head.appendChild(stEl);
+                }
+            } else if (existingNoCutStyle) {
+                existingNoCutStyle.remove();
+            }
+        }
+
+        async function saveCertSettings() {
+            localStorage.setItem(CERT_SETTINGS_KEY, JSON.stringify(CERT_CFG));
+            try {
+                await saveCapsuleData(CERT_SETTINGS_KEY, CERT_CFG);
+                Swal.fire({ icon: 'success', title: 'تم حفظ وتثبيت مقاسات الشهادة!', timer: 1400, showConfirmButton: false });
+                closeCertSettingsModal();
+            } catch (e) {
+                Swal.fire({ icon: 'info', title: 'تم الحفظ محلياً على الجهاز', timer: 1300, showConfirmButton: false });
+                closeCertSettingsModal();
+            }
+        }
+
+        async function loadSavedCertSettings() {
+            const localStr = localStorage.getItem(CERT_SETTINGS_KEY);
+            if (localStr) {
+                try { CERT_CFG = { ...DEFAULT_CERT_CFG, ...JSON.parse(localStr) }; } catch(e) {}
+            }
+            applyCertSettingsToDOM();
+
+            const cloudCfg = await fetchCapsuleData(CERT_SETTINGS_KEY);
+            if (cloudCfg && typeof cloudCfg === 'object') {
+                CERT_CFG = { ...DEFAULT_CERT_CFG, ...cloudCfg };
+                localStorage.setItem(CERT_SETTINGS_KEY, JSON.stringify(CERT_CFG));
+                applyCertSettingsToDOM();
+            }
+        }
+
+        function resetCertSettings() {
+            CERT_CFG = { ...DEFAULT_CERT_CFG };
+            localStorage.removeItem(CERT_SETTINGS_KEY);
+            syncCertSlidersFromConfig();
+            applyCertSettingsToDOM();
+            renderCurrentBatch();
+            if (SINGLE_SELECTED_STUDENT_KEY) {
+                renderSingleStudentCertificate(SINGLE_SELECTED_STUDENT_KEY);
+            }
+            Swal.fire({ toast: true, position: 'top', icon: 'info', title: 'تمت استعادة المقاسات الافتراضية', timer: 1300, showConfirmButton: false });
+        }
+    </script>
+</body>
+</html>
