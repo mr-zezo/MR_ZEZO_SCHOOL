@@ -1,0 +1,1737 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>شيت التحكم والإحصاء - كنترول مستر زيزو</title>
+
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Supabase & Excel & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary: #0f2b48;
+            --primary-light: #1e3a8a;
+            --gold: #d97706;
+            --bg: #f8fafc;
+            --border: #cbd5e1;
+        }
+
+        * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
+        body { background-color: var(--bg); color: #0f172a; min-height: 100vh; display: flex; flex-direction: column; }
+
+        .top-nav {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white; border-bottom: 4px solid var(--gold);
+        }
+
+        .btn-3d {
+            border-bottom: 3.5px solid rgba(0,0,0,0.25);
+            transition: all 0.12s ease;
+            touch-action: manipulation;
+        }
+        .btn-3d:active { transform: translateY(2px); border-bottom-width: 1px; }
+
+        .main-tab-btn {
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 900;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1.5px solid #cbd5e1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.15s;
+        }
+        .main-tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(15, 43, 72, 0.25);
+        }
+
+        /* الكومبو بوكس الذكي القابل للبحث */
+        .combo-wrapper { position: relative; width: 100%; }
+        .combo-input-box {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 2px solid #1e3a8a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(30, 58, 138, 0.08);
+        }
+        .combo-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+            font-weight: 900;
+            color: #0f2b48;
+            background: transparent;
+        }
+        .combo-toggle-btn {
+            background: #eff6ff;
+            border: none;
+            border-right: 1.5px solid #cbd5e1;
+            padding: 0 14px;
+            height: 44px;
+            color: #1e3a8a;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .combo-toggle-btn:hover { background: #dbeafe; }
+
+        .combo-dropdown {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: #ffffff;
+            border: 2px solid #0f2b48;
+            border-radius: 14px;
+            max-height: 360px;
+            overflow-y: auto;
+            z-index: 2500;
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.25);
+            display: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .combo-dropdown.open { display: block; }
+
+        .combo-group-header {
+            position: sticky;
+            top: 0;
+            padding: 6px 12px;
+            font-size: 11.5px;
+            font-weight: 900;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 5;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+        .grp-f1 { background: #fee2e2; color: #991b1b; }
+        .grp-f2 { background: #ffedd5; color: #9a3412; }
+        .grp-f3 { background: #fecdd3; color: #881337; }
+        .grp-ok { background: #dcfce7; color: #166534; }
+        .grp-na { background: #f1f5f9; color: #475569; }
+
+        .combo-option {
+            padding: 9px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.12s;
+        }
+        .combo-option:hover, .combo-option.selected-opt {
+            background: #eff6ff;
+        }
+
+        .fail-pill {
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 900;
+            cursor: pointer;
+            border: 1.5px solid #cbd5e1;
+            background: #f8fafc;
+            color: #475569;
+            transition: all 0.12s;
+        }
+        .fail-pill.active {
+            background: #0f2b48;
+            color: #ffffff;
+            border-color: #0f2b48;
+        }
+
+        /* جدول درجات التلميذ الفردي */
+        .stu-edit-table {
+            width: 100%;
+            min-width: 980px;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 12px;
+        }
+        .stu-edit-table th {
+            background: #0f2b48;
+            color: white;
+            border: 1px solid #334155;
+            padding: 7px 4px;
+            font-weight: 900;
+            white-space: nowrap;
+        }
+        .stu-edit-table td {
+            border: 1px solid #cbd5e1;
+            padding: 4px 3px;
+            font-weight: 800;
+            vertical-align: middle;
+        }
+
+        .edit-inp {
+            width: 100%;
+            height: 28px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 900;
+            font-size: 12.5px;
+            background: #ffffff;
+            outline: none;
+        }
+        .edit-inp:focus {
+            background: #fef9c3;
+            border-color: #d97706;
+            box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2);
+        }
+
+        /* ألوان التقديرات */
+        .grade-red    { background: #fee2e2 !important; color: #b91c1c !important; font-weight: 900; }
+        .grade-yellow { background: #fef9c3 !important; color: #854d0e !important; font-weight: 900; }
+        .grade-green  { background: #dcfce7 !important; color: #15803d !important; font-weight: 900; }
+        .grade-blue   { background: #dbeafe !important; color: #1d4ed8 !important; font-weight: 900; }
+
+        .swatch-red    { background: #dc2626 !important; color: #ffffff !important; font-weight: 900; }
+        .swatch-yellow { background: #facc15 !important; color: #000000 !important; font-weight: 900; }
+        .swatch-green  { background: #16a34a !important; color: #ffffff !important; font-weight: 900; }
+        .swatch-blue   { background: #2563eb !important; color: #ffffff !important; font-weight: 900; }
+
+        /* جداول الإحصاء */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 12px;
+        }
+        .stats-table th {
+            background: #0f2b48;
+            color: #ffffff;
+            border: 1px solid #334155;
+            padding: 7px 5px;
+            font-weight: 900;
+        }
+        .stats-table td {
+            border: 1px solid #cbd5e1;
+            padding: 6px 5px;
+            font-weight: 800;
+        }
+        .stats-table tr.row-total-sub td {
+            background: #f1f5f9;
+            font-weight: 900;
+            color: #0f2b48;
+            border-bottom: 2px solid #0f2b48;
+        }
+
+        .print-only { display: none; }
+        .swal2-container { z-index: 99999 !important; }
+
+        @media print {
+            @page { size: A4 landscape; margin: 7mm; }
+            body { background: white !important; padding: 0 !important; margin: 0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .overflow-x-auto { overflow: visible !important; }
+            .stu-edit-table, .stats-table { min-width: 100% !important; width: 100% !important; border: 2px solid #000 !important; }
+            .stats-table th, .stats-table td, .stu-edit-table th, .stu-edit-table td { border: 1px solid #000 !important; }
+            .stats-card-box { border: none !important; box-shadow: none !important; padding: 0 !important; margin-bottom: 12px !important; page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body class="p-2 sm:p-3">
+
+    <!-- 1. الشريط العلوي -->
+    <header class="top-nav rounded-2xl shadow-md p-3 mb-3 flex flex-wrap justify-between items-center gap-3 no-print">
+        <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-yellow-300 text-xl shrink-0">
+                <i class="fa-solid fa-chart-pie"></i>
+            </div>
+            <div>
+                <h1 class="text-sm sm:text-base font-black leading-tight text-white">
+                    شيت التحكم والإحصاء الختامي
+                </h1>
+                <p class="text-[11px] text-blue-200 font-bold">مراجعة وتعديل درجات التلاميذ والراسبين + الإحصاء التفصيلي بنين/بنات والأوائل • مستر زيزو</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/20">
+                <label class="text-xs font-bold text-yellow-300"><i class="fa-solid fa-graduation-cap"></i> الصف:</label>
+                <select id="sel-grade" onchange="loadGradeControlAndScores()" class="bg-blue-900 text-white text-xs font-black rounded-lg p-1 outline-none cursor-pointer">
+                    <option value="الأول">الصف الأول</option>
+                    <option value="الثاني">الصف الثاني</option>
+                    <option value="الثالث">الصف الثالث</option>
+                    <option value="الرابع" selected>الصف الرابع</option>
+                    <option value="الخامس">الصف الخامس</option>
+                    <option value="السادس">الصف السادس</option>
+                </select>
+            </div>
+
+            <a href="control-results.html" class="btn-3d px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
+                <i class="fa-solid fa-scroll text-yellow-300"></i> شيت النتيجة
+            </a>
+            <a href="control-index.html" class="btn-3d px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
+                <i class="fa-solid fa-stamp"></i> بوابة الكنترول
+            </a>
+            <a href="index.html" class="btn-3d px-3 py-1.5 bg-blue-800 hover:bg-blue-700 text-white font-black rounded-xl text-xs flex items-center gap-1 shadow">
+                <i class="fa-solid fa-house"></i> الرئيسية
+            </a>
+        </div>
+    </header>
+
+    <!-- 2. شريط التبويبين ونطاق التقييم -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-2.5 mb-3 shadow-sm flex flex-wrap justify-between items-center gap-2.5 no-print">
+        <div class="flex flex-wrap gap-2">
+            <button id="btn-mtab-control" onclick="switchMainTab('control')" class="main-tab-btn active">
+                <i class="fa-solid fa-user-gear text-amber-400"></i> ١. التحكم وتعديل درجات التلميذ
+            </button>
+            <button id="btn-mtab-stats" onclick="switchMainTab('stats')" class="main-tab-btn">
+                <i class="fa-solid fa-chart-column text-emerald-600"></i> ٢. الإحصاء الشامل والأوائل (بنين / بنات / إجمالي)
+            </button>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center gap-1.5 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-xl text-xs font-black text-blue-950">
+                <label>نطاق الحساب والفرز:</label>
+                <select id="sel-eval-scope" onchange="onEvalScopeChange()" class="bg-white border border-blue-300 rounded-lg px-2 py-1 text-xs font-black outline-none">
+                    <option value="combined" selected>النتيجة النهائية (متوسط الترمين)</option>
+                    <option value="t1">الترم الأول فقط (نصف العام)</option>
+                    <option value="t2">الترم الثاني فقط (آخر العام)</option>
+                </select>
+            </div>
+
+            <button onclick="loadGradeControlAndScores(true)" class="btn-3d px-3 py-1.5 bg-blue-800 hover:bg-blue-900 text-white rounded-xl text-xs font-black flex items-center gap-1 shadow">
+                <i class="fa-solid fa-arrows-rotate text-yellow-300"></i> تحديث
+            </button>
+        </div>
+    </div>
+
+    <!-- ====================================================================== -->
+    <!-- القسم الأول: التحكم ومراجعة وتعديل درجات التلميذ                        -->
+    <!-- ====================================================================== -->
+    <section id="sec-control" class="space-y-3">
+
+        <!-- كارت الكومبو بوكس الذكي والتصفية بالرسوب -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm space-y-3 no-print">
+            <div class="flex flex-wrap justify-between items-center gap-2">
+                <span class="text-xs sm:text-sm font-black text-[#0f2b48] flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass text-blue-700"></i>
+                    ابحث بالاسم (أبجدي متتابع) أو بالرقم السري، أو اختر من قوائم الراسبين:
+                </span>
+
+                <div class="flex flex-wrap gap-1.5" id="fail-filter-pills">
+                    <button type="button" class="fail-pill active" data-f="ALL" onclick="setFailCategoryFilter('ALL')">الكل (<span id="cnt-all">٠</span>)</button>
+                    <button type="button" class="fail-pill" data-f="F1" onclick="setFailCategoryFilter('F1')" style="border-color:#fca5a5; color:#991b1b;">راسب ١ مادة (<span id="cnt-f1">٠</span>)</button>
+                    <button type="button" class="fail-pill" data-f="F2" onclick="setFailCategoryFilter('F2')" style="border-color:#fdba74; color:#9a3412;">راسب مادتين (<span id="cnt-f2">٠</span>)</button>
+                    <button type="button" class="fail-pill" data-f="F3" onclick="setFailCategoryFilter('F3')" style="border-color:#fda4af; color:#881337;">٣ مواد فأكثر (<span id="cnt-f3">٠</span>)</button>
+                    <button type="button" class="fail-pill" data-f="PASS" onclick="setFailCategoryFilter('PASS')" style="border-color:#86efac; color:#166534;">ناجح (<span id="cnt-pass">٠</span>)</button>
+                </div>
+            </div>
+
+            <div class="flex gap-2 items-center">
+                <button type="button" onclick="navigateComboStudent(-1)" class="btn-3d w-10 h-11 bg-[#0f2b48] text-yellow-300 rounded-xl flex items-center justify-center shrink-0" title="التلميذ السابق">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+
+                <div class="combo-wrapper">
+                    <div class="combo-input-box">
+                        <input type="text"
+                               id="student-combo-input"
+                               class="combo-input"
+                               placeholder="🔍 اكتب أول حروف اسم التلميذ (مثال: ع ثم عب) أو الرقم السري (مثال: D1)..."
+                               autocomplete="off"
+                               oninput="onComboSearchInput()"
+                               onfocus="openComboDropdown()">
+                        <button type="button" class="combo-toggle-btn" onclick="toggleComboDropdown()" title="عرض/إخفاء القائمة">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <div id="student-combo-dropdown" class="combo-dropdown"></div>
+                </div>
+
+                <button type="button" onclick="navigateComboStudent(1)" class="btn-3d w-10 h-11 bg-[#0f2b48] text-yellow-300 rounded-xl flex items-center justify-center shrink-0" title="التلميذ التالي">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- كارت عرض وتعديل درجات التلميذ المختار (ترم أول + ترم ثانٍ + المحصلة معاً) -->
+        <div id="student-editor-card" class="bg-white border-2 border-[#0f2b48] rounded-2xl p-3.5 shadow-md space-y-3 hidden">
+            
+            <!-- شريط بيانات التلميذ وحالته الحية -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-wrap justify-between items-center gap-3">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-base font-black text-[#0f2b48]" id="ed-stu-name">-</span>
+                        <span class="text-xs font-black px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900" id="ed-stu-class">فصل -</span>
+                        <span id="ed-stu-dmj" class="hidden text-xs font-black px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">دمج</span>
+                    </div>
+                    <div class="flex flex-wrap gap-3 text-xs font-bold text-slate-600">
+                        <span>جلوس ت١: <b class="font-mono text-amber-800" id="ed-seat1">-</b></span>
+                        <span>جلوس ت٢: <b class="font-mono text-blue-800" id="ed-seat2">-</b></span>
+                        <span>سري ت١: <b class="font-mono text-purple-900" id="ed-sec1">-</b></span>
+                        <span>سري ت٢: <b class="font-mono text-purple-900" id="ed-sec2">-</b></span>
+                        <span>حضور ت١: <b class="font-mono text-emerald-800" id="ed-att1">-</b></span>
+                        <span>حضور ت٢: <b class="font-mono text-emerald-800" id="ed-att2">-</b></span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <div class="text-center px-3 py-1.5 bg-white border border-slate-300 rounded-xl">
+                        <div class="text-[10px] font-bold text-slate-500">المجموع الكلي (<span id="ed-max-total-lbl">٥٠٠</span>)</div>
+                        <div class="text-base font-black text-[#0f2b48]" id="ed-grand-sum">٠</div>
+                    </div>
+                    <div class="text-center px-3 py-1.5 bg-white border border-slate-300 rounded-xl">
+                        <div class="text-[10px] font-bold text-slate-500">النسبة المئوية</div>
+                        <div class="text-base font-black text-blue-800" id="ed-grand-pct">%٠</div>
+                    </div>
+                    <div id="ed-final-status-badge" class="px-3.5 py-2 rounded-xl text-xs font-black border">
+                        -
+                    </div>
+                </div>
+            </div>
+
+            <!-- جدول التعديل الكامل لكل مادة (ترم أول + ترم ثانٍ + متوسط الترمين) -->
+            <div class="overflow-x-auto border border-slate-300 rounded-xl">
+                <table class="stu-edit-table">
+                    <thead>
+                        <tr>
+                            <th style="width:110px;">المادة</th>
+                            <th style="width:72px;">الفصل<br>الدراسي</th>
+                            <th style="width:52px;">واجب<br>(٥)</th>
+                            <th style="width:52px;">كراسة<br>(٥)</th>
+                            <th style="width:55px;">تقييم<br>(١٠)</th>
+                            <th style="width:55px;">مواظبة<br>(٥)</th>
+                            <th style="width:55px;">شهر<br>(١٥)</th>
+                            <th style="width:58px; background:#1e3a8a; color:#fcd34d;">التقييم<br>(٤٠)</th>
+                            <th style="width:65px; background:#b45309; color:#fef08a;">الاختبار<br>(٦٠ أو غ)</th>
+                            <th style="width:58px;">مجموع<br>الترم</th>
+                            <th style="width:88px;">تقدير الترم</th>
+                            <th style="width:62px; background:#065f46;">مجموع<br>الترمين</th>
+                            <th style="width:62px; background:#78350f; color:#fef08a;">المتوسط<br>(١٠٠)</th>
+                            <th style="width:115px;">التقدير واللون النهائى</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ed-subjects-tbody"></tbody>
+                </table>
+            </div>
+
+            <!-- أزرار الحفظ -->
+            <div class="flex flex-wrap justify-between items-center gap-2 pt-1 no-print">
+                <span class="text-xs font-bold text-slate-500">
+                    <i class="fa-solid fa-circle-info text-blue-600 ml-1"></i>
+                    أي تعديل في بنود الترم الأول أو الثاني يحسب المتوسط والتقدير واللون النهائي لحظياً، واضغط حفظ لتثبيته في شيت الكنترول والنتيجة.
+                </span>
+                <button type="button" onclick="saveSelectedStudentScores()" id="btn-save-student-scores" class="btn-3d px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-sm font-black flex items-center gap-2 shadow cursor-pointer">
+                    <i class="fa-solid fa-cloud-arrow-up text-yellow-300"></i> حفظ وتحديث درجات التلميذ
+                </button>
+            </div>
+
+        </div>
+
+        <!-- رسالة مبدئية قبل اختيار تلميذ -->
+        <div id="student-editor-placeholder" class="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center text-slate-400 font-bold">
+            <i class="fa-solid fa-user-pen text-4xl mb-2 block opacity-50"></i>
+            اختر تلميذاً من الكومبو بوكس بالأعلى لعرض وتعديل درجاته في الترمين معاً.
+        </div>
+
+    </section>
+
+    <!-- ====================================================================== -->
+    <!-- القسم الثاني: الإحصاء الشامل (بنين/بنات/إجمالي + كل المواد + الأوائل) -->
+    <!-- ====================================================================== -->
+    <section id="sec-stats" class="space-y-4 hidden">
+
+        <!-- شريط أدوات الإحصاء -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm flex flex-wrap justify-between items-center gap-2 no-print">
+            <div class="flex flex-wrap items-center gap-2">
+                <label class="text-xs font-black text-slate-700">تصفية الإحصاء حسب الفصل:</label>
+                <select id="stats-filter-class" onchange="renderAllStatistics()" class="p-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-black outline-none">
+                    <option value="ALL">الصف بالكامل (جميع الفصول)</option>
+                </select>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <button type="button" onclick="exportStatisticsToExcel()" class="btn-3d px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-file-excel text-emerald-200"></i> تصدير كافة الإحصاءات (Excel)
+                </button>
+                <button type="button" onclick="window.print()" class="btn-3d px-4 py-2 bg-[#0f2b48] hover:bg-[#1e3a8a] text-white rounded-xl text-xs font-black flex items-center gap-1.5 shadow">
+                    <i class="fa-solid fa-print text-yellow-300"></i> طباعة تقرير الإحصاء (A4)
+                </button>
+            </div>
+        </div>
+
+        <!-- ترويسة الطباعة -->
+        <div class="print-only border-b-2 border-black pb-2 mb-3">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:12px; font-weight:900;">
+                    <div>محافظة المنوفية • إدارة الشهداء التعليمية</div>
+                    <div>مدرسة الشهيد أشرف حبيب الابتدائية</div>
+                </div>
+                <div style="text-align:center;">
+                    <h2 id="stats-print-title" style="font-size:16px; font-weight:900; border:2px solid #000; padding:3px 16px; border-radius:8px; background:#f1f5f9;">التقرير الإحصائي العام للنتيجة</h2>
+                </div>
+                <div style="font-size:12px; font-weight:900; text-align:left;">
+                    <div>تاريخ: <span id="stats-print-date"></span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. الإحصاء العام على كل المواد إجمالاً (بنين / بنات / إجمالي) -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm stats-card-box">
+            <h3 class="text-sm font-black text-[#0f2b48] mb-2.5 flex items-center gap-2">
+                <i class="fa-solid fa-users text-blue-700"></i>
+                ١. الإحصاء العام للنتيجة (على مستوى جميع المواد — بنين / بنات / إجمالي):
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="stats-table" id="tbl-stats-overall">
+                    <thead>
+                        <tr>
+                            <th rowspan="2">النوع</th>
+                            <th rowspan="2">مقيد</th>
+                            <th rowspan="2">حاضر</th>
+                            <th rowspan="2">غائب<br>(مادة+)</th>
+                            <th rowspan="2" style="background:#15803d;">ناجح<br>(منقول)</th>
+                            <th colspan="4" style="background:#991b1b;">المستحقون للدور الثاني / لم يتقن</th>
+                            <th rowspan="2" style="background:#1e3a8a; color:#fef08a;">نسبة النجاح %</th>
+                            <th colspan="5">توزيع التقدير العام (للمتوسط الكلي)</th>
+                        </tr>
+                        <tr>
+                            <th style="background:#b91c1c;">١ مادة</th>
+                            <th style="background:#c2410c;">٢ مادتان</th>
+                            <th style="background:#881337;">٣+ مواد</th>
+                            <th style="background:#7f1d1d;">جملة الدور الثاني</th>
+                            <th class="swatch-blue">يفوق (أزرق)</th>
+                            <th class="swatch-green">يلبي (أخضر)</th>
+                            <th class="swatch-yellow">دعم (أصفر)</th>
+                            <th class="swatch-red">لم يتقن (أحمر)</th>
+                            <th class="grade-red">غ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-stats-overall"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 2. الإحصاء التفصيلي لكل مادة (بنين / بنات / إجمالي) -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm stats-card-box">
+            <h3 class="text-sm font-black text-[#0f2b48] mb-2.5 flex items-center gap-2">
+                <i class="fa-solid fa-book-open text-amber-600"></i>
+                ٢. الإحصاء التفصيلي لكل مادة دراسية (بنين / بنات / إجمالي):
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="stats-table" id="tbl-stats-subjects">
+                    <thead>
+                        <tr>
+                            <th>المادة</th>
+                            <th>النوع</th>
+                            <th>مقيد</th>
+                            <th>حاضر</th>
+                            <th>غائب (غ)</th>
+                            <th style="background:#15803d;">ناجح</th>
+                            <th style="background:#be123c;">راسب</th>
+                            <th style="background:#1e3a8a; color:#fef08a;">نسبة النجاح %</th>
+                            <th class="swatch-blue">يفوق (أزرق)</th>
+                            <th class="swatch-green">يلبي (أخضر)</th>
+                            <th class="swatch-yellow">دعم (أصفر)</th>
+                            <th class="swatch-red">لم يتقن (أحمر)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-stats-subjects"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 3. مقارنة الفصول + العشرة الأوائل -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            
+            <!-- مقارنة الفصول -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm stats-card-box">
+                <h3 class="text-sm font-black text-[#0f2b48] mb-2.5 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-indigo-700"></i>
+                    ٣. مقارنة نسب النجاح والتفوق بين الفصول:
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="stats-table" id="tbl-stats-classes">
+                        <thead>
+                            <tr>
+                                <th>الفصل</th>
+                                <th>مقيد</th>
+                                <th>ناجح</th>
+                                <th>دور ثانٍ</th>
+                                <th>نسبة النجاح %</th>
+                                <th>يفوق التوقعات</th>
+                                <th>متوسط المجموع</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-stats-classes"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- كشف العشرة الأوائل -->
+            <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm stats-card-box">
+                <h3 class="text-sm font-black text-[#0f2b48] mb-2.5 flex items-center gap-2">
+                    <i class="fa-solid fa-award text-amber-500"></i>
+                    ٤. لوحة شرف العشرة الأوائل على الصف (الناجحون في كل المواد):
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="stats-table" id="tbl-stats-top10">
+                        <thead>
+                            <tr>
+                                <th>الترتيب</th>
+                                <th style="text-align:right; padding-right:8px;">اسم التلميذ</th>
+                                <th>الفصل</th>
+                                <th>جلوس</th>
+                                <th>المجموع</th>
+                                <th>النسبة %</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-stats-top10"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 4. كشف حصر طلاب الدور الثاني -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm stats-card-box">
+            <h3 class="text-sm font-black text-rose-900 mb-2.5 flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+                ٥. كشف حصر التلاميذ المستحقين للدور الثاني / دون المستوى:
+            </h3>
+            <div class="overflow-x-auto">
+                <table class="stats-table" id="tbl-stats-failed">
+                    <thead>
+                        <tr>
+                            <th style="width:38px;">م</th>
+                            <th style="text-align:right; padding-right:8px;">الاسم</th>
+                            <th style="width:65px;">الفصل</th>
+                            <th style="width:65px;">جلوس</th>
+                            <th style="width:65px;">سرى</th>
+                            <th style="width:85px;">عدد المواد</th>
+                            <th style="text-align:right; padding-right:8px;">المواد الراسب بها ودرجاتها</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-stats-failed"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- تذييل التوقيعات للطباعة -->
+        <div class="print-only" style="margin-top: 18px;">
+            <div style="display:flex; justify-content:space-between; padding: 0 35px; font-weight:900; font-size:13px;">
+                <div>مسئول الإحصاء والكنترول<br><br>...............................</div>
+                <div>رئيس الكنترول<br><br>...............................</div>
+                <div>يعتمد / مدير المدرسة<br><br>...............................</div>
+            </div>
+        </div>
+
+    </section>
+
+    <script>
+        const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const DB_NAME = "MR_ZEZO_SCHOOL_OFFLINE_DB";
+        const DB_VERSION = 2;
+
+        const CORE_TOTAL_KEYS = new Set(['arabic', 'math', 'science', 'social', 'english']);
+
+        const SUBJECTS_LOWER = [
+            { key: 'arabic',   name: 'لغة عربية',  inTotal: true },
+            { key: 'math',     name: 'رياضيات',    inTotal: true },
+            { key: 'english',  name: 'انجليزى',    inTotal: true },
+            { key: 'religion', name: 'دين',        inTotal: false }
+        ];
+
+        const SUBJECTS_UPPER = [
+            { key: 'arabic',   name: 'لغة عربية',  inTotal: true },
+            { key: 'math',     name: 'رياضيات',    inTotal: true },
+            { key: 'science',  name: 'علوم',       inTotal: true },
+            { key: 'social',   name: 'دراسات',     inTotal: true },
+            { key: 'english',  name: 'انجليزى',    inTotal: true },
+            { key: 'tech',     name: 'تكنولوجيا',  inTotal: false },
+            { key: 'religion', name: 'دين',        inTotal: false }
+        ];
+
+        let MASTER_STUDENTS = [];
+        let SCORES_DATA = { t1: {}, t2: {} };
+        let ANALYZED_STUDENTS = []; // طلاب الصف بعد التحليل والحساب
+        let COMBO_FILTERED_LIST = [];
+        let FAIL_FILTER = 'ALL'; // ALL | F1 | F2 | F3 | PASS
+        let SELECTED_STUDENT_KEY = null;
+
+        const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
+        const arToEn = v => String(v ?? '').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+
+        function normalizeArabic(text) {
+            if (!text) return "";
+            return String(text)
+                .replace(/[أإآا]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[\u064B-\u0652]/g, '')
+                .replace(/\u0640/g, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+        }
+
+        function isLowerGrade(grade) {
+            return ["الأول", "الثاني", "الثالث"].includes(grade);
+        }
+
+        function getSubjectsForGrade(grade) {
+            return isLowerGrade(grade) ? SUBJECTS_LOWER : SUBJECTS_UPPER;
+        }
+
+        function getStudentKey(st) {
+            return st.code || st.nid || ('SEAT_' + (st.seat_t1 || st.seat_t2 || st.serial));
+        }
+
+        function isBoy(st) {
+            if (st.gender) {
+                const g = String(st.gender).trim();
+                if (g.includes('ذكر') || g.includes('بن') || g === '1') return true;
+                if (g.includes('أنث') || g.includes('انث') || g.includes('بنات') || g === '2') return false;
+            }
+            if (st.nid && String(st.nid).trim().length === 14) {
+                return parseInt(String(st.nid).trim().charAt(12), 10) % 2 !== 0;
+            }
+            return true;
+        }
+
+        function openLocalDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('system_capsules')) {
+                        db.createObjectStore('system_capsules', { keyPath: 'id' });
+                    }
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function fetchCapsuleData(capsuleKey) {
+            const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
+            let dataOut = null;
+
+            if (mode === 'online') {
+                try {
+                    const { data, error } = await sbClient.from("system_capsules").select("data").eq("id", capsuleKey).maybeSingle();
+                    if (!error && data) dataOut = data.data;
+                } catch (e) { console.warn(e); }
+            }
+
+            if (!dataOut) {
+                try {
+                    const db = await openLocalDB();
+                    if (db.objectStoreNames.contains('system_capsules')) {
+                        dataOut = await new Promise((resolve) => {
+                            const tx = db.transaction('system_capsules', 'readonly');
+                            const req = tx.objectStore('system_capsules').get(capsuleKey);
+                            req.onsuccess = () => resolve(req.result ? req.result.data : null);
+                            req.onerror = () => resolve(null);
+                        });
+                    }
+                } catch (e) {}
+            }
+            return dataOut;
+        }
+
+        async function saveCapsuleData(capsuleKey, payload) {
+            const mode = localStorage.getItem('ZEZO_APP_MODE') || 'online';
+
+            try {
+                const db = await openLocalDB();
+                if (db.objectStoreNames.contains('system_capsules')) {
+                    await new Promise((resolve, reject) => {
+                        const tx = db.transaction('system_capsules', 'readwrite');
+                        tx.objectStore('system_capsules').put({ id: capsuleKey, data: payload });
+                        tx.oncomplete = () => resolve();
+                        tx.onerror = () => reject(tx.error);
+                    });
+                }
+            } catch (e) { console.warn(e); }
+
+            if (mode === 'online') {
+                let { error } = await sbClient.from("system_capsules").upsert({
+                    id: capsuleKey,
+                    data: payload,
+                    updatedat: new Date().toLocaleString('ar-EG')
+                }, { onConflict: 'id' });
+
+                if (error) {
+                    const res2 = await sbClient.from("system_capsules").upsert({
+                        id: capsuleKey,
+                        data: payload
+                    }, { onConflict: 'id' });
+                    if (res2.error) throw res2.error;
+                }
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            document.getElementById('stats-print-date').innerText = new Date().toLocaleDateString('ar-EG');
+            await loadGradeControlAndScores();
+        });
+
+        function switchMainTab(tab) {
+            document.getElementById('btn-mtab-control').classList.toggle('active', tab === 'control');
+            document.getElementById('btn-mtab-stats').classList.toggle('active', tab === 'stats');
+            document.getElementById('sec-control').classList.toggle('hidden', tab !== 'control');
+            document.getElementById('sec-stats').classList.toggle('hidden', tab !== 'stats');
+            if (tab === 'stats') renderAllStatistics();
+        }
+
+        async function loadGradeControlAndScores(showToast = false) {
+            const grade = document.getElementById('sel-grade').value;
+            const masterKey = `control_master_grade_${grade}`;
+            const scoresKey = `control_scores_grade_${grade}`;
+
+            SELECTED_STUDENT_KEY = null;
+            document.getElementById('student-combo-input').value = '';
+            document.getElementById('student-editor-card').classList.add('hidden');
+            document.getElementById('student-editor-placeholder').classList.remove('hidden');
+
+            try {
+                const [masterRaw, scoresRaw] = await Promise.all([
+                    fetchCapsuleData(masterKey),
+                    fetchCapsuleData(scoresKey)
+                ]);
+
+                MASTER_STUDENTS = Array.isArray(masterRaw)
+                    ? masterRaw
+                    : (masterRaw && Array.isArray(masterRaw.students) ? masterRaw.students : []);
+
+                SCORES_DATA = (scoresRaw && typeof scoresRaw === 'object')
+                    ? { t1: scoresRaw.t1 || {}, t2: scoresRaw.t2 || {} }
+                    : { t1: {}, t2: {} };
+
+                populateStatsClassFilter();
+                analyzeAllStudents();
+                renderAllStatistics();
+
+                if (showToast) {
+                    Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم تحديث بيانات التحكم والإحصاء', timer: 1200, showConfirmButton: false });
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ', 'تعذر تحميل البيانات: ' + err.message, 'error');
+            }
+        }
+
+        function populateStatsClassFilter() {
+            const sel = document.getElementById('stats-filter-class');
+            const classes = [...new Set(MASTER_STUDENTS.map(s => String(s.class || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar', { numeric: true }));
+            sel.innerHTML = `<option value="ALL">الصف بالكامل (جميع الفصول)</option>` + classes.map(c => `<option value="${c}">فصل ${c}</option>`).join('');
+        }
+
+        function onEvalScopeChange() {
+            analyzeAllStudents();
+            if (SELECTED_STUDENT_KEY) {
+                const found = ANALYZED_STUDENTS.find(x => x.stuKey === SELECTED_STUDENT_KEY);
+                if (found) renderStudentEditor(found);
+            }
+            renderAllStatistics();
+        }
+
+        // ================= محرك الحساب والتقديرات الموحد =================
+        function getStudentTermKeyAndRecord(st, term) {
+            const map = SCORES_DATA[term] || {};
+            if (st.code && map[st.code]) return { key: st.code, rec: map[st.code] };
+            if (st.nid && map[st.nid]) return { key: st.nid, rec: map[st.nid] };
+            const seatKey = term === 't1' ? st.seat_t1 : st.seat_t2;
+            const secKey  = term === 't1' ? st.secret_t1 : st.secret_t2;
+            if (seatKey && map[`SEAT_${seatKey}`]) return { key: `SEAT_${seatKey}`, rec: map[`SEAT_${seatKey}`] };
+            if (secKey  && map[`SEC_${secKey}`])   return { key: `SEC_${secKey}`, rec: map[`SEC_${secKey}`] };
+            return { key: getStudentKey(st), rec: {} };
+        }
+
+        function parseNum(v) {
+            if (v === undefined || v === null || String(v).trim() === '') return null;
+            const n = parseFloat(arToEn(v));
+            return Number.isFinite(n) ? n : null;
+        }
+
+        function hasValue(v) {
+            return v !== undefined && v !== null && String(v).trim() !== '';
+        }
+
+        function isAbsentVal(v) {
+            const s = String(v ?? '').trim();
+            return s === 'غ' || s === 'غائب' || s === 'غـ';
+        }
+
+        function evaluateGradeAndColor(score100, isAbsent, subjectKey) {
+            if (isAbsent) {
+                return { key: 'absent', label: 'غ', colorName: 'أحمر', badgeCls: 'grade-red', swatchCls: 'swatch-red', passed: false, isAbsent: true };
+            }
+
+            if (subjectKey === 'religion') {
+                if (score100 < 70) {
+                    return { key: 'red', label: 'لم يتقن', colorName: 'أحمر', badgeCls: 'grade-red', swatchCls: 'swatch-red', passed: false, isAbsent: false };
+                }
+                if (score100 < 85) {
+                    return { key: 'green', label: 'يلبي التوقعات', colorName: 'أخضر', badgeCls: 'grade-green', swatchCls: 'swatch-green', passed: true, isAbsent: false };
+                }
+                return { key: 'blue', label: 'يفوق التوقعات', colorName: 'أزرق', badgeCls: 'grade-blue', swatchCls: 'swatch-blue', passed: true, isAbsent: false };
+            }
+
+            if (score100 < 50) {
+                return { key: 'red', label: 'لم يتقن', colorName: 'أحمر', badgeCls: 'grade-red', swatchCls: 'swatch-red', passed: false, isAbsent: false };
+            }
+            if (score100 < 65) {
+                return { key: 'yellow', label: 'يحتاج إلى دعم', colorName: 'أصفر', badgeCls: 'grade-yellow', swatchCls: 'swatch-yellow', passed: true, isAbsent: false };
+            }
+            if (score100 < 85) {
+                return { key: 'green', label: 'يلبي التوقعات', colorName: 'أخضر', badgeCls: 'grade-green', swatchCls: 'swatch-green', passed: true, isAbsent: false };
+            }
+            return { key: 'blue', label: 'يفوق التوقعات', colorName: 'أزرق', badgeCls: 'grade-blue', swatchCls: 'swatch-blue', passed: true, isAbsent: false };
+        }
+
+        function computeSubjectTerm(rawSub, subjectKey) {
+            if (!rawSub || typeof rawSub !== 'object') return { hasData: false };
+            const hasAny = hasValue(rawSub.hw) || hasValue(rawSub.cw) || hasValue(rawSub.eval) ||
+                           hasValue(rawSub.att) || hasValue(rawSub.month) || hasValue(rawSub.exam);
+            if (!hasAny) return { hasData: false };
+
+            const hw = parseNum(rawSub.hw) ?? 0;
+            const cw = parseNum(rawSub.cw) ?? 0;
+            const ev = parseNum(rawSub.eval) ?? 0;
+            const att = parseNum(rawSub.att) ?? 0;
+            const month = parseNum(rawSub.month) ?? 0;
+            const eval40 = +(hw + cw + ev + att + month).toFixed(1);
+
+            const absent = isAbsentVal(rawSub.exam);
+            const exam60 = absent ? 0 : (parseNum(rawSub.exam) ?? 0);
+            const total100 = absent ? eval40 : +(eval40 + exam60).toFixed(1);
+            const meta = evaluateGradeAndColor(total100, absent, subjectKey);
+
+            return {
+                hasData: true,
+                hw: hasValue(rawSub.hw) ? hw : '',
+                cw: hasValue(rawSub.cw) ? cw : '',
+                eval: hasValue(rawSub.eval) ? ev : '',
+                att: hasValue(rawSub.att) ? att : '',
+                month: hasValue(rawSub.month) ? month : '',
+                eval40,
+                exam60: absent ? 'غ' : (hasValue(rawSub.exam) ? exam60 : ''),
+                total100Display: absent ? 'غ' : total100,
+                total100Numeric: absent ? eval40 : total100,
+                absent,
+                meta
+            };
+        }
+
+        function analyzeSingleStudent(st, grade, scope) {
+            const subjects = getSubjectsForGrade(grade);
+            const stuKey = getStudentKey(st);
+            const sc1 = getStudentTermKeyAndRecord(st, 't1').rec;
+            const sc2 = getStudentTermKeyAndRecord(st, 't2').rec;
+
+            let subjectResults = {};
+            let failedList = [];
+            let absentAnySubject = false;
+            let hasAnyGrade = false;
+            let grandSum = 0;
+            let maxPossible = 0;
+
+            subjects.forEach(sub => {
+                const r1 = computeSubjectTerm(sc1[sub.key], sub.key);
+                const r2 = computeSubjectTerm(sc2[sub.key], sub.key);
+
+                let activeScore = 0;
+                let activeAbsent = false;
+                let activeHasData = false;
+
+                if (scope === 't1') {
+                    activeHasData = r1.hasData;
+                    activeAbsent = r1.absent;
+                    activeScore = r1.hasData ? (r1.absent ? 0 : r1.total100Numeric) : 0;
+                } else if (scope === 't2') {
+                    activeHasData = r2.hasData;
+                    activeAbsent = r2.absent;
+                    activeScore = r2.hasData ? (r2.absent ? 0 : r2.total100Numeric) : 0;
+                } else {
+                    if (r1.hasData || r2.hasData) {
+                        activeHasData = true;
+                        const v1 = r1.hasData ? (r1.absent ? 0 : r1.total100Numeric) : 0;
+                        const v2 = r2.hasData ? (r2.absent ? 0 : r2.total100Numeric) : 0;
+                        if (r1.hasData && r2.hasData) {
+                            if ((r1.absent && r2.absent) || r2.absent) {
+                                activeAbsent = true;
+                                activeScore = 0;
+                            } else {
+                                activeScore = +((v1 + v2) / 2).toFixed(1);
+                            }
+                        } else {
+                            const onlyR = r1.hasData ? r1 : r2;
+                            activeAbsent = onlyR.absent;
+                            activeScore = onlyR.absent ? 0 : onlyR.total100Numeric;
+                        }
+                    }
+                }
+
+                let activeMeta = null;
+                if (activeHasData) {
+                    hasAnyGrade = true;
+                    if (activeAbsent) absentAnySubject = true;
+                    activeMeta = evaluateGradeAndColor(activeScore, activeAbsent, sub.key);
+                    if (!activeMeta.passed) {
+                        const passReq = (sub.key === 'religion') ? 70 : 50;
+                        const deficit = activeAbsent ? 'غ' : +(passReq - activeScore).toFixed(1);
+                        failedList.push({ key: sub.key, name: sub.name, score: activeScore, absent: activeAbsent, deficit, passReq });
+                    }
+                    if (CORE_TOTAL_KEYS.has(sub.key)) {
+                        grandSum += activeAbsent ? 0 : activeScore;
+                        maxPossible += 100;
+                    }
+                }
+
+                subjectResults[sub.key] = {
+                    sub,
+                    r1,
+                    r2,
+                    activeHasData,
+                    activeAbsent,
+                    activeScore,
+                    activeMeta
+                };
+            });
+
+            const failCount = failedList.length;
+            let category = 'NA'; // NA | F1 | F2 | F3 | PASS
+            if (hasAnyGrade) {
+                if (failCount === 1) category = 'F1';
+                else if (failCount === 2) category = 'F2';
+                else if (failCount >= 3) category = 'F3';
+                else category = 'PASS';
+            }
+
+            const pct = maxPossible > 0 ? +((grandSum / maxPossible) * 100).toFixed(1) : 0;
+            const overallMeta = hasAnyGrade ? evaluateGradeAndColor(pct, absentAnySubject && pct === 0, 'arabic') : null;
+
+            return {
+                st,
+                stuKey,
+                boy: isBoy(st),
+                hasAnyGrade,
+                absentAnySubject,
+                failedList,
+                failCount,
+                category,
+                grandSum: +grandSum.toFixed(1),
+                maxPossible,
+                pct,
+                overallMeta,
+                subjectResults
+            };
+        }
+
+        function analyzeAllStudents() {
+            const grade = document.getElementById('sel-grade').value;
+            const scope = document.getElementById('sel-eval-scope').value;
+
+            ANALYZED_STUDENTS = MASTER_STUDENTS.map(st => analyzeSingleStudent(st, grade, scope));
+
+            const cntAll  = ANALYZED_STUDENTS.length;
+            const cntF1   = ANALYZED_STUDENTS.filter(x => x.category === 'F1').length;
+            const cntF2   = ANALYZED_STUDENTS.filter(x => x.category === 'F2').length;
+            const cntF3   = ANALYZED_STUDENTS.filter(x => x.category === 'F3').length;
+            const cntPass = ANALYZED_STUDENTS.filter(x => x.category === 'PASS').length;
+
+            document.getElementById('cnt-all').innerText  = toAr(cntAll);
+            document.getElementById('cnt-f1').innerText   = toAr(cntF1);
+            document.getElementById('cnt-f2').innerText   = toAr(cntF2);
+            document.getElementById('cnt-f3').innerText   = toAr(cntF3);
+            document.getElementById('cnt-pass').innerText = toAr(cntPass);
+
+            renderComboDropdown();
+        }
+
+        // ================= الكومبو بوكس الذكي المصنّف (راسب ١ -> ٢ -> ٣+ -> ناجح) =================
+        function setFailCategoryFilter(cat) {
+            FAIL_FILTER = cat;
+            document.querySelectorAll('#fail-filter-pills .fail-pill').forEach(p => {
+                p.classList.toggle('active', p.dataset.f === cat);
+            });
+            renderComboDropdown();
+            openComboDropdown();
+        }
+
+        function onComboSearchInput() {
+            renderComboDropdown();
+            openComboDropdown();
+        }
+
+        function openComboDropdown() {
+            document.getElementById('student-combo-dropdown').classList.add('open');
+        }
+
+        function toggleComboDropdown() {
+            const dd = document.getElementById('student-combo-dropdown');
+            if (dd.classList.contains('open')) dd.classList.remove('open');
+            else {
+                renderComboDropdown();
+                dd.classList.add('open');
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.combo-wrapper')) {
+                const dd = document.getElementById('student-combo-dropdown');
+                if (dd) dd.classList.remove('open');
+            }
+        });
+
+        function renderComboDropdown() {
+            const dd = document.getElementById('student-combo-dropdown');
+            const rawQ = document.getElementById('student-combo-input').value.trim();
+            const normQ = normalizeArabic(rawQ);
+            const upperQ = arToEn(rawQ).toUpperCase().trim();
+
+            let pool = ANALYZED_STUDENTS.filter(item => {
+                if (FAIL_FILTER === 'ALL') return true;
+                return item.category === FAIL_FILTER;
+            });
+
+            if (rawQ !== '') {
+                pool = pool.filter(item => {
+                    const st = item.st;
+                    const normName = normalizeArabic(st.name || '');
+                    const sec1 = String(st.secret_t1 || '').toUpperCase();
+                    const sec2 = String(st.secret_t2 || '').toUpperCase();
+                    const seat1 = String(st.seat_t1 || '');
+                    const seat2 = String(st.seat_t2 || '');
+
+                    // مطابقة الاسم الأبجدية المتتابعة أو بالرقم السري أو الجلوس
+                    const matchPrefixName = normQ && normName.startsWith(normQ);
+                    const matchWordPrefix = normQ && normName.split(' ').some(w => w.startsWith(normQ));
+                    const matchSecret = upperQ && (sec1.startsWith(upperQ) || sec2.startsWith(upperQ) || sec1 === upperQ || sec2 === upperQ);
+                    const matchSeat = upperQ && (seat1 === upperQ || seat2 === upperQ);
+
+                    return matchPrefixName || matchWordPrefix || matchSecret || matchSeat;
+                }).sort((a, b) => {
+                    const aStart = normalizeArabic(a.st.name || '').startsWith(normQ);
+                    const bStart = normalizeArabic(b.st.name || '').startsWith(normQ);
+                    if (aStart && !bStart) return -1;
+                    if (!aStart && bStart) return 1;
+                    return 0;
+                });
+            }
+
+            // تصنيف الكومبو بوكس حسب الأولوية: 1 مادة -> مادتان -> 3+ -> ناجح -> غير مرصود
+            const groupsOrder = [
+                { key: 'F1',   title: 'أولاً: راسبون في مادة واحدة (١ مادة)',   cls: 'grp-f1' },
+                { key: 'F2',   title: 'ثانياً: راسبون في مادتين (٢ مادتان)',    cls: 'grp-f2' },
+                { key: 'F3',   title: 'ثالثاً: راسبون في ٣ مواد فأكثر',         cls: 'grp-f3' },
+                { key: 'PASS', title: 'رابعاً: الناجحون / المنقولون',            cls: 'grp-ok' },
+                { key: 'NA',   title: 'لم تُرصد درجاتهم بعد',                    cls: 'grp-na' }
+            ];
+
+            COMBO_FILTERED_LIST = [];
+            let html = "";
+
+            groupsOrder.forEach(grp => {
+                const items = pool.filter(x => x.category === grp.key);
+                if (items.length === 0) return;
+
+                // ترتيب داخلي: أبجدياً بالاسم
+                items.sort((a, b) => (a.st.name || '').localeCompare(b.st.name || '', 'ar'));
+
+                html += `<div class="combo-group-header ${grp.cls}"><span>${grp.title}</span><span>${toAr(items.length)} تلميذ</span></div>`;
+
+                items.forEach(item => {
+                    COMBO_FILTERED_LIST.push(item);
+                    const st = item.st;
+                    const isSel = (item.stuKey === SELECTED_STUDENT_KEY);
+                    const secText = `سري: ${st.secret_t1 || '-'} / ${st.secret_t2 || '-'}`;
+                    const failInfo = item.failedList.length > 0
+                        ? `<span class="text-[11px] font-black text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg">${item.failedList.map(f => f.name).join('، ')}</span>`
+                        : (item.hasAnyGrade
+                            ? `<span class="text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">ناجح (${toAr(item.grandSum)})</span>`
+                            : `<span class="text-[11px] font-bold text-slate-400">غير مرصود</span>`);
+
+                    html += `
+                        <div class="combo-option ${isSel ? 'selected-opt' : ''}" onmousedown="selectStudentFromCombo('${item.stuKey}')">
+                            <div>
+                                <div class="text-xs sm:text-sm font-black text-[#0f2b48]">${st.name}</div>
+                                <div class="text-[11px] font-bold text-slate-500">فصل ${st.class || '-'} • <span class="font-mono text-purple-800">${secText}</span></div>
+                            </div>
+                            <div class="shrink-0">${failInfo}</div>
+                        </div>
+                    `;
+                });
+            });
+
+            if (!html) {
+                html = `<div class="p-6 text-center text-slate-400 text-xs font-bold">لا يوجد تلاميذ مطابقون للبحث.</div>`;
+            }
+
+            dd.innerHTML = html;
+        }
+
+        function selectStudentFromCombo(stuKey) {
+            const found = ANALYZED_STUDENTS.find(x => x.stuKey === stuKey);
+            if (!found) return;
+
+            SELECTED_STUDENT_KEY = stuKey;
+            document.getElementById('student-combo-input').value = found.st.name || '';
+            document.getElementById('student-combo-dropdown').classList.remove('open');
+            renderStudentEditor(found);
+        }
+
+        function navigateComboStudent(dir) {
+            if (COMBO_FILTERED_LIST.length === 0) return;
+            let idx = COMBO_FILTERED_LIST.findIndex(x => x.stuKey === SELECTED_STUDENT_KEY);
+            if (idx === -1) idx = (dir > 0) ? 0 : COMBO_FILTERED_LIST.length - 1;
+            else idx = (idx + dir + COMBO_FILTERED_LIST.length) % COMBO_FILTERED_LIST.length;
+
+            selectStudentFromCombo(COMBO_FILTERED_LIST[idx].stuKey);
+        }
+
+        // ================= محرر درجات التلميذ الفردي (ترم أول + ترم ثانٍ + المحصلة) =================
+        function renderStudentEditor(analyzed) {
+            const st = analyzed.st;
+            const grade = document.getElementById('sel-grade').value;
+            const subjects = getSubjectsForGrade(grade);
+
+            document.getElementById('student-editor-placeholder').classList.add('hidden');
+            document.getElementById('student-editor-card').classList.remove('hidden');
+
+            document.getElementById('ed-stu-name').innerText = st.name || '-';
+            document.getElementById('ed-stu-class').innerText = `فصل ${st.class || '-'}`;
+            document.getElementById('ed-stu-dmj').classList.toggle('hidden', st.dmj !== 'دمج');
+
+            document.getElementById('ed-seat1').innerText = st.seat_t1 ? toAr(st.seat_t1) : '-';
+            document.getElementById('ed-seat2').innerText = st.seat_t2 ? toAr(st.seat_t2) : '-';
+            document.getElementById('ed-sec1').innerText  = st.secret_t1 || '-';
+            document.getElementById('ed-sec2').innerText  = st.secret_t2 || '-';
+            document.getElementById('ed-att1').innerText  = st.attend_t1 ? `%${toAr(st.attend_t1)}` : '-';
+            document.getElementById('ed-att2').innerText  = st.attend_t2 ? `%${toAr(st.attend_t2)}` : '-';
+
+            document.getElementById('ed-max-total-lbl').innerText = toAr(isLowerGrade(grade) ? 300 : 500);
+
+            updateEditorHeaderTotals(analyzed);
+
+            const tbody = document.getElementById('ed-subjects-tbody');
+            let html = "";
+
+            subjects.forEach(sub => {
+                const subRes = analyzed.subjectResults[sub.key];
+                const r1 = subRes.r1;
+                const r2 = subRes.r2;
+
+                const subTitleNote = !sub.inTotal
+                    ? (sub.key === 'religion' ? '<br><small class="text-rose-700 font-bold">(نجاح ٧٠)</small>' : '<br><small class="text-slate-500 font-bold">(لا يضاف)</small>')
+                    : '';
+
+                // حساب المتوسط والدرجة النهائية للمادة
+                const comb = computeCombinedForSubject(r1, r2, sub.key);
+
+                html += `
+                    <!-- صف الترم الأول -->
+                    <tr data-sub="${sub.key}" data-term="t1">
+                        <td rowspan="2" style="background:#f8fafc; font-weight:900; color:#0f2b48; border-left:2px solid #0f2b48;">
+                            ${sub.name}${subTitleNote}
+                        </td>
+                        <td style="background:#f0fdf4; color:#166534; font-weight:900;">نصف العام</td>
+                        <td><input type="text" class="edit-inp" value="${r1.hw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'hw', 5)"></td>
+                        <td><input type="text" class="edit-inp" value="${r1.cw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'cw', 5)"></td>
+                        <td><input type="text" class="edit-inp" value="${r1.eval ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'eval', 10)"></td>
+                        <td><input type="text" class="edit-inp" value="${r1.att ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'att', 5)"></td>
+                        <td><input type="text" class="edit-inp" value="${r1.month ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't1', 'month', 15)"></td>
+                        <td style="background:#eff6ff; color:#1e3a8a; font-weight:900;" id="ed-eval40-${sub.key}-t1">${r1.hasData ? toAr(r1.eval40) : '-'}</td>
+                        <td style="background:#fffbeb;"><input type="text" class="edit-inp" style="color:#b45309;" value="${r1.exam60 ?? ''}" placeholder="0:60 أو غ" oninput="onEditorExamInput(this, '${sub.key}', 't1')"></td>
+                        <td style="background:#f1f5f9; font-weight:900;" id="ed-tot100-${sub.key}-t1">${r1.hasData ? (r1.absent ? 'غ' : toAr(r1.total100Numeric)) : '-'}</td>
+                        <td class="${r1.hasData ? r1.meta.badgeCls : ''}" id="ed-grade-${sub.key}-t1">${r1.hasData ? r1.meta.label : '-'}</td>
+
+                        <!-- أعمدة المحصلة والترمين معاً (ممتدة لصفين) -->
+                        <td rowspan="2" style="background:#ecfdf5; color:#065f46; font-weight:900; border-right:2px solid #0f2b48;" id="ed-sum200-${sub.key}">${comb.sum200Display}</td>
+                        <td rowspan="2" style="background:#fefce8; color:#854d0e; font-weight:900; font-size:13.5px;" id="ed-avg100-${sub.key}">${comb.avg100Display}</td>
+                        <td rowspan="2" class="${comb.finalMeta ? comb.finalMeta.badgeCls : ''}" id="ed-final-${sub.key}">
+                            ${comb.finalBadgeHtml}
+                        </td>
+                    </tr>
+
+                    <!-- صف الترم الثاني -->
+                    <tr data-sub="${sub.key}" data-term="t2" style="border-bottom: 2.5px solid #0f2b48;">
+                        <td style="background:#eff6ff; color:#1e40af; font-weight:900;">آخر العام</td>
+                        <td><input type="text" class="edit-inp" value="${r2.hw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'hw', 5)"></td>
+                        <td><input type="text" class="edit-inp" value="${r2.cw ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'cw', 5)"></td>
+                        <td><input type="text" class="edit-inp" value="${r2.eval ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'eval', 10)"></td>
+                        <td><input type="text" class="edit-inp" value="${r2.att ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'att', 5)"></td>
+                        <td><input type="text" class="edit-inp" value="${r2.month ?? ''}" oninput="onEditorFieldInput(this, '${sub.key}', 't2', 'month', 15)"></td>
+                        <td style="background:#eff6ff; color:#1e3a8a; font-weight:900;" id="ed-eval40-${sub.key}-t2">${r2.hasData ? toAr(r2.eval40) : '-'}</td>
+                        <td style="background:#fffbeb;"><input type="text" class="edit-inp" style="color:#b45309;" value="${r2.exam60 ?? ''}" placeholder="0:60 أو غ" oninput="onEditorExamInput(this, '${sub.key}', 't2')"></td>
+                        <td style="background:#f1f5f9; font-weight:900;" id="ed-tot100-${sub.key}-t2">${r2.hasData ? (r2.absent ? 'غ' : toAr(r2.total100Numeric)) : '-'}</td>
+                        <td class="${r2.hasData ? r2.meta.badgeCls : ''}" id="ed-grade-${sub.key}-t2">${r2.hasData ? r2.meta.label : '-'}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function computeCombinedForSubject(r1, r2, subjectKey) {
+            if (!r1.hasData && !r2.hasData) {
+                return { sum200Display: '-', avg100Display: '-', finalMeta: null, finalBadgeHtml: '-' };
+            }
+
+            const v1 = r1.hasData ? (r1.absent ? 0 : r1.total100Numeric) : 0;
+            const v2 = r2.hasData ? (r2.absent ? 0 : r2.total100Numeric) : 0;
+
+            let sum200Display = '-';
+            let avg100Numeric = 0;
+            let avg100Display = '-';
+            let finalAbsent = false;
+
+            if (r1.hasData && r2.hasData) {
+                if ((r1.absent && r2.absent) || r2.absent) {
+                    finalAbsent = true;
+                    sum200Display = (r1.absent && r2.absent) ? 'غ' : toAr(+(v1 + v2).toFixed(1));
+                    avg100Display = 'غ';
+                } else {
+                    const sum200 = +(v1 + v2).toFixed(1);
+                    avg100Numeric = +(sum200 / 2).toFixed(1);
+                    sum200Display = toAr(sum200);
+                    avg100Display = toAr(avg100Numeric);
+                }
+            } else {
+                const onlyR = r1.hasData ? r1 : r2;
+                finalAbsent = onlyR.absent;
+                avg100Numeric = onlyR.absent ? 0 : onlyR.total100Numeric;
+                sum200Display = onlyR.absent ? 'غ' : toAr(avg100Numeric);
+                avg100Display = onlyR.absent ? 'غ' : toAr(avg100Numeric);
+            }
+
+            const finalMeta = evaluateGradeAndColor(avg100Numeric, finalAbsent, subjectKey);
+            const passReq = (subjectKey === 'religion') ? 70 : 50;
+            let deficitNote = '';
+            if (!finalMeta.passed && !finalAbsent) {
+                const diff = +(passReq - avg100Numeric).toFixed(1);
+                deficitNote = `<div style="font-size:10px; font-weight:900;">(باقي ${toAr(diff)} للـ ${toAr(passReq)})</div>`;
+            }
+
+            const finalBadgeHtml = `<div>${finalMeta.label} (${finalMeta.colorName})</div>${deficitNote}`;
+            return { sum200Display, avg100Display, finalMeta, finalBadgeHtml };
+        }
+
+        function updateEditorHeaderTotals(analyzed) {
+            document.getElementById('ed-grand-sum').innerText = analyzed.hasAnyGrade ? toAr(analyzed.grandSum) : '٠';
+            document.getElementById('ed-grand-pct').innerText = analyzed.maxPossible > 0 ? `%${toAr(analyzed.pct)}` : '%٠';
+
+            const badge = document.getElementById('ed-final-status-badge');
+            if (!analyzed.hasAnyGrade) {
+                badge.className = "px-3.5 py-2 rounded-xl text-xs font-black border bg-slate-100 text-slate-500 border-slate-300";
+                badge.innerText = "لم تُرصد درجات";
+            } else if (analyzed.failCount === 0) {
+                badge.className = "px-3.5 py-2 rounded-xl text-xs font-black border bg-emerald-100 text-emerald-900 border-emerald-300";
+                badge.innerHTML = `<i class="fa-solid fa-circle-check ml-1"></i> منقول / ناجح`;
+            } else {
+                badge.className = "px-3.5 py-2 rounded-xl text-xs font-black border bg-rose-100 text-rose-900 border-rose-300";
+                badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation ml-1"></i> دور ثانٍ في (${toAr(analyzed.failCount)}): ${analyzed.failedList.map(f => f.name).join('، ')}`;
+            }
+        }
+
+        function ensureScoreRecordForSelected(term, subKey) {
+            const item = ANALYZED_STUDENTS.find(x => x.stuKey === SELECTED_STUDENT_KEY);
+            if (!item) return null;
+            const st = item.st;
+            const existing = getStudentTermKeyAndRecord(st, term);
+            const targetKey = existing.key;
+            if (!SCORES_DATA[term]) SCORES_DATA[term] = {};
+            if (!SCORES_DATA[term][targetKey]) SCORES_DATA[term][targetKey] = {};
+            if (!SCORES_DATA[term][targetKey][subKey]) SCORES_DATA[term][targetKey][subKey] = {};
+            return { st, rec: SCORES_DATA[term][targetKey][subKey] };
+        }
+
+        function onEditorFieldInput(inp, subKey, term, field, maxVal) {
+            let cleanStr = arToEn(inp.value).replace(/[^0-9.]/g, '');
+            let num = parseFloat(cleanStr);
+            if (cleanStr !== '' && !isNaN(num)) {
+                if (num > maxVal) { num = maxVal; inp.value = maxVal; }
+                if (num < 0)      { num = 0;      inp.value = 0; }
+            }
+
+            const resObj = ensureScoreRecordForSelected(term, subKey);
+            if (!resObj) return;
+
+            resObj.rec[field] = (cleanStr === '' || isNaN(num)) ? '' : num;
+            // تحديث raw40 للمزامنة مع صفحة الرصد
+            const evalSum = (parseNum(resObj.rec.hw) ?? 0) + (parseNum(resObj.rec.cw) ?? 0) + (parseNum(resObj.rec.eval) ?? 0) + (parseNum(resObj.rec.att) ?? 0) + (parseNum(resObj.rec.month) ?? 0);
+            resObj.rec.raw40 = +evalSum.toFixed(1);
+
+            refreshSingleSubjectRowAndStudentTotals(resObj.st, subKey);
+        }
+
+        function onEditorExamInput(inp, subKey, term) {
+            const resObj = ensureScoreRecordForSelected(term, subKey);
+            if (!resObj) return;
+
+            const raw = inp.value.trim();
+            if (raw === 'غ' || raw === 'غائب' || raw === 'غـ') {
+                resObj.rec.exam = 'غ';
+                inp.value = 'غ';
+            } else {
+                let cleanStr = arToEn(raw).replace(/[^0-9.]/g, '');
+                let num = parseFloat(cleanStr);
+                if (cleanStr !== '' && !isNaN(num)) {
+                    if (num > 60) { num = 60; inp.value = 60; }
+                    if (num < 0)  { num = 0;  inp.value = 0; }
+                    resObj.rec.exam = num;
+                } else {
+                    resObj.rec.exam = '';
+                }
+            }
+
+            refreshSingleSubjectRowAndStudentTotals(resObj.st, subKey);
+        }
+
+        function refreshSingleSubjectRowAndStudentTotals(st, subKey) {
+            const grade = document.getElementById('sel-grade').value;
+            const scope = document.getElementById('sel-eval-scope').value;
+            const updated = analyzeSingleStudent(st, grade, scope);
+
+            const idx = ANALYZED_STUDENTS.findIndex(x => x.stuKey === updated.stuKey);
+            if (idx !== -1) ANALYZED_STUDENTS[idx] = updated;
+
+            const subRes = updated.subjectResults[subKey];
+            const r1 = subRes.r1;
+            const r2 = subRes.r2;
+
+            document.getElementById(`ed-eval40-${subKey}-t1`).innerText = r1.hasData ? toAr(r1.eval40) : '-';
+            document.getElementById(`ed-tot100-${subKey}-t1`).innerText = r1.hasData ? (r1.absent ? 'غ' : toAr(r1.total100Numeric)) : '-';
+            const g1El = document.getElementById(`ed-grade-${subKey}-t1`);
+            g1El.innerText = r1.hasData ? r1.meta.label : '-';
+            g1El.className = r1.hasData ? r1.meta.badgeCls : '';
+
+            document.getElementById(`ed-eval40-${subKey}-t2`).innerText = r2.hasData ? toAr(r2.eval40) : '-';
+            document.getElementById(`ed-tot100-${subKey}-t2`).innerText = r2.hasData ? (r2.absent ? 'غ' : toAr(r2.total100Numeric)) : '-';
+            const g2El = document.getElementById(`ed-grade-${subKey}-t2`);
+            g2El.innerText = r2.hasData ? r2.meta.label : '-';
+            g2El.className = r2.hasData ? r2.meta.badgeCls : '';
+
+            const comb = computeCombinedForSubject(r1, r2, subKey);
+            document.getElementById(`ed-sum200-${subKey}`).innerText = comb.sum200Display;
+            document.getElementById(`ed-avg100-${subKey}`).innerText = comb.avg100Display;
+            const fEl = document.getElementById(`ed-final-${subKey}`);
+            fEl.innerHTML = comb.finalBadgeHtml;
+            fEl.className = comb.finalMeta ? comb.finalMeta.badgeCls : '';
+
+            updateEditorHeaderTotals(updated);
+        }
+
+        async function saveSelectedStudentScores() {
+            if (!SELECTED_STUDENT_KEY) return;
+            const grade = document.getElementById('sel-grade').value;
+            const scoresKey = `control_scores_grade_${grade}`;
+
+            Swal.fire({ title: 'جاري حفظ تعديلات درجات التلميذ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                await saveCapsuleData(scoresKey, SCORES_DATA);
+                analyzeAllStudents();
+                renderAllStatistics();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'تم حفظ وتحديث درجات التلميذ بنجاح!',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ', 'تعذر الحفظ: ' + err.message, 'error');
+            }
+        }
+
+        // ================= القسم الثاني: الإحصاء الشامل =================
+        function renderAllStatistics() {
+            const grade = document.getElementById('sel-grade').value;
+            const scope = document.getElementById('sel-eval-scope').value;
+            const clsFilter = document.getElementById('stats-filter-class').value;
+            const subjects = getSubjectsForGrade(grade);
+
+            const scopeTitle = scope === 't1' ? 'الترم الأول (نصف العام)' : (scope === 't2' ? 'الترم الثاني (آخر العام)' : 'نهاية العام (متوسط الترمين)');
+            const clsTitle = clsFilter === 'ALL' ? 'جميع الفصول' : `فصل ${clsFilter}`;
+            document.getElementById('stats-print-title').innerText = `التقرير الإحصائي للنتيجة — الصف ${grade} (${clsTitle}) — ${scopeTitle}`;
+
+            const pool = ANALYZED_STUDENTS.filter(item => clsFilter === 'ALL' || String(item.st.class || '').trim() === clsFilter);
+
+            renderOverallStatsTable(pool);
+            renderPerSubjectStatsTable(pool, subjects);
+            renderClassComparisonTable(pool);
+            renderTop10Table(pool);
+            renderFailedStudentsTable(pool, scope);
+        }
+
+        function createEmptyOverallBucket() {
+            return { enrolled: 0, present: 0, absent: 0, pass: 0, f1: 0, f2: 0, f3: 0, failTotal: 0, blue: 0, green: 0, yellow: 0, red: 0, absGrade: 0 };
+        }
+
+        function renderOverallStatsTable(pool) {
+            const boys = createEmptyOverallBucket();
+            const girls = createEmptyOverallBucket();
+            const total = createEmptyOverallBucket();
+
+            pool.forEach(item => {
+                const buckets = [item.boy ? boys : girls, total];
+                buckets.forEach(b => {
+                    b.enrolled++;
+                    if (item.hasAnyGrade) {
+                        if (item.absentAnySubject) b.absent++;
+                        else b.present++;
+
+                        if (item.failCount === 0) b.pass++;
+                        else {
+                            b.failTotal++;
+                            if (item.failCount === 1) b.f1++;
+                            else if (item.failCount === 2) b.f2++;
+                            else b.f3++;
+                        }
+
+                        if (item.overallMeta) {
+                            if (item.overallMeta.key === 'blue') b.blue++;
+                            else if (item.overallMeta.key === 'green') b.green++;
+                            else if (item.overallMeta.key === 'yellow') b.yellow++;
+                            else if (item.overallMeta.key === 'red') b.red++;
+                            else if (item.overallMeta.key === 'absent') b.absGrade++;
+                        }
+                    }
+                });
+            });
+
+            const rows = [
+                { label: 'بنين', d: boys, cls: '' },
+                { label: 'بنات', d: girls, cls: '' },
+                { label: 'إجمالي', d: total, cls: 'row-total-sub' }
+            ];
+
+            document.getElementById('tbody-stats-overall').innerHTML = rows.map(r => {
+                const pct = r.d.present > 0 ? ((r.d.pass / r.d.present) * 100).toFixed(1) : (r.d.enrolled > 0 && r.d.pass > 0 ? ((r.d.pass / r.d.enrolled) * 100).toFixed(1) : 0);
+                return `
+                    <tr class="${r.cls}">
+                        <td style="font-weight:900;">${r.label}</td>
+                        <td>${toAr(r.d.enrolled)}</td>
+                        <td>${toAr(r.d.present)}</td>
+                        <td class="text-rose-700">${toAr(r.d.absent)}</td>
+                        <td class="text-emerald-800 font-black">${toAr(r.d.pass)}</td>
+                        <td>${toAr(r.d.f1)}</td>
+                        <td>${toAr(r.d.f2)}</td>
+                        <td>${toAr(r.d.f3)}</td>
+                        <td class="text-rose-700 font-black">${toAr(r.d.failTotal)}</td>
+                        <td class="bg-blue-50 text-blue-900 font-black">%${toAr(pct)}</td>
+                        <td>${toAr(r.d.blue)}</td>
+                        <td>${toAr(r.d.green)}</td>
+                        <td>${toAr(r.d.yellow)}</td>
+                        <td>${toAr(r.d.red)}</td>
+                        <td>${toAr(r.d.absGrade)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function createEmptySubjectBucket() {
+            return { enrolled: 0, present: 0, absent: 0, pass: 0, fail: 0, blue: 0, green: 0, yellow: 0, red: 0 };
+        }
+
+        function renderPerSubjectStatsTable(pool, subjects) {
+            const tbody = document.getElementById('tbody-stats-subjects');
+            let html = "";
+
+            subjects.forEach(sub => {
+                const boys = createEmptySubjectBucket();
+                const girls = createEmptySubjectBucket();
+                const total = createEmptySubjectBucket();
+
+                pool.forEach(item => {
+                    const sr = item.subjectResults[sub.key];
+                    const buckets = [item.boy ? boys : girls, total];
+
+                    buckets.forEach(b => {
+                        b.enrolled++;
+                        if (sr && sr.activeHasData) {
+                            if (sr.activeAbsent) {
+                                b.absent++;
+                                b.fail++;
+                            } else {
+                                b.present++;
+                                if (sr.activeMeta.passed) b.pass++;
+                                else b.fail++;
+
+                                if (sr.activeMeta.key === 'blue') b.blue++;
+                                else if (sr.activeMeta.key === 'green') b.green++;
+                                else if (sr.activeMeta.key === 'yellow') b.yellow++;
+                                else if (sr.activeMeta.key === 'red') b.red++;
+                            }
+                        }
+                    });
+                });
+
+                const rows = [
+                    { label: 'بنين', d: boys, isTotal: false },
+                    { label: 'بنات', d: girls, isTotal: false },
+                    { label: 'إجمالي', d: total, isTotal: true }
+                ];
+
+                rows.forEach((r, rIdx) => {
+                    const pct = r.d.present > 0 ? ((r.d.pass / r.d.present) * 100).toFixed(1) : 0;
+                    html += `
+                        <tr class="${r.isTotal ? 'row-total-sub' : ''}">
+                            ${rIdx === 0 ? `<td rowspan="3" style="background:#f8fafc; font-weight:900; color:#0f2b48; border-bottom:2px solid #0f2b48;">${sub.name}${sub.key === 'religion' ? '<br><small class="text-rose-700">(من ٧٠)</small>' : ''}</td>` : ''}
+                            <td>${r.label}</td>
+                            <td>${toAr(r.d.enrolled)}</td>
+                            <td>${toAr(r.d.present)}</td>
+                            <td class="text-rose-700">${toAr(r.d.absent)}</td>
+                            <td class="text-emerald-800 font-black">${toAr(r.d.pass)}</td>
+                            <td class="text-rose-700 font-black">${toAr(r.d.fail)}</td>
+                            <td class="bg-blue-50 text-blue-900 font-black">%${toAr(pct)}</td>
+                            <td>${toAr(r.d.blue)}</td>
+                            <td>${toAr(r.d.green)}</td>
+                            <td>${toAr(r.d.yellow)}</td>
+                            <td>${toAr(r.d.red)}</td>
+                        </tr>
+                    `;
+                });
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function renderClassComparisonTable(pool) {
+            const clsMap = {};
+            pool.forEach(item => {
+                const c = String(item.st.class || 'غير محدد').trim();
+                if (!clsMap[c]) clsMap[c] = { name: c, enrolled: 0, graded: 0, pass: 0, fail: 0, blue: 0, sumTotals: 0 };
+                clsMap[c].enrolled++;
+                if (item.hasAnyGrade) {
+                    clsMap[c].graded++;
+                    if (item.failCount === 0) clsMap[c].pass++;
+                    else clsMap[c].fail++;
+                    if (item.overallMeta && item.overallMeta.key === 'blue') clsMap[c].blue++;
+                    clsMap[c].sumTotals += item.grandSum;
+                }
+            });
+
+            const rows = Object.values(clsMap).sort((a, b) => a.name.localeCompare(b.name, 'ar', { numeric: true }));
+            document.getElementById('tbody-stats-classes').innerHTML = rows.map(c => {
+                const pct = c.graded > 0 ? ((c.pass / c.graded) * 100).toFixed(1) : 0;
+                const avgSum = c.graded > 0 ? (c.sumTotals / c.graded).toFixed(1) : 0;
+                return `
+                    <tr>
+                        <td class="font-black text-[#0f2b48]">${c.name}</td>
+                        <td>${toAr(c.enrolled)}</td>
+                        <td class="text-emerald-800 font-black">${toAr(c.pass)}</td>
+                        <td class="text-rose-700 font-black">${toAr(c.fail)}</td>
+                        <td class="bg-blue-50 text-blue-900 font-black">%${toAr(pct)}</td>
+                        <td class="text-blue-700 font-black">${toAr(c.blue)}</td>
+                        <td>${toAr(avgSum)}</td>
+                    </tr>
+                `;
+            }).join('') || `<tr><td colspan="7" class="p-4 text-slate-400">لا توجد بيانات</td></tr>`;
+        }
+
+        function renderTop10Table(pool) {
+            const eligible = pool
+                .filter(x => x.hasAnyGrade && x.failCount === 0 && !x.absentAnySubject && x.grandSum > 0)
+                .sort((a, b) => b.grandSum - a.grandSum)
+                .slice(0, 10);
+
+            const tbody = document.getElementById('tbody-stats-top10');
+            if (eligible.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-slate-400 font-bold">لا توجد نتائج ناجحة مكتملة بعد.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = eligible.map((x, idx) => `
+                <tr>
+                    <td class="font-black ${idx < 3 ? 'bg-amber-100 text-amber-900' : ''}">${toAr(idx + 1)}</td>
+                    <td style="text-align:right; padding-right:8px; font-weight:900; color:#0f2b48;">${x.st.name || ''}</td>
+                    <td>${x.st.class || '-'}</td>
+                    <td class="font-mono">${toAr(x.st.seat_t2 || x.st.seat_t1 || '-')}</td>
+                    <td class="font-black text-emerald-800">${toAr(x.grandSum)}</td>
+                    <td class="font-black text-blue-900">%${toAr(x.pct)}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderFailedStudentsTable(pool, scope) {
+            const failed = pool
+                .filter(x => x.failCount > 0)
+                .sort((a, b) => a.failCount - b.failCount || (a.st.name || '').localeCompare(b.st.name || '', 'ar'));
+
+            const tbody = document.getElementById('tbody-stats-failed');
+            if (failed.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-emerald-700 font-black">🎉 لا يوجد تلاميذ مستحقون للدور الثاني في هذا النطاق!</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = failed.map((x, idx) => {
+                const seat = (scope === 't1') ? x.st.seat_t1 : (x.st.seat_t2 || x.st.seat_t1);
+                const sec  = (scope === 't1') ? x.st.secret_t1 : (x.st.secret_t2 || x.st.secret_t1);
+                const subsTxt = x.failedList.map(f => `${f.name} (${f.absent ? 'غ' : toAr(f.score)})`).join(' — ');
+
+                return `
+                    <tr>
+                        <td>${toAr(idx + 1)}</td>
+                        <td style="text-align:right; padding-right:8px; font-weight:900; color:#0f2b48;">${x.st.name || ''}</td>
+                        <td>${x.st.class || '-'}</td>
+                        <td class="font-mono">${toAr(seat || '-')}</td>
+                        <td class="font-mono text-purple-900">${sec || '-'}</td>
+                        <td class="grade-red">${toAr(x.failCount)} مادة</td>
+                        <td style="text-align:right; padding-right:8px; color:#b91c1c; font-weight:900;">${subsTxt}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ================= تصدير كافة الإحصاءات إلى Excel =================
+        function exportStatisticsToExcel() {
+            const grade = document.getElementById('sel-grade').value;
+            const wb = XLSX.utils.book_new();
+
+            const sheets = [
+                { id: 'tbl-stats-overall',  name: 'الإحصاء العام' },
+                { id: 'tbl-stats-subjects', name: 'إحصاء المواد' },
+                { id: 'tbl-stats-classes',  name: 'مقارنة الفصول' },
+                { id: 'tbl-stats-top10',    name: 'العشرة الأوائل' },
+                { id: 'tbl-stats-failed',   name: 'كشف الدور الثاني' }
+            ];
+
+            sheets.forEach(s => {
+                const tbl = document.getElementById(s.id);
+                if (tbl) {
+                    const ws = XLSX.utils.table_to_sheet(tbl, { raw: true });
+                    if (!ws['!views']) ws['!views'] = [];
+                    ws['!views'].push({ rightToLeft: true });
+                    XLSX.utils.book_append_sheet(wb, ws, s.name.slice(0, 31));
+                }
+            });
+
+            XLSX.writeFile(wb, `إحصاء_التحكم_والنتيجة_الصف_${grade}.xlsx`);
+        }
+    </script>
+</body>
+</html>
