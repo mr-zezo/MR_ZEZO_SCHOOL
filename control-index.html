@@ -17,7 +17,7 @@
             --primary: #0f2b48;
             --primary-light: #1e3a8a;
             --gold: #d97706;
-            --bg: #f1f5f9;
+            --bg: #f8fafc;
             --border: #cbd5e1;
         }
 
@@ -33,10 +33,10 @@
             flex-direction: column; 
             align-items: center; 
             justify-content: space-between; 
-            padding: 14px;
+            padding: 14px; 
         }
 
-        .app-container { width: 100%; max-width: 1120px; }
+        .app-container { width: 100%; max-width: 1180px; }
 
         .btn-3d {
             border-bottom: 3.5px solid rgba(0,0,0,0.25);
@@ -65,7 +65,7 @@
             gap: 8px;
         }
 
-        /* تصميم بطاقات الأزرار الخمسة المطورة */
+        /* تصميم بطاقات الأزرار الستة */
         .ctrl-card {
             position: relative;
             background: #ffffff;
@@ -104,12 +104,13 @@
             border-bottom-width: 2px;
         }
 
-        /* ألوان مميزة لكل بطاقة */
+        /* ألوان وهوية كل بطاقة */
         .card-data    { --card-accent: #d97706; }
         .card-print   { --card-accent: #0284c7; }
         .card-entry   { --card-accent: #7c3aed; }
         .card-results { --card-accent: #15803d; }
         .card-stats   { --card-accent: #be123c; }
+        .card-certs   { --card-accent: #4f46e5; }
 
         .ctrl-card-top {
             display: flex;
@@ -119,13 +120,13 @@
         }
 
         .ctrl-icon-box {
-            width: 54px;
-            height: 54px;
+            width: 52px;
+            height: 52px;
             border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 23px;
             flex-shrink: 0;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
             transition: transform 0.2s ease;
@@ -135,13 +136,13 @@
         }
 
         .step-num-pill {
-            width: 30px;
-            height: 30px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 13.5px;
             font-weight: 900;
             color: #ffffff;
             background: var(--card-accent, #0f2b48);
@@ -158,30 +159,11 @@
             font-size: 11.5px;
             font-weight: 900;
         }
-
-        /* حالة البطاقة غير المفعلة بعد */
-        .ctrl-card.is-disabled {
-            background: #f8fafc;
-            border-style: dashed;
-            border-color: #cbd5e1;
-            border-bottom: 3px solid #cbd5e1;
-            opacity: 0.78;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-        .ctrl-card.is-disabled:hover {
-            transform: none;
-            border-color: #cbd5e1;
-            box-shadow: none;
-        }
-        .ctrl-card.is-disabled:hover .ctrl-icon-box {
-            transform: none;
-        }
     </style>
 </head>
 <body>
 
-    <div class="app-container space-y-5">
+    <div class="app-container space-y-4">
 
         <!-- 1. الشريط العلوي -->
         <header class="top-nav rounded-2xl shadow-lg p-3.5 sm:p-4 text-white flex flex-wrap justify-between items-center gap-3">
@@ -213,14 +195,20 @@
             </div>
         </header>
 
-        <!-- 2. شريط المسار الإرشادي -->
+        <!-- 2. شريط المسار الإرشادي للكنترول (6 مراحل متسلسلة) -->
         <div class="bg-white border border-slate-200 rounded-2xl p-3 sm:px-4 shadow-sm flex flex-wrap justify-between items-center gap-2">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-900 flex items-center justify-center text-sm font-black">
                     <i class="fa-solid fa-route"></i>
                 </div>
-                <div class="text-xs font-black text-slate-700">
-                    مسار العمل المتسلسل: <span class="text-amber-700">١. شيت البيانات</span> ← <span class="text-sky-700">٢. المطبوعات</span> ← <span class="text-purple-700">٣. الرصد</span> ← <span class="text-emerald-700">٤. النتيجة</span> ← <span class="text-rose-700">٥. التحكم والإحصاء</span>
+                <div class="text-xs font-black text-slate-700 leading-relaxed">
+                    مسار العمل: 
+                    <span class="text-amber-700">١. شيت البيانات</span> ← 
+                    <span class="text-sky-700">٢. المطبوعات</span> ← 
+                    <span class="text-purple-700">٣. الرصد</span> ← 
+                    <span class="text-emerald-700">٤. النتيجة</span> ← 
+                    <span class="text-rose-700">٥. التحكم والإحصاء</span> ← 
+                    <span class="text-indigo-700">٦. طباعة الشهادات</span>
                 </div>
             </div>
 
@@ -230,11 +218,11 @@
             </div>
         </div>
 
-        <!-- 3. شبكة الأزرار الخمسة (صف علوي من 3 بطاقات + صف سفلي من بطاقتين عريضتين) -->
-        <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <!-- 3. شبكة الأزرار الستة (مصفوفة متوازنة 3x2) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
 
             <!-- ١. شيت البيانات -->
-            <a href="control-master.html" class="ctrl-card card-data md:col-span-2">
+            <a href="control-master.html" class="ctrl-card card-data">
                 <div class="ctrl-card-top">
                     <div class="flex items-center gap-3">
                         <div class="ctrl-icon-box bg-amber-50 text-amber-700 border border-amber-200">
@@ -256,7 +244,7 @@
             </a>
 
             <!-- ٢. شيت المطبوعات -->
-            <a href="control-calling.html" class="ctrl-card card-print md:col-span-2">
+            <a href="control-calling.html" class="ctrl-card card-print">
                 <div class="ctrl-card-top">
                     <div class="flex items-center gap-3">
                         <div class="ctrl-icon-box bg-sky-50 text-sky-700 border border-sky-200">
@@ -278,7 +266,7 @@
             </a>
 
             <!-- ٣. شيت الرصد -->
-            <a href="control-entry.html" class="ctrl-card card-entry md:col-span-2">
+            <a href="control-entry.html" class="ctrl-card card-entry">
                 <div class="ctrl-card-top">
                     <div class="flex items-center gap-3">
                         <div class="ctrl-icon-box bg-purple-50 text-purple-700 border border-purple-200">
@@ -287,7 +275,7 @@
                         <div>
                             <h2 class="text-base font-black text-slate-900">شيت الرصد</h2>
                             <p class="text-[11.5px] font-bold text-slate-500 mt-1 leading-relaxed">
-                                رصد التحريري (٦٠) والتقييم (٤٠) بالمجموعة السرية • التوزيع غير النمطي • الترحيل
+                                رصد التحريري (٦٠) والتقييم (٤٠) بالمجموعة السرية • التوزيع غير النمطي • إكسيل
                             </p>
                         </div>
                     </div>
@@ -300,16 +288,16 @@
             </a>
 
             <!-- ٤. شيت النتيجة -->
-            <a href="control-results.html" class="ctrl-card card-results md:col-span-3">
+            <a href="control-results.html" class="ctrl-card card-results">
                 <div class="ctrl-card-top">
-                    <div class="flex items-center gap-3.5">
+                    <div class="flex items-center gap-3">
                         <div class="ctrl-icon-box bg-emerald-50 text-emerald-700 border border-emerald-200">
                             <i class="fa-solid fa-scroll"></i>
                         </div>
                         <div>
-                            <h2 class="text-base sm:text-lg font-black text-slate-900">شيت النتيجة</h2>
-                            <p class="text-xs font-bold text-slate-500 mt-1 leading-relaxed">
-                                نتيجة الترم الأول • الترم الثاني • الشيت النهائي المجمّع (A3) بالمتوسط والألوان الأربعة وشرط التربية الدينية (٧٠)
+                            <h2 class="text-base font-black text-slate-900">شيت النتيجة</h2>
+                            <p class="text-[11.5px] font-bold text-slate-500 mt-1 leading-relaxed">
+                                نتيجة الترم الأول • الترم الثاني • الشيت المجمّع (A3) بالألوان وشرط الدين (٧٠)
                             </p>
                         </div>
                     </div>
@@ -322,16 +310,16 @@
             </a>
 
             <!-- ٥. شيت التحكم والاحصاء -->
-            <a href="control-stats.html" class="ctrl-card card-stats md:col-span-3">
+            <a href="control-stats.html" class="ctrl-card card-stats">
                 <div class="ctrl-card-top">
-                    <div class="flex items-center gap-3.5">
+                    <div class="flex items-center gap-3">
                         <div class="ctrl-icon-box bg-rose-50 text-rose-600 border border-rose-200">
                             <i class="fa-solid fa-chart-pie"></i>
                         </div>
                         <div>
-                            <h2 class="text-base sm:text-lg font-black text-slate-900">شيت التحكم والاحصاء</h2>
-                            <p class="text-xs font-bold text-slate-500 mt-1 leading-relaxed">
-                                تعديل درجات التلاميذ والراسبين • الإحصاء الشامل بنين وبنات لكل مادة • العشرة الأوائل والدور الثاني
+                            <h2 class="text-base font-black text-slate-900">شيت التحكم والاحصاء</h2>
+                            <p class="text-[11.5px] font-bold text-slate-500 mt-1 leading-relaxed">
+                                تعديل درجات التلميذ بالترمين • إحصاء بنين وبنات • العشرة الأوائل • كشوف الدور الثاني
                             </p>
                         </div>
                     </div>
@@ -342,6 +330,32 @@
                     <span class="text-rose-700 flex items-center gap-1">فتح التحكم والإحصاء <i class="fa-solid fa-arrow-left"></i></span>
                 </div>
             </a>
+
+            <!-- ٦. شيت طباعة الشهادات -->
+            <a href="control-certificates.html" class="ctrl-card card-certs">
+                <div class="ctrl-card-top">
+                    <div class="flex items-center gap-3">
+                        <div class="ctrl-icon-box bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            <i class="fa-solid fa-award"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-black text-slate-900">شيت طباعة الشهادات</h2>
+                            <p class="text-[11.5px] font-bold text-slate-500 mt-1 leading-relaxed">
+                                شهادتان بصفحة A4 أفقية بالقص الذكي (١ مع ٦) • شهادة فردية A5 عمودي • ضبط الأبعاد
+                            </p>
+                        </div>
+                    </div>
+                    <span class="step-num-pill">٦</span>
+                </div>
+                <div class="ctrl-card-footer">
+                    <span class="bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-full border border-emerald-300">مفعل ✔️</span>
+                    <span class="text-indigo-700 flex items-center gap-1">طباعة الشهادات <i class="fa-solid fa-arrow-left"></i></span>
+                </div>
+            </a>
+
+        </div>
+
+    </div>
 
     <!-- تذييل حقوق الملكية الثابت: مستر زيزو -->
     <footer class="mt-8 text-center text-xs font-black text-slate-500 flex items-center justify-center gap-2">
