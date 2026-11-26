@@ -105,6 +105,24 @@
         .btn-excel-gen { background: var(--success); color: white; border: 2px solid #14532d; font-size: 14px; }
         .btn-action:hover { opacity: 0.9; transform: translateY(-2px); }
 
+        /* أزرار التنقل السريع بين المعلمين داخل الجدول */
+        .btn-step-sch {
+            background: var(--primary-color); 
+            color: #fcd34d; 
+            border: 1px solid #3b82f6;
+            width: 38px; height: 38px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+            font-weight: 900;
+        }
+        .btn-step-sch:hover { background: #1d4ed8; color: white; transform: scale(1.05); }
+
         /* النوافذ المنبثقة */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.8); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
         .modal-overlay.active { display: flex; }
@@ -374,20 +392,31 @@
         <div class="modal-content" style="max-width: 1050px;">
             <div class="modal-header">
                 <h2 style="font-size:15px; margin:0;">
-    <i class="fa-solid fa-table-cells"></i> جدول حصص معلم الأجر وتوليد الاستمارة السحابية
-    <span style="margin-right: 60px; color: #f7f4f4;">تصميم واعداد مستر زيزو</span>
-</h2>
+                    <i class="fa-solid fa-table-cells"></i> جدول حصص معلم الأجر وتوليد الاستمارة السحابية
+                    <span style="margin-right: 60px; color: #f7f4f4;">تصميم واعداد مستر زيزو</span>
+                </h2>
                 <button onclick="document.getElementById('scheduleModal').classList.remove('active')" style="background:none; border:none; color:white; font-size:24px; cursor:pointer;">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="abs-top-bar">
+                    
+                    <!-- خانة اختيار المعلم مع أزرار التنقل السريع ❯ / ❮ -->
                     <div class="teacher-selector">
-                        <label>اختر المعلم:</label>
-                        <select id="schedule-teacher-select" onchange="switchTeacherInScheduleModal(this.value)">
-                            <option value="" disabled selected>اختر المعلم...</option>
-                        </select>
+                        <label>اختر المعلم (أو تنقل بالأسهم):</label>
+                        <div style="display:flex; gap:5px; align-items:center;">
+                            <button type="button" class="btn-step-sch" onclick="navigateScheduleTeacher(-1)" title="المعلم السابق">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                            <select id="schedule-teacher-select" onchange="switchTeacherInScheduleModal(this.value)" style="flex:1;">
+                                <option value="" disabled selected>اختر المعلم...</option>
+                            </select>
+                            <button type="button" class="btn-step-sch" onclick="navigateScheduleTeacher(1)" title="المعلم التالي">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="teacher-selector">
+
+                    <div class="teacher-selector" style="max-width: 180px;">
                         <label>اختر شهر الحساب:</label>
                         <select id="schedule-month-select" onchange="switchTeacherInScheduleModal(document.getElementById('schedule-teacher-select').value)">
                             <option value="m_sept">سبتمبر</option><option value="m_oct">أكتوبر</option><option value="m_nov">نوفمبر</option>
@@ -395,6 +424,7 @@
                             <option value="m_mar">مارس</option><option value="m_apr">أبريل</option><option value="m_may">مايو</option>
                         </select>
                     </div>
+
                     <!-- زر تسجيل الغياب المضاف في نفس النافذة -->
                     <button type="button" class="btn-action btn-abs" style="width:auto; height:38px; padding:0 16px; white-space:nowrap; background:#0f172a;" onclick="openAbsenceFromScheduleModal()" title="تسجيل وتعديل أيام غياب هذا المعلم">
                         <i class="fa-solid fa-calendar-check text-yellow-300"></i> تسجيل الغياب
@@ -566,7 +596,6 @@
             try {
                 let { data, error } = await supabaseClient.from("contract_teachers").select("*");
                 
-                // دعم إضافي: إذا تعذر الجلب أو كانت السحابة بطيئة، نبحث في قاعدة البيانات المحلية (IndexedDB)
                 if (error || !data || data.length === 0) {
                     try {
                         const localDBReq = indexedDB.open("MR_ZEZO_SCHOOL_OFFLINE_DB");
@@ -597,16 +626,21 @@
             allTeachers.forEach(t => t.id = t.nid); 
             allTeachers.sort((a, b) => (a.name || "").localeCompare((b.name || ""), 'ar'));
             
+            // حفظ المعلم المختار حالياً قبل إعادة التعبئة حتى لا تُفقد القيمة
             const absSelect = document.getElementById("abs-teacher-select");
             if (absSelect) {
+                const prevAbsVal = absSelect.value;
                 absSelect.innerHTML = '<option value="" disabled selected>اختر المعلم...</option>';
                 allTeachers.forEach(t => { absSelect.innerHTML += `<option value="${t.nid}">${t.name}</option>`; });
+                if (prevAbsVal) absSelect.value = prevAbsVal;
             }
 
             const schSelect = document.getElementById("schedule-teacher-select");
             if (schSelect) {
+                const prevSchVal = schSelect.value;
                 schSelect.innerHTML = '<option value="" disabled selected>اختر المعلم...</option>';
                 allTeachers.forEach(t => { if(t.status === "يعمل" || !t.status) schSelect.innerHTML += `<option value="${t.nid}">${t.name}</option>`; });
+                if (prevSchVal) schSelect.value = prevSchVal;
             }
         }
 
@@ -614,7 +648,6 @@
             const resBox = document.getElementById("search-results");
             resBox.innerHTML = "";
             
-            // محاولة جلب فورية إذا كانت القائمة فارغة
             if (allTeachers.length === 0) {
                 resBox.innerHTML = "<div class='result-item'>جاري تحميل البيانات من السحابة...</div>";
                 resBox.style.display = "block";
@@ -922,6 +955,25 @@
             } 
         }
 
+        // دالة التنقل السريع بين المعلمين داخل نافذة الجدول (❮ / ❯)
+        function navigateScheduleTeacher(direction) {
+            const sel = document.getElementById("schedule-teacher-select");
+            const total = sel.options.length;
+            if (total <= 1) return;
+
+            let curIndex = sel.selectedIndex;
+            if (curIndex <= 0) {
+                curIndex = (direction > 0) ? 1 : total - 1;
+            } else {
+                curIndex += direction;
+                if (curIndex >= total) curIndex = 1;
+                if (curIndex < 1) curIndex = total - 1;
+            }
+
+            sel.selectedIndex = curIndex;
+            switchTeacherInScheduleModal(sel.value);
+        }
+
         function switchTeacherInScheduleModal(id) {
             const teacher = allTeachers.find(t => t.id === id); if(!teacher) return;
             const targetMonth = document.getElementById("schedule-month-select").value;
@@ -1177,7 +1229,7 @@
         }
 
         // =========================================================================
-        // 🌟 محرك حقن البيانات في ملف الماكرو .xlsm بواسطة JSZip كما في taq-export 🌟
+        // 🌟 محرك حقن البيانات في ملف الماكرو .xlsm بواسطة JSZip 🌟
         // =========================================================================
         function setCellInXml(xmlDoc, cellRef, val) {
             const NS = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
@@ -1224,7 +1276,6 @@
                 return;
             }
 
-            // إذا كان رقماً صحيحاً خالصاً يُسجل كقيمة رقمية، وغير ذلك يسجل كنص inlineStr
             if (typeof val === "number" || (!isNaN(val) && String(val).trim() !== "" && !String(val).includes("/") && !String(val).includes("-"))) {
                 targetCell.removeAttribute("t");
                 let v = xmlDoc.createElementNS(NS, "v");
@@ -1280,7 +1331,6 @@
                 // فتح ملف الـ XLSM بأمان تام بواسطة JSZip
                 const zip = await JSZip.loadAsync(arrayBuffer);
                 
-                // تحديد ملف الورقة الأولى sheet1.xml
                 let targetSheetPath = "xl/worksheets/sheet1.xml";
                 if (!zip.file(targetSheetPath)) {
                     const sheetFiles = Object.keys(zip.files).filter(p => p.startsWith("xl/worksheets/sheet") && p.endsWith(".xml"));
@@ -1390,11 +1440,9 @@
                 setCellInXml(xmlDoc, 'L29', LIVE_NET_CLASSES + " فقط لا غير");
                 setCellInXml(xmlDoc, 'B32', `نقر نحن الموقعون أدناه أن عدد الحصص في المدة المذكورة هي (${tafqeet(LIVE_NET_CLASSES)}) حصة فقط لا غير.`);
 
-                // حفظ التعديلات داخل الـ XML
                 const serializer = new XMLSerializer();
                 zip.file(targetSheetPath, serializer.serializeToString(xmlDoc));
 
-                // تفعيل خاصية fullCalcOnLoad لإعادة حساب المعادلات تلقائياً عند فتح الإكسيل
                 if (zip.file("xl/workbook.xml")) {
                     let wbXmlStr = await zip.file("xl/workbook.xml").async("text");
                     let wbDoc = parser.parseFromString(wbXmlStr, "application/xml");
@@ -1414,7 +1462,6 @@
 
                 statusBox.innerText = "2. جاري تجهيز الملف وتنزيله إلى جهازك...";
 
-                // إنشاء ملف الـ XLSM دون مساس بالماكرو
                 const finalBlob = await zip.generateAsync({
                     type: "blob",
                     mimeType: "application/vnd.ms-excel.sheet.macroEnabled.12"
@@ -1445,14 +1492,15 @@
 
                 await fetchAllTeachers(); 
                 
-                alert(`✅ اكتملت العملية بنجاح!\n- تم تنزيل الاستمارة باسم (${cleanName}.xlsm) بصيغة ماكرو سليمة.\n- تم حفظ النسخة في السحابة لشهر ${targetMonthName}.`);
-                document.getElementById('scheduleModal').classList.remove('active');
-                
+                // تحديث بطاقة الخلفية إن كان هو المعلم المفتوح
                 if(currentDocId === id) {
                     const updatedTeacher = allTeachers.find(t => t.id === id);
                     if(updatedTeacher) populateCard(updatedTeacher);
                 }
 
+                // 🌟 التعديل الجوهري: إبقاء النافذة مفتوحة لتسهيل ترحيل المعلم التالي فوراً 🌟
+                alert(`✅ اكتمل الترحيل بنجاح!\n- تم تنزيل استمارة: (${cleanName}.xlsm)\n- تم حفظ وتحديث بيانات شهر ${targetMonthName}.\n\nالنافذة مفتوحة: يمكنك الآن الانتقال للمعلم التالي بالسهم ( ❮ ) أو اختيار معلم آخر مباشرة!`);
+                
             } catch (e) { 
                 console.error(e);
                 alert("❌ خطأ أثناء العملية: \n" + e.message); 
