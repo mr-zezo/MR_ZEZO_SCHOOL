@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>منظومة تصحيح الإملاء اليومي - مدرسة الشهيد أشرف حبيب</title>
+    <title>منظومة تصحيح الإملاء اليومي - مستر زيزو</title>
     
     <!-- خط Cairo والأيقونات الرسمية -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
@@ -22,7 +22,7 @@
             --primary: #0f2b48;          
             --primary-light: #1e3a8a;    
             --gold: #d97706;             
-            --bg: #f8fafc;               
+            --bg: #f1f5f9;               
             --surface: #ffffff;          
             --border: #cbd5e1;           
             --danger: #be123c;           
@@ -42,23 +42,23 @@
             color: #0f172a; 
             padding: 8px 10px; 
             min-height: 100vh; 
-            padding-bottom: 30px;
+            padding-bottom: 35px;
         }
 
         .card-m { 
             background: var(--surface); 
-            border-radius: 16px; 
+            border-radius: 18px; 
             border: 1.5px solid var(--border);
-            box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
             padding: 14px;
         }
 
         /* أزرار التبويبات المتجاوبة */
         .tab-btn {
-            padding: 10px 6px;
+            padding: 11px 4px;
             font-size: 12px;
             font-weight: 900;
-            border-radius: 12px;
+            border-radius: 14px;
             text-align: center;
             background: #f1f5f9;
             color: #475569;
@@ -67,7 +67,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
+            gap: 5px;
             white-space: nowrap;
         }
         .tab-btn.active {
@@ -77,34 +77,27 @@
             box-shadow: 0 4px 12px rgba(15, 43, 72, 0.25);
         }
 
-        /* كروت المستويات الواضحة والكبيرة */
-        .level-card {
+        /* صفوف المستويات الرأسية المخصصة للموبايل (أسفل بعض بتتابع) */
+        .level-row-card {
             border-radius: 14px;
-            padding: 12px 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            border-width: 2.5px;
-            transition: 0.15s;
-        }
-        .lvl-1 { background: #fff1f2; border-color: #f43f5e; color: #be123c; }
-        .lvl-2 { background: #fffbeb; border-color: #f59e0b; color: #b45309; }
-        .lvl-3 { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
-        .lvl-4 { background: #f0fdf4; border-color: #22c55e; color: #15803d; }
-
-        .lvl-title {
-            font-size: 14px;
-            font-weight: 900;
+            padding: 10px 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 12px;
+            border-width: 2.5px;
+            transition: 0.15s;
         }
+        .lvl-1 { background: #fff1f2; border-color: #f43f5e; color: #be123c; } /* أحمر */
+        .lvl-2 { background: #fffbeb; border-color: #f59e0b; color: #b45309; } /* أصفر / برتقالي */
+        .lvl-3 { background: #f0fdf4; border-color: #22c55e; color: #15803d; } /* أخضر للمستوى الثالث */
+        .lvl-4 { background: #eff6ff; border-color: #3b82f6; color: #1e40af; } /* أزرق للمستوى الرابع */
 
-        .inp-number {
-            width: 100%;
+        .inp-number-mobile {
+            width: 110px;
             height: 48px;
-            border-radius: 10px;
-            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            border: 2px solid currentColor;
             font-size: 22px;
             font-weight: 900;
             text-align: center;
@@ -112,11 +105,10 @@
             background: #ffffff;
             color: #0f172a;
             font-family: Arial, sans-serif;
-            transition: 0.15s;
+            flex-shrink: 0;
         }
-        .inp-number:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(15, 43, 72, 0.15);
+        .inp-number-mobile:focus {
+            box-shadow: 0 0 0 3px rgba(15, 43, 72, 0.2);
             background: #fff;
         }
 
@@ -127,7 +119,7 @@
             transition: all 0.1s;
             cursor: pointer;
             font-weight: 900;
-            border-radius: 12px;
+            border-radius: 14px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -158,37 +150,44 @@
 
     <div class="w-full max-w-xl mx-auto space-y-3">
         
-        <!-- 1. شريط علوي -->
-        <header class="bg-[#0f2b48] text-white p-3.5 rounded-2xl shadow-md border-b-4 border-amber-500 flex justify-between items-center gap-2">
+        <!-- 1. شريط علوي مع توثيق (إعداد: مستر زيزو) -->
+        <header class="bg-[#0f2b48] text-white p-3 sm:p-4 rounded-2xl shadow-md border-b-4 border-amber-500 flex justify-between items-center gap-2">
             <div class="flex items-center gap-2.5">
-                <div class="w-9 h-9 rounded-xl bg-blue-600/30 flex items-center justify-center text-yellow-300 text-base shrink-0 border border-blue-400/30">
+                <div class="w-10 h-10 rounded-xl bg-blue-600/30 flex items-center justify-center text-yellow-300 text-lg shrink-0 border border-blue-400/30">
                     <i class="fa-solid fa-pen-nib"></i>
                 </div>
                 <div>
                     <h1 class="text-xs sm:text-sm font-black leading-tight">دفتر رصد وتقييم الإملاء اليومي</h1>
-                    <p class="text-[10px] text-blue-200 font-bold">مدرسة الشهيد أشرف حبيب الابتدائية</p>
+                    <p class="text-[10.5px] text-blue-200 font-bold">مدرسة الشهيد أشرف حبيب الابتدائية</p>
                 </div>
             </div>
 
-            <button type="button" onclick="loadAllStudentsFromDatabase(true)" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-xl text-white font-black flex items-center gap-1.5 border border-white/20 transition">
-                <i class="fa-solid fa-arrows-rotate text-yellow-300"></i>
-                <span>تحديث</span>
-            </button>
+            <!-- بادج مستر زيزو الملكي -->
+            <div class="flex items-center gap-2">
+                <div class="px-2.5 py-1 rounded-xl bg-white/10 border border-white/20 text-[11px] font-black text-amber-300 flex items-center gap-1 shadow-inner">
+                    <i class="fa-solid fa-award text-yellow-300"></i>
+                    <span>إعداد: مستر زيزو</span>
+                </div>
+
+                <button type="button" onclick="loadAllStudentsFromDatabase(true)" class="text-xs bg-white/10 hover:bg-white/20 p-2 rounded-xl text-white font-black flex items-center border border-white/20 transition" title="تحديث البيانات">
+                    <i class="fa-solid fa-arrows-rotate text-yellow-300"></i>
+                </button>
+            </div>
         </header>
 
-        <!-- 2. شريط التبويبات الرئيسي -->
+        <!-- 2. شريط التبويبات الرئيسي (تأمين الإحصاء والسجل برقم سري) -->
         <nav class="grid grid-cols-3 gap-1.5 no-print">
             <button type="button" class="tab-btn active" onclick="switchTab('entry')" id="tab-entry">
                 <i class="fa-solid fa-square-pen text-amber-500"></i>
                 <span>تسجيل النتيجة</span>
             </button>
-            <button type="button" class="tab-btn" onclick="requestStatsAccess()" id="tab-stats">
+            <button type="button" class="tab-btn" onclick="requestSecuredTabAccess('stats')" id="tab-stats">
                 <i class="fa-solid fa-chart-column text-emerald-500"></i>
-                <span>الإحصاء والمستوى <i class="fa-solid fa-lock text-[10px] text-amber-400 mr-0.5"></i></span>
+                <span>الإحصاء والمستوى <i class="fa-solid fa-lock text-[10px] text-amber-400 mr-0.5 tab-lock-icon"></i></span>
             </button>
-            <button type="button" class="tab-btn" onclick="switchTab('history')" id="tab-history">
+            <button type="button" class="tab-btn" onclick="requestSecuredTabAccess('history')" id="tab-history">
                 <i class="fa-solid fa-clock-rotate-left text-blue-400"></i>
-                <span>سجل الأيام</span>
+                <span>سجل الأيام <i class="fa-solid fa-lock text-[10px] text-amber-400 mr-0.5 tab-lock-icon"></i></span>
             </button>
         </nav>
 
@@ -197,7 +196,7 @@
             
             <div class="card-m space-y-3 border-t-4 border-t-blue-900">
                 
-                <!-- سطر التاريخ واختيار الصف والفصل بنمط (1/3 لتالتة أول) -->
+                <!-- سطر التاريخ واختيار الصف والفصل (افتراضياً فارغ) -->
                 <div class="grid grid-cols-3 gap-2">
                     <div>
                         <label class="block text-[11px] font-black text-slate-600 mb-1">تاريخ اليوم:</label>
@@ -207,9 +206,10 @@
                     <div>
                         <label class="block text-[11px] font-black text-slate-600 mb-1">الصف الدراسي:</label>
                         <select id="entry-grade" onchange="onGradeSelectChanged()" class="w-full p-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs font-black outline-none focus:border-blue-900">
+                            <option value="" disabled selected>-- اختر الصف --</option>
                             <option value="الأول">الصف الأول</option>
                             <option value="الثاني">الصف الثاني</option>
-                            <option value="الثالث" selected>الصف الثالث</option>
+                            <option value="الثالث">الصف الثالث</option>
                             <option value="الرابع">الصف الرابع</option>
                             <option value="الخامس">الصف الخامس</option>
                             <option value="السادس">الصف السادس</option>
@@ -217,80 +217,80 @@
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-black text-slate-600 mb-1">الفصل (مثال: 1/3):</label>
-                        <select id="entry-class" onchange="onClassOrDateChanged()" class="w-full p-2 bg-slate-50 border-2 border-blue-500 rounded-xl text-xs font-black text-blue-950 outline-none focus:border-blue-900">
-                            <!-- الفصول تتولد تلقائياً بنمط 1/3 و 2/3 -->
+                        <label class="block text-[11px] font-black text-slate-600 mb-1">الفصل:</label>
+                        <select id="entry-class" onchange="onClassOrDateChanged()" disabled class="w-full p-2 bg-slate-100 border-2 border-slate-300 rounded-xl text-xs font-black text-blue-950 outline-none focus:border-blue-900 disabled:opacity-60 disabled:cursor-not-allowed">
+                            <option value="" disabled selected>-- اختر الصف أولاً --</option>
                         </select>
                     </div>
                 </div>
 
                 <!-- شريط الحصر العددي: المقيد آلياً من القاعدة - الغائبين = الحاضرين -->
-                <div class="p-3 bg-gradient-to-r from-slate-50 to-blue-50/60 rounded-xl border border-blue-200 grid grid-cols-3 gap-2 text-center">
+                <div class="p-3 bg-gradient-to-r from-slate-50 to-blue-50/70 rounded-2xl border border-blue-200 grid grid-cols-3 gap-2 text-center">
                     <div>
                         <span class="block text-[11px] font-black text-slate-600 mb-1 flex items-center justify-center gap-1">
-                            <i class="fa-solid fa-lock text-slate-400 text-[10px]"></i> المقيدون (بالقاعدة)
+                            <i class="fa-solid fa-lock text-slate-400 text-[10px]"></i> المقيدون بالقاعدة
                         </span>
-                        <div id="dsp-enrolled" class="h-[48px] bg-slate-100 border-2 border-slate-300 rounded-xl flex items-center justify-center text-xl font-black text-blue-950 font-mono select-none" title="عدد مسحوب آلياً من قاعدة البيانات ومقفل">
-                            ٠
+                        <div id="dsp-enrolled" class="h-[46px] bg-slate-100 border-2 border-slate-300 rounded-xl flex items-center justify-center text-xl font-black text-blue-950 font-mono select-none" title="عدد مسحوب آلياً من قاعدة البيانات ومقفل">
+                            -
                         </div>
                     </div>
 
                     <div>
                         <span class="block text-[11px] font-black text-rose-700 mb-1">عدد الغائبين</span>
-                        <input type="number" id="inp-absent" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number border-rose-300 text-rose-700 font-black">
+                        <input type="number" id="inp-absent" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="w-full h-[46px] border-2 border-rose-300 rounded-xl text-center text-xl font-black font-mono text-rose-700 bg-white outline-none focus:border-rose-600">
                     </div>
 
                     <div>
                         <span class="block text-[11px] font-black text-emerald-800 mb-1">الحاضرون فعلياً</span>
-                        <div id="dsp-present" class="h-[48px] bg-emerald-100/70 border-2 border-emerald-400 rounded-xl flex items-center justify-center text-2xl font-black text-emerald-950 font-mono">
-                            ٠
+                        <div id="dsp-present" class="h-[46px] bg-emerald-100/70 border-2 border-emerald-400 rounded-xl flex items-center justify-center text-2xl font-black text-emerald-950 font-mono">
+                            -
                         </div>
                     </div>
                 </div>
 
-                <!-- 🌟 شبكة المستويات الأربعة: المستوى الأول 0 بالبداية والمستوى الرابع 5 بالنهاية 🌟 -->
+                <!-- 🌟 المستويات الأربعة أسفل بعض بالتتابع بمقاسات مريحة للأندرويد 🌟 -->
                 <div class="space-y-2 pt-1">
                     <div class="text-xs font-black text-[#0f2b48] px-1 flex items-center gap-1.5">
                         <i class="fa-solid fa-list-ol text-amber-600"></i>
                         توزيع أعداد التلاميذ الحاضرين على درجات المستويات الأربعة:
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2.5">
+                    <div class="flex flex-col gap-2.5">
                         
-                        <!-- 1. المستوى الأول ( 0 ) -->
-                        <div class="level-card lvl-1">
-                            <div class="lvl-title">
-                                <span>المستوى الأول</span>
-                                <span class="text-base font-black font-mono">( 0 )</span>
+                        <!-- 1. المستوى الأول ( 0 ) - أحمر -->
+                        <div class="level-row-card lvl-1">
+                            <div>
+                                <span class="block text-sm font-black">المستوى الأول</span>
+                                <span class="text-base font-black font-mono block mt-0.5">( 0 )</span>
                             </div>
-                            <input type="number" id="inp-lvl-1" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number border-rose-400 text-rose-900">
+                            <input type="number" id="inp-lvl-1" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number-mobile">
                         </div>
 
-                        <!-- 2. المستوى الثاني ( من 0.5 إلى 2.5 ) -->
-                        <div class="level-card lvl-2">
-                            <div class="lvl-title">
-                                <span>المستوى الثاني</span>
-                                <span class="text-xs font-black font-mono">( من 0.5 إلى 2.5 )</span>
+                        <!-- 2. المستوى الثاني ( من 0.5 إلى 2.5 ) - أصفر / برتقالي -->
+                        <div class="level-row-card lvl-2">
+                            <div>
+                                <span class="block text-sm font-black">المستوى الثاني</span>
+                                <span class="text-xs font-black font-mono block mt-0.5">( من 0.5 إلى 2.5 )</span>
                             </div>
-                            <input type="number" id="inp-lvl-2" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number border-amber-400 text-amber-900">
+                            <input type="number" id="inp-lvl-2" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number-mobile">
                         </div>
 
-                        <!-- 3. المستوى الثالث ( من 3 إلى 4.5 ) -->
-                        <div class="level-card lvl-3">
-                            <div class="lvl-title">
-                                <span>المستوى الثالث</span>
-                                <span class="text-xs font-black font-mono">( من 3 إلى 4.5 )</span>
+                        <!-- 3. المستوى الثالث ( من 3 إلى 4.5 ) - أخضر -->
+                        <div class="level-row-card lvl-3">
+                            <div>
+                                <span class="block text-sm font-black">المستوى الثالث</span>
+                                <span class="text-xs font-black font-mono block mt-0.5">( من 3 إلى 4.5 )</span>
                             </div>
-                            <input type="number" id="inp-lvl-3" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number border-blue-400 text-blue-900">
+                            <input type="number" id="inp-lvl-3" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number-mobile">
                         </div>
 
-                        <!-- 4. المستوى الرابع ( 5 ) -->
-                        <div class="level-card lvl-4">
-                            <div class="lvl-title">
-                                <span>المستوى الرابع</span>
-                                <span class="text-base font-black font-mono">( 5 )</span>
+                        <!-- 4. المستوى الرابع ( 5 ) - أزرق ملكي -->
+                        <div class="level-row-card lvl-4">
+                            <div>
+                                <span class="block text-sm font-black">المستوى الرابع</span>
+                                <span class="text-base font-black font-mono block mt-0.5">( 5 )</span>
                             </div>
-                            <input type="number" id="inp-lvl-4" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number border-emerald-400 text-emerald-900">
+                            <input type="number" id="inp-lvl-4" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number-mobile">
                         </div>
 
                     </div>
@@ -298,11 +298,11 @@
 
                 <!-- ⚠️ شريط التنبيه الذكي للمطابقة مع الحاضرين ⚠️ -->
                 <div id="balance-alert-box" class="p-3 rounded-xl text-xs font-black border transition flex items-center justify-between gap-2">
-                    <!-- يتم تحديثه تلقائياً بواسطة الجافاسكريبت -->
+                    <span>يرجى اختيار الصف والفصل للبدء في الرصد.</span>
                 </div>
 
                 <!-- زر الحفظ المباشر في السحابة -->
-                <button type="button" onclick="saveDictationResult()" id="btn-save" class="btn-touch w-full py-3.5 bg-[#0f2b48] hover:bg-blue-950 text-white text-sm font-black shadow-lg">
+                <button type="button" onclick="saveDictationResult()" id="btn-save" class="btn-touch w-full py-3.5 bg-[#0f2b48] hover:bg-blue-950 text-white text-sm font-black shadow-lg opacity-50 cursor-not-allowed" disabled>
                     <i class="fa-solid fa-cloud-arrow-up text-yellow-300 text-base"></i>
                     <span>حفظ واعتماد نتيجة الفصل بالسحابة</span>
                 </button>
@@ -319,7 +319,7 @@
                     <div>
                         <h3 class="text-xs sm:text-sm font-black text-[#0f2b48] flex items-center gap-1.5">
                             <i class="fa-solid fa-chart-line text-emerald-600"></i>
-                            إحصاء وقياس مستوى الإملاء لجميع الصفوف
+                            إحصاء وقياس مستوى الإملاء لصفوف المدرسة
                         </h3>
                         <p class="text-[10.5px] text-slate-500 font-bold">تاريخ: <span id="stats-current-date-txt">-</span></p>
                     </div>
@@ -396,7 +396,7 @@
 
         </section>
 
-        <!-- ================= 📋 التبويب 3: السجل والاستدعاء 📋 ================= -->
+        <!-- ================= 📋 التبويب 3: السجل والاستدعاء (برقم سري 2026) 📋 ================= -->
         <section id="sec-history" class="space-y-3 hidden">
             
             <div class="card-m space-y-3 border-t-4 border-t-amber-500">
@@ -421,8 +421,8 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const STATS_PIN = "2026";
-        let IS_STATS_UNLOCKED = false;
+        const SECURITY_PIN = "2026";
+        let IS_SECURITY_UNLOCKED = false; // فك قفل التبويبات المؤمنة
         
         let ALL_ACTIVE_STUDENTS = []; 
         let CURRENT_DAY_RECORDS = []; 
@@ -436,7 +436,6 @@
             "السادس": "6"
         };
 
-        // اقتصار الصفوف حصرياً على المرحلة الابتدائية (بدون KG1 و KG2)
         const ALL_GRADES = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
 
         const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
@@ -452,7 +451,7 @@
         function matchStandardGrade(rawGrade) {
             if (!rawGrade) return "";
             let s = String(rawGrade).toUpperCase().trim();
-            // استبعاد KG1 و KG2
+            // استبعاد KG1 و KG2 نهائياً
             if (s.includes("KG") || s.includes("كيجي") || s.includes("رياض")) return "";
 
             let clean = s.replace(/الصف\s*/g, '').replace(/[أإآا]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').trim();
@@ -512,7 +511,6 @@
                     return !tr.includes("محول من") && !tr.includes("محولمن") && !gr.includes("خريج") && !isKg;
                 });
 
-                onGradeSelectChanged();
                 await loadTodaySavedRecords();
 
                 if (isManual) {
@@ -526,9 +524,22 @@
         // ================= توليد فصول الصف بنمط 1/3 (رقم الفصل / رقم الصف) =================
         function onGradeSelectChanged() {
             const gradeName = document.getElementById("entry-grade").value;
-            const gNum = GRADE_DIGIT_MAP[gradeName] || "1";
             const classSelect = document.getElementById("entry-class");
 
+            if (!gradeName) {
+                classSelect.innerHTML = `<option value="" disabled selected>-- اختر الصف أولاً --</option>`;
+                classSelect.disabled = true;
+                classSelect.classList.add("bg-slate-100", "cursor-not-allowed");
+                classSelect.classList.remove("bg-slate-50");
+                onClassOrDateChanged();
+                return;
+            }
+
+            classSelect.disabled = false;
+            classSelect.classList.remove("bg-slate-100", "cursor-not-allowed");
+            classSelect.classList.add("bg-slate-50");
+
+            const gNum = GRADE_DIGIT_MAP[gradeName] || "1";
             const gradeStudents = ALL_ACTIVE_STUDENTS.filter(s => matchStandardGrade(s.grade) === gradeName);
             const foundClasses = new Set();
 
@@ -544,7 +555,7 @@
 
             const sortedClasses = Array.from(foundClasses).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
 
-            classSelect.innerHTML = sortedClasses.map(c => `
+            classSelect.innerHTML = `<option value="" disabled selected>-- اختر الفصل --</option>` + sortedClasses.map(c => `
                 <option value="${c}">فصل ${c}</option>
             `).join('');
 
@@ -556,6 +567,18 @@
             const date = document.getElementById("entry-date").value;
             const grade = document.getElementById("entry-grade").value;
             const className = document.getElementById("entry-class").value;
+
+            if (!grade || !className) {
+                document.getElementById("dsp-enrolled").innerText = "-";
+                document.getElementById("dsp-present").innerText = "-";
+                document.getElementById("inp-absent").value = "";
+                document.getElementById("inp-lvl-1").value = "";
+                document.getElementById("inp-lvl-2").value = "";
+                document.getElementById("inp-lvl-3").value = "";
+                document.getElementById("inp-lvl-4").value = "";
+                calculateAttendanceAndBalance();
+                return;
+            }
 
             // 1. حساب عدد المقيدين تلقائياً ومقفول
             const enrolledCount = ALL_ACTIVE_STUDENTS.filter(s => {
@@ -590,12 +613,15 @@
         // ================= مطابقة المستويات مع الحاضرين =================
         function calculateAttendanceAndBalance() {
             const enrolled = parseInt(document.getElementById("dsp-enrolled").innerText) || 0;
+            const grade = document.getElementById("entry-grade").value;
+            const className = document.getElementById("entry-class").value;
+
             const absentVal = document.getElementById("inp-absent").value;
             const absent = Math.max(0, parseInt(absentVal) || 0);
             
             // الحاضرون = المقيد - الغائب
-            const present = Math.max(0, enrolled - absent);
-            document.getElementById("dsp-present").innerText = present;
+            const present = (grade && className) ? Math.max(0, enrolled - absent) : 0;
+            document.getElementById("dsp-present").innerText = (grade && className) ? present : "-";
 
             const l1 = Math.max(0, parseInt(document.getElementById("inp-lvl-1").value) || 0);
             const l2 = Math.max(0, parseInt(document.getElementById("inp-lvl-2").value) || 0);
@@ -607,6 +633,14 @@
 
             const alertBox = document.getElementById("balance-alert-box");
             const saveBtn = document.getElementById("btn-save");
+
+            if (!grade || !className) {
+                alertBox.className = "p-3 rounded-xl text-xs font-black border bg-slate-50 border-slate-300 text-slate-700";
+                alertBox.innerHTML = `<span>يرجى اختيار الصف الدراسي والفصل للبدء في الرصد.</span>`;
+                saveBtn.disabled = true;
+                saveBtn.classList.add("opacity-50", "cursor-not-allowed");
+                return false;
+            }
 
             if (enrolled === 0) {
                 alertBox.className = "p-3 rounded-xl text-xs font-black border bg-amber-50 border-amber-300 text-amber-900";
@@ -721,7 +755,7 @@
 
                 CURRENT_DAY_RECORDS = dayList;
                 renderHistoryTab();
-                if (IS_STATS_UNLOCKED) renderStatsTab();
+                if (IS_SECURITY_UNLOCKED) renderStatsTab();
 
                 Swal.fire({
                     toast: true,
@@ -750,7 +784,7 @@
                 const { data } = await sbClient.from("system_capsules").select("data").eq("id", capsuleId).maybeSingle();
                 CURRENT_DAY_RECORDS = (data && Array.isArray(data.data)) ? data.data : [];
                 renderHistoryTab();
-                if (IS_STATS_UNLOCKED) renderStatsTab();
+                if (IS_SECURITY_UNLOCKED) renderStatsTab();
             } catch (err) {
                 console.error(err);
             }
@@ -766,19 +800,19 @@
             });
 
             if (tabId === 'history') renderHistoryTab();
-            if (tabId === 'stats' && IS_STATS_UNLOCKED) renderStatsTab();
+            if (tabId === 'stats' && IS_SECURITY_UNLOCKED) renderStatsTab();
         }
 
-        // ================= قفل الرقم السري (2026) لتبويب الإحصاء =================
-        async function requestStatsAccess() {
-            if (IS_STATS_UNLOCKED) {
-                switchTab('stats');
+        // ================= قفل الرقم السري (2026) لتبويبي الإحصاء والسجل =================
+        async function requestSecuredTabAccess(targetTab) {
+            if (IS_SECURITY_UNLOCKED) {
+                switchTab(targetTab);
                 return;
             }
 
             const { value: pin } = await Swal.fire({
-                title: '🔒 الرقم السري للإحصاء',
-                text: 'أدخل الرقم السري المصرح به لعرض إحصائيات وقياس مستوى المدرسة:',
+                title: '🔒 الرقم السري للإدارة',
+                text: 'أدخل الرقم السري المصرح به لعرض الإحصائيات وسجل النتائج:',
                 input: 'password',
                 inputPlaceholder: 'أدخل الرمز هنا...',
                 confirmButtonText: 'دخول',
@@ -791,12 +825,13 @@
                 }
             });
 
-            if (pin === STATS_PIN) {
-                IS_STATS_UNLOCKED = true;
-                const lockIcon = document.querySelector("#tab-stats .fa-lock");
-                if (lockIcon) lockIcon.className = "fa-solid fa-unlock text-[10px] text-emerald-300 mr-0.5";
+            if (pin === SECURITY_PIN) {
+                IS_SECURITY_UNLOCKED = true;
+                document.querySelectorAll(".tab-lock-icon").forEach(icon => {
+                    icon.className = "fa-solid fa-unlock text-[10px] text-emerald-300 mr-0.5";
+                });
                 
-                switchTab('stats');
+                switchTab(targetTab);
                 renderStatsTab();
             } else if (pin !== undefined) {
                 Swal.fire({
@@ -886,7 +921,7 @@
             });
             bestContainer.innerHTML = bestHtml || `<div class="col-span-3 text-center text-xs text-slate-400">لم يتم رصد فصول بعد.</div>`;
 
-            // 2. رسم جدول تجميع كل صف مع بعضه (الترتيب: م1 ثم م2 ثم م3 ثم م4)
+            // 2. رسم جدول تجميع كل صف مع بعضه (الترتيب: م1 ثم م2 ثم م3 أخضر ثم م4 أزرق)
             let gradesHtml = "";
             ALL_GRADES.forEach(g => {
                 const row = gradesAggregation[g];
@@ -901,15 +936,15 @@
                         <td class="font-black text-emerald-800">${toAr(row.present)}</td>
                         <td class="bg-rose-50 text-rose-900 font-bold">${toAr(row.level1)}</td>
                         <td class="bg-amber-50 text-amber-900 font-bold">${toAr(row.level2)}</td>
-                        <td class="bg-blue-50 text-blue-900 font-bold">${toAr(row.level3)}</td>
-                        <td class="bg-emerald-50 text-emerald-900 font-black">${toAr(row.level4)}</td>
+                        <td class="bg-emerald-50 text-emerald-900 font-black">${toAr(row.level3)}</td>
+                        <td class="bg-blue-50 text-blue-900 font-black">${toAr(row.level4)}</td>
                         <td class="font-black text-blue-950">${toAr(masteryRate)}%</td>
                     </tr>
                 `;
             });
             gradesTbody.innerHTML = gradesHtml || `<tr><td colspan="8" class="py-4 text-slate-400 text-xs font-bold">لم تسجل فصول بعد.</td></tr>`;
 
-            // 3. رسم الجدول التفصيلي لجميع فصول المدرسة (م1 ثم م2 ثم م3 ثم م4)
+            // 3. رسم الجدول التفصيلي لجميع فصول المدرسة
             let detailHtml = "";
             CURRENT_DAY_RECORDS.slice().sort((a,b) => a.class_name.localeCompare(b.class_name, 'en', {numeric:true})).forEach((r, idx) => {
                 detailHtml += `
@@ -921,8 +956,8 @@
                         <td class="font-black text-emerald-800">${toAr(r.present)}</td>
                         <td class="bg-rose-50 text-rose-900 font-bold">${toAr(r.level1)}</td>
                         <td class="bg-amber-50 text-amber-900 font-bold">${toAr(r.level2)}</td>
-                        <td class="bg-blue-50 text-blue-900 font-bold">${toAr(r.level3)}</td>
-                        <td class="bg-emerald-50 text-emerald-900 font-black">${toAr(r.level4)}</td>
+                        <td class="bg-emerald-50 text-emerald-900 font-black">${toAr(r.level3)}</td>
+                        <td class="bg-blue-50 text-blue-900 font-black">${toAr(r.level4)}</td>
                         <td class="font-black text-blue-950">${toAr(r.excellence_rate)}%</td>
                     </tr>
                 `;
@@ -952,8 +987,8 @@
                             <span>• حاضر: <b class="text-emerald-800">${toAr(r.present)}</b></span>
                             <span>• م1: <b class="text-rose-700">${toAr(r.level1)}</b></span>
                             <span>• م2: <b class="text-amber-700">${toAr(r.level2)}</b></span>
-                            <span>• م3: <b class="text-blue-700">${toAr(r.level3)}</b></span>
-                            <span>• م4: <b class="text-emerald-700">${toAr(r.level4)}</b></span>
+                            <span>• م3: <b class="text-emerald-700">${toAr(r.level3)}</b></span>
+                            <span>• م4: <b class="text-blue-700">${toAr(r.level4)}</b></span>
                         </div>
                     </div>
                     <div class="flex items-center gap-1.5">
@@ -1001,7 +1036,7 @@
                 });
 
                 renderHistoryTab();
-                if (IS_STATS_UNLOCKED) renderStatsTab();
+                if (IS_SECURITY_UNLOCKED) renderStatsTab();
                 onClassOrDateChanged();
 
                 Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم الحذف بنجاح', timer: 1400, showConfirmButton: false });
