@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>منظومة تصحيح الإملاء اليومي - مدرسة الشهيد أشرف حبيب</title>
+    
+    <!-- خط Cairo والأيقونات الرسمية -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- مكتبات Supabase & SheetJS & SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root { 
+            --primary: #0f2b48;          
+            --primary-light: #1e3a8a;    
+            --gold: #d97706;             
+            --bg: #f8fafc;               
+            --surface: #ffffff;          
+            --border: #cbd5e1;           
+            --danger: #be123c;           
+            --success: #15803d;          
+        }
+
+        * { 
+            box-sizing: border-box; 
+            font-family: 'Cairo', sans-serif; 
+            margin: 0; padding: 0; 
+            -webkit-tap-highlight-color: transparent; 
+            touch-action: manipulation;
+        }
+
+        body { 
+            background-color: var(--bg); 
+            color: #0f172a; 
+            padding: 8px 10px; 
+            min-height: 100vh; 
+            padding-bottom: 30px;
+        }
+
+        .card-m { 
+            background: var(--surface); 
+            border-radius: 16px; 
+            border: 1.5px solid var(--border);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.03);
+            padding: 14px;
+        }
+
+        /* أزرار التبويبات المتجاوبة */
+        .tab-btn {
+            padding: 10px 6px;
+            font-size: 12px;
+            font-weight: 900;
+            border-radius: 12px;
+            text-align: center;
+            background: #f1f5f9;
+            color: #475569;
+            border: 1.5px solid #cbd5e1;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(15, 43, 72, 0.25);
+        }
+
+        /* كروت المستويات الواضحة والكبيرة */
+        .level-card {
+            border-radius: 14px;
+            padding: 12px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            border-width: 2.5px;
+            transition: 0.15s;
+        }
+        .lvl-1 { background: #fff1f2; border-color: #f43f5e; color: #be123c; }
+        .lvl-2 { background: #fffbeb; border-color: #f59e0b; color: #b45309; }
+        .lvl-3 { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+        .lvl-4 { background: #f0fdf4; border-color: #22c55e; color: #15803d; }
+
+        .lvl-title {
+            font-size: 14px;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .inp-number {
+            width: 100%;
+            height: 48px;
+            border-radius: 10px;
+            border: 2px solid #cbd5e1;
+            font-size: 22px;
+            font-weight: 900;
+            text-align: center;
+            outline: none;
+            background: #ffffff;
+            color: #0f172a;
+            font-family: Arial, sans-serif;
+            transition: 0.15s;
+        }
+        .inp-number:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 43, 72, 0.15);
+            background: #fff;
+        }
+
+        /* أزرار اللمس التفاعلية */
+        .btn-touch {
+            border: none;
+            border-bottom: 3.5px solid rgba(0,0,0,0.25);
+            transition: all 0.1s;
+            cursor: pointer;
+            font-weight: 900;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-touch:active {
+            transform: translateY(2px);
+            border-bottom-width: 1px;
+        }
+
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1.5px solid var(--border); background: white; }
+        .summary-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 12px; min-width: 650px; }
+        .summary-table th { background: var(--primary); color: white; padding: 9px 5px; font-weight: 900; white-space: nowrap; }
+        .summary-table td { padding: 8px 5px; border: 1px solid #e2e8f0; font-weight: 800; white-space: nowrap; }
+        .summary-table tr:nth-child(even) { background-color: #f8fafc; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            header, nav, .no-print { display: none !important; }
+            .card-m { border: none; box-shadow: none; padding: 0; }
+            .table-responsive { overflow: visible; border: none; }
+            .summary-table { min-width: 100%; font-size: 11px; }
+            .summary-table th { background: #0f2b48 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="w-full max-w-xl mx-auto space-y-3">
+        
+        <!-- 1. شريط علوي -->
+        <header class="bg-[#0f2b48] text-white p-3.5 rounded-2xl shadow-md border-b-4 border-amber-500 flex justify-between items-center gap-2">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-blue-600/30 flex items-center justify-center text-yellow-300 text-base shrink-0 border border-blue-400/30">
+                    <i class="fa-solid fa-pen-nib"></i>
+                </div>
+                <div>
+                    <h1 class="text-xs sm:text-sm font-black leading-tight">دفتر رصد وتقييم الإملاء اليومي</h1>
+                    <p class="text-[10px] text-blue-200 font-bold">مدرسة الشهيد أشرف حبيب الابتدائية</p>
+                </div>
+            </div>
+
+            <button type="button" onclick="loadAllStudentsFromDatabase(true)" class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-xl text-white font-black flex items-center gap-1.5 border border-white/20 transition">
+                <i class="fa-solid fa-arrows-rotate text-yellow-300"></i>
+                <span>تحديث</span>
+            </button>
+        </header>
+
+        <!-- 2. شريط التبويبات الرئيسي -->
+        <nav class="grid grid-cols-3 gap-1.5 no-print">
+            <button type="button" class="tab-btn active" onclick="switchTab('entry')" id="tab-entry">
+                <i class="fa-solid fa-square-pen text-amber-500"></i>
+                <span>تسجيل النتيجة</span>
+            </button>
+            <button type="button" class="tab-btn" onclick="requestStatsAccess()" id="tab-stats">
+                <i class="fa-solid fa-chart-column text-emerald-500"></i>
+                <span>الإحصاء والمستوى <i class="fa-solid fa-lock text-[10px] text-amber-400 mr-0.5"></i></span>
+            </button>
+            <button type="button" class="tab-btn" onclick="switchTab('history')" id="tab-history">
+                <i class="fa-solid fa-clock-rotate-left text-blue-400"></i>
+                <span>سجل الأيام</span>
+            </button>
+        </nav>
+
+        <!-- ================= 🌟 التبويب 1: رصد نتيجة الإملاء اليومية 🌟 ================= -->
+        <section id="sec-entry" class="space-y-3">
+            
+            <div class="card-m space-y-3 border-t-4 border-t-blue-900">
+                
+                <!-- سطر التاريخ واختيار الصف والفصل بنمط (1/3 لتالتة أول) -->
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-black text-slate-600 mb-1">تاريخ اليوم:</label>
+                        <input type="date" id="entry-date" onchange="onClassOrDateChanged()" class="w-full p-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs font-black text-center outline-none focus:border-blue-900">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-black text-slate-600 mb-1">الصف الدراسي:</label>
+                        <select id="entry-grade" onchange="onGradeSelectChanged()" class="w-full p-2 bg-slate-50 border-2 border-slate-300 rounded-xl text-xs font-black outline-none focus:border-blue-900">
+                            <option value="الأول">الصف الأول</option>
+                            <option value="الثاني">الصف الثاني</option>
+                            <option value="الثالث" selected>الصف الثالث</option>
+                            <option value="الرابع">الصف الرابع</option>
+                            <option value="الخامس">الصف الخامس</option>
+                            <option value="السادس">الصف السادس</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-black text-slate-600 mb-1">الفصل (مثال: 1/3):</label>
+                        <select id="entry-class" onchange="onClassOrDateChanged()" class="w-full p-2 bg-slate-50 border-2 border-blue-500 rounded-xl text-xs font-black text-blue-950 outline-none focus:border-blue-900">
+                            <!-- الفصول تتولد تلقائياً بنمط 1/3 و 2/3 -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- شريط الحصر العددي: المقيد آلياً من القاعدة - الغائبين = الحاضرين -->
+                <div class="p-3 bg-gradient-to-r from-slate-50 to-blue-50/60 rounded-xl border border-blue-200 grid grid-cols-3 gap-2 text-center">
+                    <div>
+                        <span class="block text-[11px] font-black text-slate-600 mb-1 flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-lock text-slate-400 text-[10px]"></i> المقيدون (بالقاعدة)
+                        </span>
+                        <div id="dsp-enrolled" class="h-[48px] bg-slate-100 border-2 border-slate-300 rounded-xl flex items-center justify-center text-xl font-black text-blue-950 font-mono select-none" title="عدد مسحوب آلياً من قاعدة البيانات ومقفل">
+                            ٠
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="block text-[11px] font-black text-rose-700 mb-1">عدد الغائبين</span>
+                        <input type="number" id="inp-absent" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number border-rose-300 text-rose-700 font-black">
+                    </div>
+
+                    <div>
+                        <span class="block text-[11px] font-black text-emerald-800 mb-1">الحاضرون فعلياً</span>
+                        <div id="dsp-present" class="h-[48px] bg-emerald-100/70 border-2 border-emerald-400 rounded-xl flex items-center justify-center text-2xl font-black text-emerald-950 font-mono">
+                            ٠
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🌟 شبكة المستويات الأربعة: المستوى الأول 0 بالبداية والمستوى الرابع 5 بالنهاية 🌟 -->
+                <div class="space-y-2 pt-1">
+                    <div class="text-xs font-black text-[#0f2b48] px-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-list-ol text-amber-600"></i>
+                        توزيع أعداد التلاميذ الحاضرين على درجات المستويات الأربعة:
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2.5">
+                        
+                        <!-- 1. المستوى الأول ( 0 ) -->
+                        <div class="level-card lvl-1">
+                            <div class="lvl-title">
+                                <span>المستوى الأول</span>
+                                <span class="text-base font-black font-mono">( 0 )</span>
+                            </div>
+                            <input type="number" id="inp-lvl-1" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number border-rose-400 text-rose-900">
+                        </div>
+
+                        <!-- 2. المستوى الثاني ( من 0.5 إلى 2.5 ) -->
+                        <div class="level-card lvl-2">
+                            <div class="lvl-title">
+                                <span>المستوى الثاني</span>
+                                <span class="text-xs font-black font-mono">( من 0.5 إلى 2.5 )</span>
+                            </div>
+                            <input type="number" id="inp-lvl-2" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number border-amber-400 text-amber-900">
+                        </div>
+
+                        <!-- 3. المستوى الثالث ( من 3 إلى 4.5 ) -->
+                        <div class="level-card lvl-3">
+                            <div class="lvl-title">
+                                <span>المستوى الثالث</span>
+                                <span class="text-xs font-black font-mono">( من 3 إلى 4.5 )</span>
+                            </div>
+                            <input type="number" id="inp-lvl-3" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number border-blue-400 text-blue-900">
+                        </div>
+
+                        <!-- 4. المستوى الرابع ( 5 ) -->
+                        <div class="level-card lvl-4">
+                            <div class="lvl-title">
+                                <span>المستوى الرابع</span>
+                                <span class="text-base font-black font-mono">( 5 )</span>
+                            </div>
+                            <input type="number" id="inp-lvl-4" min="0" placeholder="-" inputmode="numeric" oninput="calculateAttendanceAndBalance()" class="inp-number border-emerald-400 text-emerald-900">
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ⚠️ شريط التنبيه الذكي للمطابقة مع الحاضرين ⚠️ -->
+                <div id="balance-alert-box" class="p-3 rounded-xl text-xs font-black border transition flex items-center justify-between gap-2">
+                    <!-- يتم تحديثه تلقائياً بواسطة الجافاسكريبت -->
+                </div>
+
+                <!-- زر الحفظ المباشر في السحابة -->
+                <button type="button" onclick="saveDictationResult()" id="btn-save" class="btn-touch w-full py-3.5 bg-[#0f2b48] hover:bg-blue-950 text-white text-sm font-black shadow-lg">
+                    <i class="fa-solid fa-cloud-arrow-up text-yellow-300 text-base"></i>
+                    <span>حفظ واعتماد نتيجة الفصل بالسحابة</span>
+                </button>
+
+            </div>
+
+        </section>
+
+        <!-- ================= 📊 التبويب 2: الإحصاء وقياس المستوى (برقم سري 2026) 📊 ================= -->
+        <section id="sec-stats" class="space-y-3 hidden">
+            
+            <div class="card-m space-y-3 border-t-4 border-t-emerald-600">
+                <div class="flex flex-wrap justify-between items-center gap-2 border-b pb-2">
+                    <div>
+                        <h3 class="text-xs sm:text-sm font-black text-[#0f2b48] flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-line text-emerald-600"></i>
+                            إحصاء وقياس مستوى الإملاء لجميع الصفوف
+                        </h3>
+                        <p class="text-[10.5px] text-slate-500 font-bold">تاريخ: <span id="stats-current-date-txt">-</span></p>
+                    </div>
+                    <div class="flex gap-1.5 no-print">
+                        <button type="button" onclick="exportStatsToExcel()" class="btn-touch px-3 py-1.5 bg-emerald-700 text-white text-xs">
+                            <i class="fa-solid fa-file-excel"></i> إكسيل
+                        </button>
+                        <button type="button" onclick="window.print()" class="btn-touch px-3 py-1.5 bg-[#0f2b48] text-white text-xs">
+                            <i class="fa-solid fa-print"></i> طباعة
+                        </button>
+                    </div>
+                </div>
+
+                <!-- كروت التتويج: أفضل فصل في كل صف -->
+                <div class="space-y-1.5">
+                    <span class="text-xs font-black text-amber-900 flex items-center gap-1">
+                        <i class="fa-solid fa-trophy text-amber-500"></i>
+                        أفضل فصل في كل صف دراسي لهذا اليوم:
+                    </span>
+                    <div id="best-classes-container" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>
+                </div>
+
+                <!-- جدول مجمع لكل صف مع بعضه -->
+                <div class="space-y-1.5 pt-1">
+                    <span class="text-xs font-black text-slate-700 block">
+                        📊 إحصاء الصفوف المجمعة (جمع كل صف مع بعضه):
+                    </span>
+                    <div class="table-responsive">
+                        <table class="summary-table" id="grades-summary-table">
+                            <thead>
+                                <tr>
+                                    <th>الصف الدراسي</th>
+                                    <th>المقيد</th>
+                                    <th>الحاضر</th>
+                                    <th>م 1 ( 0 )</th>
+                                    <th>م 2 ( 0.5 - 2.5 )</th>
+                                    <th>م 3 ( 3 - 4.5 )</th>
+                                    <th>م 4 ( 5 )</th>
+                                    <th>نسبة الإتقان</th>
+                                </tr>
+                            </thead>
+                            <tbody id="grades-summary-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- كشف تفصيلي لجميع فصول المدرسة -->
+                <div class="space-y-1.5 pt-1">
+                    <span class="text-xs font-black text-slate-700 block">
+                        📋 بيان فصول المدرسة تفصيلياً:
+                    </span>
+                    <div class="table-responsive">
+                        <table class="summary-table" id="classes-detail-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 32px;">م</th>
+                                    <th>الفصل</th>
+                                    <th>المقيد</th>
+                                    <th>الغائب</th>
+                                    <th>الحاضر</th>
+                                    <th>م 1 ( 0 )</th>
+                                    <th>م 2</th>
+                                    <th>م 3</th>
+                                    <th>م 4 ( 5 )</th>
+                                    <th>نسبة التميز</th>
+                                </tr>
+                            </thead>
+                            <tbody id="classes-detail-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ================= 📋 التبويب 3: السجل والاستدعاء 📋 ================= -->
+        <section id="sec-history" class="space-y-3 hidden">
+            
+            <div class="card-m space-y-3 border-t-4 border-t-amber-500">
+                <div class="flex justify-between items-center border-b pb-2">
+                    <h3 class="text-xs sm:text-sm font-black text-[#0f2b48] flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-600"></i>
+                        سجل الفصول المسجلة لتاريخ اليوم المحدد
+                    </h3>
+                    <span class="text-xs font-bold text-slate-500" id="history-total-classes">٠ فصل مسجل</span>
+                </div>
+
+                <div id="history-records-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
+            </div>
+
+        </section>
+
+    </div>
+
+    <!-- ================= المحرك البرمجي والربط بقاعدة البيانات ================= -->
+    <script>
+        const SUPABASE_URL = "https://xgsyktjoerrymqoutqcb.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnc3lrdGpvZXJyeW1xb3V0cWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0NzI2OTUsImV4cCI6MjA5OTA0ODY5NX0.fVdQnU8lQnacNzDTNXtAODbV3Jbgq5ACg5KIw0HFYLM";
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const STATS_PIN = "2026";
+        let IS_STATS_UNLOCKED = false;
+        
+        let ALL_ACTIVE_STUDENTS = []; 
+        let CURRENT_DAY_RECORDS = []; 
+
+        const GRADE_DIGIT_MAP = {
+            "الأول": "1",
+            "الثاني": "2",
+            "الثالث": "3",
+            "الرابع": "4",
+            "الخامس": "5",
+            "السادس": "6"
+        };
+
+        // اقتصار الصفوف حصرياً على المرحلة الابتدائية (بدون KG1 و KG2)
+        const ALL_GRADES = ["الأول", "الثاني", "الثالث", "الرابع", "الخامس", "السادس"];
+
+        const toAr = n => (n === 0 ? "٠" : (!n && n !== 0 ? "-" : String(n).replace(/[0-9]/g, w => ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'][w])));
+
+        function normalizeDigits(str) {
+            if (!str) return '';
+            const ar = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+            let s = String(str).trim();
+            for (let i = 0; i < 10; i++) s = s.replace(new RegExp(ar[i], 'g'), i);
+            return s.replace(/\s+/g, '');
+        }
+
+        function matchStandardGrade(rawGrade) {
+            if (!rawGrade) return "";
+            let s = String(rawGrade).toUpperCase().trim();
+            // استبعاد KG1 و KG2
+            if (s.includes("KG") || s.includes("كيجي") || s.includes("رياض")) return "";
+
+            let clean = s.replace(/الصف\s*/g, '').replace(/[أإآا]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').trim();
+            if (clean.includes("1") || clean.includes("اول")) return "الأول";
+            if (clean.includes("2") || clean.includes("ثان")) return "الثاني";
+            if (clean.includes("3") || clean.includes("ثالث")) return "الثالث";
+            if (clean.includes("4") || clean.includes("رابع")) return "الرابع";
+            if (clean.includes("5") || clean.includes("خامس")) return "الخامس";
+            if (clean.includes("6") || clean.includes("سادس")) return "السادس";
+            return clean;
+        }
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            initDateToToday();
+            await loadAllStudentsFromDatabase();
+        });
+
+        function initDateToToday() {
+            const today = new Date();
+            const y = today.getFullYear();
+            const m = String(today.getMonth() + 1).padStart(2, '0');
+            const d = String(today.getDate()).padStart(2, '0');
+            document.getElementById("entry-date").value = `${y}-${m}-${d}`;
+        }
+
+        // ================= جلب التلاميذ مع استبعاد KG نهائياً =================
+        async function loadAllStudentsFromDatabase(isManual = false) {
+            if (isManual) {
+                Swal.fire({ title: 'جاري حصر أعداد المقيدين الحالية...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            }
+
+            try {
+                let all = [];
+                let start = 0;
+                const step = 1000;
+                let hasMore = true;
+
+                while (hasMore) {
+                    const { data, error } = await sbClient
+                        .from('students')
+                        .select('name, grade, class, transfer_type')
+                        .range(start, start + step - 1);
+
+                    if (error) throw error;
+                    if (!data || data.length === 0) break;
+
+                    all = all.concat(data);
+                    start += step;
+                    if (data.length < step) hasMore = false;
+                }
+
+                // استبعاد من هم خارج القيد (محول من) والخريجين ورياض الأطفال (KG)
+                ALL_ACTIVE_STUDENTS = all.filter(s => {
+                    const tr = String(s.transfer_type || "").trim();
+                    const gr = String(s.grade || "").trim().toUpperCase();
+                    const isKg = gr.includes("KG") || gr.includes("كيجي") || gr.includes("رياض");
+                    return !tr.includes("محول من") && !tr.includes("محولمن") && !gr.includes("خريج") && !isKg;
+                });
+
+                onGradeSelectChanged();
+                await loadTodaySavedRecords();
+
+                if (isManual) {
+                    Swal.fire({ icon: 'success', title: `تم حصر ${toAr(ALL_ACTIVE_STUDENTS.length)} تلميذاً بالمرحلة الابتدائية!`, timer: 1400, showConfirmButton: false });
+                }
+            } catch (err) {
+                console.error("خطأ جلب التلاميذ:", err);
+            }
+        }
+
+        // ================= توليد فصول الصف بنمط 1/3 (رقم الفصل / رقم الصف) =================
+        function onGradeSelectChanged() {
+            const gradeName = document.getElementById("entry-grade").value;
+            const gNum = GRADE_DIGIT_MAP[gradeName] || "1";
+            const classSelect = document.getElementById("entry-class");
+
+            const gradeStudents = ALL_ACTIVE_STUDENTS.filter(s => matchStandardGrade(s.grade) === gradeName);
+            const foundClasses = new Set();
+
+            gradeStudents.forEach(s => {
+                const c = normalizeDigits(s.class);
+                if (c && c.includes('/')) foundClasses.add(c);
+            });
+
+            // التأكد من إضافة النمط القياسي 1/X حتى 6/X
+            for (let i = 1; i <= 6; i++) {
+                foundClasses.add(`${i}/${gNum}`);
+            }
+
+            const sortedClasses = Array.from(foundClasses).sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
+
+            classSelect.innerHTML = sortedClasses.map(c => `
+                <option value="${c}">فصل ${c}</option>
+            `).join('');
+
+            onClassOrDateChanged();
+        }
+
+        // ================= الحساب التلقائي وتفريغ الأصفار الافتراضية =================
+        function onClassOrDateChanged() {
+            const date = document.getElementById("entry-date").value;
+            const grade = document.getElementById("entry-grade").value;
+            const className = document.getElementById("entry-class").value;
+
+            // 1. حساب عدد المقيدين تلقائياً ومقفول
+            const enrolledCount = ALL_ACTIVE_STUDENTS.filter(s => {
+                const matchG = matchStandardGrade(s.grade) === grade;
+                const matchC = normalizeDigits(s.class) === normalizeDigits(className);
+                return matchG && matchC;
+            }).length;
+
+            document.getElementById("dsp-enrolled").innerText = enrolledCount;
+
+            // 2. فحص هل توجد نتيجة سابقة مسجلة (إذا لم توجد، تبقى الحقول فارغة تماماً بدون أصفار)
+            const foundRecord = CURRENT_DAY_RECORDS.find(r => r.date === date && r.grade === grade && normalizeDigits(r.class_name) === normalizeDigits(className));
+
+            if (foundRecord) {
+                document.getElementById("inp-absent").value = foundRecord.absent !== undefined ? foundRecord.absent : "";
+                document.getElementById("inp-lvl-1").value = foundRecord.level1 !== undefined ? foundRecord.level1 : "";
+                document.getElementById("inp-lvl-2").value = foundRecord.level2 !== undefined ? foundRecord.level2 : "";
+                document.getElementById("inp-lvl-3").value = foundRecord.level3 !== undefined ? foundRecord.level3 : "";
+                document.getElementById("inp-lvl-4").value = foundRecord.level4 !== undefined ? foundRecord.level4 : "";
+            } else {
+                // إزالة الأصفار الافتراضية وتفريغ الحقول
+                document.getElementById("inp-absent").value = "";
+                document.getElementById("inp-lvl-1").value = "";
+                document.getElementById("inp-lvl-2").value = "";
+                document.getElementById("inp-lvl-3").value = "";
+                document.getElementById("inp-lvl-4").value = "";
+            }
+
+            calculateAttendanceAndBalance();
+        }
+
+        // ================= مطابقة المستويات مع الحاضرين =================
+        function calculateAttendanceAndBalance() {
+            const enrolled = parseInt(document.getElementById("dsp-enrolled").innerText) || 0;
+            const absentVal = document.getElementById("inp-absent").value;
+            const absent = Math.max(0, parseInt(absentVal) || 0);
+            
+            // الحاضرون = المقيد - الغائب
+            const present = Math.max(0, enrolled - absent);
+            document.getElementById("dsp-present").innerText = present;
+
+            const l1 = Math.max(0, parseInt(document.getElementById("inp-lvl-1").value) || 0);
+            const l2 = Math.max(0, parseInt(document.getElementById("inp-lvl-2").value) || 0);
+            const l3 = Math.max(0, parseInt(document.getElementById("inp-lvl-3").value) || 0);
+            const l4 = Math.max(0, parseInt(document.getElementById("inp-lvl-4").value) || 0);
+
+            const sumLevels = l1 + l2 + l3 + l4;
+            const diff = present - sumLevels;
+
+            const alertBox = document.getElementById("balance-alert-box");
+            const saveBtn = document.getElementById("btn-save");
+
+            if (enrolled === 0) {
+                alertBox.className = "p-3 rounded-xl text-xs font-black border bg-amber-50 border-amber-300 text-amber-900";
+                alertBox.innerHTML = `<span>⚠️ تنبيه: لا يوجد تلاميذ مقيدين مسجلين لهذا الفصل في قاعدة البيانات.</span>`;
+                saveBtn.disabled = true;
+                saveBtn.classList.add("opacity-50", "cursor-not-allowed");
+                return false;
+            }
+
+            if (diff === 0 && (sumLevels > 0 || present === 0)) {
+                // الأعداد متطابقة تماماً
+                alertBox.className = "p-3 rounded-xl text-xs font-black border bg-emerald-50 border-emerald-500 text-emerald-950";
+                alertBox.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check text-emerald-600 text-lg"></i>
+                        <span>الرصد سليم ومتطابق (الحاضرون: ${toAr(present)} = مجموع المستويات: ${toAr(sumLevels)})</span>
+                    </div>
+                    <span class="px-2.5 py-1 bg-emerald-700 text-white rounded-lg text-[10.5px]">جاهز للحفظ ✔️</span>
+                `;
+                saveBtn.disabled = false;
+                saveBtn.classList.remove("opacity-50", "cursor-not-allowed");
+                return true;
+            } else if (diff > 0) {
+                // مجموع المستويات أقل من الحاضرين
+                alertBox.className = "p-3 rounded-xl text-xs font-black border bg-rose-50 border-rose-400 text-rose-950";
+                alertBox.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-600 text-lg"></i>
+                        <span>مجموع المستويات (${toAr(sumLevels)}) أقل من الحاضرين (${toAr(present)}) • متبقي (${toAr(diff)}) تلاميذ لم يُرصدوا!</span>
+                    </div>
+                `;
+                saveBtn.disabled = true;
+                saveBtn.classList.add("opacity-50", "cursor-not-allowed");
+                return false;
+            } else {
+                // مجموع المستويات أكبر من الحاضرين
+                alertBox.className = "p-3 rounded-xl text-xs font-black border bg-rose-50 border-rose-400 text-rose-950";
+                alertBox.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-xmark text-rose-600 text-lg"></i>
+                        <span>خطأ: مجموع المستويات (${toAr(sumLevels)}) أكبر من الحاضرين (${toAr(present)}) بزيادة (${toAr(Math.abs(diff))}) تلاميذ!</span>
+                    </div>
+                `;
+                saveBtn.disabled = true;
+                saveBtn.classList.add("opacity-50", "cursor-not-allowed");
+                return false;
+            }
+        }
+
+        // ================= حفظ نتيجة الفصل في Supabase =================
+        async function saveDictationResult() {
+            const isValid = calculateAttendanceAndBalance();
+            if (!isValid) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'تنبيه: الأعداد غير متطابقة!',
+                    text: 'مجموع أعداد المستويات الـ 4 يجب أن يتساوى تماماً مع عدد الحاضرين الفعليين قبل الحفظ.',
+                    confirmButtonText: 'حسناً، سأراجع الأعداد',
+                    confirmButtonColor: '#0f2b48'
+                });
+                return;
+            }
+
+            const date = document.getElementById("entry-date").value;
+            const grade = document.getElementById("entry-grade").value;
+            const className = document.getElementById("entry-class").value;
+            const enrolled = parseInt(document.getElementById("dsp-enrolled").innerText) || 0;
+            const absent = parseInt(document.getElementById("inp-absent").value) || 0;
+            const present = enrolled - absent;
+
+            const l1 = parseInt(document.getElementById("inp-lvl-1").value) || 0;
+            const l2 = parseInt(document.getElementById("inp-lvl-2").value) || 0;
+            const l3 = parseInt(document.getElementById("inp-lvl-3").value) || 0;
+            const l4 = parseInt(document.getElementById("inp-lvl-4").value) || 0;
+
+            const excellenceRate = present > 0 ? (((l4 + l3) / present) * 100).toFixed(1) : 0;
+
+            const payload = {
+                date: date,
+                grade: grade,
+                class_name: className,
+                enrolled: enrolled,
+                absent: absent,
+                present: present,
+                level1: l1,
+                level2: l2,
+                level3: l3,
+                level4: l4,
+                excellence_rate: parseFloat(excellenceRate),
+                updated_at: new Date().toISOString()
+            };
+
+            const btn = document.getElementById("btn-save");
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...`;
+
+            try {
+                const capsuleId = `dictation_${date}`;
+                const { data: capData } = await sbClient.from("system_capsules").select("data").eq("id", capsuleId).maybeSingle();
+                let dayList = (capData && Array.isArray(capData.data)) ? capData.data : [];
+
+                dayList = dayList.filter(item => !(item.grade === grade && normalizeDigits(item.class_name) === normalizeDigits(className)));
+                dayList.push(payload);
+
+                const { error } = await sbClient.from("system_capsules").upsert({
+                    id: capsuleId,
+                    data: dayList,
+                    updatedat: new Date().toLocaleString('ar-EG')
+                });
+
+                if (error) throw error;
+
+                CURRENT_DAY_RECORDS = dayList;
+                renderHistoryTab();
+                if (IS_STATS_UNLOCKED) renderStatsTab();
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top',
+                    icon: 'success',
+                    title: `تم حفظ نتيجة فصل (${className}) بنجاح!`,
+                    timer: 1600,
+                    showConfirmButton: false
+                });
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire('خطأ', 'فشل الحفظ: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up text-yellow-300 text-base"></i> <span>حفظ واعتماد نتيجة الفصل بالسحابة</span>`;
+            }
+        }
+
+        // ================= استدعاء نتائج اليوم =================
+        async function loadTodaySavedRecords() {
+            const date = document.getElementById("entry-date").value;
+            const capsuleId = `dictation_${date}`;
+
+            try {
+                const { data } = await sbClient.from("system_capsules").select("data").eq("id", capsuleId).maybeSingle();
+                CURRENT_DAY_RECORDS = (data && Array.isArray(data.data)) ? data.data : [];
+                renderHistoryTab();
+                if (IS_STATS_UNLOCKED) renderStatsTab();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // ================= التبديل بين التبويبات =================
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            ['entry', 'stats', 'history'].forEach(t => {
+                document.getElementById(`sec-${t}`).classList.toggle('hidden', t !== tabId);
+            });
+
+            if (tabId === 'history') renderHistoryTab();
+            if (tabId === 'stats' && IS_STATS_UNLOCKED) renderStatsTab();
+        }
+
+        // ================= قفل الرقم السري (2026) لتبويب الإحصاء =================
+        async function requestStatsAccess() {
+            if (IS_STATS_UNLOCKED) {
+                switchTab('stats');
+                return;
+            }
+
+            const { value: pin } = await Swal.fire({
+                title: '🔒 الرقم السري للإحصاء',
+                text: 'أدخل الرقم السري المصرح به لعرض إحصائيات وقياس مستوى المدرسة:',
+                input: 'password',
+                inputPlaceholder: 'أدخل الرمز هنا...',
+                confirmButtonText: 'دخول',
+                cancelButtonText: 'إلغاء',
+                showCancelButton: true,
+                confirmButtonColor: '#0f2b48',
+                inputAttributes: {
+                    inputmode: 'numeric',
+                    maxlength: 10
+                }
+            });
+
+            if (pin === STATS_PIN) {
+                IS_STATS_UNLOCKED = true;
+                const lockIcon = document.querySelector("#tab-stats .fa-lock");
+                if (lockIcon) lockIcon.className = "fa-solid fa-unlock text-[10px] text-emerald-300 mr-0.5";
+                
+                switchTab('stats');
+                renderStatsTab();
+            } else if (pin !== undefined) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'رمز غير صحيح!',
+                    text: 'الرقم السري الذي أدخلته غير مصرح به.',
+                    confirmButtonText: 'إغلاق',
+                    confirmButtonColor: '#be123c'
+                });
+            }
+        }
+
+        // ================= عرض الإحصاء وقياس المستوى (م1 أولاً وم4 أخيراً) =================
+        function renderStatsTab() {
+            const date = document.getElementById("entry-date").value;
+            document.getElementById("stats-current-date-txt").innerText = date;
+
+            const bestContainer = document.getElementById("best-classes-container");
+            const gradesTbody = document.getElementById("grades-summary-tbody");
+            const detailTbody = document.getElementById("classes-detail-tbody");
+
+            if (CURRENT_DAY_RECORDS.length === 0) {
+                bestContainer.innerHTML = `<div class="col-span-3 text-center py-4 text-xs font-bold text-slate-400">لا توجد نتائج مسجلة لتاريخ اليوم (${date}).</div>`;
+                gradesTbody.innerHTML = `<tr><td colspan="8" class="py-4 text-slate-400 text-xs font-bold">لا توجد بيانات مسجلة.</td></tr>`;
+                detailTbody.innerHTML = `<tr><td colspan="10" class="py-4 text-slate-400 text-xs font-bold">لا توجد بيانات مسجلة.</td></tr>`;
+                return;
+            }
+
+            const gradesAggregation = {};
+            const bestClassPerGrade = {};
+
+            ALL_GRADES.forEach(grade => {
+                gradesAggregation[grade] = {
+                    grade: grade,
+                    enrolled: 0,
+                    present: 0,
+                    level1: 0,
+                    level2: 0,
+                    level3: 0,
+                    level4: 0,
+                    recordedClasses: 0
+                };
+            });
+
+            CURRENT_DAY_RECORDS.forEach(rec => {
+                const g = rec.grade;
+                if (!gradesAggregation[g]) return;
+
+                gradesAggregation[g].enrolled += rec.enrolled;
+                gradesAggregation[g].present += rec.present;
+                gradesAggregation[g].level1 += rec.level1;
+                gradesAggregation[g].level2 += rec.level2;
+                gradesAggregation[g].level3 += rec.level3;
+                gradesAggregation[g].level4 += rec.level4;
+                gradesAggregation[g].recordedClasses++;
+
+                // حساب أفضل فصل (بأعلى نسبة إتقان المستوى الرابع والثالث معاً بالنسبة للحاضرين)
+                const qualityScore = rec.present > 0 ? ((rec.level4 * 1.5 + rec.level3) / rec.present) * 100 : 0;
+                
+                if (!bestClassPerGrade[g] || qualityScore > bestClassPerGrade[g].score) {
+                    bestClassPerGrade[g] = {
+                        className: rec.class_name,
+                        score: qualityScore,
+                        rate: rec.excellence_rate
+                    };
+                }
+            });
+
+            // 1. رسم كروت أفضل فصل في كل صف
+            let bestHtml = "";
+            ALL_GRADES.forEach(g => {
+                const b = bestClassPerGrade[g];
+                if (b) {
+                    bestHtml += `
+                        <div class="p-2.5 bg-gradient-to-br from-amber-50 to-yellow-100/70 border border-amber-300 rounded-xl text-center shadow-sm">
+                            <span class="block text-[11px] font-bold text-amber-900">الصف ${g}</span>
+                            <b class="text-sm font-black text-blue-950 flex items-center justify-center gap-1 my-0.5">
+                                <i class="fa-solid fa-medal text-amber-600 text-xs"></i>
+                                فصل ${b.className}
+                            </b>
+                            <span class="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded-full font-black">
+                                نسبة التميز: ${toAr(b.rate)}%
+                            </span>
+                        </div>
+                    `;
+                }
+            });
+            bestContainer.innerHTML = bestHtml || `<div class="col-span-3 text-center text-xs text-slate-400">لم يتم رصد فصول بعد.</div>`;
+
+            // 2. رسم جدول تجميع كل صف مع بعضه (الترتيب: م1 ثم م2 ثم م3 ثم م4)
+            let gradesHtml = "";
+            ALL_GRADES.forEach(g => {
+                const row = gradesAggregation[g];
+                if (row.recordedClasses === 0) return;
+
+                const masteryRate = row.present > 0 ? (((row.level4 + row.level3) / row.present) * 100).toFixed(1) : 0;
+
+                gradesHtml += `
+                    <tr>
+                        <td style="font-weight: 900; color: #0f2b48;">الصف ${g}</td>
+                        <td>${toAr(row.enrolled)}</td>
+                        <td class="font-black text-emerald-800">${toAr(row.present)}</td>
+                        <td class="bg-rose-50 text-rose-900 font-bold">${toAr(row.level1)}</td>
+                        <td class="bg-amber-50 text-amber-900 font-bold">${toAr(row.level2)}</td>
+                        <td class="bg-blue-50 text-blue-900 font-bold">${toAr(row.level3)}</td>
+                        <td class="bg-emerald-50 text-emerald-900 font-black">${toAr(row.level4)}</td>
+                        <td class="font-black text-blue-950">${toAr(masteryRate)}%</td>
+                    </tr>
+                `;
+            });
+            gradesTbody.innerHTML = gradesHtml || `<tr><td colspan="8" class="py-4 text-slate-400 text-xs font-bold">لم تسجل فصول بعد.</td></tr>`;
+
+            // 3. رسم الجدول التفصيلي لجميع فصول المدرسة (م1 ثم م2 ثم م3 ثم م4)
+            let detailHtml = "";
+            CURRENT_DAY_RECORDS.slice().sort((a,b) => a.class_name.localeCompare(b.class_name, 'en', {numeric:true})).forEach((r, idx) => {
+                detailHtml += `
+                    <tr>
+                        <td>${toAr(idx + 1)}</td>
+                        <td style="font-weight: 900; color: #0f2b48;">فصل ${r.class_name}</td>
+                        <td>${toAr(r.enrolled)}</td>
+                        <td class="text-rose-700">${toAr(r.absent)}</td>
+                        <td class="font-black text-emerald-800">${toAr(r.present)}</td>
+                        <td class="bg-rose-50 text-rose-900 font-bold">${toAr(r.level1)}</td>
+                        <td class="bg-amber-50 text-amber-900 font-bold">${toAr(r.level2)}</td>
+                        <td class="bg-blue-50 text-blue-900 font-bold">${toAr(r.level3)}</td>
+                        <td class="bg-emerald-50 text-emerald-900 font-black">${toAr(r.level4)}</td>
+                        <td class="font-black text-blue-950">${toAr(r.excellence_rate)}%</td>
+                    </tr>
+                `;
+            });
+            detailTbody.innerHTML = detailHtml;
+        }
+
+        // ================= عرض تبويب السجل والاستدعاء =================
+        function renderHistoryTab() {
+            const list = document.getElementById("history-records-list");
+            document.getElementById("history-total-classes").innerText = `${toAr(CURRENT_DAY_RECORDS.length)} فصل مسجل`;
+
+            if (CURRENT_DAY_RECORDS.length === 0) {
+                list.innerHTML = `<div class="p-6 text-center text-xs font-bold text-slate-400">لا توجد نتائج مسجلة لتاريخ اليوم.</div>`;
+                return;
+            }
+
+            list.innerHTML = CURRENT_DAY_RECORDS.map((r, idx) => `
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center text-xs hover:bg-blue-50/50 transition">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <b class="text-sm font-black text-[#0f2b48]">فصل ${r.class_name}</b>
+                            <span class="text-[10px] text-slate-500 font-bold">(${r.grade})</span>
+                        </div>
+                        <div class="flex gap-2 text-[11px] font-bold text-slate-600 mt-1">
+                            <span>مقيد: <b>${toAr(r.enrolled)}</b></span>
+                            <span>• حاضر: <b class="text-emerald-800">${toAr(r.present)}</b></span>
+                            <span>• م1: <b class="text-rose-700">${toAr(r.level1)}</b></span>
+                            <span>• م2: <b class="text-amber-700">${toAr(r.level2)}</b></span>
+                            <span>• م3: <b class="text-blue-700">${toAr(r.level3)}</b></span>
+                            <span>• م4: <b class="text-emerald-700">${toAr(r.level4)}</b></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <button type="button" onclick="loadClassForEdit('${r.grade}', '${r.class_name}')" class="px-2.5 py-1.5 bg-blue-900 hover:bg-blue-800 text-white rounded-lg text-xs font-black shadow-sm">
+                            <i class="fa-solid fa-pen-to-square"></i> تعديل
+                        </button>
+                        <button type="button" onclick="deleteClassRecord('${r.grade}', '${r.class_name}')" class="p-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg text-xs font-black" title="حذف">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadClassForEdit(grade, cls) {
+            document.getElementById("entry-grade").value = grade;
+            onGradeSelectChanged();
+            document.getElementById("entry-class").value = cls;
+            onClassOrDateChanged();
+            switchTab('entry');
+        }
+
+        async function deleteClassRecord(grade, className) {
+            const r = await Swal.fire({
+                title: 'حذف نتيجة الفصل؟',
+                text: `هل تريد بالتأكيد حذف نتيجة فصل (${className})؟`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، احذف',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#be123c'
+            });
+            if (!r.isConfirmed) return;
+
+            const date = document.getElementById("entry-date").value;
+            const capsuleId = `dictation_${date}`;
+
+            CURRENT_DAY_RECORDS = CURRENT_DAY_RECORDS.filter(x => !(x.grade === grade && normalizeDigits(x.class_name) === normalizeDigits(className)));
+
+            try {
+                await sbClient.from("system_capsules").upsert({
+                    id: capsuleId,
+                    data: CURRENT_DAY_RECORDS,
+                    updatedat: new Date().toLocaleString('ar-EG')
+                });
+
+                renderHistoryTab();
+                if (IS_STATS_UNLOCKED) renderStatsTab();
+                onClassOrDateChanged();
+
+                Swal.fire({ toast: true, position: 'top', icon: 'success', title: 'تم الحذف بنجاح', timer: 1400, showConfirmButton: false });
+            } catch(e) {
+                Swal.fire('خطأ', e.message, 'error');
+            }
+        }
+
+        // ================= تصدير الإحصاء إلى Excel بالترتيب الجديد =================
+        function exportStatsToExcel() {
+            const table = document.getElementById("classes-detail-table");
+            const date = document.getElementById("entry-date").value;
+            const wb = XLSX.utils.table_to_book(table, { raw: true });
+            if (!wb.Sheets[wb.SheetNames[0]]['!views']) wb.Sheets[wb.SheetNames[0]]['!views'] = [];
+            wb.Sheets[wb.SheetNames[0]]['!views'].push({ rightToLeft: true });
+            XLSX.writeFile(wb, `احصاء_الاملاء_اليومي_${date}.xlsx`);
+        }
+    </script>
+</body>
+</html>
